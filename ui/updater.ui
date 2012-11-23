@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Updater</class>
+ <widget class="QMainWindow" name="Updater">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>175</width>
+    <height>258</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ViUR Admin Updater</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icons/viup.png</normaloff>icons/viup.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/viur_logo.png</pixmap>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="textLog">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="btnCheck">
+      <property name="text">
+       <string>Check for Updates</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>icons/actions/search_small.png</normaloff>icons/actions/search_small.png</iconset>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="btnUpdate">
+      <property name="text">
+       <string>Update now</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>icons/actions/accept.png</normaloff>icons/actions/accept.png</iconset>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="btnExit">
+      <property name="text">
+       <string>Exit</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>icons/actions/exit_small.png</normaloff>icons/actions/exit_small.png</iconset>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>175</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
