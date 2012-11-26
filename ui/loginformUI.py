@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'loginform.ui'
+# Form implementation generated from reading ui file 'ui\loginform.ui'
 #
-# Created: Mon Nov 19 12:01:31 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:49 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -20,7 +20,6 @@ class Ui_LoginWindow(object):
         LoginWindow.resize(480, 622)
         LoginWindow.setMinimumSize(QtCore.QSize(480, 0))
         LoginWindow.setMaximumSize(QtCore.QSize(480, 16777215))
-        LoginWindow.setWindowTitle(QtGui.QApplication.translate("LoginWindow", "ViurAdmin – Hello!", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/viur_logo.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         LoginWindow.setWindowIcon(icon)
@@ -48,13 +47,11 @@ class Ui_LoginWindow(object):
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
         self.lblPortal = QtGui.QLabel(self.logincentralwidget)
         self.lblPortal.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblPortal.setText(QtGui.QApplication.translate("LoginWindow", "Portal", None, QtGui.QApplication.UnicodeUTF8))
         self.lblPortal.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.lblPortal.setObjectName(_fromUtf8("lblPortal"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.lblPortal)
         self.lblUrl = QtGui.QLabel(self.logincentralwidget)
         self.lblUrl.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblUrl.setText(QtGui.QApplication.translate("LoginWindow", "Server", None, QtGui.QApplication.UnicodeUTF8))
         self.lblUrl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.lblUrl.setObjectName(_fromUtf8("lblUrl"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.lblUrl)
@@ -64,13 +61,11 @@ class Ui_LoginWindow(object):
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.editUrl)
         self.lblApikey = QtGui.QLabel(self.logincentralwidget)
         self.lblApikey.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblApikey.setText(QtGui.QApplication.translate("LoginWindow", "Captcha", None, QtGui.QApplication.UnicodeUTF8))
         self.lblApikey.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.lblApikey.setObjectName(_fromUtf8("lblApikey"))
         self.formLayout.setWidget(5, QtGui.QFormLayout.LabelRole, self.lblApikey)
         self.lblUsername = QtGui.QLabel(self.logincentralwidget)
         self.lblUsername.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblUsername.setText(QtGui.QApplication.translate("LoginWindow", "User", "xy<", QtGui.QApplication.UnicodeUTF8))
         self.lblUsername.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.lblUsername.setObjectName(_fromUtf8("lblUsername"))
         self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.lblUsername)
@@ -80,7 +75,6 @@ class Ui_LoginWindow(object):
         self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.editUsername)
         self.lblPassword = QtGui.QLabel(self.logincentralwidget)
         self.lblPassword.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblPassword.setText(QtGui.QApplication.translate("LoginWindow", "Password", None, QtGui.QApplication.UnicodeUTF8))
         self.lblPassword.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.lblPassword.setObjectName(_fromUtf8("lblPassword"))
         self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.lblPassword)
@@ -100,7 +94,6 @@ class Ui_LoginWindow(object):
         self.horizontalLayout.addWidget(self.cbPortal)
         self.startAccManagerBTN = QtGui.QPushButton(self.logincentralwidget)
         self.startAccManagerBTN.setMinimumSize(QtCore.QSize(0, 32))
-        self.startAccManagerBTN.setText(QtGui.QApplication.translate("LoginWindow", "Accountmannager", None, QtGui.QApplication.UnicodeUTF8))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/modules/account_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.startAccManagerBTN.setIcon(icon1)
@@ -110,7 +103,6 @@ class Ui_LoginWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.lblCaptcha = QtGui.QLabel(self.logincentralwidget)
-        self.lblCaptcha.setText(QtGui.QApplication.translate("LoginWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.lblCaptcha.setObjectName(_fromUtf8("lblCaptcha"))
         self.verticalLayout.addWidget(self.lblCaptcha)
         self.editCaptcha = QtGui.QLineEdit(self.logincentralwidget)
@@ -118,7 +110,6 @@ class Ui_LoginWindow(object):
         self.verticalLayout.addWidget(self.editCaptcha)
         self.formLayout.setLayout(5, QtGui.QFormLayout.FieldRole, self.verticalLayout)
         self.label = QtGui.QLabel(self.logincentralwidget)
-        self.label.setText(QtGui.QApplication.translate("LoginWindow", "Language", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.cbLanguages = QtGui.QComboBox(self.logincentralwidget)
@@ -130,7 +121,6 @@ class Ui_LoginWindow(object):
         self.btnLogin = QtGui.QPushButton(self.logincentralwidget)
         self.btnLogin.setMinimumSize(QtCore.QSize(0, 64))
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnLogin.setText(QtGui.QApplication.translate("LoginWindow", "Login", None, QtGui.QApplication.UnicodeUTF8))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/login.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnLogin.setIcon(icon2)
@@ -142,29 +132,22 @@ class Ui_LoginWindow(object):
         self.menubar.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuInfo = QtGui.QMenu(self.menubar)
-        self.menuInfo.setTitle(QtGui.QApplication.translate("LoginWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
         self.menuInfo.setObjectName(_fromUtf8("menuInfo"))
         self.menuEinstellungen = QtGui.QMenu(self.menubar)
-        self.menuEinstellungen.setTitle(QtGui.QApplication.translate("LoginWindow", "Settings", None, QtGui.QApplication.UnicodeUTF8))
         self.menuEinstellungen.setObjectName(_fromUtf8("menuEinstellungen"))
         LoginWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(LoginWindow)
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
         LoginWindow.setStatusBar(self.statusbar)
         self.actionErste_Schritte = QtGui.QAction(LoginWindow)
-        self.actionErste_Schritte.setText(QtGui.QApplication.translate("LoginWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
         self.actionErste_Schritte.setObjectName(_fromUtf8("actionErste_Schritte"))
         self.actionHelp = QtGui.QAction(LoginWindow)
-        self.actionHelp.setText(QtGui.QApplication.translate("LoginWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
         self.actionHelp.setObjectName(_fromUtf8("actionHelp"))
         self.actionAbout = QtGui.QAction(LoginWindow)
-        self.actionAbout.setText(QtGui.QApplication.translate("LoginWindow", "About this Software", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
         self.actionSettings = QtGui.QAction(LoginWindow)
-        self.actionSettings.setText(QtGui.QApplication.translate("LoginWindow", "Generel settigs", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSettings.setObjectName(_fromUtf8("actionSettings"))
         self.actionAccountmanager = QtGui.QAction(LoginWindow)
-        self.actionAccountmanager.setText(QtGui.QApplication.translate("LoginWindow", "Accountmanager", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAccountmanager.setObjectName(_fromUtf8("actionAccountmanager"))
         self.menuInfo.addAction(self.actionHelp)
         self.menuInfo.addSeparator()
@@ -177,5 +160,31 @@ class Ui_LoginWindow(object):
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
 
     def retranslateUi(self, LoginWindow):
-        pass
+        LoginWindow.setWindowTitle(QtGui.QApplication.translate("LoginWindow", "ViurAdmin – Hello!", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblPortal.setText(QtGui.QApplication.translate("LoginWindow", "Portal", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblUrl.setText(QtGui.QApplication.translate("LoginWindow", "Server", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblApikey.setText(QtGui.QApplication.translate("LoginWindow", "Captcha", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblUsername.setText(QtGui.QApplication.translate("LoginWindow", "User", "xy<", QtGui.QApplication.UnicodeUTF8))
+        self.lblPassword.setText(QtGui.QApplication.translate("LoginWindow", "Password", None, QtGui.QApplication.UnicodeUTF8))
+        self.startAccManagerBTN.setText(QtGui.QApplication.translate("LoginWindow", "Accountmannager", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblCaptcha.setText(QtGui.QApplication.translate("LoginWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("LoginWindow", "Language", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnLogin.setText(QtGui.QApplication.translate("LoginWindow", "Login", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuInfo.setTitle(QtGui.QApplication.translate("LoginWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuEinstellungen.setTitle(QtGui.QApplication.translate("LoginWindow", "Settings", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionErste_Schritte.setText(QtGui.QApplication.translate("LoginWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionHelp.setText(QtGui.QApplication.translate("LoginWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAbout.setText(QtGui.QApplication.translate("LoginWindow", "About this Software", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSettings.setText(QtGui.QApplication.translate("LoginWindow", "Generel settigs", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAccountmanager.setText(QtGui.QApplication.translate("LoginWindow", "Accountmanager", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    LoginWindow = QtGui.QMainWindow()
+    ui = Ui_LoginWindow()
+    ui.setupUi(LoginWindow)
+    LoginWindow.show()
+    sys.exit(app.exec_())
 

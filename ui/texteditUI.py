@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui\textedit.ui'
 #
-# Created: Thu Nov 15 17:35:23 2012
-#      by: PyQt4 UI code generator 4.8.4
+# Created: Mon Nov 26 19:34:49 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 

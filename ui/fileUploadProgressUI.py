@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui\fileUploadProgress.ui'
 #
-# Created: Thu Nov 15 17:35:21 2012
-#      by: PyQt4 UI code generator 4.8.4
+# Created: Mon Nov 26 19:34:48 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -28,14 +28,14 @@ class Ui_FileUploadProgress(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.pbarTotal = QtGui.QProgressBar(FileUploadProgress)
-        self.pbarTotal.setProperty(_fromUtf8("value"), 24)
+        self.pbarTotal.setProperty("value", 24)
         self.pbarTotal.setObjectName(_fromUtf8("pbarTotal"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.pbarTotal)
         self.label_2 = QtGui.QLabel(FileUploadProgress)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
         self.pbarFile = QtGui.QProgressBar(FileUploadProgress)
-        self.pbarFile.setProperty(_fromUtf8("value"), 24)
+        self.pbarFile.setProperty("value", 24)
         self.pbarFile.setObjectName(_fromUtf8("pbarFile"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.pbarFile)
         self.verticalLayout.addLayout(self.formLayout)

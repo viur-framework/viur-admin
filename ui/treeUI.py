@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'tree.ui'
+# Form implementation generated from reading ui file 'ui\tree.ui'
 #
-# Created: Fri Nov 16 19:36:51 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:49 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_Tree(object):
     def setupUi(self, Tree):
         Tree.setObjectName(_fromUtf8("Tree"))
         Tree.resize(659, 479)
-        Tree.setWindowTitle(QtGui.QApplication.translate("Tree", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.verticalLayout = QtGui.QVBoxLayout(Tree)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
@@ -55,7 +54,6 @@ class Ui_Tree(object):
         self.editSearch.setObjectName(_fromUtf8("editSearch"))
         self.horizontalLayout.addWidget(self.editSearch)
         self.btnSearch = QtGui.QPushButton(Tree)
-        self.btnSearch.setText(QtGui.QApplication.translate("Tree", "Search", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSearch.setIcon(icon)
@@ -70,5 +68,17 @@ class Ui_Tree(object):
         QtCore.QMetaObject.connectSlotsByName(Tree)
 
     def retranslateUi(self, Tree):
+        Tree.setWindowTitle(QtGui.QApplication.translate("Tree", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.listWidget.setSortingEnabled(True)
+        self.btnSearch.setText(QtGui.QApplication.translate("Tree", "Search", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    Tree = QtGui.QWidget()
+    ui = Ui_Tree()
+    ui.setupUi(Tree)
+    Tree.show()
+    sys.exit(app.exec_())
 

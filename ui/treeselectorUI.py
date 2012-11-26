@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'treeselector.ui'
+# Form implementation generated from reading ui file 'ui\treeselector.ui'
 #
-# Created: Tue Nov 20 09:50:44 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:50 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_TreeSelector(object):
     def setupUi(self, TreeSelector):
         TreeSelector.setObjectName(_fromUtf8("TreeSelector"))
         TreeSelector.resize(597, 640)
-        TreeSelector.setWindowTitle(QtGui.QApplication.translate("TreeSelector", "File selection", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/windowicon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         TreeSelector.setWindowIcon(icon)
@@ -70,11 +69,9 @@ class Ui_TreeSelector(object):
         self.verticalLayout.addLayout(self.boxActions)
         self.verticalLayout_2.addWidget(self.wdgActions)
         self.btnAddSelected = QtGui.QPushButton(self.scrollAreaWidgetContents)
-        self.btnAddSelected.setText(QtGui.QApplication.translate("TreeSelector", "Add to selected", None, QtGui.QApplication.UnicodeUTF8))
         self.btnAddSelected.setObjectName(_fromUtf8("btnAddSelected"))
         self.verticalLayout_2.addWidget(self.btnAddSelected)
         self.lblSelected = QtGui.QLabel(self.scrollAreaWidgetContents)
-        self.lblSelected.setText(QtGui.QApplication.translate("TreeSelector", "Selected:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSelected.setObjectName(_fromUtf8("lblSelected"))
         self.verticalLayout_2.addWidget(self.lblSelected)
         self.listSelected = QtGui.QListWidget(self.scrollAreaWidgetContents)
@@ -82,7 +79,6 @@ class Ui_TreeSelector(object):
         self.listSelected.setObjectName(_fromUtf8("listSelected"))
         self.verticalLayout_2.addWidget(self.listSelected)
         self.btnSelect = QtGui.QPushButton(self.scrollAreaWidgetContents)
-        self.btnSelect.setText(QtGui.QApplication.translate("TreeSelector", "Apply", None, QtGui.QApplication.UnicodeUTF8))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/relationalselect.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSelect.setIcon(icon1)
@@ -98,5 +94,18 @@ class Ui_TreeSelector(object):
         QtCore.QMetaObject.connectSlotsByName(TreeSelector)
 
     def retranslateUi(self, TreeSelector):
-        pass
+        TreeSelector.setWindowTitle(QtGui.QApplication.translate("TreeSelector", "File selection", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnAddSelected.setText(QtGui.QApplication.translate("TreeSelector", "Add to selected", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblSelected.setText(QtGui.QApplication.translate("TreeSelector", "Selected:", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSelect.setText(QtGui.QApplication.translate("TreeSelector", "Apply", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    TreeSelector = QtGui.QWidget()
+    ui = Ui_TreeSelector()
+    ui.setupUi(TreeSelector)
+    TreeSelector.show()
+    sys.exit(app.exec_())
 

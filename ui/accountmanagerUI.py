@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui\accountmanager.ui'
 #
-# Created: Thu Nov 15 17:35:20 2012
-#      by: PyQt4 UI code generator 4.8.4
+# Created: Mon Nov 26 19:34:47 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +21,7 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(QtCore.QSize(480, 0))
         MainWindow.setMaximumSize(QtCore.QSize(480, 16777215))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/windowicon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/viur_logo.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))

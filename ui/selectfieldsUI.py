@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui\selectfields.ui'
 #
-# Created: Thu Nov 15 17:35:23 2012
-#      by: PyQt4 UI code generator 4.8.4
+# Created: Mon Nov 26 19:34:49 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -30,7 +30,7 @@ class Ui_SelectFields(object):
         self.verticalLayout.addWidget(self.label_2)
         self.listAvaiableFields = QtGui.QListWidget(self.centralwidget)
         self.listAvaiableFields.setEditTriggers(QtGui.QAbstractItemView.DoubleClicked|QtGui.QAbstractItemView.EditKeyPressed|QtGui.QAbstractItemView.SelectedClicked)
-        self.listAvaiableFields.setProperty(_fromUtf8("showDropIndicator"), False)
+        self.listAvaiableFields.setProperty("showDropIndicator", False)
         self.listAvaiableFields.setDragEnabled(False)
         self.listAvaiableFields.setDragDropMode(QtGui.QAbstractItemView.NoDragDrop)
         self.listAvaiableFields.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)

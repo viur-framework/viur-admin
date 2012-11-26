@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'linkEdit.ui'
+# Form implementation generated from reading ui file 'ui\docEditlinkEdit.ui'
 #
-# Created: Sat Nov 26 12:22:47 2011
-#      by: PyQt4 UI code generator 4.8.3
+# Created: Mon Nov 26 19:34:50 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -37,4 +37,14 @@ class Ui_LinkEdit(object):
         LinkEdit.setWindowTitle(QtGui.QApplication.translate("LinkEdit", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("LinkEdit", "Verknüpfungsziel", None, QtGui.QApplication.UnicodeUTF8))
         self.checkBoxNewWindow.setText(QtGui.QApplication.translate("LinkEdit", "In neuem Fenster öffnen", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    LinkEdit = QtGui.QWidget()
+    ui = Ui_LinkEdit()
+    ui.setupUi(LinkEdit)
+    LinkEdit.show()
+    sys.exit(app.exec_())
 

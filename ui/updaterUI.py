@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'updater.ui'
+# Form implementation generated from reading ui file 'ui\updater.ui'
 #
-# Created: Mon Nov 19 15:33:33 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:50 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_Updater(object):
     def setupUi(self, Updater):
         Updater.setObjectName(_fromUtf8("Updater"))
         Updater.resize(175, 258)
-        Updater.setWindowTitle(QtGui.QApplication.translate("Updater", "ViUR Admin Updater", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/viup.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         Updater.setWindowIcon(icon)
@@ -40,21 +39,18 @@ class Ui_Updater(object):
         self.progressBar.setObjectName(_fromUtf8("progressBar"))
         self.verticalLayout.addWidget(self.progressBar)
         self.btnCheck = QtGui.QPushButton(self.centralwidget)
-        self.btnCheck.setText(QtGui.QApplication.translate("Updater", "Check for Updates", None, QtGui.QApplication.UnicodeUTF8))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnCheck.setIcon(icon1)
         self.btnCheck.setObjectName(_fromUtf8("btnCheck"))
         self.verticalLayout.addWidget(self.btnCheck)
         self.btnUpdate = QtGui.QPushButton(self.centralwidget)
-        self.btnUpdate.setText(QtGui.QApplication.translate("Updater", "Update now", None, QtGui.QApplication.UnicodeUTF8))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnUpdate.setIcon(icon2)
         self.btnUpdate.setObjectName(_fromUtf8("btnUpdate"))
         self.verticalLayout.addWidget(self.btnUpdate)
         self.btnExit = QtGui.QPushButton(self.centralwidget)
-        self.btnExit.setText(QtGui.QApplication.translate("Updater", "Exit", None, QtGui.QApplication.UnicodeUTF8))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/exit_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnExit.setIcon(icon3)
@@ -73,5 +69,18 @@ class Ui_Updater(object):
         QtCore.QMetaObject.connectSlotsByName(Updater)
 
     def retranslateUi(self, Updater):
-        pass
+        Updater.setWindowTitle(QtGui.QApplication.translate("Updater", "ViUR Admin Updater", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnCheck.setText(QtGui.QApplication.translate("Updater", "Check for Updates", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnUpdate.setText(QtGui.QApplication.translate("Updater", "Update now", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnExit.setText(QtGui.QApplication.translate("Updater", "Exit", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    Updater = QtGui.QMainWindow()
+    ui = Ui_Updater()
+    ui.setupUi(Updater)
+    Updater.show()
+    sys.exit(app.exec_())
 

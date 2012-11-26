@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'admin.ui'
+# Form implementation generated from reading ui file 'ui\admin.ui'
 #
-# Created: Tue Nov 20 12:02:51 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:48 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(926, 707)
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "ViUR Admin", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/viur_logo.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -35,7 +34,6 @@ class Ui_MainWindow(object):
         self.treeWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.treeWidget.setColumnCount(3)
         self.treeWidget.setObjectName(_fromUtf8("treeWidget"))
-        self.treeWidget.headerItem().setText(0, QtGui.QApplication.translate("MainWindow", "Module", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(1, _fromUtf8("2"))
         self.treeWidget.headerItem().setText(2, _fromUtf8("3"))
         self.treeWidget.header().setVisible(False)
@@ -57,7 +55,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4 = QtGui.QHBoxLayout(self.page_2)
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
         self.iconLbl = QtGui.QLabel(self.page_2)
-        self.iconLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.iconLbl.setObjectName(_fromUtf8("iconLbl"))
         self.horizontalLayout_4.addWidget(self.iconLbl)
         self.modulLbl = QtGui.QLabel(self.page_2)
@@ -66,7 +63,6 @@ class Ui_MainWindow(object):
         font.setBold(False)
         font.setWeight(50)
         self.modulLbl.setFont(font)
-        self.modulLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.modulLbl.setObjectName(_fromUtf8("modulLbl"))
         self.horizontalLayout_4.addWidget(self.modulLbl)
         spacerItem = QtGui.QSpacerItem(368, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -88,10 +84,8 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 926, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuInfo = QtGui.QMenu(self.menubar)
-        self.menuInfo.setTitle(QtGui.QApplication.translate("MainWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
         self.menuInfo.setObjectName(_fromUtf8("menuInfo"))
         self.menuErweitert = QtGui.QMenu(self.menubar)
-        self.menuErweitert.setTitle(QtGui.QApplication.translate("MainWindow", "Advanced", None, QtGui.QApplication.UnicodeUTF8))
         self.menuErweitert.setObjectName(_fromUtf8("menuErweitert"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -101,35 +95,29 @@ class Ui_MainWindow(object):
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/onebiticonset/onebit_35.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionQuit.setIcon(icon1)
-        self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Beenden", None, QtGui.QApplication.UnicodeUTF8))
         self.actionQuit.setObjectName(_fromUtf8("actionQuit"))
         self.actionErste_Schritte = QtGui.QAction(MainWindow)
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/onebiticonset/021.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionErste_Schritte.setIcon(icon2)
-        self.actionErste_Schritte.setText(QtGui.QApplication.translate("MainWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
         self.actionErste_Schritte.setObjectName(_fromUtf8("actionErste_Schritte"))
         self.actionHelp = QtGui.QAction(MainWindow)
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/onebiticonset/022.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionHelp.setIcon(icon3)
-        self.actionHelp.setText(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
         self.actionHelp.setShortcut(_fromUtf8(""))
         self.actionHelp.setObjectName(_fromUtf8("actionHelp"))
         self.actionAbout = QtGui.QAction(MainWindow)
         icon4 = QtGui.QIcon()
         icon4.addPixmap(QtGui.QPixmap(_fromUtf8("icons/Apexico_black.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionAbout.setIcon(icon4)
-        self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
         self.actionLogout = QtGui.QAction(MainWindow)
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(_fromUtf8("icons/onebiticonset/onebit_24.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionLogout.setIcon(icon5)
-        self.actionLogout.setText(QtGui.QApplication.translate("MainWindow", "Ausloggen", None, QtGui.QApplication.UnicodeUTF8))
         self.actionLogout.setObjectName(_fromUtf8("actionLogout"))
         self.actionTasks = QtGui.QAction(MainWindow)
-        self.actionTasks.setText(QtGui.QApplication.translate("MainWindow", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
         self.actionTasks.setObjectName(_fromUtf8("actionTasks"))
         self.menuInfo.addAction(self.actionHelp)
         self.menuInfo.addSeparator()
@@ -142,5 +130,27 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "ViUR Admin", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.setSortingEnabled(False)
+        self.treeWidget.headerItem().setText(0, QtGui.QApplication.translate("MainWindow", "Module", None, QtGui.QApplication.UnicodeUTF8))
+        self.iconLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.modulLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuInfo.setTitle(QtGui.QApplication.translate("MainWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuErweitert.setTitle(QtGui.QApplication.translate("MainWindow", "Advanced", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Beenden", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionErste_Schritte.setText(QtGui.QApplication.translate("MainWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionHelp.setText(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionLogout.setText(QtGui.QApplication.translate("MainWindow", "Ausloggen", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionTasks.setText(QtGui.QApplication.translate("MainWindow", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    MainWindow = QtGui.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
 

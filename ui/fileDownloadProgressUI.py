@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ui\fileDownloadProgress.ui'
 #
-# Created: Thu Nov 15 17:35:21 2012
-#      by: PyQt4 UI code generator 4.8.4
+# Created: Mon Nov 26 19:34:48 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -29,7 +29,7 @@ class Ui_FileDownloadProgress(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.pbarTotal = QtGui.QProgressBar(FileDownloadProgress)
-        self.pbarTotal.setProperty(_fromUtf8("value"), 24)
+        self.pbarTotal.setProperty("value", 24)
         self.pbarTotal.setObjectName(_fromUtf8("pbarTotal"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.pbarTotal)
         self.verticalLayout.addLayout(self.formLayout)

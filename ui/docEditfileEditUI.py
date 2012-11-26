@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'fileEdit.ui'
+# Form implementation generated from reading ui file 'ui\docEditfileEdit.ui'
 #
-# Created: Fri Nov 25 18:47:14 2011
-#      by: PyQt4 UI code generator 4.8.3
+# Created: Mon Nov 26 19:34:50 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -133,3 +133,13 @@ class Ui_Form(object):
         self.checkboxHrefNewWindow.setText(QtGui.QApplication.translate("Form", "In neuem Fenster öffnen", None, QtGui.QApplication.UnicodeUTF8))
 
 from PyQt4 import QtWebKit
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    Form = QtGui.QWidget()
+    ui = Ui_Form()
+    ui.setupUi(Form)
+    Form.show()
+    sys.exit(app.exec_())
+

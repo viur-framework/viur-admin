@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'editpreview.ui'
+# Form implementation generated from reading ui file 'ui\editpreview.ui'
 #
-# Created: Tue Nov 20 12:05:23 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:50 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -31,7 +31,6 @@ class Ui_EditPreview(object):
         self.cbUrls.setObjectName(_fromUtf8("cbUrls"))
         self.horizontalLayout.addWidget(self.cbUrls)
         self.btnReload = QtGui.QPushButton(BasePreview)
-        self.btnReload.setText(QtGui.QApplication.translate("EditPreview", "Reload", None, QtGui.QApplication.UnicodeUTF8))
         self.btnReload.setObjectName(_fromUtf8("btnReload"))
         self.horizontalLayout.addWidget(self.btnReload)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -44,6 +43,16 @@ class Ui_EditPreview(object):
         QtCore.QMetaObject.connectSlotsByName(BasePreview)
 
     def retranslateUi(self, BasePreview):
-        pass
+        self.btnReload.setText(QtGui.QApplication.translate("EditPreview", "Reload", None, QtGui.QApplication.UnicodeUTF8))
 
 from PyQt4 import QtWebKit
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    BasePreview = QtGui.QWidget()
+    ui = Ui_EditPreview()
+    ui.setupUi(BasePreview)
+    BasePreview.show()
+    sys.exit(app.exec_())
+
