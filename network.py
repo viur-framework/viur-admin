@@ -50,7 +50,7 @@ class SecurityTokenProvider( QObject ):
 		the whole process speeds up
 	"""
 	
-	refreshIntervall = 10*60*1000 #10 Mins
+	refreshIntervall = 5*60*1000 #5 Mins
 	def __init__(self, *args, **kwargs ):
 		super( SecurityTokenProvider, self ).__init__( *args, **kwargs )
 		self.queue = Queue( 5 ) #Queue of valid tokens
