@@ -806,7 +806,7 @@ class TextBlock( HtmlBlock ):
 		return( currentEditor )
 	
 	def saveChanges( self, html ):
-		self.content = html
+		self.content = html.replace("href=\"!", "target=\"_blank\" href=\"" )
 		caption = HtmlStripper.strip( self.content ).strip().replace("\n", " ")[:25]
 		if caption:
 			self.setText(0,caption)
@@ -959,7 +959,9 @@ class Parser( html.parser.HTMLParser ):
 		if self.lastHRef:
 			self.result += "<a"
 			for k, v in self.lastHRef:
-					self.result += ' %s="%s"' % (k, v)
+				if k.lower()=="href" and "target" in [ x.lower() for x, y in self.lastHRef ]:
+					v = "!"+v #Prepend new Window Marker
+				self.result += ' %s="%s"' % (k, v)
 			self.result += ">"
 			self.lastHRef = None
 		self.result += data
