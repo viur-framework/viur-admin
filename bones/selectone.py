@@ -4,12 +4,12 @@ from event import event
 from bones.base import BaseViewBoneDelegate
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
-	def gettext(self,data):
+	def displayText(self, value, locale ):
 		items = dict( [(str(k), str(v)) for k, v in self.skelStructure[ self.boneName ]["values"].items() ] )
-		if str(data) in items.keys():
-			return ( items[str(data)])
+		if str(value) in items.keys():
+			return ( items[str(value)])
 		else:
-			return("")
+			return( value )
 
 class SelectOneEditBone( QtGui.QWidget ):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
