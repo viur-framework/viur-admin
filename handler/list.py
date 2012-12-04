@@ -249,7 +249,7 @@ class List( QtGui.QWidget ):
 		self.model = ListTableModel( self.ui.tableView, self.modul, fields or ["name"], filter  )
 		self.ui.tableView.setModel( self.model )
 		self.selectionModel = self.ui.tableView.selectionModel()
-		self.ui.lineEdit.mousePressEvent = self.on_lineEdit_clicked
+		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, "", self )
 		for item in queue.getAll():
@@ -261,7 +261,7 @@ class List( QtGui.QWidget ):
 			#self.ui.boxActions.addWidget( item( self ) )
 		self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'),self.doreloaddata )
 		if "search" in filter.keys():
-			self.ui.lineEdit.setText( filter["search"] )
+			self.ui.editSearch.setText( filter["search"] )
 		self.connect( self.model, QtCore.SIGNAL("layoutChanged()"), self.on_layoutChanged) #Hook Data-Avaiable event
 		#self.ui.tableView.horizontalHeader().mousePressEvent = self.tableViewContextMenuEvent
 		header = self.ui.tableView.horizontalHeader()
@@ -323,19 +323,16 @@ class List( QtGui.QWidget ):
 		self.updateTabDescription()
 		self.model.reload()
 		
-	def on_lineEdit_clicked(self, *args, **kwargs):
-		if self.ui.lineEdit.text()=="Suche":
-			self.ui.lineEdit.setText("")
-			
-	def on_lineEdit_returnPressed(self):
-		self.search()
-	
+	def on_editSearch_clicked(self, *args, **kwargs):
+		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
+			self.ui.editSearch.setText("")
+
 	def on_searchBTN_released(self):
 		self.search()
 	
 	def search(self):
 		filter = self.model.getFilter()
-		searchstr=self.ui.lineEdit.text()
+		searchstr=self.ui.editSearch.text()
 		if searchstr=="" and "search" in filter.keys():
 			del filter["search"]
 		elif searchstr!="":
