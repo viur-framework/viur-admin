@@ -74,8 +74,10 @@ class RawTextEdit(QtGui.QMainWindow):
 
 
 class TextEdit(QtGui.QMainWindow):
-	def __init__(self,  saveCallback, text, parent=None):
+	def __init__(self,  saveCallback, text, validHtml, parent=None):
 		super(TextEdit, self).__init__(parent)
+		self.validHtml = validHtml
+		self.serializer = HtmlSerializer( validHtml )
 		self.ui = Ui_textEditWindow()
 		self.ui.setupUi( self )
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
@@ -107,7 +109,17 @@ class TextEdit(QtGui.QMainWindow):
 		self.saveCallback = saveCallback
 		self.linkEditor = None
 		self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent
-	
+		self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData
+		
+
+	def on_textEdit_insertFromMimeData(self, source):
+		QtGui.QTextEdit.insertFromMimeData( self.ui.textEdit, source )
+		html = self.ui.textEdit.toHtml()
+		start = html.find(">", html.find("<body") )+1
+		html = html[ start : html.rfind("</body>") ]
+		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
+		print( html )
+		self.ui.textEdit.setText( self.serializer.santinize( html ) )
 	
 	def openLinkEditor(self, fragment):
 		if self.linkEditor:
@@ -140,7 +152,6 @@ class TextEdit(QtGui.QMainWindow):
 			if foundStart:
 				foundEnd = True
 				if oldHref!=fragment.charFormat().anchorHref():
-					print("p3")
 					newPos = fragment.position()
 					while( cursor.position() < newPos ):
 						cursor.movePosition( QtGui.QTextCursor.NextCharacter, QtGui.QTextCursor.KeepAnchor )
@@ -211,100 +222,104 @@ class TextEdit(QtGui.QMainWindow):
 		tb.addAction(self.actionPaste)
 		
 	def setupInsertActions(self):
-		tb = QtGui.QToolBar(self)
-		tb.setWindowTitle("Insert Actions")
-		self.addToolBar(tb)
-		self.actionInsertLink = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Link", self)
-		tb.addAction(self.actionInsertLink)
+		if "a" in self.validHtml["validTags"]:
+			tb = QtGui.QToolBar(self)
+			tb.setWindowTitle("Insert Actions")
+			self.addToolBar(tb)
+			self.actionInsertLink = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Link", self)
+			tb.addAction(self.actionInsertLink)
 
 	def setupTextActions(self):
 		tb = QtGui.QToolBar(self)
 		tb.setWindowTitle("Format Actions")
 		self.addToolBar(tb)
+		if "b" in self.validHtml["validTags"]:
+			self.actionTextBold = QtGui.QAction(QtGui.QIcon(rsrcPath + '/bold.png'),
+					"&Bold", self, priority=QtGui.QAction.LowPriority,
+					shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
+					triggered=self.textBold, checkable=True)
+			bold = QtGui.QFont()
+			bold.setBold(True)
+			self.actionTextBold.setFont(bold)
+			tb.addAction(self.actionTextBold)
 
-		self.actionTextBold = QtGui.QAction(QtGui.QIcon(rsrcPath + '/bold.png'),
-				"&Bold", self, priority=QtGui.QAction.LowPriority,
-				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
-				triggered=self.textBold, checkable=True)
-		bold = QtGui.QFont()
-		bold.setBold(True)
-		self.actionTextBold.setFont(bold)
-		tb.addAction(self.actionTextBold)
+		if "i" in self.validHtml["validTags"]:
+			self.actionTextItalic = QtGui.QAction(QtGui.QIcon(rsrcPath + '/italic.png'),
+					"&Italic", self, priority=QtGui.QAction.LowPriority,
+					shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
+					triggered=self.textItalic, checkable=True)
+			italic = QtGui.QFont()
+			italic.setItalic(True)
+			self.actionTextItalic.setFont(italic)
+			tb.addAction(self.actionTextItalic)
+		
+		if "u" in self.validHtml["validTags"]:
+			self.actionTextUnderline = QtGui.QAction(QtGui.QIcon(rsrcPath + '/underline.png'),
+					"&Underline", self, priority=QtGui.QAction.LowPriority,
+					shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
+					triggered=self.textUnderline, checkable=True)
+			underline = QtGui.QFont()
+			underline.setUnderline(True)
+			self.actionTextUnderline.setFont(underline)
+			tb.addAction(self.actionTextUnderline)
 
+		if "p" in self.validHtml["validAttrs"].keys() and "align" in self.validHtml["validAttrs"]["p"]:
+			grp = QtGui.QActionGroup(self, triggered=self.textAlign)
+			# Make sure the alignLeft is always left of the alignRight.
+			if QtGui.QApplication.isLeftToRight():
+				self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+						"&Left", grp)
+				self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+						"C&enter", grp)
+				self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+						"&Right", grp)
+			else:
+				self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+						"&Right", grp)
+				self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+						"C&enter", grp)
+				self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+						"&Left", grp)
 
-		self.actionTextItalic = QtGui.QAction(QtGui.QIcon(rsrcPath + '/italic.png'),
-				"&Italic", self, priority=QtGui.QAction.LowPriority,
-				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
-				triggered=self.textItalic, checkable=True)
-		italic = QtGui.QFont()
-		italic.setItalic(True)
-		self.actionTextItalic.setFont(italic)
-		tb.addAction(self.actionTextItalic)
+			self.actionAlignJustify = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
+					"&Justify", grp)
 
-		self.actionTextUnderline = QtGui.QAction(QtGui.QIcon(rsrcPath + '/underline.png'),
-				"&Underline", self, priority=QtGui.QAction.LowPriority,
-				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
-				triggered=self.textUnderline, checkable=True)
-		underline = QtGui.QFont()
-		underline.setUnderline(True)
-		self.actionTextUnderline.setFont(underline)
-		tb.addAction(self.actionTextUnderline)
+			self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
+			self.actionAlignLeft.setCheckable(True)
+			self.actionAlignLeft.setPriority(QtGui.QAction.LowPriority)
 
+			self.actionAlignCenter.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_E)
+			self.actionAlignCenter.setCheckable(True)
+			self.actionAlignCenter.setPriority(QtGui.QAction.LowPriority)
 
-		grp = QtGui.QActionGroup(self, triggered=self.textAlign)
+			self.actionAlignRight.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
+			self.actionAlignRight.setCheckable(True)
+			self.actionAlignRight.setPriority(QtGui.QAction.LowPriority)
 
-		# Make sure the alignLeft is always left of the alignRight.
-		if QtGui.QApplication.isLeftToRight():
-			self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
-					"&Left", grp)
-			self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
-					"C&enter", grp)
-			self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
-					"&Right", grp)
-		else:
-			self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
-					"&Right", grp)
-			self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
-					"C&enter", grp)
-			self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
-					"&Left", grp)
+			self.actionAlignJustify.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
+			self.actionAlignJustify.setCheckable(True)
+			self.actionAlignJustify.setPriority(QtGui.QAction.LowPriority)
 
-		self.actionAlignJustify = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
-				"&Justify", grp)
+			tb.addActions(grp.actions())
 
-		self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
-		self.actionAlignLeft.setCheckable(True)
-		self.actionAlignLeft.setPriority(QtGui.QAction.LowPriority)
-
-		self.actionAlignCenter.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_E)
-		self.actionAlignCenter.setCheckable(True)
-		self.actionAlignCenter.setPriority(QtGui.QAction.LowPriority)
-
-		self.actionAlignRight.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
-		self.actionAlignRight.setCheckable(True)
-		self.actionAlignRight.setPriority(QtGui.QAction.LowPriority)
-
-		self.actionAlignJustify.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
-		self.actionAlignJustify.setCheckable(True)
-		self.actionAlignJustify.setPriority(QtGui.QAction.LowPriority)
-
-		tb.addActions(grp.actions())
-
-		pix = QtGui.QPixmap(16, 16)
-		pix.fill(QtCore.Qt.black)
-		self.actionTextColor = QtGui.QAction(QtGui.QIcon(pix), "&Color...",
-				self, triggered=self.textColor)
-		tb.addAction(self.actionTextColor)
-
-		self.actionBulletList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/bullet.png'), "Bullet",
-										self,
-										triggered=self.onBulletList)
-		tb.addAction(self.actionBulletList)
-
-		self.actionNumberedList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/numbered.png'), "Numbered",
+		if "font" in self.validHtml["validAttrs"].keys() and "color" in self.validHtml["validAttrs"]["font"]:
+			pix = QtGui.QPixmap(16, 16)
+			pix.fill(QtCore.Qt.black)
+			self.actionTextColor = QtGui.QAction(QtGui.QIcon(pix), "&Color...",
+					self, triggered=self.textColor)
+			tb.addAction(self.actionTextColor)
+	
+		if "ul" in self.validHtml["validTags"]:
+			self.actionBulletList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/bullet.png'), "Bullet",
 											self,
-											triggered=self.onNumberedList)
-		tb.addAction(self.actionNumberedList)
+											triggered=self.onBulletList)
+			tb.addAction(self.actionBulletList)
+		
+		if "ol" in self.validHtml["validTags"]:
+			self.actionNumberedList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/numbered.png'), "Numbered",
+												self,
+												triggered=self.onNumberedList)
+			tb.addAction(self.actionNumberedList)
 
 	def save(self, *args, **kwargs):
 		html = self.ui.textEdit.toHtml()
@@ -419,39 +434,138 @@ class TextEdit(QtGui.QMainWindow):
 		self.alignmentChanged(self.ui.textEdit.alignment())
 
 	def clipboardDataChanged(self):
-		self.actionPaste.setEnabled(
-				len(QtGui.QApplication.clipboard().text()) != 0)
+		if "actionPaste" in dir( self ):
+			self.actionPaste.setEnabled( len(QtGui.QApplication.clipboard().text()) != 0 )
 
 	def mergeFormatOnWordOrSelection(self, format):
 		cursor = self.ui.textEdit.textCursor()
 		if not cursor.hasSelection():
 			cursor.select(QtGui.QTextCursor.WordUnderCursor)
-
 		cursor.mergeCharFormat(format)
 		self.ui.textEdit.mergeCurrentCharFormat(format)
 
 	def fontChanged(self, font):
-		self.actionTextBold.setChecked(font.bold())
-		self.actionTextItalic.setChecked(font.italic())
-		self.actionTextUnderline.setChecked(font.underline())
+		if "actionTextBold" in dir(self ):
+			self.actionTextBold.setChecked(font.bold())
+		if "actionTextItalic" in dir(self ):
+			self.actionTextItalic.setChecked(font.italic())
+		if "actionTextUnderline" in dir(self ):
+			self.actionTextUnderline.setChecked(font.underline())
 
 	def colorChanged(self, color):
-		pix = QtGui.QPixmap(16, 16)
-		pix.fill(color)
-		self.actionTextColor.setIcon(QtGui.QIcon(pix))
+		if "actionTextColor" in dir( self ):
+			pix = QtGui.QPixmap(16, 16)
+			pix.fill(color)
+			self.actionTextColor.setIcon(QtGui.QIcon(pix))
 
 	def alignmentChanged(self, alignment):
 		if alignment & QtCore.Qt.AlignLeft:
-			self.actionAlignLeft.setChecked(True)
+			if "actionAlignLeft" in dir( self ):
+				self.actionAlignLeft.setChecked(True)
 		elif alignment & QtCore.Qt.AlignHCenter:
-			self.actionAlignCenter.setChecked(True)
+			if "actionAlignCenter" in dir( self ):
+				self.actionAlignCenter.setChecked(True)
 		elif alignment & QtCore.Qt.AlignRight:
-			self.actionAlignRight.setChecked(True)
+			if "actionAlignRight" in dir( self ):
+				self.actionAlignRight.setChecked(True)
 		elif alignment & QtCore.Qt.AlignJustify:
-			self.actionAlignJustify.setChecked(True)
+			if "actionAlignJustify" in dir( self ):
+				self.actionAlignJustify.setChecked(True)
 	
 	def on_btnSave_released( self ):
 		self.save()
+
+### Copy&Paste from server/bones/textBone.py
+
+_attrsMargins = ["margin","margin-left","margin-right","margin-top","margin-bottom"]
+_attrsSpacing = ["spacing","spacing-left","spacing-right","spacing-top","spacing-bottom"]
+_attrsDescr = ["title","alt"]
+_defaultTags = {
+	"validTags": [	'font','b', 'a', 'i', 'u', 'span', 'div','p', 'img', 'ol', 'ul','li','acronym', #List of HTML-Tags which are valid
+				'h1','h2','h3','h4','h5','h6', 'table', 'tr', 'td', 'th', 'br', 'hr', 'strong'], 
+	"validAttrs": {	"font": ["color"], #Mapping of valid parameters for each tag (if a tag is not listed here: no parameters allowed)
+					"a": ["href","target"]+_attrsDescr,
+					"acronym": ["title"],
+					"div": ["align","width","height"]+_attrsMargins+_attrsSpacing,
+					"p":["align","width","height"]+_attrsMargins+_attrsSpacing,
+					"span":["align","width","height"]+_attrsMargins+_attrsSpacing,
+					"img":[ "src","target", "width","height", "align" ]+_attrsDescr+_attrsMargins+_attrsSpacing,
+					"table": [ "width","align", "border", "cellspacing", "cellpadding" ]+_attrsDescr,
+					"td" : [ "cellspan", "rowspan", "width", "heigt" ]+_attrsMargins+_attrsSpacing
+				}, 
+	"validStyles": ["font-weight","font-style","text-decoration","color", "display"], #List of CSS-Directives we allow
+	"singleTags": ["br","img", "hr"] # List of tags, which dont have a corresponding end tag
+}
+del _attrsDescr, _attrsSpacing, _attrsMargins
+
+
+class HtmlSerializer( html.parser.HTMLParser ): #html.parser.HTMLParser
+	def __init__(self, validHtml=None ):
+		global _defaultTags
+		html.parser.HTMLParser.__init__(self)
+		self.result = ""
+		self.openTagsList = [] 
+		self.validHtml = validHtml
+
+	def handle_data(self, data):
+		if data:
+			self.result += data
+
+	def handle_charref(self, name):
+		self.result += "&#%s;" % ( name )
+
+	def handle_entityref(self, name): #FIXME
+		if name in htmlentitydefs.entitydefs.keys(): 
+			self.result += "&%s;" % ( name )
+
+	def handle_starttag(self, tag, attrs):
+		""" Delete all tags except for legal ones """
+		if self.validHtml and tag in self.validHtml["validTags"]:
+			self.result = self.result + '<' + tag
+			for k, v in attrs:
+				if not tag in self.validHtml["validAttrs"].keys() or not k in self.validHtml["validAttrs"][ tag ]:
+					continue					
+				if k.lower()[0:2] != 'on' and v.lower()[0:10] != 'javascript':
+					self.result = '%s %s="%s"' % (self.result, k, v)
+			if "style" in [ k for (k,v) in attrs ]:
+				syleRes = {}
+				styles = [ v for (k,v) in attrs if k=="style"][0].split(";")
+				for s in styles:
+					style = s[ : s.find(":") ].strip()
+					value = s[ s.find(":")+1 : ].strip()
+					if style in self.validHtml["validStyles"] and not any( [(x in value) for x in ["\"",":",";"]] ):
+						syleRes[ style ] = value
+				if len( syleRes.keys() ):
+					self.result += " style=\"%s\"" % "; ".join( [("%s: %s" % (k,v)) for (k,v) in syleRes.items()] )
+			if tag in self.validHtml["singleTags"]:
+				self.result = self.result + ' />'
+			else:
+				self.result = self.result + '>'
+				self.openTagsList.insert( 0, tag)    
+
+	def handle_endtag(self, tag):
+		if self.validHtml and tag in self.openTagsList:
+			for endTag in self.openTagsList[ : ]: #Close all currently open Tags until we reach the current one
+				self.result = "%s</%s>" % (self.result, endTag)
+				self.openTagsList.remove( endTag)
+				if endTag==tag:
+					break
+
+	def cleanup(self): #FIXME: vertauschte tags
+		""" Append missing closing tags """
+		for tag in self.openTagsList:
+			endTag = '</%s>' % tag
+			self.result += endTag 
+	
+	def santinize( self, instr ):
+		self.result = ""
+		self.openTagsList = [] 
+		self.feed( instr )
+		self.close()
+		self.cleanup()
+		return( self.result )
+
+### Copy&Paste: End
 
 
 class TextEditBone( QtGui.QWidget ):
@@ -477,12 +591,18 @@ class TextEditBone( QtGui.QWidget ):
 		return( QtCore.QSize( 150, 150 ) )
 
 	def openEditor(self, *args, **kwargs ):
+		global _defaultTags
 		if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
 			editor = RawTextEdit( self.onSave, self.html )
-		elif self.skelStructure[self.boneName]["params"] and "plaintext" in self.skelStructure[self.boneName]["params"].keys():
+		elif self.skelStructure[self.boneName]["params"] and "plaintext" in self.skelStructure[self.boneName]["params"].keys(): #FIXME:!
 			editor = RawTextEdit( self.onSave, self.html, contentType=self.skelStructure[self.boneName]["params"]["plaintext"] )
+		elif "validHtml" in self.skelStructure[self.boneName].keys():
+			if self.skelStructure[self.boneName]["validHtml"]:
+				editor = TextEdit( self.onSave, self.html, self.skelStructure[self.boneName]["validHtml"] )
+			else:
+				editor = RawTextEdit( self.onSave, self.html )
 		else:
-			editor = TextEdit( self.onSave, self.html )
+			editor = TextEdit( self.onSave, self.html, _defaultTags )
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), editor )
 
 	def onSave(self, text ):
