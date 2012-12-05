@@ -50,12 +50,10 @@ class SecurityTokenProvider( QObject ):
 		the whole process speeds up
 	"""
 	
-	refreshIntervall = 5*60*1000 #5 Mins
 	def __init__(self, *args, **kwargs ):
 		super( SecurityTokenProvider, self ).__init__( *args, **kwargs )
 		self.queue = Queue( 5 ) #Queue of valid tokens
 		self.req = None
-		self.timer = None
 	
 	def reset(self):
 		"""
@@ -65,8 +63,6 @@ class SecurityTokenProvider( QObject ):
 			self.queue.get( False )
 		self.req = NetworkService.request("/skey" )
 		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
-		if not self.timer:
-			self.startTimer( self.refreshIntervall )
 	
 	def fetchNext( self ):
 		"""
@@ -94,8 +90,6 @@ class SecurityTokenProvider( QObject ):
 			self.queue.put( skey, False )
 		except QFull:
 			print( "Err: Queue FULL" )
-		if self.queue.qsize()<3:
-			self.fetchNext()
 	
 	def getKey(self):
 		"""
@@ -111,16 +105,6 @@ class SecurityTokenProvider( QObject ):
 				QtCore.QCoreApplication.processEvents()
 		return( skey )
 	
-	def timerEvent(self, event):
-		"""
-			Ensures that the session stays alive and the Keys are valid.
-			Well cache a key for a maximum of self.refreshIntervall Minutes
-		"""
-		if self.queue.qsize()<3:
-			self.fetchNext()
-		else:
-			self.getKey()
-		
 securityTokenProvider = SecurityTokenProvider()
 
 class NetworkService():
