@@ -115,47 +115,47 @@
 <context>
     <name>DocEdit</name>
     <message>
-        <location filename="docEditUI.py" line="21"/>
+        <location filename="docEditUI.py" line="106"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="29"/>
+        <location filename="docEditUI.py" line="107"/>
         <source>Import/Export</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="46"/>
+        <location filename="docEditUI.py" line="109"/>
         <source>New caption</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="53"/>
+        <location filename="docEditUI.py" line="110"/>
         <source>New Image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="60"/>
+        <location filename="docEditUI.py" line="111"/>
         <source>New Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="67"/>
+        <location filename="docEditUI.py" line="112"/>
         <source>Apply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="74"/>
+        <location filename="docEditUI.py" line="113"/>
         <source>New Table</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="81"/>
+        <location filename="docEditUI.py" line="114"/>
         <source>Extensions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEditUI.py" line="94"/>
+        <location filename="docEditUI.py" line="115"/>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
@@ -261,32 +261,32 @@
 <context>
     <name>Edit</name>
     <message>
-        <location filename="editUI.py" line="21"/>
+        <location filename="editUI.py" line="72"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editUI.py" line="35"/>
+        <location filename="editUI.py" line="73"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editUI.py" line="51"/>
+        <location filename="editUI.py" line="75"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editUI.py" line="67"/>
+        <location filename="editUI.py" line="77"/>
         <source>Save and continue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editUI.py" line="60"/>
+        <location filename="editUI.py" line="76"/>
         <source>Save and close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="editUI.py" line="42"/>
+        <location filename="editUI.py" line="74"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
@@ -372,21 +372,8 @@
 <context>
     <name>EditPreview</name>
     <message>
-        <location filename="editpreviewUI.py" line="34"/>
+        <location filename="editpreviewUI.py" line="46"/>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>EmailImport</name>
-    <message>
-        <location filename="emailimportUI.py" line="21"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="emailimportUI.py" line="32"/>
-        <source>Import Starten</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -641,7 +628,7 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchyUI.py" line="21"/>
+        <location filename="hierarchyUI.py" line="56"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
@@ -672,17 +659,17 @@
 <context>
     <name>HierarchySelector</name>
     <message>
-        <location filename="hierarchySelectorUI.py" line="21"/>
+        <location filename="hierarchySelectorUI.py" line="65"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchySelectorUI.py" line="50"/>
+        <location filename="hierarchySelectorUI.py" line="67"/>
         <source>Selected:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchySelectorUI.py" line="57"/>
+        <location filename="hierarchySelectorUI.py" line="68"/>
         <source>Apply</source>
         <translation type="unfinished"></translation>
     </message>
@@ -857,88 +844,88 @@
 <context>
     <name>LoginWindow</name>
     <message>
-        <location filename="loginformUI.py" line="51"/>
+        <location filename="loginformUI.py" line="164"/>
         <source>Portal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="57"/>
+        <location filename="loginformUI.py" line="165"/>
         <source>Server</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="67"/>
+        <location filename="loginformUI.py" line="166"/>
         <source>Captcha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="83"/>
+        <location filename="loginformUI.py" line="168"/>
         <source>Password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="103"/>
+        <location filename="loginformUI.py" line="169"/>
         <source>Accountmannager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="113"/>
+        <location filename="loginformUI.py" line="170"/>
         <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="121"/>
+        <location filename="loginformUI.py" line="171"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="133"/>
+        <location filename="loginformUI.py" line="172"/>
         <source>Login</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="145"/>
+        <location filename="loginformUI.py" line="173"/>
         <source>Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="155"/>
+        <location filename="loginformUI.py" line="175"/>
         <source>Erste Schritte</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="167"/>
+        <location filename="loginformUI.py" line="179"/>
         <source>Accountmanager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="73"/>
+        <location filename="loginformUI.py" line="167"/>
         <source>User</source>
         <comment>xy&lt;</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="148"/>
+        <location filename="loginformUI.py" line="174"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="164"/>
+        <location filename="loginformUI.py" line="178"/>
         <source>Generel settigs</source>
         <translation type="unfinished"></translation>
     </message>
     <message encoding="UTF-8">
-        <location filename="loginformUI.py" line="23"/>
+        <location filename="loginformUI.py" line="163"/>
         <source>ViurAdmin – Hello!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="161"/>
+        <location filename="loginformUI.py" line="177"/>
         <source>About this Software</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginformUI.py" line="158"/>
+        <location filename="loginformUI.py" line="176"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
@@ -956,37 +943,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="38"/>
+        <location filename="adminUI.py" line="135"/>
         <source>Module</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="69"/>
+        <location filename="adminUI.py" line="137"/>
         <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="91"/>
+        <location filename="adminUI.py" line="138"/>
         <source>Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="104"/>
+        <location filename="adminUI.py" line="140"/>
         <source>Beenden</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="110"/>
+        <location filename="adminUI.py" line="141"/>
         <source>Erste Schritte</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="129"/>
+        <location filename="adminUI.py" line="144"/>
         <source>Ausloggen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="21"/>
+        <location filename="adminUI.py" line="133"/>
         <source>ViUR Admin</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1026,12 +1013,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="94"/>
+        <location filename="adminUI.py" line="139"/>
         <source>Advanced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="132"/>
+        <location filename="adminUI.py" line="145"/>
         <source>Tasks</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1041,13 +1028,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="116"/>
+        <location filename="adminUI.py" line="142"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="adminUI.py" line="123"/>
+        <location filename="adminUI.py" line="143"/>
         <source>About</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NetworkService</name>
+    <message>
+        <location filename="network.py" line="161"/>
+        <source>Insecure connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="network.py" line="161"/>
+        <source>Continue in unsecure mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="network.py" line="161"/>
+        <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1113,17 +1118,17 @@
 <context>
     <name>Task</name>
     <message>
-        <location filename="taskUI.py" line="21"/>
+        <location filename="taskUI.py" line="45"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="taskUI.py" line="30"/>
+        <location filename="taskUI.py" line="46"/>
         <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="taskUI.py" line="39"/>
+        <location filename="taskUI.py" line="47"/>
         <source>Execute</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1162,12 +1167,12 @@
 <context>
     <name>Tree</name>
     <message>
-        <location filename="treeUI.py" line="21"/>
+        <location filename="treeUI.py" line="71"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeUI.py" line="58"/>
+        <location filename="treeUI.py" line="73"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1256,22 +1261,22 @@
 <context>
     <name>TreeSelector</name>
     <message>
-        <location filename="treeselectorUI.py" line="77"/>
+        <location filename="treeselectorUI.py" line="99"/>
         <source>Selected:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="85"/>
+        <location filename="treeselectorUI.py" line="100"/>
         <source>Apply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="21"/>
+        <location filename="treeselectorUI.py" line="97"/>
         <source>File selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="73"/>
+        <location filename="treeselectorUI.py" line="98"/>
         <source>Add to selected</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1279,17 +1284,17 @@
 <context>
     <name>Updater</name>
     <message>
-        <location filename="updaterUI.py" line="21"/>
+        <location filename="updaterUI.py" line="72"/>
         <source>ViUR Admin Updater</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="43"/>
+        <location filename="updaterUI.py" line="73"/>
         <source>Check for Updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="50"/>
+        <location filename="updaterUI.py" line="74"/>
         <source>Update now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1324,41 +1329,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="57"/>
+        <location filename="updaterUI.py" line="75"/>
         <source>Exit</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>exportDialog</name>
     <message>
-        <location filename="exportUI.py" line="21"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="exportUI.py" line="25"/>
-        <source>Ab Datum</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="exportUI.py" line="33"/>
-        <source>Bis Datum</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="exportUI.py" line="41"/>
-        <source>Sortieren</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="exportUI.py" line="54"/>
-        <source>Neuste zuerst</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message encoding="UTF-8">
-        <location filename="exportUI.py" line="56"/>
-        <source>Älteste zuerst</source>
+        <location filename="network.py" line="161"/>
+        <source>The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose &quot;abort&quot;!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

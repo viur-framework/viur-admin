@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'edit.ui'
+# Form implementation generated from reading ui file 'ui\edit.ui'
 #
-# Created: Mon Nov 19 10:59:56 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:48 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_Edit(object):
     def setupUi(self, Edit):
         Edit.setObjectName(_fromUtf8("Edit"))
         Edit.resize(820, 621)
-        Edit.setWindowTitle(QtGui.QApplication.translate("Edit", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.verticalLayout = QtGui.QVBoxLayout(Edit)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.tabWidget = QtGui.QTabWidget(Edit)
@@ -32,14 +31,12 @@ class Ui_Edit(object):
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.btnReset = QtGui.QPushButton(Edit)
-        self.btnReset.setText(QtGui.QApplication.translate("Edit", "Reset", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/undo_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnReset.setIcon(icon)
         self.btnReset.setObjectName(_fromUtf8("btnReset"))
         self.horizontalLayout_2.addWidget(self.btnReset)
         self.btnClose = QtGui.QPushButton(Edit)
-        self.btnClose.setText(QtGui.QApplication.translate("Edit", "Close", None, QtGui.QApplication.UnicodeUTF8))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnClose.setIcon(icon1)
@@ -48,7 +45,6 @@ class Ui_Edit(object):
         spacerItem = QtGui.QSpacerItem(254, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
         self.btnPreview = QtGui.QPushButton(Edit)
-        self.btnPreview.setText(QtGui.QApplication.translate("Edit", "Preview", None, QtGui.QApplication.UnicodeUTF8))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/preview_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPreview.setIcon(icon2)
@@ -57,14 +53,12 @@ class Ui_Edit(object):
         spacerItem1 = QtGui.QSpacerItem(254, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.btnSaveClose = QtGui.QPushButton(Edit)
-        self.btnSaveClose.setText(QtGui.QApplication.translate("Edit", "Save and close", None, QtGui.QApplication.UnicodeUTF8))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSaveClose.setIcon(icon3)
         self.btnSaveClose.setObjectName(_fromUtf8("btnSaveClose"))
         self.horizontalLayout_2.addWidget(self.btnSaveClose)
         self.btnSaveContinue = QtGui.QPushButton(Edit)
-        self.btnSaveContinue.setText(QtGui.QApplication.translate("Edit", "Save and continue", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSaveContinue.setIcon(icon3)
         self.btnSaveContinue.setObjectName(_fromUtf8("btnSaveContinue"))
         self.horizontalLayout_2.addWidget(self.btnSaveContinue)
@@ -75,5 +69,20 @@ class Ui_Edit(object):
         QtCore.QMetaObject.connectSlotsByName(Edit)
 
     def retranslateUi(self, Edit):
-        pass
+        Edit.setWindowTitle(QtGui.QApplication.translate("Edit", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnReset.setText(QtGui.QApplication.translate("Edit", "Reset", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnClose.setText(QtGui.QApplication.translate("Edit", "Close", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnPreview.setText(QtGui.QApplication.translate("Edit", "Preview", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSaveClose.setText(QtGui.QApplication.translate("Edit", "Save and close", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSaveContinue.setText(QtGui.QApplication.translate("Edit", "Save and continue", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    Edit = QtGui.QWidget()
+    ui = Ui_Edit()
+    ui.setupUi(Edit)
+    Edit.show()
+    sys.exit(app.exec_())
 

@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/windowicon.png</normaloff>icons/windowicon.png</iconset>
+     <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">

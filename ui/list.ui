@@ -36,7 +36,7 @@
    <item>
     <layout class="QHBoxLayout" name="layoutToolBar">
      <item>
-      <widget class="QLineEdit" name="lineEdit">
+      <widget class="QLineEdit" name="editSearch">
        <property name="minimumSize">
         <size>
          <width>0</width>

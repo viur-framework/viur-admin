@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'hierarchy.ui'
+# Form implementation generated from reading ui file 'ui\hierarchy.ui'
 #
-# Created: Tue Nov 20 12:08:13 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Mon Nov 26 19:34:48 2012
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,7 +18,6 @@ class Ui_Hierarchy(object):
     def setupUi(self, HierarchyApp):
         HierarchyApp.setObjectName(_fromUtf8("HierarchyApp"))
         HierarchyApp.setGeometry(QtCore.QRect(0, 0, 793, 494))
-        HierarchyApp.setWindowTitle(QtGui.QApplication.translate("Hierarchy", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.verticalLayout = QtGui.QVBoxLayout(HierarchyApp)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
@@ -46,7 +45,7 @@ class Ui_Hierarchy(object):
         self.webView.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.webView.setBaseSize(QtCore.QSize(300, 300))
         self.webView.setProperty("url", QtCore.QUrl(_fromUtf8("about:blank")))
-        self.webView.setProperty("zoomFactor", 0.800000011921)
+        self.webView.setProperty("zoomFactor", 0.800000011920929)
         self.webView.setObjectName(_fromUtf8("webView"))
         self.verticalLayout.addWidget(self.splitter)
 
@@ -54,6 +53,17 @@ class Ui_Hierarchy(object):
         QtCore.QMetaObject.connectSlotsByName(HierarchyApp)
 
     def retranslateUi(self, HierarchyApp):
+        HierarchyApp.setWindowTitle(QtGui.QApplication.translate("Hierarchy", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.setSortingEnabled(True)
 
 from PyQt4 import QtWebKit
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    HierarchyApp = QtGui.QWidget()
+    ui = Ui_Hierarchy()
+    ui.setupUi(HierarchyApp)
+    HierarchyApp.show()
+    sys.exit(app.exec_())
+

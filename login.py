@@ -35,7 +35,10 @@ class LoginTask( QtCore.QObject ):
 	def onWarmup(self): #Warmup request has finished
 		if self.req:
 			self.req.deleteLater()
-		self.req = NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ) )
+		if self.isLocalServer:
+			self.req = NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ) )
+		else:
+			self.req = NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ) )
 		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onAuthMethodKnown )
 		
 	

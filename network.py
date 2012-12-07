@@ -15,7 +15,7 @@ import http.cookiejar
 import base64
 from queue import Queue, Empty as QEmpty, Full as QFull
 
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl, QVariant, QObject
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate
 
@@ -28,8 +28,17 @@ if certs:
 	baseSslConfig = QSslConfiguration.defaultConfiguration()
 	baseSslConfig.setCaCertificates( QSslCertificate.fromData( certs ) )
 	QSslConfiguration.setDefaultConfiguration( baseSslConfig )
-
-nam = QNetworkAccessManager()
+	nam = QNetworkAccessManager()
+	_isSecureSSL = True
+else:
+	#We got no valid certificate file - accept all SSL connections
+	nam = QNetworkAccessManager()
+	class SSLFIX( QtCore.QObject ):
+		def onSSLError(self, networkReply,  sslErros ):
+			networkReply.ignoreSslErrors()
+	_SSLFIX = SSLFIX()
+	_SSLFIX.connect( nam, QtCore.SIGNAL("sslErrors(QNetworkReply *,const QList<QSslError>&)" ), _SSLFIX.onSSLError )
+	_isSecureSSL = False
 
 if os.path.exists("mime.types"):
 	mimetypes.read_mime_types("mime.types")
@@ -41,12 +50,10 @@ class SecurityTokenProvider( QObject ):
 		the whole process speeds up
 	"""
 	
-	refreshIntervall = 10*60*1000 #10 Mins
 	def __init__(self, *args, **kwargs ):
 		super( SecurityTokenProvider, self ).__init__( *args, **kwargs )
 		self.queue = Queue( 5 ) #Queue of valid tokens
 		self.req = None
-		self.timer = None
 	
 	def reset(self):
 		"""
@@ -56,8 +63,6 @@ class SecurityTokenProvider( QObject ):
 			self.queue.get( False )
 		self.req = NetworkService.request("/skey" )
 		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
-		if not self.timer:
-			self.startTimer( self.refreshIntervall )
 	
 	def fetchNext( self ):
 		"""
@@ -85,8 +90,6 @@ class SecurityTokenProvider( QObject ):
 			self.queue.put( skey, False )
 		except QFull:
 			print( "Err: Queue FULL" )
-		if self.queue.qsize()<3:
-			self.fetchNext()
 	
 	def getKey(self):
 		"""
@@ -102,18 +105,8 @@ class SecurityTokenProvider( QObject ):
 				QtCore.QCoreApplication.processEvents()
 		return( skey )
 	
-	def timerEvent(self, event):
-		"""
-			Ensures that the session stays alive and the Keys are valid.
-			Well cache a key for a maximum of self.refreshIntervall Minutes
-		"""
-		if self.queue.qsize()<3:
-			self.fetchNext()
-		else:
-			self.getKey()
-		
 securityTokenProvider = SecurityTokenProvider()
-	
+
 class NetworkService():
 	url = None
 	
@@ -147,6 +140,16 @@ class NetworkService():
 
 	@staticmethod
 	def request( url, params=None, secure=False, extraHeaders=None ):
+		global nam, _isSecureSSL
+		if _isSecureSSL==False: #Warn the user of a potential security risk
+			msgRes = QtGui.QMessageBox.warning(	None, QtCore.QCoreApplication.translate("NetworkService", "Insecure connection"),
+											QtCore.QCoreApplication.translate("Updater", "The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose \"abort\"!"), 
+											QtCore.QCoreApplication.translate("NetworkService", "Continue in unsecure mode"),
+											QtCore.QCoreApplication.translate("NetworkService", "Abort") )
+			if msgRes==0:
+				_isSecureSSL=None
+			else:
+				sys.exit(1)
 		if secure:
 			key=securityTokenProvider.getKey()
 			if "?" in url:

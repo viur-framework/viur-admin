@@ -36,7 +36,7 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 
 class HierarchyList( QtGui.QWidget ):
 	
-	def __init__(self, modul, *args, **kwargs ):
+	def __init__(self, modul, repoID=None, *args, **kwargs ):
 		self.modul = modul
 		self.page = 0
 		self.rootNodes = {}
@@ -62,7 +62,10 @@ class HierarchyList( QtGui.QWidget ):
 			self.ui.boxActions.addWidget( self.toolBar )
 		self.overlay = Overlay( self )
 		#event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, config["name"], None )
-		self.loadRootNodes()
+		if not repoID:
+			self.loadRootNodes()
+		else:
+			self.setRootNode( repoID )
 		self.setAcceptDrops( True )
 		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
 		self.lastUploadTime = 0
@@ -70,7 +73,7 @@ class HierarchyList( QtGui.QWidget ):
 		self.ui.webView.hide()
 		self.ui.treeWidget.dropEvent = self.dropEvent
 
-	def setRootNode( self, repoID, repoName ):
+	def setRootNode( self, repoID, repoName=None ):
 		self.currentRootNode = repoID
 		self.ui.treeWidget.clear()
 		self.loadData()
@@ -335,6 +338,21 @@ class HierarchyEditAction( QtGui.QAction ):
 			handler = EditHandler( parent.modul, widget  )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
+
+class HierarchyRepoHandler( EntryHandler ):
+	"""Class for holding one Repo-Entry within the modules-list"""
+	def __init__( self, modul, repo, *args, **kwargs ):
+		super( HierarchyRepoHandler, self ).__init__( modul, *args, **kwargs )	
+		self.repo = repo
+		self.setText(0, repo["name"] )
+
+	def clicked( self ):
+		if not self.widgets:
+			self.addWidget( HierarchyList( self.modul, self.repo["key"]  ) )
+		else:
+			self.focus()
+
+
 class HierarchyCoreHandler( EntryHandler ):
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
@@ -349,7 +367,23 @@ class HierarchyCoreHandler( EntryHandler ):
 			else:
 				self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
-	
+		self.repos = []
+		self.tmpObj = QtGui.QWidget()
+		self.fetchTask = NetworkService.request("/%s/listRootNodes" % self.modul )
+		self.tmpObj.connect(self.fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
+
+	def setRepos( self ):
+		data = NetworkService.decode( self.fetchTask )
+		self.fetchTask.deleteLater()
+		self.fetchTask = None
+		self.tmpObj.deleteLater()
+		self.tmpObj = None
+		self.repos = data
+		if len( self.repos ) > 1:
+			for repo in self.repos:
+				d = HierarchyRepoHandler( self.modul, repo )
+				self.addChild( d )
+
 	def clicked( self ):
 		if not self.widgets:
 			self.addWidget( HierarchyList( self.modul ) )
