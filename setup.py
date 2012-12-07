@@ -31,5 +31,6 @@ setup( name = "ViUR-Admin",
        version = version,
        description = "ViUR Administations-Tool",
        executables = buildList, 
+       options = opts
        )
 
