@@ -12,6 +12,17 @@ http://docs.viur.is
 
 import sys, os, traceback
 from io import StringIO
+
+#Fixing the path
+cwd = os.getcwd()
+prgc = sys.argv[0]
+
+if prgc.startswith("/") or prgc[1]==":":
+	path = os.path.dirname( prgc )
+else:
+	path = os.path.abspath( os.path.dirname( os.path.join( cwd, prgc ) ) )
+os.chdir( path )
+
 from PyQt4 import Qt, QtCore
 from mainwindow import MainWindow
 from handler import *
@@ -48,17 +59,6 @@ def reportError( type, value, tb ):
 		assert urllib.request.urlopen( report_url, params ).read()=="OK"
 	except:
 		traceback.print_exc()
-
-
-#Fixing the path
-cwd = os.getcwd()
-prgc = sys.argv[0]
-
-if prgc.startswith("/") or prgc[1]==":":
-	path = os.path.dirname( prgc )
-else:
-	path = os.path.abspath( os.path.dirname( os.path.join( cwd, prgc ) ) )
-os.chdir( path )
 
 if not os.path.exists( ".git" ): #Report errors only if not beeing a local development instance
 	sys.excepthook = reportError
