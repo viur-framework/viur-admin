@@ -25,8 +25,9 @@ if sys.platform.startswith("win32"):
     fwadmindbg = Executable( script="admin.py", icon=os.path.join( "icons","viur_win.ico" ), targetName="admindbg.exe" )
     buildList.append( fwadmindbg )
 
+opts = {"build_exe": {"include_files": ["app.css", "cacert.pem", "license.txt", "mime.types","plugins", "icons","locales"]} }
     
-setup( name = "ViUR Admin",
+setup( name = "ViUR-Admin",
        version = version,
        description = "ViUR Administations-Tool",
        executables = buildList, 
