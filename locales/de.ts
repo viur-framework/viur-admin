@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="de_DE" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.0" language="de_DE">
 <context>
     <name>Accountmanager</name>
     <message>
@@ -559,12 +560,12 @@
         <source>em</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="120"/>
         <source>Größe</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="121"/>
         <source>Auswählen</source>
         <translation type="unfinished"></translation>
@@ -589,7 +590,7 @@
         <source>Rechts</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="126"/>
         <source>FolgendenText umfließen lassen</source>
         <translation type="unfinished"></translation>
@@ -609,7 +610,7 @@
         <source>Alternativ-Text</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="130"/>
         <source>Verknüpfen mit</source>
         <translation type="unfinished"></translation>
@@ -619,12 +620,12 @@
         <source>-Keine Verlinkung-</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="132"/>
         <source>Vergrößern</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditfileEditUI.py" line="133"/>
         <source>In neuem Fenster öffnen</source>
         <translation type="unfinished"></translation>
@@ -651,7 +652,7 @@
     <message>
         <location filename="hierarchy.py" line="314"/>
         <source>Delete entry %s and everything beneath?</source>
-        <translation>Eintrag und alles darunter löschen?</translation>
+        <translation type="unfinished">Eintrag %s und alles darunter löschen?</translation>
     </message>
     <message>
         <location filename="hierarchy.py" line="316"/>
@@ -694,12 +695,12 @@
         <source>Form</source>
         <translation>Form</translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditlinkEditUI.py" line="38"/>
         <source>Verknüpfungsziel</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="docEditlinkEditUI.py" line="39"/>
         <source>In neuem Fenster öffnen</source>
         <translation type="unfinished"></translation>
@@ -927,7 +928,7 @@
         <source>Generel settigs</source>
         <translation>Allgemeine Einstellungen</translation>
     </message>
-    <message encoding="UTF-8">
+    <message utf8="true">
         <location filename="loginformUI.py" line="163"/>
         <source>ViurAdmin – Hello!</source>
         <translation>ViurAdmin – Hallo!</translation>
