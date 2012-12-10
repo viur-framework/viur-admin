@@ -60,11 +60,13 @@ class TreeList( QtGui.QWidget ):
 	treeItem = TreeItem
 	gridSizeIcon = (128,128)
 	gridSizeList = (64,64)
+	cache = {} #Cache Requests sothat allready visited Dirs load much faster
 	
 	def __init__(self, modul, currentRootNode=None, path=None, *args, **kwargs ):
 		self.modul = modul
 		self.page = 0
 		self.rootNodes = {}
+		self.flushList = [] #List of lambda: functions, which flush a set of cache-entries
 		config = conf.serverConfig["modules"][ modul ]
 		self.currentRootNode = currentRootNode
 		self.path = path or []
@@ -107,6 +109,26 @@ class TreeList( QtGui.QWidget ):
 		self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.onDataChanged )
 		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
 		self.startDrag = False
+
+	def flushCache(self, repo, path=None ):
+		"""
+			Remove a path (or a whole RootNode) from Cache, sothat new requests
+			wont be served from cache
+			
+			@param rootNode: RootNode of the repository
+			@type rootNode: String
+			@param path: (Optional) path with will be marked dirty
+			@type path: String
+		"""
+		if not repo in TreeList.cache.keys():
+			return
+		if not path:
+			TreeList.cache[ repo ] = {}
+		else:
+			try:
+				del TreeList.cache[repo][path]
+			except KeyError:
+				pass
 
 	def mousePressEvent(self, event ):
 		if event.buttons() == QtCore.Qt.LeftButton and self.ui.listWidget.selectedItems():
@@ -184,7 +206,6 @@ class TreeList( QtGui.QWidget ):
 					files.append( item.data["name"] )
 			self.clipboard = (self.currentRootNode, self.getPath(), True, files, dirs )
 
-	
 	def pathListDragMoveEvent(self, event):
 		event.accept()
 
@@ -213,15 +234,28 @@ class TreeList( QtGui.QWidget ):
 				return
 			self.reloadData()
 
-		
-	def reloadData(self, queryObj=None ):
+	def reloadData( self, queryObj=None ):
 		if self.request:
 			self.request.deleteLater()
-		self.overlay.inform( self.overlay.BUSY )
-		self.updatePathList()
-		self.request = NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":self.getPath()} )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
-	
+			self.request = None
+		if self.flushList:
+			while 1:
+				try:
+					task = self.flushList.pop()
+				except IndexError:
+					break
+				task()
+		path = self.getPath()
+		if not self.currentRootNode in TreeList.cache.keys():
+			TreeList.cache[ self.currentRootNode ] = {}
+		if path in TreeList.cache[ self.currentRootNode ].keys() and not queryObj: # We have this Cached
+			self.updatePathList()
+			self.setData( TreeList.cache[ self.currentRootNode ][ path ] )
+		else: # We need to fetch this
+			self.overlay.inform( self.overlay.BUSY )
+			self.updatePathList()
+			self.request = NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path} )
+			self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
 	
 	def updatePathList(self ):
 		foldericon= "icons/menu/folder_small.png"
@@ -252,6 +286,9 @@ class TreeList( QtGui.QWidget ):
 			data = NetworkService.decode( self.request )
 			self.request.deleteLater()
 			self.request = None
+			event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modul, self )
+		if self.getPath()!=None:
+			TreeList.cache[ self.currentRootNode ][ self.getPath() ] = data
 		self.ui.listWidget.clear()
 		for dir in data["subdirs"]:
 			self.ui.listWidget.addItem( self.dirItem( dir ) )
@@ -269,6 +306,7 @@ class TreeList( QtGui.QWidget ):
 	def mkdir(self, modulName, rootNode, path, dirName):
 		if self.request:
 			self.request.deleteLater()
+		self.flushList.append( lambda*args, **kwargs: self.flushCache(rootNode, path) )
 		self.request = NetworkService.request("/%s/mkDir"%modulName, {"rootNode":rootNode, "path":path, "dirname":dirName} )
 		self.connect( self.request, QtCore.SIGNAL("finished()"), self.reloadData )
 		self.connect( self.request, QtCore.SIGNAL("error (QNetworkReply::NetworkError)"), self.showError )
@@ -349,6 +387,7 @@ class TreeList( QtGui.QWidget ):
 										"path": path, 
 										"name": dir, 
 										"type": "dir" } ) )
+		self.flushList.append( lambda *args, **kwargs:  self.flushCache( rootNode, path ) )
 		self.connect( self.request, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onQueryAggregationFinished )
 		self.overlay.inform( self.overlay.BUSY )
 	
@@ -380,12 +419,15 @@ class TreeList( QtGui.QWidget ):
 									"destpath": path,
 									"deleteold": "1" if doMove else "0",
 									"type":"dir"} ) )
+		self.flushList.append( lambda *args, **kwargs: self.flushCache(rootNode, path) ) #Target Path
+		self.flushList.append( lambda *args, **kwargs: self.flushCache(srcRepo, srcPath) ) #Source Path
 		self.connect( self.request, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onQueryAggregationFinished )
 		self.overlay.inform( self.overlay.BUSY )
 	
 	def rename(self, rootNode, path, oldName, newName ):
 		if self.request:
 			self.request.deleteLater()
+		self.flushList.append( lambda *args, **kwargs: self.flushCache(rootNode, path) )
 		self.request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path":path, "src": oldName, "dest":newName } )
 		self.connect( self.request, QtCore.SIGNAL("finished()"), self.reloadData )
 		self.overlay.inform( self.overlay.BUSY )
@@ -401,7 +443,6 @@ class TreeEdit( Edit ):
 		self.path = path
 		super( TreeEdit, self ).__init__( modul, id, *args, **kwargs )
 	
-
 	def reloadData(self):
 		if self.id: #We are in Edit-Mode
 			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path } )
@@ -413,7 +454,9 @@ class TreeEdit( Edit ):
 		if self.request:
 			self.request.deleteLater()
 			self.request = None
+		print( data )
 		data.update( {"rootNode": self.rootNode, "path": self.path } )
+		print( data )
 		if self.id:
 			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True )
 		else:
@@ -421,7 +464,7 @@ class TreeEdit( Edit ):
 		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onSaveResult )
 
 	def emitEntryChanged( self, modul ):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject)'), modul )
+		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), modul, self )
 
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):

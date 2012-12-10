@@ -436,88 +436,8 @@ class UploadHandler( ):
 		if self._mousePressEvent:
 			self._mousePressEvent( event )
 
-class CacheHandler( ):
-	"""Caches Requests sothat allready visited Dirs load much faster"""
-	cache = {}
-	
-	def __init__(self, *args, **kwargs):
-		self.flushList = []
-		super( CacheHandler, self ).__init__(*args, **kwargs)
 
-	
-	def flushCache(self, repo, path=None ):
-		if not repo in FileList.cache.keys():
-			return
-		if not path:
-			FileList.cache[ repo ] = {}
-		else:
-			try:
-				del FileList.cache[repo][path]
-			except KeyError:
-				pass
-	
-	def reloadData( self, queryObj=None ):
-		if self.request:
-			self.request.deleteLater()
-			self.request = None
-		if self.flushList:
-			while 1:
-				try:
-					task = self.flushList.pop()
-				except IndexError:
-					break
-				task()
-		path = self.getPath()
-		if not self.currentRootNode in FileList.cache.keys():
-			FileList.cache[ self.currentRootNode ] = {}
-		if path in FileList.cache[ self.currentRootNode ].keys() and not queryObj: # We have this Cached
-			self.updatePathList()
-			self.setData( FileList.cache[ self.currentRootNode ][ path ] )
-		else: # We need to fetch this
-			self.overlay.inform( self.overlay.BUSY )
-			self.updatePathList()
-			self.request = NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path} )
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
-
-	def onQueryAggregationFinished(self, *args, **kwargs):
-		if self.request.isIdle(): #This was the last one
-			if self.flushList:
-				while 1:
-					try:
-						task = self.flushList.pop()
-					except IndexError:
-						break
-					task()
-		super( CacheHandler, self ).onQueryAggregationFinished( *args, **kwargs )
-		
-	def setData( self, data=None ):
-		if not data:
-			data = NetworkService.decode( self.request )
-			self.request.deleteLater()
-			self.request=None
-		if self.getPath()!=None:
-			FileList.cache[ self.currentRootNode ][ self.getPath() ] = data
-		super( CacheHandler, self ).setData( data )
-
-	def delete( self, rootNode, path, files, dirs ):
-		super( CacheHandler, self ).delete( rootNode, path, files, dirs )
-		self.flushList.append( lambda *args, **kwargs:  self.flushCache( rootNode, path ) )
-
-	def copy(self, clipboard, rootNode, path ):
-		srcRepo, srcPath, doMove, files, dirs = clipboard
-		super( CacheHandler, self ).copy( clipboard, rootNode, path )
-		self.flushList.append( lambda *args, **kwargs: self.flushCache(rootNode, path) )
-		self.flushList.append( lambda *args, **kwargs: self.flushCache(srcRepo, srcPath) )
-
-	def rename(self, rootNode, path, oldName, newName ):
-		super( CacheHandler, self ).rename( rootNode, path, oldName, newName )
-		self.flushList.append( lambda *args, **kwargs: self.flushCache(rootNode, path) )
-
-	def mkdir(self, modulName, rootNode, path, dirName):
-		super( CacheHandler, self ).mkdir( modulName, rootNode, path, dirName )
-		self.flushList.append( lambda*args, **kwargs: self.flushCache(rootNode, path) )
-
-class FileList( CacheHandler, UploadHandler, TreeList ):
+class FileList( UploadHandler, TreeList ):
 	treeItem = FileItem
 	
 	def on_btnSearch_released(self, *args, **kwargs):

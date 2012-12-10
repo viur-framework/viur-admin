@@ -2,7 +2,7 @@
 from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, RessourceManager
-from handler.file import  FileItem, UploadHandler, CacheHandler
+from handler.file import  FileItem, UploadHandler
 from bones.treeitem import BaseTreeItemBoneSelector, TreeItemEditBone
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
@@ -123,7 +123,7 @@ class FileEditBone( TreeItemEditBone ):
 			self.entry.setText( self.selection["name"] )
 			self.resMgr.loadFile( self.selection["dlkey"] )
 
-class BaseFileBoneSelector( CacheHandler, UploadHandler, BaseTreeItemBoneSelector ):
+class BaseFileBoneSelector( UploadHandler, BaseTreeItemBoneSelector ):
 	treeItem = FileItem
 	lastState = None
 	
