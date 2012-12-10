@@ -178,6 +178,10 @@ class BaseTreeItemBoneSelector( TreeList ):
 		else:
 			super( BaseTreeItemBoneSelector, self ).on_listWidget_itemDoubleClicked( item )
 	
+	def on_listSelected_itemDoubleClicked(self, item):
+		self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
+		self.selection.remove( item.data )
+	
 	def on_btnAddSelected_released(self, *args, **kwargs ):
 		items = self.ui.listWidget.selectedItems()
 		for item in items:
