@@ -199,7 +199,6 @@ class BaseTreeItemBoneSelector( TreeList ):
 			self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
 			self.selection.remove( item.data )
 	
-		
 	def dropEvent(self, event):
 		if event.source()==self.ui.listWidget and self.ui.listSelected.childrenRect().contains( self.ui.listSelected.mapFromGlobal( self.mapToGlobal(event.pos()) ) ):
 			if not self.selection:
