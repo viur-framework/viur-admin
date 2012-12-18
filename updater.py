@@ -35,7 +35,7 @@ from tempfile import NamedTemporaryFile
 
 
 class Updater( QtGui.QMainWindow ):
-	baseURL = "https://viur-is.appspot.com"
+	baseURL = "https://viur-site.appspot.com"
 	def __init__( self, *args, **kwargs ):
 		super( Updater, self ).__init__( *args, **kwargs )
 		self.log = []
@@ -105,7 +105,7 @@ class Updater( QtGui.QMainWindow ):
 					if fn in skel.keys() and skel[fn]:
 						self.targetVersion = rev
 						self.targetDL = skel[fn]["dlkey"]
-						self.addLog( "%s: %s" % ( rev, skel["descr_deu"] ) )
+						self.addLog( "%s: %s" % ( rev, skel["changelog"] ) )
 						needsUpdate = True
 		if needsUpdate:
 			self.showUpdateBtn()
