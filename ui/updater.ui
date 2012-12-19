@@ -25,7 +25,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>icons/viur_logo.png</pixmap>
+       <pixmap>icons/viur-updater.png</pixmap>
       </property>
      </widget>
     </item>
