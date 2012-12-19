@@ -62,17 +62,20 @@
     <message>
         <location filename="calender.py" line="32"/>
         <source>yyyy</source>
-        <translation>jjjj</translation>
+        <translatorcomment>Bitte so lassen</translatorcomment>
+        <translation type="unfinished">yyyy</translation>
     </message>
     <message>
         <location filename="calender.py" line="35"/>
         <source>MM.yyyy</source>
-        <translation>mm.jjjj</translation>
+        <translatorcomment>Bitte so lassen</translatorcomment>
+        <translation type="unfinished">MM.yyyy</translation>
     </message>
     <message>
         <location filename="calender.py" line="38"/>
         <source>dd.MM.yyyy</source>
-        <translation>tt.mm.jjjj</translation>
+        <translatorcomment>Bitte so lassen</translatorcomment>
+        <translation type="unfinished">dd.MM.yyyy</translation>
     </message>
 </context>
 <context>

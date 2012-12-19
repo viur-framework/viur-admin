@@ -3,6 +3,7 @@ from network import NetworkService
 from event import event
 from ui.calenderlistUI import Ui_List
 from handler.list import ListCoreHandler, List
+from utils import RegisterQueue, Overlay, formatString, QueryAggregator
 from config import conf
 
 class CalenderList( List ):
@@ -10,6 +11,10 @@ class CalenderList( List ):
 		QtGui.QWidget.__init__( self, *args, **kwargs )
 		self.ui = Ui_List()
 		self.ui.setupUi( self )
+		self.overlay = Overlay( self )
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.tableView.verticalHeader().hide()
 		super( CalenderList, self ).__init__( modul, fields, filter, *args, **kwargs )
 		self.filterTypes = {	"none": QtCore.QCoreApplication.translate("CalenderList", "unfiltered"),
 						"year": QtCore.QCoreApplication.translate("CalenderList", "Year"), 
@@ -51,7 +56,7 @@ class CalenderList( List ):
 				del filter["startdate$lt"]
 		elif self.currentFilterMode=="year":
 			filter["startdate$gt"] = self.ui.deFilter.date().toString("01.01.yyyy")
-			filter["startdate$lt"] = "01.01.%0.4i" % self.ui.deFilter.date().year()+1
+			filter["startdate$lt"] = "01.01.%0.4i" % (self.ui.deFilter.date().year()+1)
 		elif self.currentFilterMode=="month":
 			filter["startdate$gt"] = self.ui.deFilter.date().toString("01.MM.yyyy")
 			#Calculate enddate: set Day of Month to 01; add 33 Days, read Year+Month

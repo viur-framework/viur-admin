@@ -20,7 +20,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLineEdit" name="lineEdit">
+      <widget class="QLineEdit" name="editSearch">
        <property name="text">
         <string>Search</string>
        </property>
@@ -33,7 +33,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/search.png</normaloff>icons/actions/search.png</iconset>
+         <normaloff>icons/actions/search_small.png</normaloff>icons/actions/search_small.png</iconset>
        </property>
       </widget>
      </item>
