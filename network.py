@@ -40,8 +40,9 @@ else:
 	_SSLFIX.connect( nam, QtCore.SIGNAL("sslErrors(QNetworkReply *,const QList<QSslError>&)" ), _SSLFIX.onSSLError )
 	_isSecureSSL = False
 
+mimetypes.init()
 if os.path.exists("mime.types"):
-	mimetypes.read_mime_types("mime.types")
+	mimetypes.types_map.update( mimetypes.read_mime_types("mime.types") )
 
 class SecurityTokenProvider( QObject ):
 	"""
