@@ -612,7 +612,7 @@ class TextEditBone( QtGui.QWidget ):
 	def unserialize( self, data ):
 		if not self.boneName in data.keys():
 			return
-		self.html = data[ self.boneName ].replace( "target=\"_blank\" href=\"", "href=\"!" )
+		self.html = data[ self.boneName ].replace( "target=\"_blank\" href=\"", "href=\"!" ) if data else ""
 		self.webView.setHtml (self.html)
 
 	def serialize(self):
