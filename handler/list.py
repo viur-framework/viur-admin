@@ -440,9 +440,9 @@ class ListDeleteAction( QtGui.QAction ):
 			entryData = self.parentWidget().model.getData()[ indexes[0].row() ]
 			config = conf.serverConfig["modules"][ self.parentWidget().modul ]
 			if "formatstring" in config.keys():
-				question = QtCore.QCoreApplication.translate("ListHandler", "Delete entry %s and everything beneath?") % formatString( config["formatstring"],  entryData )
+				question = QtCore.QCoreApplication.translate("ListHandler", "Delete entry %s?") % formatString( config["formatstring"],  entryData )
 			else:
-				question = QtCore.QCoreApplication.translate("ListHandler", "Delete this entry and everything beneath?")
+				question = QtCore.QCoreApplication.translate("ListHandler", "Delete this entry?")
 			if QtGui.QMessageBox.question(	self.parentWidget(),
 										QtCore.QCoreApplication.translate("ListHandler", "Confirm delete"),
 										question,
