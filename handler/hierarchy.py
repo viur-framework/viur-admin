@@ -253,7 +253,10 @@ class HierarchyList( QtGui.QWidget ):
 		self.connect(self.request, QtCore.SIGNAL("finished()"), self.setHTML )
 	
 	def setHTML( self ):
-		html = bytes( self.request.readAll() )
+		try: #This request might got canceled meanwhile..
+			html = bytes( self.request.readAll() )
+		except:
+			return
 		self.request.deleteLater()
 		self.request= None
 		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
