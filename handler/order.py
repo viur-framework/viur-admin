@@ -2,7 +2,6 @@ from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
-from utils import QueryAggregator
 
 def askYesNo( question ):
 	return( QtGui.QMessageBox.question(	None,

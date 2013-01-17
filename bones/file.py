@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
-from utils import RegisterQueue, RessourceManager
-from handler.file import  FileItem, UploadHandler
+from utils import RegisterQueue
+from network import RemoteFile
+from handler.file import  FileItem
 from bones.treeitem import BaseTreeItemBoneSelector, TreeItemEditBone
+from widgets.file import FileWidget
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 
@@ -15,15 +17,10 @@ def formatBoneDescr( data ):
 
 class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 
-	def load(self, dlkey ):
-		self.resMgr = RessourceManager()
-		self.connect( self.resMgr, QtCore.SIGNAL("fileAvailable(PyQt_PyObject)" ), self.setImage )
-		self.resMgr.loadFile( dlkey )
-
-	def setImage( self, dlkey ):
-		fn = self.resMgr.getFileName( dlkey )
+	def setImage( self, remoteFile ):
+		fn = remoteFile.getFileName( )
 		try:
-			self.cache[ dlkey ] = QtGui.QImage( fn )
+			self.cache[ remoteFile.dlKey ] = QtGui.QImage( fn )
 		except:
 			pass
 		self.emit( QtCore.SIGNAL('repaintRequest()') )
@@ -42,7 +39,7 @@ class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 			return
 		if not record["dlkey"] in self.cache.keys():
 			self.cache[ record["dlkey"] ] = None
-			self.load( record["dlkey"] )
+			RemoteFile( record["dlkey"], successHandler=self.setImage )
 			return
 		elif not self.cache[ record["dlkey"] ]: #Image not loaded yet
 			return
@@ -52,6 +49,7 @@ class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 
 
 class FileEditBone( TreeItemEditBone ):
+	treeItem = FileItem
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		QtGui.QWidget.__init__( self )
 		self.skelStructure = skelStructure
@@ -61,8 +59,6 @@ class FileEditBone( TreeItemEditBone ):
 		self.format = "$(name)"
 		if "format" in skelStructure[ boneName ].keys():
 			self.format = skelStructure[ boneName ]["format"]
-		self.resMgr = RessourceManager()
-		self.connect( self.resMgr, QtCore.SIGNAL("fileAvailable(PyQt_PyObject)"), self.onToolTipAvaiable )
 		self.layout = QtGui.QVBoxLayout( self )
 		self.listWidget = QtGui.QListWidget( self )
 		self.listWidget.setViewMode( QtGui.QListView.IconMode )
@@ -96,11 +92,11 @@ class FileEditBone( TreeItemEditBone ):
 			self.selection = []
 		self.layout.addWidget( self.w )
 	
-	def onToolTipAvaiable(self, dlkey):
+	def onToolTipAvaiable(self, remoteFile):
 		"""
 			Called, as soon the File displayed inside the Tooltip is ready
 		"""
-		self.entry.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( self.resMgr.getFileName( dlkey ), str( self.selection["name"] ) ) )
+		self.entry.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( remoteFile.getFileName( ), str( self.selection["name"] ) ) )
 	
 
 	def unserialize( self, *args, **kwargs ):
@@ -121,22 +117,13 @@ class FileEditBone( TreeItemEditBone ):
 			self.listWidget.reset()
 		elif isinstance( self.selection, dict ):
 			self.entry.setText( self.selection["name"] )
-			self.resMgr.loadFile( self.selection["dlkey"] )
+			RemoteFile( self.selection["dlkey"], successHandler=self.onToolTipAvaiable )
 
-class BaseFileBoneSelector( UploadHandler, BaseTreeItemBoneSelector ):
+class BaseFileBoneSelector( BaseTreeItemBoneSelector ):
 	treeItem = FileItem
-	lastState = None
 	
 	def __init__(self, *args, **kwargs ):
-		self._mousePressEvent = None
-		if BaseFileBoneSelector.lastState:
-			super( BaseFileBoneSelector, self ).__init__( *args, currentRootNode=BaseFileBoneSelector.lastState[0], path=BaseFileBoneSelector.lastState[1], **kwargs )
-		else:
-			super( BaseFileBoneSelector, self ).__init__( *args, **kwargs )
-	
-	def reloadData(self, *args, **kwargs ):
-		BaseFileBoneSelector.lastState = ( self.currentRootNode, self.path )
-		super( BaseFileBoneSelector, self ).reloadData( *args, **kwargs )
+		return( super( BaseFileBoneSelector, self ).__init__( widget = FileWidget, *args, **kwargs ) )
 	
 	def getBreadCrumb( self ):
 		return( QtCore.QCoreApplication.translate("FileBone", "Select file"), QtGui.QIcon( QtGui.QPixmap( "icons/actions/relationalselect.png" ) ) )

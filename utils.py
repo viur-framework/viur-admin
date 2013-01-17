@@ -5,7 +5,6 @@ import math
 import os, os.path
 import os
 from config import conf
-from hashlib import sha1
 from network import NetworkService
 
 class RegisterQueue():
@@ -271,100 +270,4 @@ def showAbout( parent=None ):
 	appDescr += "Revision: %s" % version
 	QtGui.QMessageBox.about( parent, appName, appDescr )
 
-class QueryAggregator( QtCore.QObject ):
-	"""
-		Aggregates multiple QNetworkResults into one place.
-		Informs the creator whenever an Query finishes processing and allows
-		easy checking if there more queries pending.
-	"""
-	class QueryWrapper( QtCore.QObject ):
-		def __init__( self, query, *args, **kwargs ):
-			super( QueryAggregator.QueryWrapper, self ).__init__(*args, **kwargs)
-			self.query = query
-			self.connect( query, QtCore.SIGNAL("finished()"), self.onFinished )
-		
-		def onFinished(self):
-			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-			self.query.deleteLater()
-	
-	def __init__(self, *args, **kwargs ):
-		super( QueryAggregator, self ).__init__(*args, **kwargs)
-		self.querys = []
-	
-	def addQuery( self, query ):
-		"""
-			Add an QNetworkResult to the Aggregator
-		"""
-		wrappedQuery = QueryAggregator.QueryWrapper( query )
-		self.querys.append( wrappedQuery )
-		self.connect( wrappedQuery, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onFinished )
-	
-	def onFinished(self, queryWrapper ):
-		self.querys.remove( queryWrapper )
-		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)") , queryWrapper.query )
-		queryWrapper.query.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), queryWrapper.query )
-		queryWrapper.deleteLater()
-	
-	def isIdle(self):
-		"""
-			Check whenever no more querys are pending.
-			@returns: Bool
-		"""
-		return( len(self.querys) == 0 )
-	
-	def __del__(self):
-		for req in self.querys:
-			req.abort()
-			req.deleteLater()
-	
-	def abort(self):
-		for req in self.querys:
-			req.abort()
 
-def getCachedFileName( dlkey ):
-	"""Calculates the name of the local (cached) file"""
-	fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest() )
-	return( fileName )
-
-def cachedFileExists( dlkey ):
-	"""Checks if the file is already cached """
-	fileName = getCachedFileName( dlkey )
-	return( os.path.isfile( fileName ) )
-		
-class RessourceManager( QueryAggregator ):
-	"""This is a static ressource Mannager
-	Its loads a File from the server if needed and Caches it locally sothat further requests will 
-	not bother the server again"""
-	
-	def mkCb(self, req, dlkey ):
-		return( lambda: self.onFileAvaiable( req, dlkey ) )
-	
-	def loadFile(self, dlkey ):
-		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest() )
-		if not os.path.isfile( fileName ):
-			if not dlkey.lower().startswith("http://") or not dlkey.lower().startswith("https://"):
-				dlkey = "/file/view/%s/file.dat" % dlkey
-			req = NetworkService.request( dlkey )
-			self.connect( req, QtCore.SIGNAL("finished()"), self.mkCb( req, dlkey ) )
-		else:
-			self.emit( QtCore.SIGNAL("fileAvailable(PyQt_PyObject)"), dlkey )
-	
-	def onFileAvaiable( self, request, dlkey ):
-		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest() )
-		data = request.readAll()
-		open( fileName, "w+b" ).write( data )
-		self.emit( QtCore.SIGNAL("fileAvailable(PyQt_PyObject)"), dlkey )
-	
-	def getFileName( self, dlkey ):
-		"""Generic Function to download a file if needed and returning the local Filename"""
-
-		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest() )
-		return( fileName )
-
-	def getFileContents( self, dlkey ):
-		"""Returns the content of the file as bytes"""
-
-		fileName = self.getFileName( dlkey )
-		if not fileName:
-			return( b"" )
-		return( open( fileName, "rb" ).read() )

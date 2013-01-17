@@ -3,7 +3,7 @@ from network import NetworkService
 from event import event
 from ui.calenderlistUI import Ui_List
 from handler.list import ListCoreHandler, List
-from utils import RegisterQueue, Overlay, formatString, QueryAggregator
+from utils import RegisterQueue, Overlay, formatString
 from config import conf
 
 class CalenderList( List ):

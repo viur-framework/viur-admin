@@ -11,7 +11,7 @@ from ui.createtableUI import Ui_DialogCreateTable
 from event import event
 from utils import RegisterQueue, Overlay
 from event import event
-from handler.file import FileUploader
+#from handler.file import FileUploader
 from handler.edit import Edit
 import urllib.parse, os, os.path, sys
 from network import NetworkService

@@ -7,6 +7,7 @@ from handler.tree import TreeList
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate
+from widgets.tree import TreeWidget, TreeItem, DirItem
 
 class TreeItemViewBoneDelegate( RelationalViewBoneDelegate ):
 	pass
@@ -88,32 +89,40 @@ class TreeItemEditBone( QtGui.QWidget ):
 		else:
 			return( None )
 
-class BaseTreeItemBoneSelector( TreeList ):
-	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None,  *args, **kwargs ):
+class BaseTreeItemBoneSelector( QtGui.QWidget ):
+	treeItem = None #Allow override of these on class level
+	dirItem = None
+	
+	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None, widget=None, *args, **kwargs ):
+		super( BaseTreeItemBoneSelector, self ).__init__( parent, *args, **kwargs )
 		self.modul = skelStructure[ boneName ]["type"].split(".")[1]
 		self.boneName = boneName
 		self.skelStructure = skelStructure
 		self.selection = selection
 		self.setSelection = setSelection
 		self.multiple = skelStructure[boneName]["multiple"]
-		QtGui.QWidget.__init__( self, parent )
 		self.ui = Ui_TreeSelector()
 		self.ui.setupUi( self )
-		self.overlay = Overlay( self )
-		self.toolBar = QtGui.QToolBar( self.ui.wdgActions )
-		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
-		super( BaseTreeItemBoneSelector, self ).__init__( self.modul, *args, **kwargs )
-		self.ui.boxActions.insertWidget( 0, self.toolBar )
-		queue = RegisterQueue()
-		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, self )
-		for item in queue.getAll():
-			i = item( self )
-			if isinstance( i, QtGui.QAction ):
-				self.toolBar.addAction( i )
-				self.ui.listWidget.addAction( i )
-			else:
-				self.toolBar.addWidget( i )
-		self.setAcceptDrops( True )
+		layout = QtGui.QHBoxLayout( self.ui.listWidget )
+		self.ui.listWidget.setLayout( layout )
+		if not widget:
+			widget = TreeWidget
+		self.tree = widget( self.ui.listWidget, self.modul, None, None, treeItem=self.treeItem, dirItem=self.dirItem )
+		layout.addWidget( self.tree )
+		self.tree.show()
+		#self.toolBar = QtGui.QToolBar( self.ui.wdgActions )
+		#self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		#self.ui.boxActions.insertWidget( 0, self.toolBar )
+		#queue = RegisterQueue()
+		#event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, self )
+		#for item in queue.getAll():
+		#	i = item( self )
+		#	if isinstance( i, QtGui.QAction ):
+		#		self.toolBar.addAction( i )
+		#		self.ui.listWidget.addAction( i )
+		#	else:
+		#		self.toolBar.addWidget( i )
+		#self.setAcceptDrops( True )
 		#self.clipboard = None  #(str repo,str path, bool doMove, list treeItems, list dirs )
 		if not self.multiple:
 			self.ui.listSelected.hide()
@@ -129,21 +138,9 @@ class BaseTreeItemBoneSelector( TreeList ):
 		self.delShortcut.setKey( QtGui.QKeySequence.Delete )
 		self.connect( self.delShortcut, QtCore.SIGNAL("activated()"), self.onDeleteCurrentSelection )
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
-		
-	def onSetDefaultRootNode(self):
-		super( BaseTreeItemBoneSelector, self ).onSetDefaultRootNode()
-		if self.rootNodes and len( self.rootNodes )>1:
-			self.ui.cbRootNode.blockSignals( True )
-			self.ui.cbRootNode.show()
-			self.ui.cbRootNode.clear()
-			for repo in self.rootNodes:
-				self.ui.cbRootNode.addItem( repo["name"] )
-			self.ui.cbRootNode.setCurrentIndex( 0 )
-			self.ui.cbRootNode.blockSignals( False )
-		else:
-			self.ui.cbRootNode.hide()
-	
-	def on_cbRootNode_currentIndexChanged( self, text ):
+		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
+
+	def on_cbRootNode_currentIndexChanged( self, text ): #Fixme: currently disabled
 		if not isinstance( text, str ):
 			return
 		for repo in self.rootNodes:
@@ -163,7 +160,7 @@ class BaseTreeItemBoneSelector( TreeList ):
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 	
 	def on_listWidget_itemDoubleClicked(self, item):
-		if isinstance( item, self.treeItem ):
+		if isinstance( item, self.tree.treeItem ):
 			if not self.multiple:
 				self.setSelection( [item.data] )
 				event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
@@ -175,8 +172,6 @@ class BaseTreeItemBoneSelector( TreeList ):
 					return
 				self.ui.listSelected.addItem( self.treeItem( item.data ) )
 				self.selection.append( item.data )
-		else:
-			super( BaseTreeItemBoneSelector, self ).on_listWidget_itemDoubleClicked( item )
 	
 	def on_listSelected_itemDoubleClicked(self, item):
 		self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )

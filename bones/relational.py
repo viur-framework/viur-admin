@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
-from utils import RegisterQueue,  formatString, QueryAggregator
+from utils import RegisterQueue,  formatString
 from handler.list import ListTableModel
 from ui.relationalselectionUI import Ui_relationalSelector
 from network import NetworkService
