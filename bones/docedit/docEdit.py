@@ -369,7 +369,7 @@ class TextEdit(QtGui.QMainWindow):
 		self.mergeFormatOnWordOrSelection(fmt)
 
 	def onBulletList(self, *args, **kwargs):
-		cursor = self.ui.textEdit.textCursor()
+		cursor = self.textEdit.textCursor()
 		style = QtGui.QTextListFormat.ListDisc
 		cursor.beginEditBlock()
 		blockFmt = cursor.blockFormat()
@@ -387,7 +387,7 @@ class TextEdit(QtGui.QMainWindow):
 
 
 	def onNumberedList(self, *args, **kwargs ):
-		cursor = self.ui.textEdit.textCursor()
+		cursor = self.textEdit.textCursor()
 		style = QtGui.QTextListFormat.ListDecimal
 		cursor.beginEditBlock()
 		blockFmt = cursor.blockFormat()

@@ -61,20 +61,16 @@ class TreeEdit( Edit ):
 	
 	def reloadData(self):
 		if self.id: #We are in Edit-Mode
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path } )
+			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path } )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
+			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
 
 	def save(self, data ):
-		print( data )
 		data.update( {"rootNode": self.rootNode, "path": self.path } )
-		print( data )
 		if self.id:
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True )
+			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onSaveResult )
+			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 
 	def emitEntryChanged( self, modul ):
 		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), modul, self )
@@ -87,13 +83,13 @@ class TreeAddAction( QtGui.QAction ):
 		self.setShortcut( QtGui.QKeySequence.New )
 	
 	def onTriggered( self, e ):
-		config = conf.serverConfig["modules"][ self.parent().modul ]
+		config = conf.serverConfig["modules"][ self.parent().tree.modul ]
 		if "name" in config.keys():
 			name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry: %s") % config["name"]
 		else:
 			name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
-		widget = TreeEdit(self.parent().modul, 0, rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
-		handler = EditHandler( self.parentWidget().modul, widget )
+		widget = TreeEdit(self.parent().tree.modul, 0, rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
+		handler = EditHandler( self.parentWidget().tree.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
 

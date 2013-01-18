@@ -75,7 +75,6 @@ class Edit( QtGui.QWidget ):
 		self.bones = {}
 		self.overlay = Overlay( self )
 		self.overlay.inform( self.overlay.BUSY )
-		self.request = None
 		self.reloadData( )
 		self.closeOnSuccess = False
 		#Hide Previewbuttons if no PreviewURLs are set
@@ -97,16 +96,12 @@ class Edit( QtGui.QWidget ):
 		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
 
 	def reloadData(self):
-		if self.request:
-			self.request.deleteLater()
-			self.request = None
 		if self.modul == "_tasks":
-			self.request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ) )
+			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), successHandler=self.setData )
 		elif self.id: #We are in Edit-Mode
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ) )
+			request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ) )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
+			request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
 		
 	def on_btnReset_released( self, *args, **kwargs ):
 		res = QtGui.QMessageBox.question(	self,
@@ -115,7 +110,7 @@ class Edit( QtGui.QWidget ):
 						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No
 						)
 		if res == QtGui.QMessageBox.Yes:
-			self.setData( self.dataCache )
+			self.setData( data=self.dataCache )
 
 	def parseHelpText( self, txt ):
 		"""Parses the HTML-Text txt and returns it with remote Images replaced with their local copys
@@ -147,21 +142,16 @@ class Edit( QtGui.QWidget ):
 		return( fileName )
 
 
-	def setData( self, data=None ):
+	def setData( self, request=None, data=None ):
 		"""
 		Rebuilds the UI according to the skeleton recived from server
 		
 		@type data: dict
 		@param data: The data recived
 		"""
-		try:
-			data = data or NetworkService.decode( self.request )
-		except:
-			if self.request:
-				self.request.deleteLater()
-				self.request = None
-			self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditHandler", "Error saving your changes!") )
-			return
+		assert (request or data)
+		if request:
+			data = NetworkService.decode( request )
 		#Clear the UI
 		while( self.ui.tabWidget.count() ):
 			item = self.ui.tabWidget.widget(0)
@@ -258,21 +248,17 @@ class Edit( QtGui.QWidget ):
 		self.preview = Preview( self.modul, res )
 	
 	def save(self, data ):
-		if self.request:
-			self.request.deleteLater()
-			self.request = None
 		if self.modul=="_tasks":
-			self.request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True )
+			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.id:
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True )
+			request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onSaveResult )
+			request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 
 	
-	def onSaveResult(self):
+	def onSaveResult(self, request):
 		try:
-			data = NetworkService.decode( self.request )
+			data = NetworkService.decode( request )
 		except:
 			self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditHandler", "There was an error saving your changes") )
 			return
@@ -288,7 +274,7 @@ class Edit( QtGui.QWidget ):
 					self.reloadData()
 		else:
 			self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditHandler", "Missing data") )
-			self.setData( data )
+			self.setData( data=data )
 		self.emitEntryChanged( self.modul )
 
 	def taskAdded(self):

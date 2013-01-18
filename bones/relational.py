@@ -28,7 +28,6 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 		self.modul = modul
 		self.format = format
 		self.dataCache = []
-		self.requst = QueryAggregator()
 	
 	def rowCount(self, *args, **kwargs):
 		return( len( self.dataCache ) )
@@ -42,9 +41,7 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 			return( formatString( self.format, self.dataCache[ index.row() ] ) )
 
 	def setCompletionPrefix(self, prefix ):
-		req =NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix } )
-		self.requst.addQuery( req )
-		self.connect( req, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.addCompletionData )
+		NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix }, successHandler=self.addCompletionData )
 		
 	def addCompletionData(self, req ):
 		try:
@@ -179,7 +176,6 @@ class RelationalSelectedTableModel( QtCore.QAbstractTableModel ):
 		self.parentModel = parentModel
 		self.multiSelection = multiSelection
 		self.dataCache = []
-		self.request = None
 		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("modelAboutToBeReset()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("modelAboutToBeReset()")) ) 
 		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("modelReset()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("modelReset()")) ) 
 		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("layoutAboutToBeChanged()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()")) ) 
@@ -190,24 +186,16 @@ class RelationalSelectedTableModel( QtCore.QAbstractTableModel ):
 	def reloadSelectionData( self, selectionData ):
 		if not selectionData:
 			return
-		if self.request:
-			self.request.deleteLater()
-		self.request = QueryAggregator()
 		if isinstance( selectionData,list ):
 			for entry in selectionData:
-				self.request.addQuery( NetworkService.request("/%s/list?id=%s" % (self.modul, entry["id"])) )
+				NetworkService.request("/%s/list?id=%s" % (self.modul, entry["id"]), successHandler= self.onReloadSelectionData )
 		elif isinstance( selectionData, dict ):
-			self.request.addQuery( NetworkService.request("/%s/list?id=%s" % (self.modul, selectionData["id"])) )
-		self.connect( self.request, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onReloadSelectionData )
+			NetworkService.request("/%s/list?id=%s" % (self.modul, selectionData["id"]), successHandler= self.onReloadSelectionData )
 	
 	def onReloadSelectionData(self, query ):
 		data = NetworkService.decode( query )
 		for item in data["skellist"]:
 			self.addItem( item )
-		if self.request.isIdle():
-			self.request.deleteLater()
-			self.request = None
-
 
 	def rowCount(self, parent): 
 		if not self.dataCache:

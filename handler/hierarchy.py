@@ -115,10 +115,6 @@ class HierarchyList( QtGui.QWidget ):
 		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
 		self.ui.webView.show()
 
-
-
-
-
 class HierarchyAdd( Edit ):
 	def __init__( self, modul, id=0, rootNode="", *args, **kwargs ):
 		self.rootNode = rootNode
@@ -126,19 +122,17 @@ class HierarchyAdd( Edit ):
 	
 	def reloadData(self):
 		if self.id: #We are in Edit-Mode
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode } )
+			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode } )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.setData )
+			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
 
 	def save(self, data ):
 		self.overlay.inform( self.overlay.BUSY )
 		data.update( {"parent": self.rootNode } )
 		if self.id:
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True )
+			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onSaveResult )
+			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 
 	def emitEntryChanged( self, modul ):
 		event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, modul, None, None )

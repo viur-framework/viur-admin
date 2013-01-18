@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'treeselector.ui'
 #
-# Created: Tue Jan 15 14:18:35 2013
+# Created: Fri Jan 18 15:30:58 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,8 +49,7 @@ class Ui_TreeSelector(object):
         self.lblSelected = QtGui.QLabel(self.scrollAreaWidgetContents)
         self.lblSelected.setObjectName(_fromUtf8("lblSelected"))
         self.verticalLayout_2.addWidget(self.lblSelected)
-        self.listSelected = QtGui.QListWidget(self.scrollAreaWidgetContents)
-        self.listSelected.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.listSelected = QtGui.QWidget(self.scrollAreaWidgetContents)
         self.listSelected.setObjectName(_fromUtf8("listSelected"))
         self.verticalLayout_2.addWidget(self.listSelected)
         self.btnSelect = QtGui.QPushButton(self.scrollAreaWidgetContents)
