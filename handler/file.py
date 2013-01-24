@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from ui.treeUI import Ui_Tree
 from PyQt4 import QtCore, QtGui
 from network import NetworkService, RemoteFile
@@ -7,13 +7,11 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os
-from handler.tree import TreeDirUpAction, TreeMkDirAction, TreeDeleteAction,  TreeItem, DirItem
+#from handler.tree import TreeDirUpAction, TreeMkDirAction, TreeDeleteAction,  TreeItem, DirItem
+
 from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
-from handler.edit import Edit, EditHandler
-from PyQt4.QtCore import QUrl
 from utils import RegisterQueue
-
 
 class FileList( QtGui.QWidget ):
 	treeItem = FileItem

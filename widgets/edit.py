@@ -1,12 +1,13 @@
-from ui.editUI import Ui_Edit
+# -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from collections import OrderedDict
 from utils import RegisterQueue, Overlay
 from mainwindow import EntryHandler
-from ui.editpreviewUI import Ui_EditPreview
 from config import conf
+from ui.editUI import Ui_Edit
+from ui.editpreviewUI import Ui_EditPreview
 
 
 class Preview( QtGui.QWidget ):
@@ -38,40 +39,29 @@ class Preview( QtGui.QWidget ):
 	def on_btnReload_released(self, *args, **kwargs):
 		self.loadURL()
 
-class EditHandler( EntryHandler ):
-	def __init__( self, modul, widget, *args, **kwargs ):
-		super( EditHandler, self ).__init__( modul, *args, **kwargs )
-		self.addWidget( widget )
-		if widget.id:
-			self.setText( 0, QtCore.QCoreApplication.translate("EditHandler", "Edit entry") )
-			self.setIcon( 0, QtGui.QIcon("icons/actions/edit_small.png") )
-		else:
-			self.setText( 0, QtCore.QCoreApplication.translate("EditHandler", "Add entry") )
-			self.setIcon( 0, QtGui.QIcon("icons/actions/add_small.png") )
-		self.focus()
-		widget.connect( widget, QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), self.on_widget_descriptionChanged )
-		
-	def on_widget_descriptionChanged( self, descr ):
-		self.setText( 0, descr )
-		self.focus()
 
-	def clicked( self ):
-		if self.widgets:
-			self.focus()
-	
-	def close( self ):
-		super( EditHandler, self).close()
-		if not self.widgets:
-			self.remove()
 
-class Edit( QtGui.QWidget ):
-	def __init__(self, modul, id=0, *args, **kwargs ):
-		super( Edit, self ).__init__( *args, **kwargs )
+class EditWidget( QtGui.QWidget ):
+	appList = "list"
+	appHierarchy = "hierarchy"
+	appTree = "tree"
+	appSingleton = "tree"
+
+	def __init__( self, modul, id=0, rootNode="", path="", *args, **kwargs ):
+		self.rootNode = rootNode
+		self.path = path
+
+	def __init__(self, modul, applicationType, id=0, rootNode=None, path=None, *args, **kwargs ):
+		super( EditWidget, self ).__init__( *args, **kwargs )
 		if not "ui" in dir( self ):
 			self.ui = Ui_Edit()
 			self.ui.setupUi( self )
 		self.modul = modul
+		assert applicationType in [ EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree, EditWidget.appSingleton ]
+		self.applicationType = applicationType
 		self.id = id
+		self.rootNode = rootNode
+		self.path = path
 		self.bones = {}
 		self.overlay = Overlay( self )
 		self.overlay.inform( self.overlay.BUSY )
@@ -98,11 +88,58 @@ class Edit( QtGui.QWidget ):
 	def reloadData(self):
 		if self.modul == "_tasks":
 			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), successHandler=self.setData )
-		elif self.id: #We are in Edit-Mode
-			request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
+		elif self.applicationType == EditWidget.appList: ## Application: List
+			if self.id: #We are in Edit-Mode
+				request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
+			else:
+				request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
+		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
+			if self.id: #We are in Edit-Mode
+				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
+			else:
+				self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
+		elif self.applicationType == EditWidget.appTree: ## Application: Tree
+			if self.id: #We are in Edit-Mode
+				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
+			else:
+				self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
 		else:
-			request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
-		
+			raise NotImplementedError() #Should never reach this
+
+	def save(self, data ):
+		if self.modul=="_tasks":
+			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+		elif self.applicationType == EditWidget.appList: ## Application: List
+			if self.id:
+				request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+			else:
+				request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
+			self.overlay.inform( self.overlay.BUSY )
+			data.update( {"parent": self.rootNode } )
+			if self.id:
+				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+			else:
+				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+		elif self.applicationType == EditWidget.appTree: ## Application: Tree
+			data.update( {"rootNode": self.rootNode, "path": self.path } )
+			if self.id:
+				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+			else:
+				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+		else:
+			raise NotImplementedError() #Should never reach this
+
+	def emitEntryChanged( self, modul ):
+		if self.applicationType == EditWidget.appList: ## Application: List
+			event.emit( QtCore.SIGNAL('listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.id )
+		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
+			event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, modul, self.rootNode, self.id )
+		elif self.applicationType == EditWidget.appTree: ## Application: Tree
+			event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.rootNode, self.id )
+		else:
+			raise NotImplementedError() #Should never reach this
+
 	def on_btnReset_released( self, *args, **kwargs ):
 		res = QtGui.QMessageBox.question(	self,
 						QtCore.QCoreApplication.translate("EditHandler", "Confirm reset"),
@@ -247,15 +284,6 @@ class Edit( QtGui.QWidget ):
 				res[ key ] = value
 		self.preview = Preview( self.modul, res )
 	
-	def save(self, data ):
-		if self.modul=="_tasks":
-			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
-		elif self.id:
-			request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
-		else:
-			request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
-
-	
 	def onSaveResult(self, request):
 		try:
 			data = NetworkService.decode( request )
@@ -283,6 +311,3 @@ class Edit( QtGui.QWidget ):
 									QtCore.QCoreApplication.translate("EditHandler", "The task was sucessfully created."), 
 									QtCore.QCoreApplication.translate("EditHandler", "Okay") )
 		self.parent().close()
-
-	def emitEntryChanged( self, modul ):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), modul, self )

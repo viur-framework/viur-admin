@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ui.treeUI import Ui_Tree
 from PyQt4 import QtCore, QtGui, QtNetwork
 from network import NetworkService
@@ -6,10 +7,11 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os, os.path
-from handler.edit import Edit, EditHandler
 from utils import RegisterQueue, Overlay
 from handler.list import ListCoreHandler
+from mainwindow import EntryHandler, WidgetHandler
 from widgets.tree import TreeWidget, TreeItem, DirItem
+from widgets.edit import EditWidget
 
 
 
@@ -48,33 +50,10 @@ class TreeList( QtGui.QWidget ):
 	def on_listWidget_itemDoubleClicked(self, item ):
 		if( isinstance( item, self.tree.treeItem ) ):
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			widget = Edit(self.tree.modul, item.data["id"])
-			handler = EditHandler( self.tree.modul, widget )
+			widget = EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"])
+			handler = WidgetHandler( self.tree.modul, widget )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
-
-class TreeEdit( Edit ):
-	def __init__( self, modul, id=0, rootNode="", path="", *args, **kwargs ):
-		self.rootNode = rootNode
-		self.path = path
-		super( TreeEdit, self ).__init__( modul, id, *args, **kwargs )
-	
-	def reloadData(self):
-		if self.id: #We are in Edit-Mode
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-
-	def save(self, data ):
-		data.update( {"rootNode": self.rootNode, "path": self.path } )
-		if self.id:
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
-		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
-
-	def emitEntryChanged( self, modul ):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), modul, self )
-	
 
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
@@ -88,8 +67,8 @@ class TreeAddAction( QtGui.QAction ):
 			name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry: %s") % config["name"]
 		else:
 			name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
-		widget = TreeEdit(self.parent().tree.modul, 0, rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
-		handler = EditHandler( self.parentWidget().tree.modul, widget )
+		widget = EditWidget(self.parent().tree.modul, EditWidget.appTree, 0, rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
+		handler = WidgetHandler( self.parentWidget().tree.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
 
@@ -124,14 +103,14 @@ class TreeDeleteAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		dirs = []
 		files = []
-		for item in self.parent().ui.listWidget.selectedItems():
+		for item in self.parent().tree.selectedItems():
 			if isinstance( item, DirItem ):
 				dirs.append( item.dirName )
 			else:
 				files.append( item.data )
 		if not files and not dirs:
 			return
-		self.parent().delete( self.parent().currentRootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
+		self.parent().tree.delete( self.parent().tree.currentRootNode, self.parent().tree.getPath(), [ x["name"] for x in files], dirs )
 
 class TreeBaseHandler( ListCoreHandler ):
 	def __init__( self, modul, *args, **kwargs ):

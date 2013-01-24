@@ -8,6 +8,7 @@ from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate
 from widgets.tree import TreeWidget, TreeItem, DirItem
+from widgets.selectedEntities import SelectedEntitiesWidget
 
 class TreeItemViewBoneDelegate( RelationalViewBoneDelegate ):
 	pass
@@ -89,60 +90,7 @@ class TreeItemEditBone( QtGui.QWidget ):
 		else:
 			return( None )
 
-class SelectedListWidget( QtGui.QListWidget ):
-	def __init__(self, parent, modul, selection=None, treeItem=None, dragSource=None, *args, **kwargs ):
-		super( SelectedListWidget, self ).__init__( *args, **kwargs )
-		self.selection = selection or []
-		self.treeItem = treeItem
-		self.dragSource = dragSource
-		for s in selection:
-			self.addItem( self.treeItem( s ) )
-		self.setAcceptDrops( True )
-		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
-	
-	def itemDoubleClicked(self, item):
-		self.takeItem( self.indexFromItem( item ).row() )
-		self.selection.remove( item.data )
-		self.clear()
-		for s in self.selection:
-			self.addItem( self.treeItem( s ) )
 
-	def dropEvent(self, event):
-		if event.source()==self.dragSource:
-			if not self.selection:
-				self.selection = []
-			for item in self.dragSource.selectedItems():
-				if item.data in self.selection:
-					continue
-				self.extend( [item.data] )
-
-	def set(self, selection):
-		self.clear()
-		self.selection = selection
-		for s in selection:
-			self.addItem( self.treeItem( s ) )
-	
-	def extend(self, selection):
-		self.selection += selection
-		for s in selection:
-			self.addItem( self.treeItem( s ) )
-	
-	def get(self):
-		return( self.selection )
-
-	def dragMoveEvent(self, event):
-		event.accept()
-
-	def dragEnterEvent(self, event):
-		event.accept()
-	
-	def keyPressEvent( self, e ):
-		if e.matches( QtGui.QKeySequence.Delete ):
-			for item in self.selectedItems():
-				self.takeItem( self.indexFromItem( item ).row() )
-				self.selection.remove( item.data )
-		else:
-			super( SelectedListWidget, self ).keyPressEvent( e )
 
 class BaseTreeItemBoneSelector( QtGui.QWidget ):
 	treeItem = None #Allow override of these on class level
@@ -166,41 +114,13 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 		self.tree.show()
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
 		self.ui.listSelected.setLayout( layout )
-		self.selected = SelectedListWidget( self.ui.listSelected, self.modul, selection=selection, treeItem=self.treeItem, dragSource=self.tree )
-		layout.addWidget( self.selected )
-		self.selected.show()
-		#self.toolBar = QtGui.QToolBar( self.ui.wdgActions )
-		#self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
-		#self.ui.boxActions.insertWidget( 0, self.toolBar )
-		#queue = RegisterQueue()
-		#event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, self )
-		#for item in queue.getAll():
-		#	i = item( self )
-		#	if isinstance( i, QtGui.QAction ):
-		#		self.toolBar.addAction( i )
-		#		self.ui.listWidget.addAction( i )
-		#	else:
-		#		self.toolBar.addWidget( i )
-		self.ui.listSelected.setAcceptDrops( True )
-		#self.clipboard = None  #(str repo,str path, bool doMove, list treeItems, list dirs )
+		self.selection = SelectedEntitiesWidget( self, self.modul, selection )
+		layout.addWidget( self.selection )
+		self.selection.show()
 		if not self.multiple:
 			self.ui.listSelected.hide()
 			self.ui.lblSelected.hide()
 			self.ui.btnAddSelected.hide()
-		else:
-			if selection:
-				for sel in selection:
-					self.selected.extend( [sel] )
-		#self.ui.listSelected.keyPressEvent = self.on_listSelection_event
-		#self.ui.listSelected.dragEnterEvent = self.onDragEnterEvent
-		#self.ui.listSelected.dragMoveEvent = self.onDragMoveEvent
-		#self.ui.listSelected.dropEvent = self.onDropEvent
-		
-		
-		#self.delShortcut = QtGui.QShortcut( self.ui.listSelected )
-		#self.delShortcut.setContext( QtCore.Qt.WidgetWithChildrenShortcut )
-		#self.delShortcut.setKey( QtGui.QKeySequence.Delete )
-		#self.connect( self.delShortcut, QtCore.SIGNAL("activated()"), self.onDeleteCurrentSelection )
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 
@@ -220,7 +140,7 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 					return
 			return
 		else:
-			self.setSelection( self.selected.get() )
+			self.setSelection( self.selection.get() )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 	
 	def on_listWidget_itemDoubleClicked(self, item):
@@ -230,18 +150,18 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 				event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 				return
 			else:
-				if item.data in self.selected.get():
+				if item.data in self.selection.get():
 					return
-				self.selected.extend( [item.data] )
+				self.selection.extend( [item.data] )
 
 	
 	def on_btnAddSelected_released(self, *args, **kwargs ):
 		items = self.tree.selectedItems()
 		for item in items:
 			if isinstance( item, self.treeItem ):
-				if item.data in self.selected.get():
+				if item.data in self.selection.get():
 					continue
-				self.selected.extend( [item.data] )
+				self.selection.extend( [item.data] )
 
 	def onDeleteCurrentSelection( self ):
 		items = self.ui.listSelected.selectedItems()

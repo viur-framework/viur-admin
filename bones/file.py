@@ -6,6 +6,7 @@ from network import RemoteFile
 from handler.file import  FileItem
 from bones.treeitem import BaseTreeItemBoneSelector, TreeItemEditBone
 from widgets.file import FileWidget
+from widgets.selectedFiles import SelectedFilesWidget
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 
@@ -122,12 +123,16 @@ class FileEditBone( TreeItemEditBone ):
 class BaseFileBoneSelector( BaseTreeItemBoneSelector ):
 	treeItem = FileItem
 	
-	def __init__(self, *args, **kwargs ):
-		return( super( BaseFileBoneSelector, self ).__init__( widget = FileWidget, *args, **kwargs ) )
+	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None, widget=None, *args, **kwargs ):
+		super( BaseFileBoneSelector, self ).__init__( modulName, boneName, skelStructure, selection, setSelection, parent, widget = FileWidget, *args, **kwargs )
+		self.selection.deleteLater()
+		self.selection = SelectedFilesWidget( self, self.modul, selection )
+		self.ui.listSelected.layout().addWidget( self.selection )
+		self.selection.show()
 	
 	def getBreadCrumb( self ):
 		return( QtCore.QCoreApplication.translate("FileBone", "Select file"), QtGui.QIcon( QtGui.QPixmap( "icons/actions/relationalselect.png" ) ) )
-
+		
 class FileHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )

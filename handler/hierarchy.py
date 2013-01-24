@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ui.hierarchyUI import Ui_Hierarchy
 from PyQt4 import QtCore, QtGui
 from network import NetworkService
@@ -6,10 +7,10 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os, os.path
-from handler.edit import Edit, EditHandler
 from utils import RegisterQueue, Overlay,  formatString
-from mainwindow import EntryHandler
+from mainwindow import EntryHandler, WidgetHandler
 from widgets.hierarchy import HierarchyWidget
+from widgets.edit import EditWidget
 
 class HierarchyItem(QtGui.QTreeWidgetItem):
 	def __init__( self, data ):
@@ -74,8 +75,6 @@ class HierarchyList( QtGui.QWidget ):
 		#else:
 		#	self.setRootNode( repoID )
 		self.setAcceptDrops( True )
-		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
-		self.lastUploadTime = 0
 		#self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'),self.doReloadData )
 		self.ui.webView.hide()
 		self.connect( self.hierarchy, QtCore.SIGNAL("itemClicked(QTreeWidgetItem *,int)"), self.onItemClicked )
@@ -97,8 +96,8 @@ class HierarchyList( QtGui.QWidget ):
 		"""
 			Open a editor for this entry.
 		"""
-		widget = HierarchyAdd(self.modul, item.data["id"] )
-		handler = EditHandler( self.modul, widget )
+		widget = EditWidget(self.modul, EditWidget.appHierarchy, item.data["id"] )
+		handler = WidgetHandler( self.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
 	def loadPreview( self, url ):
@@ -115,27 +114,6 @@ class HierarchyList( QtGui.QWidget ):
 		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
 		self.ui.webView.show()
 
-class HierarchyAdd( Edit ):
-	def __init__( self, modul, id=0, rootNode="", *args, **kwargs ):
-		self.rootNode = rootNode
-		super( HierarchyAdd, self ).__init__( modul, id, *args, **kwargs )
-	
-	def reloadData(self):
-		if self.id: #We are in Edit-Mode
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
-		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
-
-	def save(self, data ):
-		self.overlay.inform( self.overlay.BUSY )
-		data.update( {"parent": self.rootNode } )
-		if self.id:
-			self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
-		else:
-			self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
-
-	def emitEntryChanged( self, modul ):
-		event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, modul, None, None )
 
 class HierarchyAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
@@ -145,8 +123,8 @@ class HierarchyAddAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		config = conf.serverConfig["modules"][ self.parent().modul ]
-		widget = HierarchyAdd(self.parent().modul, 0, rootNode=self.parent().hierarchy.currentRootNode)
-		handler = EditHandler( self.parentWidget().modul, widget )
+		widget = EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, rootNode=self.parent().hierarchy.currentRootNode)
+		handler = WidgetHandler( self.parentWidget().modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 		
 
@@ -181,8 +159,8 @@ class HierarchyEditAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
-			widget = HierarchyAdd(parent.modul, item.data["id"] )
-			handler = EditHandler( parent.modul, widget  )
+			widget = EditWidget(parent.modul, EditWidget.appHierarchy, item.data["id"] )
+			handler = WidgetHandler( parent.modul, widget  )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
 

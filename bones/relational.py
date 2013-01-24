@@ -4,6 +4,8 @@ from event import event
 from utils import RegisterQueue,  formatString
 from handler.list import ListTableModel
 from ui.relationalselectionUI import Ui_relationalSelector
+from widgets.list import ListWidget, ListTableModel
+from widgets.selectedEntities import SelectedEntitiesWidget
 from network import NetworkService
 from config import conf
 
@@ -41,7 +43,7 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 			return( formatString( self.format, self.dataCache[ index.row() ] ) )
 
 	def setCompletionPrefix(self, prefix ):
-		NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix }, successHandler=self.addCompletionData )
+		NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix, "orderby":"name" }, successHandler=self.addCompletionData )
 		
 	def addCompletionData(self, req ):
 		try:
@@ -136,6 +138,7 @@ class RelationalEditBone( QtGui.QWidget ):
 		if self.skelStructure[self.boneName]["multiple"]:
 			self.selection = selection
 		elif len( selection )>0 :
+			print( selection )
 			self.selection = selection[0]
 		else:
 			self.selection = None
@@ -167,77 +170,6 @@ class RelationalEditBone( QtGui.QWidget ):
 		else:
 			return( None )
 
-class RelationalSelectedTableModel( QtCore.QAbstractTableModel ):
-	_chunkSize = 1
-	def __init__(self, tableView, modul, parentModel, selection, multiSelection, parent=None, *args):
-		QtCore.QAbstractTableModel.__init__(self, parent, *args) 
-		self.modul = modul
-		self.tableView = tableView
-		self.parentModel = parentModel
-		self.multiSelection = multiSelection
-		self.dataCache = []
-		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("modelAboutToBeReset()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("modelAboutToBeReset()")) ) 
-		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("modelReset()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("modelReset()")) ) 
-		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("layoutAboutToBeChanged()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()")) ) 
-		self.parentModel.connect( self.parentModel, QtCore.SIGNAL("layoutChanged()"), lambda *args, **kwargs: self.emit(QtCore.SIGNAL("layoutChanged()")) ) 
-		self.reloadSelectionData( selection )
-
-	
-	def reloadSelectionData( self, selectionData ):
-		if not selectionData:
-			return
-		if isinstance( selectionData,list ):
-			for entry in selectionData:
-				NetworkService.request("/%s/list?id=%s" % (self.modul, entry["id"]), successHandler= self.onReloadSelectionData )
-		elif isinstance( selectionData, dict ):
-			NetworkService.request("/%s/list?id=%s" % (self.modul, selectionData["id"]), successHandler= self.onReloadSelectionData )
-	
-	def onReloadSelectionData(self, query ):
-		data = NetworkService.decode( query )
-		for item in data["skellist"]:
-			self.addItem( item )
-
-	def rowCount(self, parent): 
-		if not self.dataCache:
-			return( 0 )
-		return( len(self.dataCache) )
-
-	def columnCount(self, parent): 
-		try:
-			return self.parentModel.columnCount(parent)
-		except:
-			return( 0 )
-
-	def data(self, index, role): 
-		if not index.isValid(): 
-			return None
-		elif role != QtCore.Qt.DisplayRole: 
-			return None
-		if( index.row() >= 0 and index.row()<len(self.dataCache)  ):
-			return str( self.dataCache[index.row()][ self.parentModel.fields[index.column()] ] )
-
-
-	def headerData(self, col, orientation, role):
-		return( self.parentModel.headerData( col, orientation, role) )
-	
-	def addItem(self, item):
-		if not self.dataCache:
-			self.dataCache = []
-		if item in self.dataCache:
-			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.dataCache.append( item )
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
-	
-	def removeItemAtIndex(self, index):
-		if not index.isValid() or index.row()>=len( self.dataCache ):
-			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.dataCache.pop( index.row() )
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
-	
-	def getData(self):
-		return self.dataCache
 
 class BaseRelationalBoneSelector( QtGui.QWidget ):
 	""" 	
@@ -254,32 +186,41 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		self.page = 0
 		self.ui = Ui_relationalSelector()
 		self.ui.setupUi( self )
-		self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'),self.onDataChanged )
-		self.model = None
-		if self.modul in conf.serverConfig["modules"].keys():
-			config = conf.serverConfig["modules"][ self.modul ]
-			if "columns" in config.keys() and "filter" in config.keys():
-				self.model = ListTableModel( self.ui.tableView, self.modul, fields=config["columns"], filter=config["filter"] )
-		if not self.model:
-			self.model = ListTableModel( self.ui.tableView, self.modul  )
-		self.ui.tableView.setModel( self.model )
-		self.selectionModel = self.ui.tableView.selectionModel()
+		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
+		self.ui.tableWidget.setLayout( layout )
+		self.list = ListWidget( self.ui.tableWidget, self.modul )
+		layout.addWidget( self.list )
+		self.list.show()
 		if not self.skelStructure[ self.boneName ]["multiple"]:
 			self.multiSelection = False
-			self.ui.tableView.setSelectionMode( self.ui.tableView.SingleSelection )
-		else: self.multiSelection = True
-		self.selectedModel = RelationalSelectedTableModel( self.ui.tableSelected,self.modul,  self.model, self.selection, True  )
-		self.ui.tableSelected.setModel( self.selectedModel )
-		self.tableSelectedselectionModel = self.ui.tableSelected.selectionModel(  )
-		self.ui.tableSelected.keyPressEvent = self.on_tableSelected_keyPressEvent
-		if not self.multiSelection:
-			self.ui.tableView.setSelectionMode( self.ui.tableView.SingleSelection )
-			self.ui.tableSelected.hide()
-			self.ui.lblSelected.hide()
-		header = self.ui.tableView.horizontalHeader()
-		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
+		else:
+			self.multiSelection = True
+		layout = QtGui.QHBoxLayout( self.ui.listSelected )
+		self.ui.listSelected.setLayout( layout )
+		self.selection = SelectedEntitiesWidget( self, self.modul, selection, self.list )
+		layout.addWidget( self.selection )
+		self.selection.show()
+		#self.selectedModel = RelationalSelectedTableModel( self.ui.tableSelected, self.modul,  self.model, self.selection, True  )
+		#self.ui.tableSelected.setModel( self.selectedModel )
+		#self.tableSelectedselectionModel = self.ui.tableSelected.selectionModel(  )
+		#self.ui.tableSelected.keyPressEvent = self.on_tableSelected_keyPressEvent
+		#if not self.multiSelection:
+		#	self.ui.tableView.setSelectionMode( self.ui.tableView.SingleSelection )
+		#	self.ui.tableSelected.hide()
+		#	self.ui.lblSelected.hide()
+		#header = self.ui.tableView.horizontalHeader()
+		#header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		#header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
+		self.selection.connect( self.list, QtCore.SIGNAL("doubleClicked(const QModelIndex&)"), self.onSourceItemDoubleClicked )
+
+	def onSourceItemDoubleClicked(self, index):
+		"""
+			An item has been doubleClicked in our listWidget.
+			Read its properties and add them to our selection.
+		"""
+		data = self.list.model.getData()[ index.row() ]
+		self.selection.extend( [data] )
 
 	def reload(self, newFilter=None):
 		if newFilter == None:
@@ -319,9 +260,9 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 
 	def on_btnSelect_released(self, *args, **kwargs):
 		if self.multiSelection:
-			self.setSelection( self.selectedModel.getData() )
+			self.setSelection( self.selection.get() )
 		else:
-			self.setSelection( [ self.model.getData()[x.row()] for x in self.selectionModel.selection().indexes() ] )
+			self.setSelection( self.selection.get() )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
 	def on_btnCancel_released(self, *args,  **kwargs ):

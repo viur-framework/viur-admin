@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\relationalselection.ui'
+# Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Wed Jan 23 10:47:03 2013
+#      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_relationalSelector(object):
     def setupUi(self, relationalSelector):
@@ -36,34 +45,19 @@ class Ui_relationalSelector(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 831, 542))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 843, 567))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.tableView = QtGui.QTableView(self.scrollAreaWidgetContents)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableView.sizePolicy().hasHeightForWidth())
-        self.tableView.setSizePolicy(sizePolicy)
-        self.tableView.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self.tableView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.tableView.setSortingEnabled(True)
-        self.tableView.setObjectName(_fromUtf8("tableView"))
-        self.verticalLayout_2.addWidget(self.tableView)
+        self.tableWidget = QtGui.QWidget(self.scrollAreaWidgetContents)
+        self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
+        self.verticalLayout_2.addWidget(self.tableWidget)
         self.lblSelected = QtGui.QLabel(self.scrollAreaWidgetContents)
         self.lblSelected.setObjectName(_fromUtf8("lblSelected"))
         self.verticalLayout_2.addWidget(self.lblSelected)
-        self.tableSelected = QtGui.QTableView(self.scrollAreaWidgetContents)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableSelected.sizePolicy().hasHeightForWidth())
-        self.tableSelected.setSizePolicy(sizePolicy)
-        self.tableSelected.setSizeIncrement(QtCore.QSize(0, 0))
-        self.tableSelected.setBaseSize(QtCore.QSize(0, 0))
-        self.tableSelected.setObjectName(_fromUtf8("tableSelected"))
-        self.verticalLayout_2.addWidget(self.tableSelected)
+        self.listSelected = QtGui.QWidget(self.scrollAreaWidgetContents)
+        self.listSelected.setObjectName(_fromUtf8("listSelected"))
+        self.verticalLayout_2.addWidget(self.listSelected)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.btnCancel = QtGui.QPushButton(self.scrollAreaWidgetContents)
@@ -88,20 +82,10 @@ class Ui_relationalSelector(object):
         QtCore.QMetaObject.connectSlotsByName(relationalSelector)
 
     def retranslateUi(self, relationalSelector):
-        relationalSelector.setWindowTitle(QtGui.QApplication.translate("relationalSelector", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.editSearch.setText(QtGui.QApplication.translate("relationalSelector", "Search", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSearch.setText(QtGui.QApplication.translate("relationalSelector", "Search", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblSelected.setText(QtGui.QApplication.translate("relationalSelector", "Selected:", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnCancel.setText(QtGui.QApplication.translate("relationalSelector", "Abort", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSelect.setText(QtGui.QApplication.translate("relationalSelector", "Save", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    relationalSelector = QtGui.QWidget()
-    ui = Ui_relationalSelector()
-    ui.setupUi(relationalSelector)
-    relationalSelector.show()
-    sys.exit(app.exec_())
+        relationalSelector.setWindowTitle(_translate("relationalSelector", "Form", None))
+        self.editSearch.setText(_translate("relationalSelector", "Search", None))
+        self.btnSearch.setText(_translate("relationalSelector", "Search", None))
+        self.lblSelected.setText(_translate("relationalSelector", "Selected:", None))
+        self.btnCancel.setText(_translate("relationalSelector", "Abort", None))
+        self.btnSelect.setText(_translate("relationalSelector", "Save", None))
 

@@ -12,7 +12,7 @@ from event import event
 from utils import RegisterQueue, Overlay
 from event import event
 #from handler.file import FileUploader
-from handler.edit import Edit
+from widgets.edit import EditWidget #FIXME: !!
 import urllib.parse, os, os.path, sys
 from network import NetworkService
 import json
@@ -887,7 +887,7 @@ class HeaderBlock( HtmlBlock ):
 
 
 
-class ExtEdit( Edit ):
+class ExtEdit( EditWidget ):
 	def __init__(self, saveCB, *args, **kwargs ):
 		super( ExtEdit, self ).__init__( *args, **kwargs )
 		self.saveCB = saveCB

@@ -1,9 +1,9 @@
 from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
-from handler.edit import Edit, EditHandler
 from config import conf
 from mainwindow import EntryHandler
+from widgets.edit import EditWidget
 
 class SingletonEntryHandler( EntryHandler ):
 	"""Class for holding the main (module) Entry within the modules-list"""
@@ -24,7 +24,7 @@ class SingletonEntryHandler( EntryHandler ):
 	def clicked( self ):
 		if not self.widgets:
 			config = conf.serverConfig["modules"][ self.modul ]
-			self.addWidget( Edit( self.modul, "singleton"  ) )
+			self.addWidget( EditWidget( self.modul, EditWidget.appSingleton, "singleton"  ) )
 		else:
 			self.focus()
 	
@@ -32,7 +32,6 @@ class SingletonHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
 		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
-
 
 	def requestModulHandler(self, queue, modulName ):
 		config = conf.serverConfig["modules"][ modulName ]

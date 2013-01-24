@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
 from PyQt4 import QtCore, QtGui, QtWebKit
 from event import event
@@ -98,6 +99,37 @@ class EntryHandler( QtGui.QTreeWidgetItem ):
 		"""
 		pass
 	
+
+
+class WidgetHandler( EntryHandler ):
+	"""
+		Simple Wrapper holding one widget.
+	"""
+	
+	def __init__( self, modul, widget, *args, **kwargs ):
+		super( WidgetHandler, self ).__init__( modul, *args, **kwargs )
+		self.addWidget( widget )
+		if widget.id:
+			self.setText( 0, QtCore.QCoreApplication.translate("WidgetHandler", "Edit entry") )
+			self.setIcon( 0, QtGui.QIcon("icons/actions/edit_small.png") )
+		else:
+			self.setText( 0, QtCore.QCoreApplication.translate("WidgetHandler", "Add entry") )
+			self.setIcon( 0, QtGui.QIcon("icons/actions/add_small.png") )
+		self.focus()
+		widget.connect( widget, QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), self.on_widget_descriptionChanged )
+		
+	def on_widget_descriptionChanged( self, descr ):
+		self.setText( 0, descr )
+		self.focus()
+
+	def clicked( self ):
+		if self.widgets:
+			self.focus()
+	
+	def close( self ):
+		super( WidgetHandler, self).close()
+		if not self.widgets:
+			self.remove()
 
 class MainWindow( QtGui.QMainWindow ):
 	"""

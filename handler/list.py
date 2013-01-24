@@ -2,15 +2,15 @@ from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from ui.listUI import Ui_List
-from handler.edit import Edit, EditHandler
 import time
 import os, os.path
 from ui.selectfieldsUI import Ui_SelectFields
 from ui.editpreviewUI import Ui_EditPreview
 from utils import RegisterQueue, Overlay, formatString
 from config import conf
-from mainwindow import EntryHandler
+from mainwindow import EntryHandler, WidgetHandler
 from widgets.list import ListWidget, ListTableModel
+from widgets.edit import EditWidget
 
 
 class SelectFields( QtGui.QMainWindow ):
@@ -112,8 +112,8 @@ class List( QtGui.QWidget ):
 		else:
 			name = self.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit: %s") % name
-		widget = Edit(self.modul, data["id"])
-		handler = EditHandler( self.modul, widget )
+		widget = EditWidget( self.modul, EditWidget.appList, data["id"] )
+		handler = WidgetHandler( self.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 	
 class ListAddAction( QtGui.QAction ):
@@ -128,8 +128,8 @@ class ListAddAction( QtGui.QAction ):
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
-		widget = Edit(self.parentWidget().list.modul, 0)
-		handler = EditHandler( self.parentWidget().list.modul, widget )
+		widget = EditWidget( self.parentWidget().list.modul, EditWidget.appList, 0 )
+		handler = WidgetHandler( self.parentWidget().list.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 		#event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), Edit(self.parentWidget().list.modul, 0), descr, "icons/onebiticonset/onebit_31.png" )
 
@@ -149,8 +149,8 @@ class ListEditAction( QtGui.QAction ):
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit entry: %s") % name
-		widget = Edit(self.parentWidget().list.modul, data["id"])
-		handler = EditHandler( self.parentWidget().list.modul, widget )
+		widget = EditWidget( self.parentWidget().list.modul, EditWidget.appList, data["id"] )
+		handler = WidgetHandler( self.parentWidget().list.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 		
 
@@ -192,59 +192,16 @@ class ListDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( QtGui.QKeySequence.Delete )
-		#self.setDisabled(True)
 	
 	def onTriggered( self, e ):
-		indexes = self.parentWidget().list.selectionModel().selection().indexes()
+		indexes = self.parentWidget().list.selectedIndexes()
 		rows = []
 		for index in indexes:
 			row = index.row()
 			if not row in rows:
 				rows.append( row )
-		if len( rows ) == 1:
-			entryData = self.parentWidget().list.model.getData()[ indexes[0].row() ]
-			config = conf.serverConfig["modules"][ self.parentWidget().list.modul ]
-			if "formatstring" in config.keys():
-				question = QtCore.QCoreApplication.translate("ListHandler", "Delete entry %s?") % formatString( config["formatstring"],  entryData )
-			else:
-				question = QtCore.QCoreApplication.translate("ListHandler", "Delete this entry?")
-			if QtGui.QMessageBox.question(	self.parentWidget().list,
-										QtCore.QCoreApplication.translate("ListHandler", "Confirm delete"),
-										question,
-										QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-										QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
-				return
-		elif len( indexes )>1:
-			if QtGui.QMessageBox.question(	self.parentWidget().list,
-										QtCore.QCoreApplication.translate("ListHandler", "Confirm delete"),
-										QtCore.QCoreApplication.translate("ListHandler", "Delete %s entries?") % len( rows ),
-										QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-										QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
-				return
 		deleteData = [ self.parentWidget().list.model.getData()[ row ] for row in rows ]
-		self.deleteEntries( deleteData, self.parentWidget().list.modul )
-	
-	def deleteEntries(self, entries, modul ):
-		if not entries:
-			return
-		self.parent().overlay.inform( self.parent().overlay.BUSY )
-		self.task = DeleteTask( modul, entries )
-		self.connect( self.task, QtCore.SIGNAL("taskProgress(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onTaskProgress )
-		self.connect( self.task, QtCore.SIGNAL("taskError(PyQt_PyObject)"), self.onTaskError )
-		self.connect( self.task, QtCore.SIGNAL("taskFinished()"), self.onTaskFinished )
-		
-	
-	def onTaskProgress(self, total, done, name ):
-		self.parent().overlay.inform( self.parent().overlay.BUSY, QtCore.QCoreApplication.translate("ListHandler", "Deleting entry %s of %s (%s)") % (done, total, name) )
-	
-	def onTaskFinished(self):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.parentWidget().list.modul, self)
-		self.parent().overlay.inform( self.parent().overlay.SUCCESS )
-	
-	def onTaskError(self, error):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.parentWidget().list.modul, self)
-		self.parent().overlay.inform( self.parent().overlay.ERROR )
+		self.parent().list.delete( [x["id"] for x in deleteData], ask=True )
 	
 
 class ListConfigAction( QtGui.QAction ):

@@ -46,29 +46,13 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>831</width>
-        <height>542</height>
+        <width>843</width>
+        <height>567</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTableView" name="tableView">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::ExtendedSelection</enum>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="sortingEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
+        <widget class="QWidget" name="tableWidget" native="true"/>
        </item>
        <item>
         <widget class="QLabel" name="lblSelected">
@@ -78,26 +62,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableView" name="tableSelected">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="sizeIncrement">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </widget>
+        <widget class="QWidget" name="listSelected" native="true"/>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">

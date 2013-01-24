@@ -242,7 +242,7 @@ class RemoteFile( QtCore.QObject ):
 		self.deleteLater()
 		
 	
-	def timerEvent(self, event ):
+	def onTimerEvent( self ):
 		if self.successHandler:
 			self.successHandler( self )
 		self._delayTimer.deleteLater()

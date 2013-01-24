@@ -7,6 +7,7 @@ import os
 from config import conf
 from network import NetworkService
 
+
 class RegisterQueue():
 	"""
 	Propagates through the QT-Eventqeue and collects all Handlers able to scope with the current request
@@ -212,6 +213,54 @@ class Overlay(QtGui.QWidget):
 			return
 		self.update()
 
+
+def urlForItem( modul, item ):
+	"""
+		Returns a QUrl for the given item.
+		Usefull for creating a QDrag which can be dropped outside the application.
+		@param modul: Name of the modul, this item belongs to.
+		@type modul: String
+		@param item: Data-Dictionary of the item. Must contain at least an "id" key.
+		@type item: Dict
+		@returns: QUrl
+	"""
+	if "dlkey" in item.keys(): #Its a file, fill in its dlkey, sothat drag&drop to the outside works
+		if "name" in item.keys():
+			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"], item["name"] ) ) )
+		else: #Return a URL without a name appended
+			return( QtCore.QUrl( "%s/%s/view/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"] ) ) )
+	else:
+		if "name" in item.keys():
+			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["id"], item["name"] ) ) )
+		else: #Return a URL without a name appended
+			return( QtCore.QUrl( "%s/%s/view/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["id"] ) ) )
+
+def itemFromUrl( url ):
+	"""
+		Parses a URL constructed by urlForItem.
+		Returns a tuple (modul, id, name ) if parsing is successfull, None otherwise.
+		@param url: Url which should be parsed.
+		@type url: QUrl or String
+		@returns: Tuple (modul, id, name ) or None
+	"""
+	if isinstance( url, QtCore.QUrl ):
+		url = url.toString()
+	#Strip host and query-string
+	url = url[ url.find("/", 7) : ] 
+	if "?" in url:
+		url = url[ : url.find("?") ]
+	parts = [ x for x in url.split("/") if x ]
+	if len( parts ) < 3:
+		return( None )
+	if parts[1].lower() != "view":
+		return( None )
+	modul = parts[0]
+	if not modul in conf.serverConfig["modules"].keys(): #Unknown modul
+		return( None )
+	if len( parts )>3:
+		return( modul, parts[2], parts[3] )
+	else:
+		return( modul, parts[2], "" )
 
 def formatString( format, data, prefix=None ):
 	""" Parses a String given by format and substitutes Placeholders using values specified by data.

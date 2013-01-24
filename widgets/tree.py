@@ -1,0 +1,413 @@
+# -*- coding: utf-8 -*-
+from PyQt4 import QtCore, QtGui
+from utils import Overlay
+from network import NetworkService, RequestGroup
+from event import event
+import utils
+from ui.treeWidgetUI import Ui_TreeWidget
+
+class IndexItem (QtGui.QListWidgetItem):
+	def __init__(self,i,Iconpath,caption):
+		super(IndexItem,self).__init__(QtGui.QIcon(Iconpath) , caption)
+		self.i = i
+
+class DirItem(QtGui.QListWidgetItem):
+	def __init__( self, dirName ):
+		super( DirItem, self ).__init__( QtGui.QIcon("icons/filetypes/folder.png"), str( dirName ) )
+		self.dirName = dirName
+	
+	def __gt__( self, other ):
+		if isinstance( other, TreeItem ):
+			return( False )
+		else:
+			return( super( DirItem, self ).__gt__( other ) )
+
+	def __lt__( self, other ):
+		if isinstance( other, TreeItem ):
+			return( True )
+		else:
+			return( super( DirItem, self ).__lt__( other ) )
+
+class TreeItem(QtGui.QListWidgetItem):
+	def __init__( self, data ):
+		if isinstance( data, dict ) and "name" in data:
+			name = str( data["name"] )
+		else:
+			name = " - "
+		super( TreeItem, self ).__init__( QtGui.QIcon("icons/filetypes/unknown.png"), str( name ) )
+		self.data = data
+
+	def __gt__( self, other ):
+		if isinstance( other, DirItem ):
+			return( True )
+		else:
+			return( super( TreeItem, self ).__gt__( other ) )
+
+	def __lt__( self, other ):
+		if isinstance( other, DirItem ):
+			return( False )
+		else:
+			return( super( TreeItem, self ).__lt__( other ) )
+
+class TreeWidget( QtGui.QWidget ):
+	gridSizeIcon = (128,128)
+	gridSizeList = (64,64)
+	cache = {} #Cache Requests sothat allready visited Dirs load much faster
+	
+	def __init__(self, parent, modul, rootNode=None, path=None, treeItem=None, dirItem=None, *args, **kwargs ):
+		super( TreeWidget, self ).__init__( parent, *args, **kwargs )
+		self.ui = Ui_TreeWidget( )
+		self.ui.setupUi( self )
+		self.modul = modul
+		self.currentRootNode = rootNode
+		self.path = path or []
+		self.dirItem = dirItem or DirItem
+		self.treeItem = treeItem or TreeItem
+		self.ui.listWidget.dropEvent = self.dropEvent
+		self.ui.listWidget.dragEnterEvent = self.dragEnterEvent
+		self.ui.listWidget.dragMoveEvent = self.dragMoveEvent
+		self.ui.pathlist.dropEvent = self.pathListDropEvent
+		self.ui.pathlist.dragEnterEvent = self.pathListDragEnterEvent
+		self.ui.pathlist.dragMoveEvent = self.pathListDragMoveEvent
+		self._mouseMoveEvent = self.ui.listWidget.mouseMoveEvent
+		self.ui.listWidget.mouseMoveEvent = self.mouseMoveEvent
+		self._mousePressEvent = self.ui.listWidget.mousePressEvent
+		self.ui.listWidget.mousePressEvent = self.mousePressEvent
+		self.ui.pathlist.setAcceptDrops(True)
+		self.overlay = Overlay( self )
+		if not self.currentRootNode:
+			self.setDefaultRootNode()
+		else:
+			self.loadData()
+		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
+		self.startDrag = False
+		self.connect( event, QtCore.SIGNAL("treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onTreeChanged )
+
+	def onTreeChanged( self, emitter, modul, rootNode, itemID ):
+		if emitter==self: #We issued this event - ignore it as we allready knew
+			return
+		if modul and modul!=self.modul: #Not our modul
+			return
+		if rootNode and rootNode!=self.currentRootNode: #Not in our Hierarchy
+			return
+		#Well, seems to affect us, refresh our view
+		self.loadData()
+
+	def selectedItems(self):
+		return( self.ui.listWidget.selectedItems() )
+
+	def flushCache(self, repo, path=None ):
+		"""
+			Remove a path (or a whole RootNode) from Cache, sothat new requests
+			wont be served from cache
+			
+			@param rootNode: RootNode of the repository
+			@type rootNode: String
+			@param path: (Optional) path with will be marked dirty
+			@type path: String
+		"""
+		if not repo in TreeWidget.cache.keys():
+			return
+		if not path:
+			TreeWidget.cache[ repo ] = {}
+		else:
+			try:
+				del TreeWidget.cache[repo][path]
+			except KeyError:
+				pass
+
+	def mousePressEvent(self, event ):
+		if self._mousePressEvent:
+			self._mousePressEvent( event )
+		if event.buttons() == QtCore.Qt.LeftButton and self.ui.listWidget.selectedItems():
+			self.startDrag = True
+		else:
+			self.startDrag = False
+
+	def mouseMoveEvent(self, event):
+		if self.startDrag:
+			mimeData = QtCore.QMimeData()
+			urls = []
+			for item in self.ui.listWidget.selectedItems():
+				print( item )
+				if isinstance( item, self.treeItem ):
+					print( utils.urlForItem( self.modul, item.data) )
+					urls.append( utils.urlForItem( self.modul, item.data) )
+			mimeData.setUrls( urls )
+			drag = QtGui.QDrag(self)
+			drag.setMimeData(mimeData)
+			drag.setHotSpot(event.pos() - self.rect().topLeft())
+			dropAction = drag.start(QtCore.Qt.CopyAction)
+		elif self._mouseMoveEvent:
+			self._mouseMoveEvent( event )
+
+	def resizeEvent(self, resizeEvent):
+		"""Ensure Items in listWidget get realigned if the available space changes"""
+		super( TreeWidget, self ).resizeEvent( resizeEvent )
+		self.ui.listWidget.reset()
+
+	def dragMoveEvent( self, event ):
+		event.accept()
+
+	def dragEnterEvent(self, event ):
+		if event.source() == self:
+			event.accept()
+			dirs = []
+			files = []
+			for item in self.ui.listWidget.selectedItems():
+				if isinstance( item, self.dirItem ):
+					dirs.append( item.dirName )
+				else:
+					files.append( item.data["name"] )
+			self.clipboard = (self.currentRootNode, self.getPath(), True, files, dirs )
+
+	def dropEvent(self, event):
+		if event.source() == self:
+			item = self.ui.listWidget.itemAt( event.pos() )
+			if isinstance( item, self.dirItem ) and self.clipboard:
+				self.copy( self.clipboard, self.currentRootNode,"/".join( self.path+[ item.dirName ] ) )
+				self.clipboard = None
+
+	def pathListDropEvent(self, event):
+		if event.source()==self and self.clipboard:
+			item = self.ui.pathlist.itemAt( event.pos() )
+			path = "/".join( self.path[ : item.i ] ) or "/"
+			srcRepo, srcPath, doMove, files, dirs = self.clipboard
+			if path!=srcPath:
+				self.copy( self.clipboard, self.currentRootNode, path )
+				self.clipboard = None
+		pass
+	
+	def pathListDragEnterEvent(self, event):
+		if event.source()==self:
+			event.accept()
+			dirs = []
+			files = []
+			for item in self.ui.listWidget.selectedItems():
+				if isinstance( item, self.dirItem ):
+					dirs.append( item.dirName )
+				else:
+					files.append( item.data["name"] )
+			self.clipboard = (self.currentRootNode, self.getPath(), True, files, dirs )
+
+	def pathListDragMoveEvent(self, event):
+		event.accept()
+
+	def setRootNode( self, repoID, repoName ):
+		if repoID==self.currentRootNode:
+			return
+		self.currentRootNode = repoID
+		self.path = []
+		self.loadData()
+	
+	def setDefaultRootNode(self):
+		NetworkService.request("/%s/listRootNodes" % ( self.modul ), successHandler=self.onSetDefaultRootNode )
+	
+	def onSetDefaultRootNode(self, request):
+		data =NetworkService.decode( request )
+		self.rootNodes = data
+		if not self.currentRootNode:
+			try:
+				self.currentRootNode = self.rootNodes[0]["key"]
+			except:
+				self.currentRootNode = None
+				return
+			self.loadData()
+
+	def loadData( self, queryObj=None ):
+		if queryObj and "flushList" in dir( queryObj ):
+			while 1:
+				try:
+					task = queryObj.flushList.pop()
+				except IndexError:
+					break
+				task()
+		path = self.getPath()
+		if not self.currentRootNode in TreeWidget.cache.keys():
+			TreeWidget.cache[ self.currentRootNode ] = {}
+		if path in TreeWidget.cache[ self.currentRootNode ].keys() and not queryObj: # We have this Cached
+			self.updatePathList()
+			self.setData( data=TreeWidget.cache[ self.currentRootNode ][ path ] )
+		else: # We need to fetch this
+			self.overlay.inform( self.overlay.BUSY )
+			self.updatePathList()
+			NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path}, successHandler=self.setData )
+	
+	def updatePathList(self ):
+		foldericon= "icons/menu/folder_small.png"
+		homeicon = "icons/menu/home_small.png"
+		pathlist = self.ui.pathlist
+		pathlist.clear()
+		if self.getPath()==None:
+			homeitem= IndexItem(0,homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home"))
+			pathlist.addItem(homeitem)
+			return
+		homeitem= IndexItem(0,homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home") )
+		pathlist.addItem(homeitem)
+		counter=1
+		for acaption in self.path:
+			aitem= IndexItem(counter, foldericon, acaption)
+			pathlist.addItem(aitem)
+			counter+=1
+
+	def on_pathlist_itemClicked (self,clickeditem):
+		if self.getPath()==None:
+			self.path = []
+		else:
+			self.path = self.path[ : clickeditem.i ]
+		self.loadData()
+
+	def setData( self, request=None, data=None ):
+		if not data:
+			assert request
+			data = NetworkService.decode( request )
+		# event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modul, self ) FIXME: ??
+		if self.getPath()!=None:
+			TreeWidget.cache[ self.currentRootNode ][ self.getPath() ] = data
+		self.ui.listWidget.clear()
+		for dir in data["subdirs"]:
+			self.ui.listWidget.addItem( self.dirItem( dir ) )
+		for entry in data["entrys"]:
+			self.ui.listWidget.addItem( self.treeItem( entry ) )
+		self.overlay.clear( )
+	
+
+	def getPath(self):
+		if self.path == None:
+			return( None )
+		else:
+			return( "/".join( self.path ) or "/" )
+
+	def onRequestSucceeded(self, request, *args, **kwargs):
+		"""
+			We modified something on the server, and that request succeded
+		"""
+		if "flushList" in dir(request):
+			while 1:
+				try:
+					task = request.flushList.pop()
+				except IndexError:
+					break
+				task()
+		event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.currentRootNode, None )
+		self.loadData()
+
+	def mkdir(self, modulName, rootNode, path, dirName):
+		request = NetworkService.request("/%s/mkDir"%modulName, {"rootNode":rootNode, "path":path, "dirname":dirName}, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
+		request.flushList = [ lambda*args, **kwargs: self.flushCache(rootNode, path) ]
+
+	def delete( self, rootNode, path, files, dirs ):
+		self.overlay.inform( self.overlay.BUSY )
+		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
+		for file in files:
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
+										"path": path, 
+										"name": file, 
+										"type": "entry" } ) )
+		for dir in dirs:
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
+										"path": path, 
+										"name": dir, 
+										"type": "dir" } ) )
+		request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
+		self.overlay.inform( self.overlay.BUSY )
+
+	def copy(self, clipboard, rootNode, path ):
+		srcRepo, srcPath, doMove, files, dirs = clipboard
+		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
+		for file in files:
+			request.addQuery( NetworkService.request( "/%s/copy" % self.modul , {"srcrepo": srcRepo,
+									"srcpath": srcPath,
+									"name": file,
+									"destrepo": rootNode,
+									"destpath": path,
+									"deleteold": "1" if doMove else "0",
+									"type":"entry"} ) )
+		for dir in dirs:
+			request.addQuery( NetworkService.request( "/%s/copy" % self.modul, {"srcrepo": srcRepo,
+									"srcpath": srcPath,
+									"name": dir,
+									"destrepo": rootNode,
+									"destpath": path,
+									"deleteold": "1" if doMove else "0",
+									"type":"dir"} ) )
+		request.flushList = [
+							lambda *args, **kwargs: self.flushCache( rootNode, path ),  #Target Path
+							lambda *args, **kwargs: self.flushCache( srcRepo, srcPath ) #Source Path
+						]
+		self.overlay.inform( self.overlay.BUSY )
+	
+	def rename(self, rootNode, path, oldName, newName ):
+		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path":path, "src": oldName, "dest":newName }, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
+		request.flushList = [ lambda *args, **kwargs: self.flushCache(rootNode, path) ]
+		self.overlay.inform( self.overlay.BUSY )
+
+	def showError(self, reqWrapper, error):
+		self.overlay.inform( self.overlay.ERROR, str(error) )
+
+	def on_listWidget_itemDoubleClicked(self, item ):
+		try:
+			self.emit( QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), item )
+		except StopIteration:
+			return
+		if( isinstance( item, DirItem ) ):
+			self.path.append( item.dirName )
+			self.loadData()
+			
+	def on_listWidget_customContextMenuRequested(self, point ):
+		menu = QtGui.QMenu( self )
+		if self.ui.listWidget.itemAt(point):
+			actionRename = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Rename") )
+			menu.addSeparator ()
+			actionCopy = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Copy") )
+			actionMove = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Cut") )
+			actionDelete = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Delete") )
+			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
+			if( selection==actionRename and self.ui.listWidget.currentItem() ):
+				item = self.ui.listWidget.currentItem()
+				if isinstance( item, DirItem ):
+					oldName = item.dirName
+				else:
+					oldName = item.data["name"]
+				newName, okay = QtGui.QInputDialog.getText( self, QtCore.QCoreApplication.translate("TreeWidget", "Rename"), QtCore.QCoreApplication.translate("TreeWidget", "New name"), text=oldName )
+				if okay:
+					self.rename( self.currentRootNode, self.getPath(), oldName, newName )
+			elif selection == actionCopy or selection == actionMove:
+				dirs = []
+				files = []
+				for item in self.ui.listWidget.selectedItems():
+					if isinstance( item, DirItem ):
+						dirs.append( item.dirName )
+					else:
+						files.append( item.data["name"] )
+				doMove = (selection==actionMove)
+				self.clipboard = ( self.currentRootNode, self.getPath(), doMove, files, dirs )
+			elif selection == actionDelete:
+				dirs = []
+				files = []
+				for item in self.ui.listWidget.selectedItems():
+					if isinstance( item, DirItem ):
+						dirs.append( item.dirName )
+					else:
+						files.append( item.data["name"] )
+				self.delete( self.currentRootNode, self.getPath(), files, dirs )				
+		else:
+			actionPaste = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Insert") )
+			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
+			if( selection==actionPaste and self.clipboard ):
+				# self.ui.listWidget.currentItem() ):
+				self.copy( self.clipboard, self.currentRootNode, self.getPath() )
+
+	def keyPressEvent( self, e ):
+		if e.matches( QtGui.QKeySequence.Delete ):
+			dirs = []
+			files = []
+			for item in self.ui.listWidget.selectedItems():
+				if isinstance( item, DirItem ):
+					dirs.append( item.dirName )
+				else:
+					files.append( item.data["name"] )
+			self.delete( self.currentRootNode, self.getPath(), files, dirs )		
+		else:
+			super( TreeWidget, self ).keyPressEvent( e )
+

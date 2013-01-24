@@ -5,6 +5,8 @@ from utils import RegisterQueue
 from ui.relationalselectionUI import Ui_relationalSelector
 from handler.hierarchy import HierarchyList
 from ui.hierarchySelectorUI import Ui_HierarchySelector
+from widgets.hierarchy import HierarchyWidget, HierarchyItem
+from widgets.selectedEntities import SelectedEntitiesWidget
 from os import path
 
 def formatBoneDescr( data ):
@@ -87,7 +89,9 @@ class HierarchyEditBone( QtGui.QWidget ):
 		else:
 			return( None )
 
-class BaseHierarchyBoneSelector( HierarchyList ):
+
+
+class BaseHierarchyBoneSelector( QtGui.QWidget ):
 	
 	class SelectionItem(QtGui.QListWidgetItem):
 		def __init__( self, data ):
@@ -99,25 +103,30 @@ class BaseHierarchyBoneSelector( HierarchyList ):
 			self.data = data
 
 	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None,  *args, **kwargs ):
+		super( BaseHierarchyBoneSelector, self ).__init__( parent, *args, **kwargs )
 		self.modul = skelStructure[ boneName ]["type"].split(".")[1]
 		self.boneName = boneName
 		self.skelStructure = skelStructure
-		self.selection = selection
 		self.setSelection = setSelection
 		self.multiple = skelStructure[boneName]["multiple"]
-		QtGui.QWidget.__init__( self, parent )
 		self.ui = Ui_HierarchySelector()
 		self.ui.setupUi( self )		
-		super( BaseHierarchyBoneSelector, self ).__init__( self.modul, *args, **kwargs )
-		self.setAcceptDrops( True )
+		layout = QtGui.QHBoxLayout( self.ui.hierarchyWidget )
+		self.ui.hierarchyWidget.setLayout( layout )
+		self.hierarchy = HierarchyWidget( self.ui.hierarchyWidget, self.modul )
+		layout.addWidget( self.hierarchy )
+		layout = QtGui.QHBoxLayout( self.ui.listSelected )
+		self.ui.listSelected.setLayout( layout )
+		#parent, modul, selection=None, treeItem=None, dragSource=None,
+		self.selection = SelectedEntitiesWidget( self, self.modul, selection )
+		layout.addWidget( self.selection )
+		self.selection.show()
+		#self.ui.treeWidget.addChild( self.hierarchy )
+		self.hierarchy.show()
 		#self.clipboard = None  #(str repo,str path, bool doMove, list Hierarchys, list dirs )
 		if not self.multiple:
 			self.ui.listSelected.hide()
 			self.ui.lblSelected.hide()
-		else:
-			if selection:
-				for sel in selection:
-					self.ui.listSelected.addItem( BaseHierarchyBoneSelector.SelectionItem( sel ) )
 		self.ui.listSelected.keyPressEvent = self.on_listSelection_event
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
 		
@@ -138,7 +147,7 @@ class BaseHierarchyBoneSelector( HierarchyList ):
 					return
 			return
 		else:
-			self.setSelection( self.selection )
+			self.setSelection( self.selection.get() )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 	
 	def on_treeWidget_itemDoubleClicked(self, item):
