@@ -7,11 +7,17 @@ import utils
 from ui.treeWidgetUI import Ui_TreeWidget
 
 class IndexItem (QtGui.QListWidgetItem):
+	"""
+		Shows one level in the path-widget.
+	"""
 	def __init__(self,i,Iconpath,caption):
 		super(IndexItem,self).__init__(QtGui.QIcon(Iconpath) , caption)
 		self.i = i
 
 class DirItem(QtGui.QListWidgetItem):
+	"""
+		Displayes one subfolder inside a QListWidget
+	"""
 	def __init__( self, dirName ):
 		super( DirItem, self ).__init__( QtGui.QIcon("icons/filetypes/folder.png"), str( dirName ) )
 		self.dirName = dirName
@@ -29,6 +35,10 @@ class DirItem(QtGui.QListWidgetItem):
 			return( super( DirItem, self ).__lt__( other ) )
 
 class TreeItem(QtGui.QListWidgetItem):
+	"""
+		Displayes one generic entry inside a QListWidget.
+		Can be overriden for a more accurate representation of the element.
+	"""
 	def __init__( self, data ):
 		if isinstance( data, dict ) and "name" in data:
 			name = str( data["name"] )
@@ -50,11 +60,33 @@ class TreeItem(QtGui.QListWidgetItem):
 			return( super( TreeItem, self ).__lt__( other ) )
 
 class TreeWidget( QtGui.QWidget ):
+	"""
+		Provides an interface for Data structured as a tree on the server.
+
+		@emits treeChanged(PyQt_PyObject=emitter,PyQt_PyObject=modul,PyQt_PyObject=rootNode,PyQt_PyObject=itemID)
+		@emits onItemClicked(PyQt_PyObject=item.data)
+		@emits onItemDoubleClicked(PyQt_PyObject=item.data)
+	"""
+	
 	gridSizeIcon = (128,128)
 	gridSizeList = (64,64)
 	cache = {} #Cache Requests sothat allready visited Dirs load much faster
 	
 	def __init__(self, parent, modul, rootNode=None, path=None, treeItem=None, dirItem=None, *args, **kwargs ):
+		"""
+			@param parent: Parent widget.
+			@type parent: QWidget
+			@param modul: Name of the modul to show the elements for
+			@type modul: String
+			@param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose one.
+			@type rootNode: String or None
+			@param path: If given, displaying starts in this path
+			@type path: String or None
+			@param treeItem: If set, use this class for displaying Entries inside the QListWidget.
+			@param treeItem: QListWidgetItem
+			@param treeItem: If set, use this class for displaying Directories inside the QListWidget.
+			@param treeItem: QListWidgetItem
+		"""
 		super( TreeWidget, self ).__init__( parent, *args, **kwargs )
 		self.ui = Ui_TreeWidget( )
 		self.ui.setupUi( self )
@@ -94,6 +126,11 @@ class TreeWidget( QtGui.QWidget ):
 		self.loadData()
 
 	def selectedItems(self):
+		"""
+			Returns the currently selected items.
+			Dont mix these with the selectedItems from relationalBones.
+			@returns: List
+		"""
 		return( self.ui.listWidget.selectedItems() )
 
 	def flushCache(self, repo, path=None ):
@@ -117,6 +154,9 @@ class TreeWidget( QtGui.QWidget ):
 				pass
 
 	def mousePressEvent(self, event ):
+		"""
+			Remember the state of the MouseBtns, so we can initiate a drag-operation if needed.
+		"""
 		if self._mousePressEvent:
 			self._mousePressEvent( event )
 		if event.buttons() == QtCore.Qt.LeftButton and self.ui.listWidget.selectedItems():
@@ -125,13 +165,14 @@ class TreeWidget( QtGui.QWidget ):
 			self.startDrag = False
 
 	def mouseMoveEvent(self, event):
+		"""
+			The mouse as moved. We might need to initiate a drag-operation.
+		"""
 		if self.startDrag:
 			mimeData = QtCore.QMimeData()
 			urls = []
 			for item in self.ui.listWidget.selectedItems():
-				print( item )
 				if isinstance( item, self.treeItem ):
-					print( utils.urlForItem( self.modul, item.data) )
 					urls.append( utils.urlForItem( self.modul, item.data) )
 			mimeData.setUrls( urls )
 			drag = QtGui.QDrag(self)
@@ -150,6 +191,9 @@ class TreeWidget( QtGui.QWidget ):
 		event.accept()
 
 	def dragEnterEvent(self, event ):
+		"""
+			Allow Drag&Drop inside this widget (ie. moving files to subdirs)
+		"""
 		if event.source() == self:
 			event.accept()
 			dirs = []
@@ -169,6 +213,12 @@ class TreeWidget( QtGui.QWidget ):
 				self.clipboard = None
 
 	def pathListDropEvent(self, event):
+		"""
+			Elements have been dropped onto the path-list.
+			Check which folder (if any) was under the cursor when the items dropped
+			and move them to the corresponding directory.
+		"""
+
 		if event.source()==self and self.clipboard:
 			item = self.ui.pathlist.itemAt( event.pos() )
 			path = "/".join( self.path[ : item.i ] ) or "/"
@@ -176,7 +226,6 @@ class TreeWidget( QtGui.QWidget ):
 			if path!=srcPath:
 				self.copy( self.clipboard, self.currentRootNode, path )
 				self.clipboard = None
-		pass
 	
 	def pathListDragEnterEvent(self, event):
 		if event.source()==self:
@@ -193,10 +242,17 @@ class TreeWidget( QtGui.QWidget ):
 	def pathListDragMoveEvent(self, event):
 		event.accept()
 
-	def setRootNode( self, repoID, repoName ):
-		if repoID==self.currentRootNode:
+	def setRootNode( self, rootNode, repoName="" ):
+		"""
+			Switch to the given RootNode of our modul and start displaying these items.
+			@param rootNode: Key of the new rootNode.
+			@type rootNode: String
+			@param repoName: Human-readable description of the given rootNode
+			@type repoName: -Currently ignored-
+		"""
+		if rootNode==self.currentRootNode:
 			return
-		self.currentRootNode = repoID
+		self.currentRootNode = rootNode
 		self.path = []
 		self.loadData()
 	
@@ -292,11 +348,34 @@ class TreeWidget( QtGui.QWidget ):
 		event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.currentRootNode, None )
 		self.loadData()
 
-	def mkdir(self, modulName, rootNode, path, dirName):
-		request = NetworkService.request("/%s/mkDir"%modulName, {"rootNode":rootNode, "path":path, "dirname":dirName}, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
+	def mkdir(self, rootNode, path, dirName):
+		"""
+			Creates a new directory on the server.
+			
+			@param rootNode: rootNode to create the directory under.
+			@type rootNode: String
+			@param path: Path to create the directory in
+			@type path: String
+			@param dirName: Name of the new directory
+			@type dirName: String
+		"""
+		request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode":rootNode, "path":path, "dirname":dirName}, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
 		request.flushList = [ lambda*args, **kwargs: self.flushCache(rootNode, path) ]
 
 	def delete( self, rootNode, path, files, dirs ):
+		"""
+			Delete files and/or directories from the server.
+			Directories dont need to be empty, the server handles that case internally.
+			
+			@param rootNode: rootNode to delete from
+			@type rootNode: String
+			@param path: Path (relative to the rootNode) which contains the elements which should be deleted.
+			@type path: String
+			@param files: List of filenames in that directory.
+			@type files: List
+			@param dirs: List of directories in that directory.
+			@type dirs: List
+		"""
 		self.overlay.inform( self.overlay.BUSY )
 		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
 		for file in files:
@@ -313,6 +392,16 @@ class TreeWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 
 	def copy(self, clipboard, rootNode, path ):
+		"""
+			Copy or move elements to the given rootNode/path.
+			
+			@param clipboard: Tuple holding all informations about the elements which get moved/copied
+			@type clipboard: (srcRepo, srcPath, doMove, entities, dirs)
+			@param rootNode: Destination rootNode
+			@type rootNode: String
+			@param path: Destination path
+			@type path: String
+		"""
 		srcRepo, srcPath, doMove, files, dirs = clipboard
 		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
 		for file in files:
@@ -338,16 +427,34 @@ class TreeWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 	
 	def rename(self, rootNode, path, oldName, newName ):
+		"""
+			Rename an entity or directory.
+			
+			@param rootNode: rootNode the element is in
+			@type rootNode: String
+			@param path: Path to that element.
+			@type path: String
+			@param oldName: Old name of the element
+			@type oldName: String
+			@param newName: The new name for that element
+			@type newName: String
+		"""
 		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path":path, "src": oldName, "dest":newName }, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
 		request.flushList = [ lambda *args, **kwargs: self.flushCache(rootNode, path) ]
 		self.overlay.inform( self.overlay.BUSY )
 
 	def showError(self, reqWrapper, error):
 		self.overlay.inform( self.overlay.ERROR, str(error) )
+		
+	def on_listWidget_itemClicked( self, item ):
+		"""
+			A item has been selected. Emit onItemClicked.
+		"""
+		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), item.data )
 
 	def on_listWidget_itemDoubleClicked(self, item ):
 		try:
-			self.emit( QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), item )
+			self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), item )
 		except StopIteration:
 			return
 		if( isinstance( item, DirItem ) ):
@@ -399,6 +506,9 @@ class TreeWidget( QtGui.QWidget ):
 				self.copy( self.clipboard, self.currentRootNode, self.getPath() )
 
 	def keyPressEvent( self, e ):
+		"""
+			Catch and handle QKeySequence.Delete.
+		"""
 		if e.matches( QtGui.QKeySequence.Delete ):
 			dirs = []
 			files = []

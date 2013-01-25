@@ -7,7 +7,19 @@ from config import conf
 from widgets.file import FileItem
 
 class SelectedFilesWidget( QtGui.QListWidget ):
+	"""
+		Displayes the currently selected files of one fileBone.
+	"""
+		
 	def __init__(self, parent, modul, selection=None, *args, **kwargs ):
+		"""
+			@param parent: Parent-Widget
+			@type parent: QWidget
+			@param modul: Modul which entities we'll display. (usually "file" in this context)
+			@type modul: String
+			@param selection: Currently selected Items.
+			@type selection: List-of-Dict, Dict or None
+		"""
 		super( SelectedFilesWidget, self ).__init__( *args, **kwargs )
 		self.selection = selection or []
 		self.modul = modul
@@ -19,6 +31,10 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
 	
 	def itemDoubleClicked(self, item):
+		"""
+			One of our Items has been double-clicked.
+			Remove it from the selection
+		"""
 		self.selection.remove( item.data )
 		self.clear()
 		for s in self.selection:
@@ -26,6 +42,7 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 
 	def dropEvent(self, event):
 		"""
+			We got a Drop! Add them to the selection if possible.
 			Files contain their dlkey instead of an id.
 			Well check the events.source widget for more informations about the files,
 			and add them only if we succed.
@@ -50,6 +67,11 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 					break
 
 	def set(self, selection):
+		"""
+			Set our current selection to "selection".
+			@param selection: The new selection
+			@type selection: List-of-Dict, Dict or None
+		"""
 		self.clear()
 		self.selection = selection
 		if isinstance( self.selection, dict ):
@@ -58,11 +80,20 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 			self.addItem( FileItem( s ) )
 
 	def extend(self, selection):
+		"""
+			Append the given items to our selection.
+			@param selection: New items
+			@type selection: List
+		"""
 		self.selection += selection
 		for s in selection:
 			self.addItem( FileItem( s ) )
 	
 	def get(self):
+		"""
+			Returns the currently selected items.
+			@returns: List or None
+		"""
 		return( self.selection )
 
 	def dragMoveEvent(self, event):
@@ -77,6 +108,9 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 		event.accept()
 	
 	def keyPressEvent( self, e ):
+		"""
+			Catch and handle QKeySequence.Delete.
+		"""
 		if e.matches( QtGui.QKeySequence.Delete ):
 			for item in self.selectedItems():
 				self.selection.remove( item.data )

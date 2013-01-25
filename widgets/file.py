@@ -57,7 +57,9 @@ class FileUploader( QtCore.QObject ):
 			self.request.abort()
 
 class FileItem( TreeItem ):
-
+	"""
+		Displayes a file (including its preview if possible) inside a QListWidget.
+	"""
 	def __init__( self, data ):
 		super( FileItem, self ).__init__( data )
 		self.data = data
@@ -89,8 +91,26 @@ class FileItem( TreeItem ):
 		
 
 class RecursiveUploader( QtGui.QWidget ):
+	"""
+		Upload files and/or directories from the the local filesystem to the server.
+		This one is recursive, it supports uploading of files in subdirectories as well.
+		Subdirectories on the server are created as needed.
+		The functionality is bound to a widget displaying the current progress.
+		If downloading has finished, finished(PyQt_PyObject=self) is emited.
+	"""
+	
 	directorySize = 15 #Letz count an directory as 15 Bytes
 	def __init__(self, files, rootNode, path, modul, *args, **kwargs ):
+		"""
+			@param files: List of local files (including thier absolute path) which will be uploaded. 
+			@type files: List
+			@param rootNode: Destination rootNode
+			@type rootNode: String
+			@param path: Remote destination path, relative to rootNode.
+			@type path: String
+			@param modul: Modulname to upload to (usually "file")
+			@type modul: String
+		"""
 		super( RecursiveUploader, self ).__init__( *args, **kwargs )
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi( self )
@@ -136,9 +156,11 @@ class RecursiveUploader( QtGui.QWidget ):
 		self.doUploadRecursive()
 	
 	def doUploadRecursive( self, data=None ):
-		"""Uploads a list of Files/Dirs to the Server
-		Should only be called by doUpload to prevent raceconditions in which an
-		Subdirectory may be uploaded before its parent Direcotry has been created"""
+		"""
+			Uploads a list of Files/Dirs to the Server
+			Should only be called by doUpload to prevent raceconditions in which an
+			Subdirectory may be uploaded before its parent Direcotry has been created.
+		"""
 		self.statsDone["bytes"] += self.currentFileSize
 		self.currentFileSize = 0
 		self.updateStats()
@@ -224,8 +246,28 @@ class RecursiveUploader( QtGui.QWidget ):
 		return( None )
 
 class RecursiveDownloader( QtGui.QWidget ):
+	"""
+		Download files and/or directories from the server into the local filesystem.
+		The functionality is bound to a widget displaying the current progress.
+		If downloading has finished, finished(PyQt_PyObject=self) is emited.
+	"""
+	
 	directorySize = 15 #Letz count an directory as 15 Bytes
 	def __init__(self, localTargetDir, rootNode, path, files, dirs, modul, *args, **kwargs ):
+		"""
+			@param localTargetDir: Local, existing and absolute destination-path
+			@type localTargetDir: String
+			@param rootNode: RootNode to download from
+			@type rootNode: String
+			@param path: Remote path, relative to rootNode.
+			@type path: String
+			@param files: List of files in the given remote path
+			@type files: List
+			@param dirs: List of directories in the given remote path
+			@type dirs: List
+			@param modul: Modulname to download from (usually "file")
+			@type modul: String
+		"""
 		super( RecursiveDownloader, self ).__init__( *args, **kwargs )
 		self.ui = Ui_FileDownloadProgress()
 		self.ui.setupUi( self )
@@ -285,11 +327,24 @@ class RecursiveDownloader( QtGui.QWidget ):
 
 
 class FileWidget( TreeWidget ):
+	"""
+		Extension for TreeWidget to handle the specialities of files like Up&Downloading.
+	"""
+	
 	def __init__( self, *args, **kwargs ):
 		super( FileWidget, self ).__init__( *args, **kwargs )
 		self.startDrag = False
 
 	def doUpload(self, files, rootNode, path ):
+		"""
+			Uploads a list of files to the Server and adds them to the given path on the server.
+			@param files: List of local filenames including their full, absolute path
+			@type files: List
+			@param rootNode: RootNode which will recive the uploads
+			@type rootNode: String
+			@param path: Path (server-side) relative to the given RootNode
+			@type path: String
+		"""
 		if not files:
 			return
 		uploader = RecursiveUploader( files, rootNode, path, self.modul )
@@ -309,6 +364,19 @@ class FileWidget( TreeWidget ):
 		task.deleteLater()
 
 	def download( self, targetDir, currentRootNode, path, files, dirs ):
+		"""
+			Download a list of files and/or directories from the server to the local file-system.
+			@param targetDir: Local, existing and absolute path
+			@type targetDir: String
+			@param rootNode: RootNode to download from
+			@type rootNode: String
+			@param path: Path relative to the RootNode containing the files and directories which should be downloaded
+			@type path: String
+			@param files: List of files in this directory which should be downloaded
+			@type files: List
+			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
+			@type dirs: List
+		"""
 		downloader = RecursiveDownloader( targetDir, self.currentRootNode, path, files, dirs, self.modul )
 		self.ui.boxUpload.addWidget( downloader )
 		self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
@@ -326,6 +394,9 @@ class FileWidget( TreeWidget ):
 			super( FileWidget, self ).dragEnterEvent( event )
 
 	def on_listWidget_customContextMenuRequested(self, point ):
+		"""
+			Provides the default context-menu for this modul.
+		"""
 		#FIXME: Copy&Paste from tree.py
 		menu = QtGui.QMenu( self )
 		if self.ui.listWidget.itemAt(point):

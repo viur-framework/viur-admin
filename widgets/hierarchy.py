@@ -8,6 +8,10 @@ from widgets.edit import EditWidget
 
 
 class HierarchyItem(QtGui.QTreeWidgetItem):
+	"""
+		Displayes one entry in a QTreeWidget.
+		Its comparison-methods have been overriden to reflect the sort-order on the server.
+	"""	
 	def __init__( self, data ):
 		if "name" in data.keys():
 			name = data["name"]
@@ -35,10 +39,21 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 	"""
 		Provides an interface for Data structured as a hierarchy on the server.
 		
-		@emits hierarchyChanged( emitter, modul, rootNode, itemID )
+		@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode, PyQt_PyObject=itemID )
+		@emits onItemClicked(PyQt_PyObject=item.data)
+		@emits onItemDoubleClicked(PyQt_PyObject=item.data)
+		
 	"""
 	
 	def __init__(self, parent, modul, rootNode=None, *args, **kwargs ):
+		"""
+			@param parent: Parent widget.
+			@type parent: QWidget
+			@param modul: Name of the modul to show the elements for
+			@type modul: String
+			@param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose one.
+			@type rootNode: String or None
+		"""
 		super( HierarchyWidget, self ).__init__( parent, *args, **kwargs )
 		self.modul = modul
 		self.currentRootNode = rootNode
@@ -90,7 +105,6 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		"""
 			A item has been doubleClicked. Emit onItemDoubleClicked.
 		"""
-		print( "pppp")
 		self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), item.data )
 		
 	def onHierarchyChanged(self, emitter, modul, rootNode, itemID ):
