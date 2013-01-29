@@ -27,7 +27,7 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		self.dataCache = []
 		self.fields = ["name"]
 		self.headers = []
-		for item in selection:
+		for item in (selection or []):
 			self.addItem( item )
 	
 	def addItem( self, item ):
@@ -41,7 +41,7 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 			return
 		if isinstance( item, dict ):
 			id = item["id"]
-		elif isinstance( item, basestring ):
+		elif isinstance( item, str ):
 			id = item
 		else:
 			raise NotImplementedError()
