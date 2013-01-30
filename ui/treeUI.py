@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'tree.ui'
 #
-# Created: Mon Jan 14 16:15:30 2013
+# Created: Wed Jan 30 14:44:24 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -53,5 +53,6 @@ class Ui_Tree(object):
 
     def retranslateUi(self, Tree):
         Tree.setWindowTitle(_translate("Tree", "Form", None))
+        self.editSearch.setText(_translate("Tree", "Search", None))
         self.btnSearch.setText(_translate("Tree", "Search", None))
 

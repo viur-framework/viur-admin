@@ -77,8 +77,8 @@ class HierarchyList( QtGui.QWidget ):
 		self.setAcceptDrops( True )
 		#self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'),self.doReloadData )
 		self.ui.webView.hide()
-		self.connect( self.hierarchy, QtCore.SIGNAL("itemClicked(QTreeWidgetItem *,int)"), self.onItemClicked )
-		self.connect( self.hierarchy, QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem *)"), self.onItemDoubleClicked )
+		self.connect( self.hierarchy, QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.onItemClicked )
+		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.onItemDoubleClicked )
 
 
 	def onItemClicked( self, item ):
@@ -87,7 +87,7 @@ class HierarchyList( QtGui.QWidget ):
 		"""
 		config = conf.serverConfig["modules"][ self.modul ]
 		if "previewURL" in config.keys():
-			previewURL = config["previewURL"].replace("{{id}}",item.data["id"])
+			previewURL = config["previewURL"].replace("{{id}}",item["id"])
 			if not previewURL.lower().startswith("http"):
 				previewURL = NetworkService.url.replace("/admin","")+previewURL
 			self.loadPreview( previewURL )
@@ -96,7 +96,7 @@ class HierarchyList( QtGui.QWidget ):
 		"""
 			Open a editor for this entry.
 		"""
-		widget = EditWidget(self.modul, EditWidget.appHierarchy, item.data["id"] )
+		widget = EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
 		handler = WidgetHandler( self.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 

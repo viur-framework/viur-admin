@@ -15,7 +15,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.filter = filter or {}
 		self.skippedkeys=[]
 		self.dataCache = []
-		self.structureCache = {}
 		self.headers = []
 		self.completeList = False #Have we all items?
 		self.isLoading = 0
@@ -24,15 +23,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.reload()
 
 	def setDisplayedFields(self, fields ):
-		self.emit(QtCore.SIGNAL("modelAboutToBeReset()"))
 		self.fields = fields
-		self.headers = []
-		for key in self.fields:
-			if  key in self.structureCache.keys() and key!="id":
-				self.headers.append( self.structureCache[ key ]["descr"] )
-			else:
-				pass
-		self.emit(QtCore.SIGNAL("modelReset()"))
 		self.reload()
 	
 	def setFilterbyName(self, filterName):
@@ -149,23 +140,42 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.setFilter( filter )
 
 class ListWidget( QtGui.QTableView ):
+	"""
+		Provides an interface for Data structured as a simple list.
+		
+		@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode, PyQt_PyObject=itemID )
+		@emits onItemClicked(PyQt_PyObject=item.data)
+		@emits onItemDoubleClicked(PyQt_PyObject=item.data)
+		@emits onItemActivated(PyQt_PyObject=item.data)
+		
+	"""
+	
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
 		super( ListWidget, self ).__init__( parent,  *args, **kwargs )
 		self.modul = modul
 		filter = filter or {}
-		self.model = ListTableModel( self, self.modul, fields or ["name"], filter  )
-		self.setModel( self.model )
+		self.structureCache = None
+		model = ListTableModel( self, self.modul, fields or ["name"], filter  )
+		self.setModel( model )
 		self.overlay = Overlay( self )
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		self.verticalHeader().hide()
-		self.connect( self.model, QtCore.SIGNAL("layoutChanged()"), self.on_layoutChanged) #Hook Data-Avaiable event
+		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.on_layoutChanged) #Hook Data-Avaiable event
 		#self.connect( event, QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'),self.doreloaddata )
 		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
-		self.connect( self.model, QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
-		self.connect( self.model, QtCore.SIGNAL("layoutChanged()"), self.realignHeaders )
-		
+		self.connect( model, QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
+		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.realignHeaders )
+		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
+		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
+
+	def onItemClicked(self, index ):
+		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+
+	def onItemDoubleClicked(self, index ):
+		self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
 
 	def onListChanged(self, emitter, modul, itemID ):
 		"""
@@ -176,15 +186,15 @@ class ListWidget( QtGui.QTableView ):
 		if modul and modul!=self.modul: #Not our modul
 			return
 		#Well, seems to affect us, refresh our view
-		self.model.reload()
+		self.model().reload()
 
 	def realignHeaders(self):
 		"""
 			Distribute space evenly through all displayed columns.
 		"""
 		width = self.size().width()
-		for x in range( 0, len( self.model.headers ) ):
-			self.setColumnWidth(x, int( width/len( self.model.headers ) ) )
+		for x in range( 0, len( self.model().headers ) ):
+			self.setColumnWidth(x, int( width/len( self.model().headers ) ) )
 
 	def rebuildDelegates( self, data ):
 		"""
@@ -197,11 +207,11 @@ class ListWidget( QtGui.QTableView ):
 		for key, bone in data:
 			bones[ key ] = bone
 		self.structureCache = bones
-		self.model.headers = []
+		self.model().headers = []
 		colum = 0
-		fields = [ x for x in self.model.fields if x in bones.keys()]
+		fields = [ x for x in self.model().fields if x in bones.keys()]
 		for field in fields:
-			self.model.headers.append( bones[field]["descr"] )
+			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
 			queue = RegisterQueue()
 			event.emit( QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, field, self.structureCache)
@@ -220,9 +230,12 @@ class ListWidget( QtGui.QTableView ):
 					rows.append( row )
 			idList = []
 			for row in rows:
-				data = self.model.getData()[ row ]
+				data = self.model().getData()[ row ]
 				idList.append( data["id"] )
 			self.delete( idList, ask=True )
+		elif e.key() == QtCore.Qt.Key_Return:
+			for index in self.selectedIndexes():
+				self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
 		else:
 			super( ListWidget, self ).keyPressEvent( e )
 
@@ -234,19 +247,19 @@ class ListWidget( QtGui.QTableView ):
 				self.name = name
 				self.setText( self.name )
 		menu = QtGui.QMenu( self )
-		activeFields = self.model.fields
+		activeFields = self.model().fields
 		actions = []
-		if not self.model.structureCache:
+		if not self.structureCache:
 			return
-		for key in self.model.structureCache.keys():
-			action = FieldAction( key, self.model.structureCache[ key ]["descr"], self )
+		for key in self.structureCache.keys():
+			action = FieldAction( key, self.structureCache[ key ]["descr"], self )
 			action.setCheckable( True )
 			action.setChecked( key in activeFields )
 			menu.addAction( action )
 			actions.append( action )
 		selection = menu.exec_( self.mapToGlobal( point ) )
 		if selection:
-			self.model.setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
+			self.model().setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
 
 	def on_layoutChanged( self, *args, **kwargs ):
 		self.overlay.clear()
@@ -265,6 +278,6 @@ class ListWidget( QtGui.QTableView ):
 			reqGroup.addQuery( NetworkService.request("/%s/delete/%s" % ( self.modul, id ), secure=True ) )
 	
 	def onQuerySuccess(self, query ):
-		self.model.reload()
+		self.model().reload()
 		event.emit( QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.modul, None )
 		self.overlay.inform( self.overlay.SUCCESS )

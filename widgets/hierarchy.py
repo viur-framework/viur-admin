@@ -60,6 +60,9 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		self.overlay = Overlay( self )
 		self.expandList = []
 		self.startDrag = False
+		self.setHeaderHidden( True )
+		self.setAcceptDrops( True )
+		self.setDragDropMode( self.InternalMove )
 		if not self.currentRootNode:
 			self.loadRootNodes()
 		self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
@@ -72,16 +75,18 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		"""
 			Remember the state of the MouseBtns, so we can initiate a drag-operation if needed.
 		"""
+		super( HierarchyWidget, self ).mousePressEvent( event )
 		if event.buttons() == QtCore.Qt.LeftButton and self.selectedItems():
 			self.startDrag = True
 		else:
 			self.startDrag = False
-		super( HierarchyWidget, self ).mousePressEvent( event )
+		
 
 	def mouseMoveEvent(self, event):
 		"""
 			The mouse as moved. We might need to initiate a drag-operation.
 		"""
+		super( HierarchyWidget, self ).mouseMoveEvent( event )
 		if self.startDrag:
 			mimeData = QtCore.QMimeData()
 			urls = []
@@ -92,8 +97,7 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 			drag.setMimeData(mimeData)
 			drag.setHotSpot(event.pos() - self.rect().topLeft())
 			dropAction = drag.start(QtCore.Qt.CopyAction)
-		else:
-			super( HierarchyWidget, self ).mouseMoveEvent( event )
+	
 
 	def onItemClicked( self, item ):
 		"""
@@ -231,6 +235,20 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 				self.insertItem( newItem, child )
 				idx += 1
 				child = fromChildren.child( idx )
+
+	def dragMoveEvent(self, event):
+		event.accept()
+
+	def dragEnterEvent( self, event ):
+		""""
+			Check if we are moving entities we can handle.
+		"""
+		mime = event.mimeData()
+		if mime.hasUrls() and any( [ utils.itemFromUrl( url ) for url in mime.urls() if (utils.itemFromUrl( url ) and utils.itemFromUrl( url )[0]==self.modul) ] ):
+			event.accept()
+			return
+		else:
+			super( HierarchyWidget, self ).dragEnterEvent( event )
 
 	def dropEvent( self, event ):
 		"""

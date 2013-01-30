@@ -93,6 +93,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.modul = modul
 		self.currentRootNode = rootNode
 		self.path = path or []
+		self.searchStr = ""
 		self.dirItem = dirItem or DirItem
 		self.treeItem = treeItem or TreeItem
 		self.ui.listWidget.dropEvent = self.dropEvent
@@ -327,12 +328,27 @@ class TreeWidget( QtGui.QWidget ):
 			self.ui.listWidget.addItem( self.treeItem( entry ) )
 		self.overlay.clear( )
 	
-
 	def getPath(self):
 		if self.path == None:
 			return( None )
 		else:
 			return( "/".join( self.path ) or "/" )
+
+	def search( self, searchStr ):
+		"""
+			Start a search for the given string.
+			If searchStr is None, it ends a currently active search.
+			@param searchStr: Token to search for
+			@type searchStr: String or None
+		"""
+		if searchStr:
+			self.path = None
+			self.searchStr = searchStr
+			self.loadData( {"rootNode":self.currentRootNode, "path": "",  "name$lk": self.searchStr } )
+		else:
+			self.path = []
+			self.searchStr = None
+			self.loadData( )
 
 	def onRequestSucceeded(self, request, *args, **kwargs):
 		"""

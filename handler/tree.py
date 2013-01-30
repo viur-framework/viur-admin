@@ -44,8 +44,10 @@ class TreeList( QtGui.QWidget ):
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 		
 	def on_btnSearch_released(self, *args, **kwargs):
-		self.path = None
-		self.loadData( filter={"rootNode":self.currentRootNode, "path": "",  "serach": self.ui.editSearch.text() }  )
+		self.tree.search( self.ui.editSearch.text() )
+
+	def on_editSearch_returnPressed(self):
+		self.tree.search( self.ui.editSearch.text() )
 		
 	def on_listWidget_itemDoubleClicked(self, item ):
 		if( isinstance( item, self.tree.treeItem ) ):

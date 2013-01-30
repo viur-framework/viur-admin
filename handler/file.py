@@ -27,6 +27,7 @@ class FileList( QtGui.QWidget ):
 		self.tree = FileWidget( self.ui.listWidget, modul, currentRootNode, path, treeItem=self.treeItem, dirItem=self.dirItem )
 		layout.addWidget( self.tree )
 		self.tree.show()
+		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked
 		self.toolBar = QtGui.QToolBar( self )
 		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
 		self.ui.boxActions.addWidget( self.toolBar )
@@ -47,11 +48,16 @@ class FileList( QtGui.QWidget ):
 			widget = Edit(self.modul, item.data["id"])
 			handler = EditHandler( self.modul, widget )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
-	
-	def on_btnSearch_released(self, *args, **kwargs):
-		self.path = None
-		self.reloadData( {"rootNode":self.currentRootNode, "path": "",  "name$lk": self.ui.editSearch.text() }  )
 
+	def on_editSearch_clicked(self, *args, **kwargs):
+		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
+			self.ui.editSearch.setText("")
+
+	def on_btnSearch_released(self, *args, **kwargs):
+		self.tree.search( self.ui.editSearch.text() )
+
+	def on_editSearch_returnPressed(self):
+		self.tree.search( self.ui.editSearch.text() )
 
 class FileUploadAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):

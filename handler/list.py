@@ -4,62 +4,12 @@ from event import event
 from ui.listUI import Ui_List
 import time
 import os, os.path
-from ui.selectfieldsUI import Ui_SelectFields
 from ui.editpreviewUI import Ui_EditPreview
 from utils import RegisterQueue, Overlay, formatString
 from config import conf
 from mainwindow import EntryHandler, WidgetHandler
 from widgets.list import ListWidget, ListTableModel
 from widgets.edit import EditWidget
-
-
-class SelectFields( QtGui.QMainWindow ):
-	class AttributeItem (QtGui.QListWidgetItem):
-		def __init__(self,attrname,infos):
-			super(SelectFields.AttributeItem,self).__init__(infos["descr"])
-			self.name=attrname
-			self.data=infos	
-	def __init__(self, model, *args, **kwargs ):
-		super( SelectFields, self ).__init__( *args, **kwargs )
-		self.ui = Ui_SelectFields()
-		self.ui.setupUi( self )
-		self.list.model = model
-		self.activefields = model.fields
-		self.listai=[]
-		if not self.list.model.structureCache:
-			return
-		self.updateUI()
-		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
-		
-	def updateUI(self):
-		self.ui.listAvaiableFields.clear()
-		for key in self.list.model.structureCache.keys():
-			ai=SelectFields.AttributeItem(key, self.list.model.structureCache[ key ] )
-			if key in self.activefields:
-				ai.setCheckState(QtCore.Qt.Checked)
-			else:
-				ai.setCheckState(QtCore.Qt.Unchecked)
-			self.ui.listAvaiableFields.addItem( ai )
-			self.listai.append(ai)	
-	
-	def on_btnApply_released(self, *args, **kwargs ):
-		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
-			
-	def on_listAvaiableFields_currentRowChanged(self, i):
-		self.update()
-		
-	def on_listAvaiableFields_currentItemChanged (self, item):
-		self.update()
-		
-	def on_listAvaiableFields_itemClicked (self, item):
-		self.update()
-		
-	def update(self):
-		self.activefields =[]
-		for ai in self.listai:
-			if ai.checkState()==QtCore.Qt.Checked:
-				self.activefields.append(ai.name)
-		self.list.model.setDisplayedFields( self.activefields )
 
 
 class List( QtGui.QWidget ):
@@ -78,7 +28,6 @@ class List( QtGui.QWidget ):
 		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText( filter["search"] )
-		self.connect( self.list, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.on_tableView_doubleClicked )
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, modul, "", self )
 		for item in queue.getAll():
@@ -88,32 +37,40 @@ class List( QtGui.QWidget ):
 			else:
 				self.toolBar.addWidget( i )
 		self.ui.boxActions.addWidget( self.toolBar )
+		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
 
 	def on_editSearch_clicked(self, *args, **kwargs):
 		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
 			self.ui.editSearch.setText("")
 
+	def on_editSearch_returnPressed(self):
+		self.search()
+
 	def on_searchBTN_released(self):
 		self.search()
-	
+		
 	def search(self):
-		filter = self.list.model.getFilter()
+		filter = self.list.model().getFilter()
 		searchstr=self.ui.editSearch.text()
 		if searchstr=="" and "search" in filter.keys():
 			del filter["search"]
 		elif searchstr!="":
 			filter["search"]=searchstr
-		self.list.model.setFilter( filter )
+		self.list.model().setFilter( filter )
 	
-	def on_tableView_doubleClicked(self, index):
-		data = self.list.model.getData()[ index.row() ]
-		if self.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.modul ].keys() :
-			name = conf.serverConfig["modules"][ self.modul ]["name"]
+	def openEditor( self, item ):
+		"""
+			Open a new Editor-Widget for the given entity.
+			@param item: Entity to open the editor for
+			@type item: Dict
+		"""
+		if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+			name = conf.serverConfig["modules"][ self.list.modul ]["name"]
 		else:
-			name = self.modul
-		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit: %s") % name
-		widget = EditWidget( self.modul, EditWidget.appList, data["id"] )
-		handler = WidgetHandler( self.modul, widget )
+			name = self.list.modul
+		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit entry: %s") % name
+		widget = EditWidget( self.list.modul, EditWidget.appList, item["id"] )
+		handler = WidgetHandler( self.list.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 	
 class ListAddAction( QtGui.QAction ):
@@ -138,20 +95,12 @@ class ListEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( "Return" )
 	
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
 			return
 		data = self.parentWidget().list.model.getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
-		if self.parentWidget().list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.parentWidget().list.modul ].keys() :
-			name = conf.serverConfig["modules"][ self.parentWidget().list.modul ]["name"]
-		else:
-			name = self.parentWidget().list.modul
-		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit entry: %s") % name
-		widget = EditWidget( self.parentWidget().list.modul, EditWidget.appList, data["id"] )
-		handler = WidgetHandler( self.parentWidget().list.modul, widget )
-		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+		self.parentWidget().openEditor( data )
 		
 
 class DeleteTask( QtCore.QObject ):
@@ -203,16 +152,6 @@ class ListDeleteAction( QtGui.QAction ):
 		deleteData = [ self.parentWidget().list.model.getData()[ row ] for row in rows ]
 		self.parent().list.delete( [x["id"] for x in deleteData], ask=True )
 	
-
-class ListConfigAction( QtGui.QAction ):
-	def __init__(self, parent, *args, **kwargs ):
-		super( ListConfigAction, self ).__init__(  QtGui.QIcon("icons/actions/configure_small.png"),"Konfigurieren", parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( QtGui.QKeySequence.Preferences )
-		
-	
-	def onTriggered( self, e ):
-		self.parentWidget().list.model.selectColums()
 
 
 class Preview( QtGui.QWidget ):
@@ -362,7 +301,6 @@ class ListHandler( QtCore.QObject ):
 			queue.registerHandler( 2, ListEditAction )
 			queue.registerHandler( 4, ListDeleteAction )
 			queue.registerHandler( 5, ListPreviewAction )
-			queue.registerHandler( 7, ListConfigAction )
 
 	def requestModulHandler(self, queue, modulName ):
 		f = lambda: ListCoreHandler( modulName )
