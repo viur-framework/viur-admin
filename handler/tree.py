@@ -41,6 +41,7 @@ class TreeList( QtGui.QWidget ):
 				self.ui.listWidget.addAction( i )
 			else:
 				self.toolBar.addWidget( i )
+		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 		
 	def on_btnSearch_released(self, *args, **kwargs):
@@ -81,7 +82,7 @@ class TreeDirUpAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		self.parent().tree.path = self.parent().tree.path[ : -1 ]
-		self.parent().tree.reloadData()
+		self.parent().tree.loadData()
 
 class TreeMkDirAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
@@ -93,7 +94,7 @@ class TreeMkDirAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		(dirName, okay) = QtGui.QInputDialog.getText( self.parent(), QtCore.QCoreApplication.translate("TreeHandler", "Create directory"), QtCore.QCoreApplication.translate("TreeHandler", "Directory name") )
 		if dirName and okay:
-			self.parent().tree.mkdir( self.parent().tree.modul, self.parent().tree.currentRootNode, self.parent().tree.getPath(), dirName )
+			self.parent().tree.mkdir( self.parent().tree.currentRootNode, self.parent().tree.getPath(), dirName )
 
 class TreeDeleteAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):

@@ -7,7 +7,7 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os
-#from handler.tree import TreeDirUpAction, TreeMkDirAction, TreeDeleteAction,  TreeItem, DirItem
+from handler.tree import TreeDirUpAction, TreeMkDirAction, TreeDeleteAction,  TreeItem, DirItem
 
 from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
@@ -33,6 +33,7 @@ class FileList( QtGui.QWidget ):
 		self.ui.boxActions.addWidget( self.toolBar )
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, modul, self )
+		print("Event emited")
 		for item in queue.getAll():
 			i = item( self )
 			if isinstance( i, QtGui.QAction ):
@@ -40,6 +41,7 @@ class FileList( QtGui.QWidget ):
 				self.ui.listWidget.addAction( i )
 			else:
 				self.toolBar.addWidget( i )
+		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 		
 	def on_listWidget_itemDoubleClicked(self, item ):
@@ -67,7 +69,7 @@ class FileUploadAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		files = QtGui.QFileDialog.getOpenFileNames()
-		self.parent().doUpload( files, self.parent().tree.currentRootNode, self.parent().tree.getPath() )
+		self.parent().tree.doUpload( files, self.parent().tree.currentRootNode, self.parent().tree.getPath() )
 
 
 class FileDownloadAction( QtGui.QAction ): 
@@ -79,7 +81,7 @@ class FileDownloadAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		dirs = []
 		files = []
-		for item in self.parent().ui.listWidget.selectedItems():
+		for item in self.parent().tree.selectedItems():
 			if isinstance( item, DirItem ):
 				dirs.append( item.dirName )
 			else:
@@ -89,7 +91,7 @@ class FileDownloadAction( QtGui.QAction ):
 		targetDir = QtGui.QFileDialog.getExistingDirectory( self.parentWidget() )
 		if not targetDir:
 			return
-		self.parent().download( targetDir, self.parent().currentRootNode, self.parent().getPath(), files, dirs )
+		self.parent().tree.download( targetDir, self.parent().tree.currentRootNode, self.parent().tree.getPath(), files, dirs )
 
 
 class FileRepoHandler( ListCoreHandler ):

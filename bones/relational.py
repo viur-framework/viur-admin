@@ -219,13 +219,13 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		data = self.list.model.getData()[ index.row() ]
+		data = self.list.model().getData()[ index.row() ]
 		self.selection.extend( [data] )
 
 	def reload(self, newFilter=None):
 		if newFilter == None:
-			newFilter = self.model.getFilter()
-		self.model.setFilter( newFilter )
+			newFilter = self.model().getFilter()
+		self.model().setFilter( newFilter )
 	
 	def reloadData(self ):
 		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modulName, self )
@@ -234,15 +234,9 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		if (modulName==self.modul or emitingEntry==self):
 			self.reload( )
 		
-	def on_btnExtendedSearch_released(self, *args, **kwargs):
-		self.model.extendedSearch()
-	
-	def on_btnConfig_released(self, *args, **kwargs ):
-		self.model.selectColums()
-	
 	def on_tableView_doubleClicked (self,index):
 		if self.multiSelection:
-			self.selectedModel.addItem( self.model.getData()[ index.row() ] )
+			self.selectedModel.addItem( self.model().getData()[ index.row() ] )
 		else:
 			self.on_btnSelect_released()
 
@@ -276,34 +270,12 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 	
 	def search(self):
 		searchstr=self.ui.editSearch.text()
-		filter = self.model.getFilter()
+		filter = self.model().getFilter()
 		if searchstr=="" and "search" in filter.keys():
 			del filter["search"]
 		elif searchstr!="":
 			filter["search"]= searchstr
-		self.model.setFilter( filter )
-	
-	def tableHeaderContextMenuEvent(self, point ):
-		class FieldAction( QtGui.QAction ):
-			def __init__(self, key, name, *args, **kwargs ):
-				super( FieldAction, self ).__init__( *args, **kwargs )
-				self.key = key
-				self.name = name
-				self.setText( self.name )
-		menu = QtGui.QMenu( self )
-		activeFields = self.model.fields
-		actions = []
-		if not self.model.structureCache:
-			return
-		for key in self.model.structureCache.keys():
-			action = FieldAction( key, self.model.structureCache[ key ]["descr"], self )
-			action.setCheckable( True )
-			action.setChecked( key in activeFields )
-			menu.addAction( action )
-			actions.append( action )
-		selection = menu.exec_( self.ui.tableView.mapToGlobal( point ) )
-		if selection:
-			self.model.setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
+		self.model().setFilter( filter )
 
 class RelationalHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
