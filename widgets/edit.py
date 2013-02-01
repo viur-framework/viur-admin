@@ -47,10 +47,6 @@ class EditWidget( QtGui.QWidget ):
 	appTree = "tree"
 	appSingleton = "tree"
 
-	def __init__( self, modul, id=0, rootNode="", path="", *args, **kwargs ):
-		self.rootNode = rootNode
-		self.path = path
-
 	def __init__(self, modul, applicationType, id=0, rootNode=None, path=None, *args, **kwargs ):
 		super( EditWidget, self ).__init__( *args, **kwargs )
 		if not "ui" in dir( self ):

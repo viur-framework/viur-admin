@@ -122,7 +122,7 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 			self.ui.lblSelected.hide()
 			self.ui.btnAddSelected.hide()
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
-		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
+		self.connect( self.tree, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 
 	def on_cbRootNode_currentIndexChanged( self, text ): #Fixme: currently disabled
 		if not isinstance( text, str ):
@@ -133,7 +133,7 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 		
 	def on_btnSelect_released(self, *args, **kwargs):
 		if not self.multiple:
-			for item in self.ui.listWidget.selectedItems():
+			for item in self.tree.selectedItems():
 				if isinstance( item, self.treeItem ):
 					self.setSelection( [item.data] )
 					event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
