@@ -58,6 +58,6 @@ class TaskViewer( QtGui.QWidget ):
 		self.ui.verticalLayout.addWidget( nameLbl )
 		descrLbl = QtGui.QLabel( task["descr"], self )
 		self.ui.verticalLayout.addWidget( descrLbl )
-		from handler.edit import Edit
-		self.ui.verticalLayout.addWidget( Edit( "_tasks", taskID ) )
+		from widgets.edit import EditWidget
+		self.ui.verticalLayout.addWidget( EditWidget( "_tasks", EditWidget.appSingleton,  taskID ) )
 
