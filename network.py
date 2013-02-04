@@ -18,7 +18,7 @@ from hashlib import sha1
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl, QVariant, QObject
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate
-
+import traceback
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
 	certs = open("cacert.pem", "r").read()
@@ -112,9 +112,13 @@ class RequestWrapper( QtCore.QObject ):
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
 		super( RequestWrapper, self ).__init__()
 		self.request = request
-		self.successHandler = successHandler
-		self.failureHandler = failureHandler
-		self.finishedHandler = finishedHandler
+		self.requestStatus = None #None => In progress, True => Succeeded, QNetworkError => Failure
+		if successHandler and "__self__" in dir( successHandler ):
+			successHandler.__self__.connect( self, QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), successHandler )
+		if failureHandler and "__self__" in dir( failureHandler ):
+			failureHandler.__self__.connect( self, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), failureHandler )
+		if finishedHandler and "__self__" in dir( finishedHandler ):
+			finishedHandler.__self__.connect( self, QtCore.SIGNAL("finished(PyQt_PyObject)"), finishedHandler )
 		self.connect( request, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onProgress )
 		self.connect( request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.onError )
 		self.connect( request, QtCore.SIGNAL("finished()"), self.onFinished )
@@ -122,25 +126,24 @@ class RequestWrapper( QtCore.QObject ):
 	
 	def onProgress(self, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
-			if self.successHandler:
-				self.successHandler( self )
+			self.requestStatus = True
 		self.emit( QtCore.SIGNAL("downloadProgress(qint64,qint64)"),  bytesReceived, bytesTotal )
 		self.emit( QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesReceived, bytesTotal )
 	
 	def onError(self, error):
-		if self.failureHandler:
-			self.failureHandler( self, error )
-		self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), error )
-		self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, error )
+		self.requestStatus = error
 	
 	def onFinished(self ):
+		if self.requestStatus==True:
+			self.emit( QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), self )
+		else: 
+			self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.requestStatus )
+			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
+		self.emit( QtCore.SIGNAL("finished()") )
+		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
 		print("Req finished: %s" % str(self))
 		NetworkService.currentRequests.remove( self )
 		print("Remaining requests: %s" % len(NetworkService.currentRequests) )
-		if self.finishedHandler:
-			self.finishedHandler( self )
-		self.emit( QtCore.SIGNAL("finished()") )
-		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
 		self.request.deleteLater()
 		self.request = None
 		self.successHandler = None
