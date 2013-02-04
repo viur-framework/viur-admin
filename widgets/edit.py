@@ -306,4 +306,4 @@ class EditWidget( QtGui.QWidget ):
 									QtCore.QCoreApplication.translate("EditHandler", "Task created"), 
 									QtCore.QCoreApplication.translate("EditHandler", "The task was sucessfully created."), 
 									QtCore.QCoreApplication.translate("EditHandler", "Okay") )
-		self.parent().close()
+		self.parent().deleteLater()
