@@ -45,7 +45,7 @@ class EditWidget( QtGui.QWidget ):
 	appList = "list"
 	appHierarchy = "hierarchy"
 	appTree = "tree"
-	appSingleton = "tree"
+	appSingleton = "singleton"
 
 	def __init__(self, modul, applicationType, id=0, rootNode=None, path=None, *args, **kwargs ):
 		super( EditWidget, self ).__init__( *args, **kwargs )

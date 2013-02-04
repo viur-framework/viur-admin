@@ -8,9 +8,10 @@ import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error,
 from time import sleep, time
 import sys, os
 from handler.tree import TreeDirUpAction, TreeMkDirAction, TreeDeleteAction,  TreeItem, DirItem
-
+from widgets.edit import EditWidget
 from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
+from mainwindow import WidgetHandler
 from utils import RegisterQueue
 
 class FileList( QtGui.QWidget ):
@@ -33,7 +34,6 @@ class FileList( QtGui.QWidget ):
 		self.ui.boxActions.addWidget( self.toolBar )
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, modul, self )
-		print("Event emited")
 		for item in queue.getAll():
 			i = item( self )
 			if isinstance( i, QtGui.QAction ):
@@ -42,13 +42,13 @@ class FileList( QtGui.QWidget ):
 			else:
 				self.toolBar.addWidget( i )
 		self.ui.boxActions.addWidget( self.toolBar )
-		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
+		self.connect( self.tree, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 		
 	def on_listWidget_itemDoubleClicked(self, item ):
 		if( isinstance( item, self.tree.treeItem ) ):
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			widget = Edit(self.modul, item.data["id"])
-			handler = EditHandler( self.modul, widget )
+			widget = EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"])
+			handler = WidgetHandler( self.tree.modul, widget )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
 	def on_editSearch_clicked(self, *args, **kwargs):

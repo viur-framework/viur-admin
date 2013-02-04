@@ -6,6 +6,8 @@ from utils import Overlay
 from network import NetworkService, RemoteFile, RequestGroup
 from event import event
 from widgets.tree import TreeWidget, TreeItem
+from widgets.edit import EditWidget
+from mainwindow import WidgetHandler
 import os, sys
 
 class FileUploader( QtCore.QObject ):
@@ -446,8 +448,8 @@ class FileWidget( TreeWidget ):
 				self.download( targetDir, self.currentRootNode, self.getPath(), files, dirs )
 			elif selection == actionEdit:
 				descr = "Bearbeiten"
-				widget = Edit(self.modul, item.data["id"])
-				handler = EditHandler( self.modul, widget )
+				widget = EditWidget(self.modul, EditWidget.appTree, item.data["id"])
+				handler = WidgetHandler( self.modul, widget )
 				event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 		else:
 			actionPaste = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Insert") )
