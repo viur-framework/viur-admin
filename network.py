@@ -20,7 +20,7 @@ from PyQt4.QtCore import QUrl, QVariant, QObject
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate
 import traceback
 import logging
-
+import weakref
 
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
@@ -235,16 +235,24 @@ class RemoteFile( QtCore.QObject ):
 	"""
 	maxBlockTime = 30 #Maximum seconds, we are willing to wait for a file to download in "blocking" mode
 	
-	def __init__(self, dlkey, successHandler=None, failureHandler=None, *args, **kwargs ):
+	def __init__(self, dlKey, successHandler=None, failureHandler=None, *args, **kwargs ):
 		super( RemoteFile, self ).__init__(*args, **kwargs)
-		self.successHandler = successHandler
-		self.failureHandler = failureHandler
-		self.dlKey = dlkey
-		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest() )
+		self.logger = logging.getLogger( "RemoteFile" )
+		self.logger.debug("New RemoteFile: %s for %s", str(self), str(dlKey) )
+		if successHandler:
+			self.successHandlerSelf = weakref.ref( successHandler.__self__)
+			self.successHandlerName = successHandler.__name__
+		if failureHandler:
+			self.failureHandlerSelf = weakref.ref( failureHandler.__self__)
+			self.failureHandlerName = failureHandler.__name__
+		self.dlKey = dlKey
+		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest() )
 		if os.path.isfile( fileName ):
+			self.logger.debug("We already have that file :)")
 			self._delayTimer = QtCore.QTimer( self )
 			self._delayTimer.singleShot( 250, self.onTimerEvent )
 		else:
+			self.logger.debug("Need to fetch that file")
 			self.loadFile()
 		NetworkService.currentRequests.append( self )
 
@@ -252,6 +260,7 @@ class RemoteFile( QtCore.QObject ):
 		"""
 			Unregister this object, so it gets garbarge collected
 		"""
+		self.logger.debug("Checkpoint: remove")
 		NetworkService.currentRequests.remove( self )
 		self.successHandler = None
 		self.failureHandler = None
@@ -259,24 +268,35 @@ class RemoteFile( QtCore.QObject ):
 		
 	
 	def onTimerEvent( self ):
-		if self.successHandler:
-			self.successHandler( self )
+		self.logger.debug("Checkpoint: onTimerEvent")
+		s = self.successHandlerSelf()
+		if s:
+			try:
+				getattr( s, self.successHandlerName )( self )
+			except e:
+				self.logger.exception( e )
 		self._delayTimer.deleteLater()
 		self._delayTimer = None
 		self.remove()
 
 	
 	def loadFile(self ):
-		if not self.dlKey.lower().startswith("http://") or not self.dlKey.lower().startswith("https://"):
-			self.dlKey = "/file/view/%s/file.dat" % self.dlKey
-		req = NetworkService.request( self.dlKey, successHandler=self.onFileAvaiable  )
+		dlKey = self.dlKey
+		if not dlKey.lower().startswith("http://") or not dlKey.lower().startswith("https://"):
+			dlKey = "/file/view/%s/file.dat" % dlKey
+		req = NetworkService.request( dlKey, successHandler=self.onFileAvaiable  )
 
 	def onFileAvaiable( self, request ):
+		self.logger.debug("Checkpoint: onFileAvaiable")
 		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1( self.dlKey.encode("UTF-8")).hexdigest() )
 		data = request.readAll()
 		open( fileName, "w+b" ).write( data )
-		if self.successHandler:
-			self.successHandler( self )
+		s = self.successHandlerSelf()
+		if s:
+			try:
+				getattr( s, self.successHandlerName )( self )
+			except e:
+				self.logger.exception( e )
 		self.remove()
 
 	def getFileName( self ):
