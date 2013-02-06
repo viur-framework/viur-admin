@@ -99,7 +99,7 @@ class ListEditAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
 			return
-		data = self.parentWidget().list.model.getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
+		data = self.parentWidget().list.model().getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
 		self.parentWidget().openEditor( data )
 		
 
