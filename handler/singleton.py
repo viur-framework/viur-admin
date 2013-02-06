@@ -4,6 +4,7 @@ from event import event
 from config import conf
 from mainwindow import EntryHandler
 from widgets.edit import EditWidget
+import os
 
 class SingletonEntryHandler( EntryHandler ):
 	"""Class for holding the main (module) Entry within the modules-list"""

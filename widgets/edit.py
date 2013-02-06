@@ -99,6 +99,8 @@ class EditWidget( QtGui.QWidget ):
 				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
 			else:
 				self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
+		elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
+			request = NetworkService.request("/%s/edit" % ( self.modul ), successHandler=self.setData )
 		else:
 			raise NotImplementedError() #Should never reach this
 
@@ -123,6 +125,8 @@ class EditWidget( QtGui.QWidget ):
 				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+		elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
+			self.request = NetworkService.request("/%s/edit" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		else:
 			raise NotImplementedError() #Should never reach this
 
