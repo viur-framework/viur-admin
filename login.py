@@ -10,10 +10,18 @@ from urllib.error import HTTPError
 from PyQt4 import QtCore
 import json
 from locales import ISO639CODES
+import logging
 
 class LoginTask( QtCore.QObject ):
 	def __init__(self, username, password, captchaToken=None, captcha=None ):
 		QtCore.QObject.__init__( self )
+		self.logger = logging.getLogger( "LoginTask" )
+		self.logger.debug("Starting LoginTask")
+		try:
+			event.emit( QtCore.SIGNAL( "loginStarted(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)" ), username, password, captchaToken, captcha )
+		except StopIteration:
+			logging.info("Login aborted by StopIteration")
+			return
 		self.username = username
 		self.password = password
 		self.captcha = captcha
@@ -24,36 +32,32 @@ class LoginTask( QtCore.QObject ):
 		self.accountType = None
 		self.isLocalServer = False
 		self.hostName = urllib.parse.urlparse( NetworkService.url ).hostname or NetworkService.url
-		if urllib.parse.urlparse( NetworkService.url ).port: #Asume local Development
+		if urllib.parse.urlparse( NetworkService.url ).port: #Assume local Development
+			logging.debug("Assuming local development Server")
 			self.isLocalServer = True
-			self.req = NetworkService.request("http://%s:%s/_ah/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ) )
-			self.connect( self.req, QtCore.SIGNAL("finished()"), self.onWarmup )
+			NetworkService.request("http://%s:%s/_ah/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), successHandler=self.onWarmup )
 		else:
 			self.onWarmup()
 
 	
-	def onWarmup(self): #Warmup request has finished
-		if self.req:
-			self.req.deleteLater()
+	def onWarmup(self, request=None): #Warmup request has finished
+		self.logger.debug("Checkpoint: onWarmup")
 		if self.isLocalServer:
-			self.req = NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ) )
+			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), finishedHandler=self.onAuthMethodKnown )
 		else:
-			self.req = NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ) )
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onAuthMethodKnown )
-		
+			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ), finishedHandler=self.onAuthMethodKnown )
 	
-	def onAuthMethodKnown(self):
-		method = bytes( self.req.readAll() ).decode("UTF-8").lower()
-		if self.req:
-			self.req.deleteLater()
+	def onAuthMethodKnown(self, request ):
+		self.logger.debug("Checkpoint: onAuthMethodKnown")
+		method = bytes( request.readAll() ).decode("UTF-8").lower()
 		if method == "x-viur-internal":
-			self.req = NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True )
-			self.connect( self.req, QtCore.SIGNAL("finished()"), self.onViurAuth )
+			logging.debug("LoginTask using method x-viur-internal")
+			NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True, successHandler=self.onViurAuth )
 		else: #Fallback to google account auth
+			logging.debug("LoginTask using method x-google-account")
 			if self.isLocalServer:
 				argsStr = urllib.parse.urlencode( {"email": self.username, "admin": "True", "action":"Login"} )
-				self.req = NetworkService.request("http://%s:%s/_ah/login?%s" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, argsStr ), None )
-				self.connect( self.req, QtCore.SIGNAL("finished()"), self.onLocalAuth )
+				NetworkService.request("http://%s:%s/_ah/login?%s" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, argsStr ), None, finishedHandler=self.onLocalAuth  )
 			else:
 				credDict = {	"Email": self.username,
 							"Passwd":self.password,
@@ -64,53 +68,51 @@ class LoginTask( QtCore.QObject ):
 					credDict["logintoken"] = self.captchaToken
 					credDict["logincaptcha"] = self.captcha
 				credStr = urllib.parse.urlencode( credDict )
-				self.req = NetworkService.request( "https://www.google.com/accounts/ClientLogin", credStr.encode("UTF-8")  )
-				self.connect( self.req, QtCore.SIGNAL("finished()"), self.onGoogleAuthSuccess )		
+				NetworkService.request( "https://www.google.com/accounts/ClientLogin", credStr.encode("UTF-8"), successHandler=self.onGoogleAuthSuccess )
 
-	def onViurAuth(self): # We recived an response to our auth request
+	def onViurAuth(self, request): # We recived an response to our auth request
+		self.logger.debug("Checkpoint: onViurAuth")
 		try:
-			res = NetworkService.decode( self.req )
+			res = NetworkService.decode( request )
 		except: #Something went wrong
+			event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 			self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 			return
-		finally:
-			self.req.deleteLater()
-			self.req = None
 		if str(res).lower()=="okay":
 			self.loadConfig()
 		else:
+			event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 			self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 
-	def onLocalAuth(self):
-		self.req.deleteLater()
-		self.req = NetworkService.request("http://%s:%s/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None )
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.loadConfig )
+	def onLocalAuth(self, request):
+		self.logger.debug("Checkpoint: onLocalAuth")
+		NetworkService.request("http://%s:%s/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None, successHandler=self.loadConfig )
 		
-	def loadConfig(self):
-		if self.req:
-			self.req.deleteLater()
-		self.req = NetworkService.request("/config")
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onLoadConfig )
+	def loadConfig(self, request=None):
+		self.logger.debug("Checkpoint: loadConfig")
+		NetworkService.request("/config", successHandler=self.onLoadConfig )
 		
-	def onLoadConfig(self):
+	def onLoadConfig(self, request):
+		self.logger.debug("Checkpoint: onLoadConfig")
 		try:
-			conf.serverConfig = NetworkService.decode( self.req )
+			conf.serverConfig = NetworkService.decode( request )
 		except ValueError:
+			event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 			self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 			return
-		finally:
-			self.req.deleteLater()
-		self.emit(QtCore.SIGNAL("loginSucceeded()") )
+		event.emit( QtCore.SIGNAL("loginSucceeded()") )
 
-	def onGoogleAuthSuccess(self):
-		res = bytes( self.req.readAll() ).decode("UTF-8")
-		self.req.deleteLater()
+	def onGoogleAuthSuccess( self, request ):
+		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
+		res = bytes( request.readAll() ).decode("UTF-8")
 		authToken=None
 		for line in res.splitlines():
 			if line.lower().startswith("auth="):
 				authToken = line[ 5: ].strip()
+		self.logger.debug("LoginTask got AuthToken: %s...", authToken[:6] )
 		if not authToken:
 			if "CaptchaRequired".lower() in res.lower():
+				self.logger.info( "Need captcha" )
 				captchaToken = None
 				captchaURL = None
 				for line in res.splitlines():
@@ -122,6 +124,7 @@ class LoginTask( QtCore.QObject ):
 				self.emit(QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), captchaToken, captchaURL)
 				return
 			else:
+				event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", "Login failed") )
 				self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), "Login fehlgeschlagen" )
 				return
 		# Normalizing the URL we use
@@ -137,13 +140,11 @@ class LoginTask( QtCore.QObject ):
 			else:
 				url = "https://"+url
 		argsStr = urllib.parse.urlencode( {"continue": url+"/user/login", "auth": authToken} )
-		self.req = NetworkService.request("https://%s/_ah/login?%s" % ( self.hostName, argsStr ) )
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onGAEAuth )
+		NetworkService.request("https://%s/_ah/login?%s" % ( self.hostName, argsStr ), successHandler=self.onGAEAuth )
 	
-	def onGAEAuth(self):
-		self.req.deleteLater()
-		self.req = NetworkService.request( "/user/login" )
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.loadConfig )
+	def onGAEAuth( self, request=None ):
+		self.logger.debug("Checkpoint: onGAEAuth")
+		self.req = NetworkService.request( "/user/login", successHandler=self.loadConfig )
 	
 
 class Login( QtGui.QMainWindow ):
@@ -155,7 +156,7 @@ class Login( QtGui.QMainWindow ):
 		self.helpBrowser = None
 		self.connect( event, QtCore.SIGNAL('resetLoginWindow()'), self.enableForm )
 		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
-		self.connect( event, QtCore.SIGNAL('mainWindowInitialized()'), self.closeWindow )
+		self.connect( event, QtCore.SIGNAL('loginSucceeded()'), self.closeWindow )
 		self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
@@ -180,7 +181,6 @@ class Login( QtGui.QMainWindow ):
 	def changeEvent(self, *args, **kwargs):
 		super( Login, self ).changeEvent( *args, **kwargs )
 		self.ui.retranslateUi( self )
-
 	
 	def loadAccounts(self):
 		cb = self.ui.cbPortal
@@ -291,7 +291,6 @@ class Login( QtGui.QMainWindow ):
 		self.captchaReq.deleteLater()
 		self.captchaReq = None
 
-
 	def login( self, username, password, captcha=None ):
 		"""
 		Then:
@@ -305,13 +304,12 @@ class Login( QtGui.QMainWindow ):
 			self.loginTask = LoginTask( username, password )
 		self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
 		self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
-		self.connect( self.loginTask, QtCore.SIGNAL("loginSucceeded()"), self.loginSucceeded )
+		self.connect( event, QtCore.SIGNAL("loginSucceeded()"), self.loginSucceeded )
 
 
 	def loginSucceeded( self ):
 		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
 		conf.loadPortalConfig( NetworkService.url )
-		event.emit( QtCore.SIGNAL('loginSucceeded()') )
 	
 	def enableForm(self, msg=None):
 		if msg:

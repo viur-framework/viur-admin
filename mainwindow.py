@@ -150,14 +150,14 @@ class MainWindow( QtGui.QMainWindow ):
 		self.ui.treeWidget.setColumnWidth(0,244)
 		self.ui.treeWidget.setColumnWidth(1,25)
 		self.ui.treeWidget.setColumnWidth(2,25)
-		self.connect( event, QtCore.SIGNAL('loginSucceeded()'), self.setup )
-		self.connect( event, QtCore.SIGNAL('focusWidget(PyQt_PyObject,PyQt_PyObject)'), self.focusWidget )
-		self.connect( event, QtCore.SIGNAL('closeWidget(PyQt_PyObject)'), self.closeWidget )
-		self.connect( event, QtCore.SIGNAL('addHandler(PyQt_PyObject)'), self.addHandler )
-		self.connect( event, QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler )
-		self.connect( event, QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget )
-		self.connect( event, QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self.popWidget )
-		self.connect( event, QtCore.SIGNAL("statusMessage(PyQt_PyObject,PyQt_PyObject)"), self.statusMessage )
+		event.connectWithPriority( QtCore.SIGNAL('loginSucceeded()'), self.setup, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('focusWidget(PyQt_PyObject,PyQt_PyObject)'), self.focusWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('closeWidget(PyQt_PyObject)'), self.closeWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), self.addHandler, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessage, event.lowestPriority )
 		self.currentHandler = None
 		self.helpBrowser = None
 		self.startPage = None

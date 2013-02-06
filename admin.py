@@ -31,7 +31,10 @@ from login import Login
 from config import conf
 import urllib, urllib.request
 from urllib.parse import quote_plus
+import logging
+from event import EventDispatcher
 
+logging.getLogger().setLevel( logging.DEBUG )
 
 def reportError( type, value, tb ):
 	print( "*"*40 )
@@ -84,3 +87,4 @@ l.show()
 app.exec_()
 conf.savePortalConfig()
 conf.saveConfig()
+EventDispatcher.shutdown()

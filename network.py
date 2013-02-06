@@ -19,6 +19,9 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl, QVariant, QObject
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate
 import traceback
+import logging
+
+
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
 	certs = open("cacert.pem", "r").read()
@@ -53,13 +56,15 @@ class SecurityTokenProvider( QObject ):
 	
 	def __init__(self, *args, **kwargs ):
 		super( SecurityTokenProvider, self ).__init__( *args, **kwargs )
+		self.logger = logging.getLogger( "RequestWrapper" )
 		self.queue = Queue( 5 ) #Queue of valid tokens
-		self.req = None
+		self.isRequesting = False
 	
 	def reset(self):
 		"""
 			Flushes the cache and tries to rebuild it
 		"""
+		self.logger.debug("Reset" )
 		while not self.queue.empty():
 			self.queue.get( False )
 		self.req = NetworkService.request("/skey" )
@@ -69,22 +74,25 @@ class SecurityTokenProvider( QObject ):
 		"""
 			Requests a new SKey if theres currently no request pending
 		"""
-		if not self.req:
-			self.req = NetworkService.request("/skey" )
-			self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
+		if not self.isRequesting:
+			self.logger.debug( "Fetching new skey" )
+			self.isRequesting = True
+			NetworkService.request("/skey", successHandler=self.onSkeyAvailable, failureHandler=self.onError )
 	
-	def onSkeyAvailable(self):
+	def onError(self, request, error ):
+		self.logger.warning( "Error fetching skey: %s", str(error) )
+		self.isRequesting = False
+	
+	def onSkeyAvailable(self, request=None ):
 		"""
 			New SKey got avaiable
 		"""
-		if not self.req:
-			return
+		self.isRequesting = False
 		try:
-			skey = NetworkService.decode( self.req )
+			skey = NetworkService.decode( request )
 		except:
 			skey = None
-		self.req.deleteLater()
-		self.req = None
+		self.isRequesting = False
 		if not skey:
 			return
 		try:
@@ -97,13 +105,16 @@ class SecurityTokenProvider( QObject ):
 			Returns a fresh, valid SKey from the pool.
 			Blocks and requests a new one if the Pool is currently empty.
 		"""
+		self.logger.debug( "Consuming a new skey" )
 		skey = None
 		while not skey:
 			self.fetchNext()
 			try:
 				skey = self.queue.get( False )
 			except QEmpty:
+				self.logger.debug( "Empty cache! Please wait..." )
 				QtCore.QCoreApplication.processEvents()
+		self.logger.debug( "Using skey: %s", skey )
 		return( skey )
 	
 securityTokenProvider = SecurityTokenProvider()
@@ -111,6 +122,8 @@ securityTokenProvider = SecurityTokenProvider()
 class RequestWrapper( QtCore.QObject ):
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
 		super( RequestWrapper, self ).__init__()
+		self.logger = logging.getLogger( "RequestWrapper" )
+		self.logger.debug("New network request: %s", str(self) )
 		self.request = request
 		self.requestStatus = None #None => In progress, True => Succeeded, QNetworkError => Failure
 		if successHandler and "__self__" in dir( successHandler ):
@@ -141,9 +154,9 @@ class RequestWrapper( QtCore.QObject ):
 			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
 		self.emit( QtCore.SIGNAL("finished()") )
 		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-		print("Req finished: %s" % str(self))
+		self.logger.debug("Request finished: %s", str(self) )
 		NetworkService.currentRequests.remove( self )
-		print("Remaining requests: %s" % len(NetworkService.currentRequests) )
+		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
 		self.request.deleteLater()
 		self.request = None
 		self.successHandler = None

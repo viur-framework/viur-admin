@@ -149,7 +149,7 @@ class ListDeleteAction( QtGui.QAction ):
 			row = index.row()
 			if not row in rows:
 				rows.append( row )
-		deleteData = [ self.parentWidget().list.model.getData()[ row ] for row in rows ]
+		deleteData = [ self.parentWidget().list.model().getData()[ row ] for row in rows ]
 		self.parent().list.delete( [x["id"] for x in deleteData], ask=True )
 	
 
@@ -292,8 +292,10 @@ class ListCoreHandler( EntryHandler ):
 class ListHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
-		self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
+		event.connectWithPriority( QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.requestModulListActions, event.lowPriority )
+		#self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		#self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
 	
 	def requestModulListActions(self, queue, modul, config, parent ):
 		if isinstance( parent, List ):
@@ -305,12 +307,5 @@ class ListHandler( QtCore.QObject ):
 	def requestModulHandler(self, queue, modulName ):
 		f = lambda: ListCoreHandler( modulName )
 		queue.registerHandler( 0, f )
-	
-	
-	def openList(self, modulName, listConfigName ):
-		l = ListList( modulName, listConfigName )
-		event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), l , QtCore.QCoreApplication.translate("ListHandler", "List"), None )
-		l.updateTabDescription()
-		
 
 _listHandler = ListHandler()
