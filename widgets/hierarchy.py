@@ -59,7 +59,6 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		self.currentRootNode = rootNode
 		self.overlay = Overlay( self )
 		self.expandList = []
-		self.startDrag = False
 		self.setHeaderHidden( True )
 		self.setAcceptDrops( True )
 		self.setDragDropMode( self.InternalMove )
@@ -70,34 +69,6 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		self.connect( self,  QtCore.SIGNAL("itemClicked(QTreeWidgetItem *,int)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QTreeWidgetItem *,int)"), self.onItemDoubleClicked )
 
-
-	def mousePressEvent(self, event ):
-		"""
-			Remember the state of the MouseBtns, so we can initiate a drag-operation if needed.
-		"""
-		super( HierarchyWidget, self ).mousePressEvent( event )
-		if event.buttons() == QtCore.Qt.LeftButton and self.selectedItems():
-			self.startDrag = True
-		else:
-			self.startDrag = False
-		
-
-	def mouseMoveEvent(self, event):
-		"""
-			The mouse as moved. We might need to initiate a drag-operation.
-		"""
-		super( HierarchyWidget, self ).mouseMoveEvent( event )
-		if self.startDrag:
-			mimeData = QtCore.QMimeData()
-			urls = []
-			for item in self.selectedItems():
-				urls.append( utils.urlForItem( self.modul, item.data) )
-			mimeData.setUrls( urls )
-			drag = QtGui.QDrag(self)
-			drag.setMimeData(mimeData)
-			drag.setHotSpot(event.pos() - self.rect().topLeft())
-			dropAction = drag.start(QtCore.Qt.CopyAction)
-	
 
 	def onItemClicked( self, item ):
 		"""
@@ -185,12 +156,6 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 		NetworkService.request( "/%s/list/%s" % (self.modul, (parent or self.currentRootNode) ), successHandler=self.setData, failureHandler=self.onLoadError )
 
-	def reparent(self, itemKey, destParent):
-		NetworkService.request( "/%s/reparent" % self.modul, { "item": itemKey, "dest": destParent }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
-
-	def updateSortIndex(self, itemKey, newIndex):
-		self.request = NetworkService.request( "/%s/setIndex" % self.modul, { "item": itemKey, "index": newIndex }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
-
 	def setData(self, request):
 		data = NetworkService.decode( request )
 		if len( data["skellist"] ):
@@ -236,19 +201,17 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 				idx += 1
 				child = fromChildren.child( idx )
 
-	def dragMoveEvent(self, event):
-		event.accept()
-
 	def dragEnterEvent( self, event ):
 		""""
-			Check if we are moving entities we can handle.
+			Add URL-Mimedata to the dragevent, so it can be dropped outside.
 		"""
-		mime = event.mimeData()
-		if mime.hasUrls() and any( [ utils.itemFromUrl( url ) for url in mime.urls() if (utils.itemFromUrl( url ) and utils.itemFromUrl( url )[0]==self.modul) ] ):
-			event.accept()
-			return
-		else:
-			super( HierarchyWidget, self ).dragEnterEvent( event )
+		if event.source() == self:
+			mimeData = event.mimeData()
+			urls = []
+			for item in self.selectedItems():
+				urls.append( utils.urlForItem( self.modul, item.data) )
+			mimeData.setUrls( urls )
+		super( HierarchyWidget, self ).dragEnterEvent( event )
 
 	def dropEvent( self, event ):
 		"""
@@ -304,6 +267,13 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 						return
 					childIndex+=1
 					currChild = self.topLevelItem( childIndex )
+
+	def reparent(self, itemKey, destParent):
+		NetworkService.request( "/%s/reparent" % self.modul, { "item": itemKey, "dest": destParent }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
+
+	def updateSortIndex(self, itemKey, newIndex):
+		self.request = NetworkService.request( "/%s/setIndex" % self.modul, { "item": itemKey, "index": newIndex }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
+
 
 	def delete( self, id ):
 		"""
