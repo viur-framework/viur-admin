@@ -39,37 +39,37 @@
 <context>
     <name>CalenderList</name>
     <message>
-        <location filename="calender.py" line="14"/>
+        <location filename="calender.py" line="19"/>
         <source>unfiltered</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="15"/>
+        <location filename="calender.py" line="20"/>
         <source>Year</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="16"/>
+        <location filename="calender.py" line="21"/>
         <source>Month</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="17"/>
+        <location filename="calender.py" line="22"/>
         <source>Day</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="32"/>
+        <location filename="calender.py" line="37"/>
         <source>yyyy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="35"/>
+        <location filename="calender.py" line="40"/>
         <source>MM.yyyy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calender.py" line="38"/>
+        <location filename="calender.py" line="43"/>
         <source>dd.MM.yyyy</source>
         <translation type="unfinished"></translation>
     </message>
@@ -218,7 +218,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1521"/>
+        <location filename="docEdit.py" line="1523"/>
         <source>Document editor</source>
         <translation type="unfinished"></translation>
     </message>
@@ -243,17 +243,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1479"/>
+        <location filename="docEdit.py" line="1481"/>
         <source>Insert new caption</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1479"/>
+        <location filename="docEdit.py" line="1481"/>
         <source>New caption</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1487"/>
+        <location filename="docEdit.py" line="1489"/>
         <source>New text</source>
         <translation type="unfinished"></translation>
     </message>
@@ -294,77 +294,62 @@
 <context>
     <name>EditHandler</name>
     <message>
-        <location filename="edit.py" line="46"/>
-        <source>Edit entry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="49"/>
-        <source>Add entry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="112"/>
+        <location filename="edit.py" line="144"/>
         <source>Confirm reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="112"/>
+        <location filename="edit.py" line="144"/>
         <source>Discard all unsaved changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="163"/>
-        <source>Error saving your changes!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="185"/>
+        <location filename="edit.py" line="212"/>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="284"/>
+        <location filename="edit.py" line="298"/>
         <source>Entry saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="290"/>
+        <location filename="edit.py" line="304"/>
         <source>Missing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="295"/>
+        <location filename="edit.py" line="309"/>
         <source>Task created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="295"/>
+        <location filename="edit.py" line="309"/>
         <source>The task was sucessfully created.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="295"/>
+        <location filename="edit.py" line="309"/>
         <source>Okay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="224"/>
+        <location filename="edit.py" line="251"/>
         <source>Edit: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="277"/>
+        <location filename="edit.py" line="291"/>
         <source>There was an error saving your changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="88"/>
+        <location filename="edit.py" line="73"/>
         <source>Execute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="93"/>
+        <location filename="edit.py" line="78"/>
         <source>List: %s</source>
         <translation type="unfinished"></translation>
     </message>
@@ -380,12 +365,12 @@
 <context>
     <name>FileBone</name>
     <message>
-        <location filename="file.py" line="75"/>
+        <location filename="file.py" line="72"/>
         <source>Change selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="142"/>
+        <location filename="file.py" line="134"/>
         <source>Select file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -416,78 +401,83 @@
 <context>
     <name>FileHandler</name>
     <message>
-        <location filename="file.py" line="200"/>
+        <location filename="file.py" line="198"/>
         <source>Creating dir %s in %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="214"/>
+        <location filename="file.py" line="212"/>
         <source>File %s exists in %s. Overwrite?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="235"/>
+        <location filename="file.py" line="234"/>
         <source>Files: %s/%s, Directories: %s/%s, Bytes: %s/%s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="278"/>
+        <location filename="file.py" line="297"/>
         <source>Downloading: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="403"/>
+        <location filename="file.py" line="433"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="387"/>
+        <location filename="file.py" line="417"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="391"/>
+        <location filename="file.py" line="421"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="392"/>
+        <location filename="file.py" line="422"/>
         <source>Cut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="393"/>
+        <location filename="file.py" line="423"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="403"/>
+        <location filename="file.py" line="433"/>
         <source>New name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="425"/>
+        <location filename="file.py" line="455"/>
         <source>Insert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="530"/>
+        <location filename="file.py" line="66"/>
         <source>Upload files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="541"/>
+        <location filename="file.py" line="77"/>
         <source>Download files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="334"/>
+        <location filename="file.py" line="363"/>
         <source>Error during upload</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="file.py" line="334"/>
+        <location filename="file.py" line="363"/>
         <source>There was an error uploading your files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="file.py" line="212"/>
+        <source>Please confirm</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -620,57 +610,31 @@
 <context>
     <name>Help</name>
     <message>
-        <location filename="mainwindow.py" line="356"/>
+        <location filename="mainwindow.py" line="425"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Hierarchy</name>
-    <message>
-        <location filename="hierarchyUI.py" line="56"/>
-        <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>HierarchyHandler</name>
     <message>
-        <location filename="hierarchy.py" line="314"/>
+        <location filename="hierarchy.py" line="142"/>
         <source>Delete entry %s and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="316"/>
+        <location filename="hierarchy.py" line="144"/>
         <source>Delete this entry and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="317"/>
+        <location filename="hierarchy.py" line="145"/>
         <source>Confirm delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="327"/>
+        <location filename="hierarchy.py" line="155"/>
         <source>Edit entry</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>HierarchySelector</name>
-    <message>
-        <location filename="hierarchySelectorUI.py" line="65"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="hierarchySelectorUI.py" line="67"/>
-        <source>Selected:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="hierarchySelectorUI.py" line="68"/>
-        <source>Apply</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -695,17 +659,17 @@
 <context>
     <name>List</name>
     <message>
-        <location filename="listUI.py" line="51"/>
+        <location filename="calenderlistUI.py" line="21"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="calenderlistUI.py" line="68"/>
+        <location filename="calenderlistUI.py" line="53"/>
         <source>dd.MM.yyyy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="listUI.py" line="53"/>
+        <location filename="calenderlistUI.py" line="34"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -713,130 +677,108 @@
 <context>
     <name>ListHandler</name>
     <message>
-        <location filename="list.py" line="351"/>
-        <source>Edit: %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="358"/>
+        <location filename="list.py" line="78"/>
         <source>Add entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="367"/>
+        <location filename="list.py" line="87"/>
         <source>Add entry: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="376"/>
+        <location filename="list.py" line="96"/>
         <source>Edit entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="388"/>
+        <location filename="list.py" line="71"/>
         <source>Edit entry: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="415"/>
+        <location filename="list.py" line="127"/>
         <source>Aborted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="430"/>
+        <location filename="list.py" line="142"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="446"/>
-        <source>Delete entry %s and everything beneath?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="448"/>
-        <source>Delete this entry and everything beneath?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="456"/>
-        <source>Confirm delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="456"/>
-        <source>Delete %s entries?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="476"/>
-        <source>Deleting entry %s of %s (%s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="list.py" line="512"/>
+        <location filename="list.py" line="171"/>
         <source>Preview: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="514"/>
+        <location filename="list.py" line="173"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="536"/>
+        <location filename="list.py" line="195"/>
         <source>Preview not possible</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="654"/>
-        <source>List</source>
+        <location filename="list.py" line="43"/>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ListWidget</name>
+    <message>
+        <location filename="list.py" line="268"/>
+        <source>Confirm delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="list.py" line="268"/>
+        <source>Delete %s entries?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Login</name>
     <message>
-        <location filename="login.py" line="96"/>
-        <source>Login failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="login.py" line="225"/>
+        <location filename="login.py" line="230"/>
         <source>Save this account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="220"/>
+        <location filename="login.py" line="225"/>
         <source>Save this account permanently?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="223"/>
+        <location filename="login.py" line="228"/>
         <source>Enter a name for this account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="225"/>
+        <location filename="login.py" line="230"/>
         <source>Save the password, too?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="243"/>
+        <location filename="login.py" line="248"/>
         <source>Login in progress</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="287"/>
+        <location filename="login.py" line="292"/>
         <source>Captcha required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="309"/>
+        <location filename="login.py" line="313"/>
         <source>Login successful</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="login.py" line="157"/>
+        <location filename="login.py" line="163"/>
         <source>Not required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1023,7 +965,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.py" line="136"/>
+        <location filename="mainwindow.py" line="173"/>
         <source>Welcome to ViUR!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1041,17 +983,17 @@
 <context>
     <name>NetworkService</name>
     <message>
-        <location filename="network.py" line="161"/>
+        <location filename="network.py" line="356"/>
         <source>Insecure connection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="network.py" line="161"/>
+        <location filename="network.py" line="356"/>
         <source>Continue in unsecure mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="network.py" line="161"/>
+        <location filename="network.py" line="356"/>
         <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1059,59 +1001,56 @@
 <context>
     <name>OrderHandler</name>
     <message>
-        <location filename="order.py" line="11"/>
+        <location filename="order.py" line="18"/>
         <source>Payment recived</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="20"/>
+        <location filename="order.py" line="27"/>
         <source>Mark as payed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="20"/>
+        <location filename="order.py" line="27"/>
         <source>Mark %s orders as payed?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="43"/>
+        <location filename="order.py" line="58"/>
         <source>Order Shipped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="52"/>
+        <location filename="order.py" line="106"/>
         <source>Mark shipped</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="52"/>
+        <location filename="order.py" line="67"/>
         <source>Mark %s orders as shipped?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="order.py" line="7"/>
+        <source>Please confirm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="order.py" line="97"/>
+        <source>Order canceled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="order.py" line="106"/>
+        <source>Cancel %s orders?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Preview</name>
     <message>
-        <location filename="edit.py" line="32"/>
+        <location filename="edit.py" line="33"/>
         <source>Preview not possible</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SelectFields</name>
-    <message>
-        <location filename="selectfieldsUI.py" line="68"/>
-        <source>List of attributes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="selectfieldsUI.py" line="69"/>
-        <source>Apply</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="selectfieldsUI.py" line="67"/>
-        <source>Sort columns and show/hide /</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1144,108 +1083,60 @@
 <context>
     <name>TextEditBone</name>
     <message>
-        <location filename="text.py" line="463"/>
+        <location filename="text.py" line="577"/>
         <source>Open editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="text.py" line="183"/>
+        <location filename="text.py" line="194"/>
         <source>Text edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="text.py" line="393"/>
+        <location filename="text.py" line="408"/>
         <source>Specify target</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="text.py" line="393"/>
+        <location filename="text.py" line="408"/>
         <source>Link target:</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>Tree</name>
-    <message>
-        <location filename="treeUI.py" line="71"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="treeUI.py" line="73"/>
-        <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>TreeHandler</name>
     <message>
-        <location filename="tree.py" line="235"/>
-        <source>Home</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="288"/>
-        <source>Edit entry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="308"/>
-        <source>Rename</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="298"/>
-        <source>Copy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="299"/>
-        <source>Cut</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="466"/>
+        <location filename="tree.py" line="101"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="308"/>
-        <source>New name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="331"/>
-        <source>Insert</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="437"/>
+        <location filename="tree.py" line="72"/>
         <source>Add entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="435"/>
+        <location filename="tree.py" line="70"/>
         <source>Add entry: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="445"/>
+        <location filename="tree.py" line="80"/>
         <source>Directory up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="454"/>
+        <location filename="tree.py" line="89"/>
         <source>New directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="460"/>
+        <location filename="tree.py" line="95"/>
         <source>Create directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="tree.py" line="460"/>
+        <location filename="tree.py" line="95"/>
         <source>Directory name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1253,89 +1144,122 @@
 <context>
     <name>TreeItemEditBone</name>
     <message>
-        <location filename="treeitem.py" line="25"/>
+        <location filename="treeitem.py" line="27"/>
         <source>Select</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
-    <name>TreeSelector</name>
+    <name>TreeWidget</name>
     <message>
-        <location filename="treeselectorUI.py" line="99"/>
-        <source>Selected:</source>
+        <location filename="tree.py" line="55"/>
+        <source>Edit entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="100"/>
-        <source>Apply</source>
+        <location filename="tree.py" line="302"/>
+        <source>Home</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="97"/>
-        <source>File selection</source>
+        <location filename="tree.py" line="495"/>
+        <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="treeselectorUI.py" line="98"/>
-        <source>Add to selected</source>
+        <location filename="tree.py" line="485"/>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="tree.py" line="486"/>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="tree.py" line="487"/>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="tree.py" line="495"/>
+        <source>New name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="tree.py" line="518"/>
+        <source>Insert</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Updater</name>
     <message>
-        <location filename="updaterUI.py" line="72"/>
+        <location filename="updaterUI.py" line="21"/>
         <source>ViUR Admin Updater</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="73"/>
+        <location filename="updaterUI.py" line="43"/>
         <source>Check for Updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="74"/>
+        <location filename="updaterUI.py" line="50"/>
         <source>Update now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="85"/>
+        <location filename="updater.py" line="88"/>
         <source>Searching for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="109"/>
+        <location filename="updater.py" line="112"/>
         <source>Updates avaiable. Ready to upgrade.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="112"/>
+        <location filename="updater.py" line="115"/>
         <source>There is no new version avaiable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="130"/>
+        <location filename="updater.py" line="133"/>
         <source>Securityviolation inside the update!!! Update aborted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="132"/>
+        <location filename="updater.py" line="135"/>
         <source>Extracting: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updater.py" line="158"/>
+        <location filename="updater.py" line="161"/>
         <source>Update successful</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="updaterUI.py" line="75"/>
+        <location filename="updaterUI.py" line="57"/>
         <source>Exit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="network.py" line="161"/>
+        <location filename="network.py" line="356"/>
         <source>The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose &quot;abort&quot;!</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>WidgetHandler</name>
+    <message>
+        <location filename="mainwindow.py" line="118"/>
+        <source>Edit entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.py" line="121"/>
+        <source>Add entry</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1349,34 +1273,6 @@
     <message>
         <location filename="rawtexteditUI.py" line="45"/>
         <source>Apply</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>relationalSelector</name>
-    <message>
-        <location filename="relationalselectionUI.py" line="91"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="relationalselectionUI.py" line="93"/>
-        <source>Search</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="relationalselectionUI.py" line="95"/>
-        <source>Abort</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="relationalselectionUI.py" line="96"/>
-        <source>Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="relationalselectionUI.py" line="94"/>
-        <source>Selected:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
