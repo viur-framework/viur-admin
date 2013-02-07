@@ -138,7 +138,6 @@ class RelationalEditBone( QtGui.QWidget ):
 		if self.skelStructure[self.boneName]["multiple"]:
 			self.selection = selection
 		elif len( selection )>0 :
-			print( selection )
 			self.selection = selection[0]
 		else:
 			self.selection = None
