@@ -2,7 +2,7 @@
 """
 Viur Admin
 
-Copyright 2012 Mausbrand Informationssysteme GmbH
+Copyright 2012-2013 Mausbrand Informationssysteme GmbH
 Licensed under GPL Version 3.
 http://www.gnu.org/licenses/gpl-3.0
 
@@ -12,6 +12,8 @@ http://docs.viur.is
 
 import sys, os, traceback
 from io import StringIO
+from optparse import OptionParser
+import logging
 
 #Fixing the path
 cwd = os.getcwd()
@@ -23,6 +25,15 @@ else:
 	path = os.path.abspath( os.path.dirname( os.path.join( cwd, prgc ) ) )
 os.chdir( path )
 
+#Check CMD-Line options
+parser = OptionParser(usage="usage: %prog [options]")
+parser.add_option('-d', '--debug',    dest='debug', default='warning', help=u"Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice", choices=["debug", "info", "warning", "critical"])
+parser.add_option('-r', '--report',    dest='report', default='auto', help=u"Report exceptions to viur.is ('yes', 'no' or 'auto')", type="choice", choices=["yes", "no", "auto"])
+(options, args) = parser.parse_args()
+
+#Apply options
+logging.getLogger().setLevel( getattr( logging, options.debug.upper()  ) )
+
 from PyQt4 import Qt, QtCore
 from mainwindow import MainWindow
 from handler import *
@@ -31,10 +42,8 @@ from login import Login
 from config import conf
 import urllib, urllib.request
 from urllib.parse import quote_plus
-import logging
 from event import EventDispatcher
 
-logging.getLogger().setLevel( logging.DEBUG )
 
 def reportError( type, value, tb ):
 	print( "*"*40 )
@@ -63,7 +72,7 @@ def reportError( type, value, tb ):
 	except:
 		traceback.print_exc()
 
-if not os.path.exists( ".git" ): #Report errors only if not beeing a local development instance
+if (options.report == "auto" and not os.path.exists( ".git" )) or options.report=="yes": #Report errors only if not beeing a local development instance
 	sys.excepthook = reportError
 
 import plugin
