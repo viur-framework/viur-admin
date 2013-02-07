@@ -27,8 +27,8 @@ os.chdir( path )
 
 #Check CMD-Line options
 parser = OptionParser(usage="usage: %prog [options]")
-parser.add_option('-d', '--debug',    dest='debug', default='warning', help=u"Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice", choices=["debug", "info", "warning", "critical"])
-parser.add_option('-r', '--report',    dest='report', default='auto', help=u"Report exceptions to viur.is ('yes', 'no' or 'auto')", type="choice", choices=["yes", "no", "auto"])
+parser.add_option('-d', '--debug', dest='debug', default='warning', help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice", choices=["debug", "info", "warning", "critical"])
+parser.add_option('-r', '--report', dest='report', default='auto', help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type="choice", choices=["yes", "no", "auto"])
 (options, args) = parser.parse_args()
 
 #Apply options
