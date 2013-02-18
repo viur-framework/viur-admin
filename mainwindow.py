@@ -182,8 +182,7 @@ class MainWindow( QtGui.QMainWindow ):
 					if len(sizes):
 						pixmap = icon.pixmap( sizes[0] )
 						self.ui.iconLbl.setPixmap( pixmap.scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
-			
-			if self.currentHandler.parent(): #Its on the 2nd Level
+			if self.currentHandler.parent() and not isinstance( self.currentHandler.parent(), GroupHandler): #Its on the 2nd Level
 				self.currentHandler.takeChildren()
 				currentHandler = self.currentHandler
 				for widget in self.currentHandler.widgets[1:]:
