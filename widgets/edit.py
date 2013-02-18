@@ -47,17 +47,47 @@ class EditWidget( QtGui.QWidget ):
 	appTree = "tree"
 	appSingleton = "singleton"
 
-	def __init__(self, modul, applicationType, id=0, rootNode=None, path=None, *args, **kwargs ):
+	def __init__(self, modul, applicationType, id=0, rootNode=None, path=None, clone=False, *args, **kwargs ):
+		"""
+			Initialize a new Edit or Add-Widget for the given modul.
+			@param modul: Name of the modul
+			@type modul: String
+			@param applicationType: Defines for what application this Add / Edit should be created. This hides additional complexity introduced by the hierarchy / tree-application
+			@type applicationType: Any of EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree or EditWidget.appSingleton
+			@param id: ID of the entry. If none, it will add a new Entry.
+			@type id: Number
+			@param rootNode: If applicationType==EditWidget.appHierarchy, the new entry will be added under this node, if applicationType==EditWidget,appTree the final node is derived from this and the path-parameter. 
+							Has no effect if applicationType is not appHierarchy or appTree or if an id have been set.
+			@type rootNode: String
+			@param path: Specifies the path from the rootNode for new entries in a treeApplication
+			@type path: String
+			@param clone: If true, it will load the values from the given id, but will save a new entry (i.e. allows "cloning" an existing entry)
+			@type clone: Bool
+		"""
 		super( EditWidget, self ).__init__( *args, **kwargs )
 		if not "ui" in dir( self ):
 			self.ui = Ui_Edit()
 			self.ui.setupUi( self )
 		self.modul = modul
-		assert applicationType in [ EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree, EditWidget.appSingleton ]
+		# A Bunch of santy-checks, as there is a great chance to mess around with this widget
+		assert applicationType in [ EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree, EditWidget.appSingleton ] #Invalid Application-Type?
+		if applicationType==EditWidget.appHierarchy or applicationType==EditWidget.appTree:
+			assert id or rootNode #Need either an id or an rootNode
+		if applicationType==EditWidget.appTree:
+			assert id or path #Need either an id or an path
+		if clone:
+			assert id #Need an id if we should clone an entry
+			assert not applicationType==EditWidget.appSingleton # We cant clone a singleton
+			if applicationType==EditWidget.appHierarchy or applicationType==EditWidget.appTree:
+				assert rootNode #We still need a rootNode for cloning
+			if applicationType==EditWidget.appTree:
+				assert path #We still need a path for cloning
+		# End santy-checks
 		self.applicationType = applicationType
 		self.id = id
 		self.rootNode = rootNode
 		self.path = path
+		self.clone = clone
 		self.bones = {}
 		self.overlay = Overlay( self )
 		self.overlay.inform( self.overlay.BUSY )
@@ -108,20 +138,20 @@ class EditWidget( QtGui.QWidget ):
 		if self.modul=="_tasks":
 			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appList: ## Application: List
-			if self.id:
+			if self.id and not self.clone:
 				request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
 			self.overlay.inform( self.overlay.BUSY )
 			data.update( {"parent": self.rootNode } )
-			if self.id:
+			if self.id and not self.clone:
 				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appTree: ## Application: Tree
 			data.update( {"rootNode": self.rootNode, "path": self.path } )
-			if self.id:
+			if self.id and not self.clone:
 				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
@@ -248,7 +278,13 @@ class EditWidget( QtGui.QWidget ):
 			self.bones[ key ] = widget
 		self.unserialize( data["values"] )
 		if self.id and "name" in data["values"].keys(): #Update name in Menu
-			self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % str( data["values"]["name"] ) )
+			if not self.id:
+				self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Add: %s") % str( data["values"]["name"] ) )
+			else:
+				if self.clone:
+					self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % str( data["values"]["name"] ) )
+				else:
+					self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % str( data["values"]["name"] ) )
 		if self.overlay.status==self.overlay.BUSY:
 			self.overlay.clear()
 

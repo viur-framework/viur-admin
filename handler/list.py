@@ -58,18 +58,19 @@ class List( QtGui.QWidget ):
 			filter["search"]=searchstr
 		self.list.model().setFilter( filter )
 	
-	def openEditor( self, item ):
+	def openEditor( self, item, clone=False ):
 		"""
 			Open a new Editor-Widget for the given entity.
 			@param item: Entity to open the editor for
 			@type item: Dict
+			@param clone: Clone the given entry?
+			@type clone: Bool
 		"""
 		if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
 			name = conf.serverConfig["modules"][ self.list.modul ]["name"]
 		else:
 			name = self.list.modul
-		descr = QtCore.QCoreApplication.translate("ListHandler", "Edit entry: %s") % name
-		widget = EditWidget( self.list.modul, EditWidget.appList, item["id"] )
+		widget = EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone )
 		handler = WidgetHandler( self.list.modul, widget )
 		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 	
@@ -100,7 +101,18 @@ class ListEditAction( QtGui.QAction ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
 			return
 		data = self.parentWidget().list.model().getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
-		self.parentWidget().openEditor( data )
+		self.parentWidget().openEditor( data, clone=False )
+		
+class ListCloneAction( QtGui.QAction ):
+	def __init__(self, parent, *args, **kwargs ):
+		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
+		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+	
+	def onTriggered( self, e ):
+		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
+			return
+		data = self.parentWidget().list.model().getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
+		self.parentWidget().openEditor( data, clone=True )
 		
 
 class DeleteTask( QtCore.QObject ):
@@ -301,8 +313,9 @@ class ListHandler( QtCore.QObject ):
 		if isinstance( parent, List ):
 			queue.registerHandler( 0, ListAddAction )
 			queue.registerHandler( 2, ListEditAction )
-			queue.registerHandler( 4, ListDeleteAction )
-			queue.registerHandler( 5, ListPreviewAction )
+			queue.registerHandler( 4, ListCloneAction )
+			queue.registerHandler( 6, ListDeleteAction )
+			queue.registerHandler( 8, ListPreviewAction )
 
 	def requestModulHandler(self, queue, modulName ):
 		f = lambda: ListCoreHandler( modulName )

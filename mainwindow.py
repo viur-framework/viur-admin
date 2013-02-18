@@ -323,6 +323,11 @@ class MainWindow( QtGui.QMainWindow ):
 			item = self.ui.treeWidget.topLevelItem( idx )
 			if item.modul == handler.modul:
 				item.removeChild( handler )
+			elif isinstance( item, GroupHandler ):
+				for subIdx in range( 0 , item.childCount() ):
+					child = item.child( subIdx )
+					if child.modul == handler.modul:
+						child.removeChild( handler )
 		self.rebuildBreadCrumbs()
 	
 	def resetLoginWindow( self ):
