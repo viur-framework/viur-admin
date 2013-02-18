@@ -12,6 +12,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.tableView = tableView
 		self.modul = modul
 		self.fields = fields or ["name"]
+		self._validFields = [] #Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
 		self.filter = filter or {}
 		self.skippedkeys=[]
 		self.dataCache = []
@@ -73,7 +74,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			return None
 		if index.row() >= 0 and ( index.row() < len(self.dataCache )  ):
 			try:
-				return( self.dataCache[index.row()][ self.fields[index.column()] ] )
+				return( self.dataCache[index.row()][ self._validFields[index.column()] ] )
 			except:
 				return( "" )
 		else:
@@ -110,6 +111,11 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
 		if( data["structure"] ): #Reset Headers
 			self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), data["structure"] )
+			#Rebuild our local cache of valid fields
+			bones = {}
+			for key, bone in data["structure"]:
+				bones[ key ] = bone
+			self._validFields = [ x for x in self.fields if x in bones.keys() ]
 		for item in data["skellist"]: #Insert the new Data at the coresponding Position
 			self.dataCache.append( item )
 		if len(data["skellist"]) < self._chunkSize:
