@@ -9,6 +9,13 @@ from widgets.tree import TreeWidget, TreeItem
 from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
 import os, sys
+from config import conf
+
+ignorePatterns = [ #List of patterns of filenames/directories, which wont get uploaded
+				lambda x: x.startswith("."),  #All files/dirs starting with a dot (".")
+				lambda x: x.lower()=="thumbs.db",  #Thumbs.DB,
+				lambda x: x.startswith("~") or x.endswith("~") #Temp files (ususally starts/ends with ~)
+			]
 
 class FileUploader( QtCore.QObject ):
 	def __init__(self, fileName, destPath=None, destRepo=None ):
@@ -26,29 +33,23 @@ class FileUploader( QtCore.QObject ):
 		self.fileName = fileName
 		self.destPath = destPath
 		self.destRepo = destRepo
-		self.request = NetworkService.request("/file/getUploadURL")
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.startUpload )
+		request = NetworkService.request("/file/getUploadURL", successHandler=self.startUpload)
 	
-	def startUpload(self):
-		url = bytes( self.request.readAll() ).decode("UTF8")
-		self.request.deleteLater()
+	def startUpload(self, req):
+		url = bytes( req.readAll() ).decode("UTF8")
 		params = {"Filedata": open( self.fileName.encode(sys.getfilesystemencoding()),  "rb" ) }
 		if self.destPath and self.destRepo:
 			params["path"] = self.destPath.replace( os.sep, "/")
 			params["rootNode"] = self.destRepo
-		self.request = NetworkService.request( url, params )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onFinished )
-		self.connect( self.request, QtCore.SIGNAL("uploadProgress (qint64,qint64)"), self.onProgress )
+		req = NetworkService.request( url, params, finishedHandler=self.onFinished )
+		self.connect( req, QtCore.SIGNAL("uploadProgress (qint64,qint64)"), self.onProgress )
 	
-	def onFinished(self):
+	def onFinished(self, req):
 		try:
-			data = NetworkService.decode( self.request )
+			data = NetworkService.decode( req )
 		except:
 			self.emit( QtCore.SIGNAL("failed()") )
 			return
-		finally:
-			self.request.deleteLater()
-			self.request = None
 		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), data )
 	
 	def onProgress(self, bytesSend, bytesTotal ):
@@ -104,7 +105,7 @@ class RecursiveUploader( QtGui.QWidget ):
 	directorySize = 15 #Letz count an directory as 15 Bytes
 	def __init__(self, files, rootNode, path, modul, *args, **kwargs ):
 		"""
-			@param files: List of local files (including thier absolute path) which will be uploaded. 
+			@param files: List of local files or directories (including thier absolute path) which will be uploaded. 
 			@type files: List
 			@param rootNode: Destination rootNode
 			@type rootNode: String
@@ -118,7 +119,7 @@ class RecursiveUploader( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		self.rootNode = rootNode
 		self.modul = modul
-		self.recursionInfo = [ (files, path, {}) ]
+		self.recursionInfo = [ ( [x for x in files if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ] , path, {}) ]
 		self.request = None
 		self.cancel = False
 		self.currentFileSize = 0
@@ -204,7 +205,7 @@ class RecursiveUploader( QtGui.QWidget ):
 				return
 			else:
 				files.pop(0) #Were done with this element
-				self.recursionInfo.append( ( [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/")], path+dirname, {}  ) )
+				self.recursionInfo.append( ( [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/") if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ], path+dirname, {}  ) )
 				self.doUploadRecursive()
 				return
 		else: #Looks like a file

@@ -17,6 +17,7 @@ class Config( object ):
 		self.currentUsername = None #Store the current Username/Password sothat
 		self.currentPassword = None # plugins are able to authenticate against other services
 		self.availableLanguages = {}
+		self.cmdLineOpts = None
 		self.loadConfig()
 
 	def xor(self, data, key=None):

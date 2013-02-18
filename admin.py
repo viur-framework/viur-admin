@@ -29,6 +29,7 @@ os.chdir( path )
 parser = OptionParser(usage="usage: %prog [options]")
 parser.add_option('-d', '--debug', dest='debug', default='warning', help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice", choices=["debug", "info", "warning", "critical"])
 parser.add_option('-r', '--report', dest='report', default='auto', help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type="choice", choices=["yes", "no", "auto"])
+parser.add_option('-i', '--no-ignore', dest='noignore', default=False, help="Disable automatic exclusion of temporary files on upload", action="store_true")
 (options, args) = parser.parse_args()
 
 #Apply options
@@ -74,6 +75,8 @@ def reportError( type, value, tb ):
 
 if (options.report == "auto" and not os.path.exists( ".git" )) or options.report=="yes": #Report errors only if not beeing a local development instance
 	sys.excepthook = reportError
+
+conf.cmdLineOpts = options #Store the command-line options
 
 import plugin
 
