@@ -132,17 +132,25 @@ class RequestWrapper( QtCore.QObject ):
 			failureHandler.__self__.connect( self, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), failureHandler )
 		if finishedHandler and "__self__" in dir( finishedHandler ):
 			finishedHandler.__self__.connect( self, QtCore.SIGNAL("finished(PyQt_PyObject)"), finishedHandler )
-		self.connect( request, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onProgress )
+		self.connect( request, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onDownloadProgress )
+		self.connect( request, QtCore.SIGNAL("uploadProgress(qint64,qint64)"), self.onUploadProgress )
 		self.connect( request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.onError )
 		self.connect( request, QtCore.SIGNAL("finished()"), self.onFinished )
 		NetworkService.currentRequests.append( self )
 	
-	def onProgress(self, bytesReceived, bytesTotal ):
+	def onDownloadProgress(self, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
 			self.requestStatus = True
 		self.emit( QtCore.SIGNAL("downloadProgress(qint64,qint64)"),  bytesReceived, bytesTotal )
 		self.emit( QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesReceived, bytesTotal )
 	
+	
+	def onUploadProgress(self, bytesSend, bytesTotal ):
+		if bytesSend == bytesTotal:
+			self.requestStatus = True
+		self.emit( QtCore.SIGNAL("uploadProgress(qint64,qint64)"),  bytesSend, bytesTotal )
+		self.emit( QtCore.SIGNAL("uploadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesSend, bytesTotal )
+
 	def onError(self, error):
 		self.requestStatus = error
 	
