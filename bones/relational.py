@@ -203,10 +203,10 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		#self.ui.tableSelected.setModel( self.selectedModel )
 		#self.tableSelectedselectionModel = self.ui.tableSelected.selectionModel(  )
 		#self.ui.tableSelected.keyPressEvent = self.on_tableSelected_keyPressEvent
-		#if not self.multiSelection:
-		#	self.ui.tableView.setSelectionMode( self.ui.tableView.SingleSelection )
-		#	self.ui.tableSelected.hide()
-		#	self.ui.lblSelected.hide()
+		if not self.multiSelection:
+			self.list.setSelectionMode( self.list.SingleSelection )
+			self.selection.hide()
+			self.ui.lblSelected.hide()
 		#header = self.ui.tableView.horizontalHeader()
 		#header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		#header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
@@ -219,7 +219,11 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 			Read its properties and add them to our selection.
 		"""
 		data = self.list.model().getData()[ index.row() ]
-		self.selection.extend( [data] )
+		if self.multiSelection:
+			self.selection.extend( [data] )
+		if not self.multiSelection:
+			self.setSelection( [data] )
+			event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
 	def reload(self, newFilter=None):
 		if newFilter == None:
@@ -233,12 +237,6 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		if (modulName==self.modul or emitingEntry==self):
 			self.reload( )
 		
-	def on_tableView_doubleClicked (self,index):
-		if self.multiSelection:
-			self.selectedModel.addItem( self.model().getData()[ index.row() ] )
-		else:
-			self.on_btnSelect_released()
-
 	def on_tableSelected_doubleClicked (self,index):
 		self.selectedModel.removeItemAtIndex( index )
 		
@@ -252,10 +250,7 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 				self.selectedModel.removeItemAtIndex( index )
 
 	def on_btnSelect_released(self, *args, **kwargs):
-		if self.multiSelection:
-			self.setSelection( self.selection.get() )
-		else:
-			self.setSelection( self.selection.get() )
+		self.setSelection( self.selection.get() )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
 	def on_btnCancel_released(self, *args,  **kwargs ):
