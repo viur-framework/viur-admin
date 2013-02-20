@@ -281,7 +281,16 @@ class ListWidget( QtGui.QTableView ):
 		reqGroup = RequestGroup( finishedHandler=self.onQuerySuccess )
 		for id in ids:
 			reqGroup.addQuery( NetworkService.request("/%s/delete/%s" % ( self.modul, id ), secure=True ) )
+		reqGroup.queryType = "delete"
+		self.connect( reqGroup, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
 	
+	def onProgessUpdate(self, request, done, maximum ):
+		if request.queryType == "delete":
+			descr =  QtCore.QCoreApplication.translate("ListWidget", "Deleting: %s of %s removed.")
+		else:
+			raise NotImplementedError()
+		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
+
 	def onQuerySuccess(self, query ):
 		self.model().reload()
 		event.emit( QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.modul, None )

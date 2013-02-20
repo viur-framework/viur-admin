@@ -405,6 +405,8 @@ class TreeWidget( QtGui.QWidget ):
 										"name": dir, 
 										"type": "dir" } ) )
 		request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
+		request.queryType = "delete"
+		self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
 		self.overlay.inform( self.overlay.BUSY )
 
 	def copy(self, clipboard, rootNode, path ):
@@ -440,7 +442,20 @@ class TreeWidget( QtGui.QWidget ):
 							lambda *args, **kwargs: self.flushCache( rootNode, path ),  #Target Path
 							lambda *args, **kwargs: self.flushCache( srcRepo, srcPath ) #Source Path
 						]
+		request.queryType = "move" if doMove else "copy"
+		self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
 		self.overlay.inform( self.overlay.BUSY )
+	
+	def onProgessUpdate(self, request, done, maximum ):
+		if request.queryType == "move":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
+		elif request.queryType == "copy":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Copying: %s of %s finished.")
+		elif request.queryType == "delete":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Deleting: %s of %s removed.")
+		else:
+			raise NotImplementedError()
+		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
 	
 	def rename(self, rootNode, path, oldName, newName ):
 		"""

@@ -213,7 +213,6 @@ class Overlay(QtGui.QWidget):
 			return
 		self.update()
 
-
 def urlForItem( modul, item ):
 	"""
 		Returns a QUrl for the given item.

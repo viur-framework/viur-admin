@@ -188,12 +188,14 @@ class RequestGroup( QtCore.QObject ):
 		self.successHandler = successHandler
 		self.failureHandler = failureHandler
 		self.finishedHandler = finishedHandler
+		self.maxQueryCount = 0
 		NetworkService.currentRequests.append( self )
 
 	def addQuery( self, query ):
 		"""
 			Add an RequestWrapper to the Group
 		"""
+		self.maxQueryCount += 1
 		self.querys.append( query )
 		self.connect( query, QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self.onProgress )
 		self.connect( query, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self.onError )
@@ -203,10 +205,12 @@ class RequestGroup( QtCore.QObject ):
 		if bytesReceived == bytesTotal:
 			if self.successHandler:
 				self.successHandler( self, request )
+			self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 	
 	def onError(self, request, error):
 		if self.failureHandler:
 			self.failureHandler( self, request, error )
+		self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 	
 	def onFinished(self, queryWrapper ):
 		self.querys.remove( queryWrapper )
