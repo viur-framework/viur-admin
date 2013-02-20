@@ -10,7 +10,8 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
-		super( SingletonEntryHandler, self ).__init__( modul, *args, **kwargs )
+		widgetFactory = lambda: EditWidget( modul, EditWidget.appSingleton, "singleton"  )
+		super( SingletonEntryHandler, self ).__init__( widgetFactory, vanishOnClose=False , *args, **kwargs )
 		if modul in conf.serverConfig["modules"].keys():
 			config = conf.serverConfig["modules"][ modul ]
 			if config["icon"]:
@@ -21,14 +22,7 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 				else:
 					self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
 			self.setText( 0, config["name"] )
-	
-	def clicked( self ):
-		if not self.widgets:
-			config = conf.serverConfig["modules"][ self.modul ]
-			self.addWidget( EditWidget( self.modul, EditWidget.appSingleton, "singleton"  ) )
-		else:
-			self.focus()
-	
+
 class SingletonHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )

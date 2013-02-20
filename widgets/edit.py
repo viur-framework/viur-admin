@@ -182,6 +182,8 @@ class EditWidget( QtGui.QWidget ):
 			event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, modul, self.rootNode, self.id )
 		elif self.applicationType == EditWidget.appTree: ## Application: Tree
 			event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.rootNode, self.id )
+		elif self.applicationType == EditWidget.appSingleton: ## Application: Tree
+			event.emit( QtCore.SIGNAL('singletonChanged(PyQt_PyObject,PyQt_PyObject)'), self, self.modul )
 		else:
 			raise NotImplementedError() #Should never reach this
 
