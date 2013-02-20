@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hierarchy.ui'
 #
-# Created: Mon Jan 14 16:06:01 2013
+# Created: Wed Feb 20 11:18:14 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,6 +27,11 @@ class Ui_Hierarchy(object):
     def setupUi(self, Hierarchy):
         Hierarchy.setObjectName(_fromUtf8("Hierarchy"))
         Hierarchy.resize(878, 543)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Hierarchy.sizePolicy().hasHeightForWidth())
+        Hierarchy.setSizePolicy(sizePolicy)
         self.verticalLayout = QtGui.QVBoxLayout(Hierarchy)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
@@ -36,6 +41,11 @@ class Ui_Hierarchy(object):
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName(_fromUtf8("splitter"))
         self.treeWidget = QtGui.QWidget(self.splitter)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.treeWidget.sizePolicy().hasHeightForWidth())
+        self.treeWidget.setSizePolicy(sizePolicy)
         self.treeWidget.setObjectName(_fromUtf8("treeWidget"))
         self.webView = QtWebKit.QWebView(self.splitter)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)

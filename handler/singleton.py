@@ -2,11 +2,11 @@ from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
-from mainwindow import EntryHandler
+from mainwindow import WidgetHandler
 from widgets.edit import EditWidget
 import os
 
-class SingletonEntryHandler( EntryHandler ):
+class SingletonEntryHandler( WidgetHandler ): #FIXME
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):

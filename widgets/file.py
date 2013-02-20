@@ -170,14 +170,12 @@ class RecursiveUploader( QtGui.QWidget ):
 		if self.cancel or len( self.recursionInfo ) == 0:
 			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
 			if self.request:
-				self.request.deleteLater()
 				self.request = None
 			return
 		files, path, cache = self.recursionInfo[ -1 ]
 		if not path.endswith( "/" ):
 			path += "/"
 		if self.request:
-			self.request.deleteLater()
 			self.request = None
 		#Upload the next file / create&process the next subdir
 		if len(files)>0:
@@ -227,7 +225,6 @@ class RecursiveUploader( QtGui.QWidget ):
 	def onFailed( self, *args, **kwargs ):
 		self.emit( QtCore.SIGNAL("failed(PyQt_PyObject)"), self )
 		if self.request:
-			self.request.deleteLater()
 			self.request = None
 		return
 
@@ -287,7 +284,6 @@ class RecursiveDownloader( QtGui.QWidget ):
 		if self.cancel or len( self.recursionInfo ) == 0:
 			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
 			if self.request:
-				self.request.deleteLater()
 				self.request = None
 			return
 		files, dirs,  path, localTargetDir = self.recursionInfo[ -1 ]

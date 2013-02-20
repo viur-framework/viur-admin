@@ -109,7 +109,6 @@ class RelationalEditBone( QtGui.QWidget ):
 		if self.skelStructure[self.boneName]["multiple"]:
 			widgetItem = self.previewLayout.takeAt( 0 )
 			while widgetItem:
-				widgetItem.widget().deleteLater()
 				widgetItem = self.previewLayout.takeAt( 0 )
 			if self.selection and len(self.selection)>0:
 				for item in self.selection:

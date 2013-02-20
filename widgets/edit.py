@@ -4,7 +4,6 @@ from network import NetworkService
 from event import event
 from collections import OrderedDict
 from utils import RegisterQueue, Overlay
-from mainwindow import EntryHandler
 from config import conf
 from ui.editUI import Ui_Edit
 from ui.editpreviewUI import Ui_EditPreview
@@ -93,6 +92,7 @@ class EditWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 		self.reloadData( )
 		self.closeOnSuccess = False
+		self._itemName = "" #Name of the item were currently editing (if known)
 		#Hide Previewbuttons if no PreviewURLs are set
 		if modul in conf.serverConfig["modules"].keys():
 			if not "previewurls" in conf.serverConfig["modules"][ self.modul  ].keys() \
@@ -105,7 +105,22 @@ class EditWidget( QtGui.QWidget ):
 			self.ui.btnReset.hide()
 
 	def getBreadCrumb( self ):
-		return( QtCore.QCoreApplication.translate("EditHandler", "List: %s") % self.modul, QtGui.QPixmap( "icons/action/edit.png" ) )
+		if self.clone:
+			if self._itemName:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % self._itemName
+			else:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone entry")
+			icon = QtGui.QIcon( "icons/actions/clone.png" )
+		elif self.id or self.applicationType == EditWidget.appSingleton: #Were editing
+			if self._itemName:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % self._itemName
+			else:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit entry")
+			icon = QtGui.QIcon( "icons/actions/edit.png" )
+		else: #Were adding 
+			descr = QtCore.QCoreApplication.translate("EditHandler", "Add entry") #We know that we cant know the name yet
+			icon = QtGui.QIcon( "icons/actions/add.png" )
+		return( descr, icon )
 		
 	
 	def on_btnClose_released(self, *args, **kwargs):
@@ -223,7 +238,6 @@ class EditWidget( QtGui.QWidget ):
 		while( self.ui.tabWidget.count() ):
 			item = self.ui.tabWidget.widget(0)
 			if item and item.widget():
-				item.widget().deleteLater()
 				if "remove" in dir( item.widget() ):
 					item.widget().remove()
 			self.ui.tabWidget.removeTab( 0 )
@@ -278,13 +292,10 @@ class EditWidget( QtGui.QWidget ):
 			self.bones[ key ] = widget
 		self.unserialize( data["values"] )
 		if self.id and "name" in data["values"].keys(): #Update name in Menu
-			if not self.id:
-				self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Add: %s") % str( data["values"]["name"] ) )
-			else:
-				if self.clone:
-					self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % str( data["values"]["name"] ) )
-				else:
-					self.emit( QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % str( data["values"]["name"] ) )
+			self._itemName = str( data["values"]["name"] )
+		else:
+			self._itemName = ""
+		event.emit( QtCore.SIGNAL("rebuildBreadCrumbs()") )
 		if self.overlay.status==self.overlay.BUSY:
 			self.overlay.clear()
 

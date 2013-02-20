@@ -9,132 +9,103 @@ from tasks import TaskViewer
 from analytics import AnalytisWidget
 
 
-class EntryHandler( QtGui.QTreeWidgetItem ):
-	""" 
-	Holds the items displayed top-left within the admin.
-	Each of these provides access to one modul and holds the references
-	to the widgets shown inside L{MainWindow.ui.stackedWidget}
-	"""
-	def __init__( self, modul, *args, **kwargs ):
-		"""
-		@type modul: string
-		@param modul: Name of the modul handled
-		"""
-		super( EntryHandler, self ).__init__( *args, **kwargs )
-		self.modul = modul
-		self.widgets = []
-		self.largeIcon = None
-		if modul in conf.serverConfig["modules"].keys():
-			config = conf.serverConfig["modules"][ modul ]
-			if config["icon"]:
-				self.largeIcon = QtGui.QIcon( config["icon"] )
-
-	def getBreadCrumb( self ):
-		return( self.text(0), self.largeIcon or self.icon(0) )
-		
-	def addWidget( self, widget ):
-		"""
-		Adds a widget to the stack.
-		The widget gains focus.
-		
-		@type widget: QWidget
-		@param widget: The widget to add
-		"""
-		if not widget in self.widgets:
-			self.widgets.append( widget )
-		self.setIcon( 2, QtGui.QIcon( "icons/actions/delete.png" ) )
-		self.focus()
+class BaseHandler( QtGui.QTreeWidgetItem ):
 	
 	def focus( self ):
 		"""
 		If this handler holds at least one widget, the last widget
 		on the stack gains focus
 		"""
-		if self.widgets:
-			event.emit( QtCore.SIGNAL("focusWidget(PyQt_PyObject,PyQt_PyObject)"), self.widgets[-1], self )
+		pass
 	
 	def close( self ):
-		"""
-		Closes the last widget on the stack.
-		If no more widgets are left, the X-Icon is removed.
-		
-		Gets called automaticaly if the user clicks this X-Icon.
-		"""
-		if self.widgets:
-			w = self.widgets[-1]
-			event.emit( QtCore.SIGNAL("closeWidget(PyQt_PyObject)"), w )
-			w.deleteLater()
-			self.widgets.remove( w )
-		if not self.widgets:
-			self.setIcon( 2, QtGui.QIcon( ) )
-		else:
-			self.focus()
-	
-	def remove( self ):
-		"""
-		Closes *all* widgets of this handler
-		"""
-		while self.widgets:
-			w = self.widgets[-1]
-			event.emit( QtCore.SIGNAL("closeWidget(PyQt_PyObject)"), w )
-			w.deleteLater()
-			self.widgets.remove( w )
-		event.emit( QtCore.SIGNAL("removeHandler(PyQt_PyObject)"), self )
+		pass
 	
 	def clicked( self ):
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
-		pass
+		self.focus()
 		
-	def sticky( self ):
-		"""
-		Toggles sticky of this item
-		"""
-		pass
-	
 	def contextMenu( self ):
 		"""
 		Currently unused
 		"""
 		pass
+
+	def getBreadCrumb(self):
+		return( self.text(0), self.icon(0) )
+
+class WidgetHandler( BaseHandler ):
+	""" 
+	Holds the items displayed top-left within the admin.
+	Each of these provides access to one modul and holds the references
+	to the widgets shown inside L{MainWindow.ui.stackedWidget}
+	"""
+	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, *args, **kwargs ):
+		"""
+		@type modul: string
+		@param modul: Name of the modul handled
+		"""
+		super( WidgetHandler, self ).__init__( *args, **kwargs )
+		self.widgets = []
+		self.widgetGenerator = widgetGenerator
+		self.setText(0, descr)
+		if icon:
+			self.setIcon(0, icon )
+		self.vanishOnClose = vanishOnClose
+		#self.largeIcon = None
+		#if modul in conf.serverConfig["modules"].keys():
+		#	config = conf.serverConfig["modules"][ modul ]
+		#	if config["icon"]:
+		#		self.largeIcon = QtGui.QIcon( config["icon"] )
+
+	def focus( self ):
+		"""
+		If this handler holds at least one widget, the last widget
+		on the stack gains focus
+		"""
+		if not self.widgets:
+			self.widgets.append( self.widgetGenerator() )
+			self.setIcon( 1, QtGui.QIcon( "icons/actions/exit_small.png") )
+		event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
 	
-class GroupHandler( EntryHandler ):
+	def close( self ):
+		"""
+		Closes *all* widgets of this handler
+		"""
+		if len( self.widgets ) > 1:
+			self.widgets = self.widgets[ : -1]
+			self.focus()
+		elif len( self.widgets )==1:
+			self.widgets = []
+			if self.vanishOnClose:
+				event.emit( QtCore.SIGNAL("removeHandler(PyQt_PyObject)"), self )
+			else:
+				event.emit( QtCore.SIGNAL("unfocusHandler(PyQt_PyObject)"), self )
+				self.setIcon( 1, QtGui.QIcon() )
+	
+	def getBreadCrumb(self):
+		for widget in self.widgets[ : : -1 ]:
+			try:
+				txt, icon = widget.getBreadCrumb()
+				if not icon:
+					icon = QtGui.QIcon()
+				elif not isinstance( icon, QtGui.QIcon ):
+					icon = QtGui.QIcon( icon )
+				return( txt, icon )
+			except:
+				continue
+		return( self.text(0), self.icon(0) )
+	
+class GroupHandler( BaseHandler ):
 	"""
 		Toplevel widget for one modul-group
 	"""
 	pass
 
 
-class WidgetHandler( EntryHandler ):
-	"""
-		Simple Wrapper holding one widget.
-	"""
-	
-	def __init__( self, modul, widget, *args, **kwargs ):
-		super( WidgetHandler, self ).__init__( modul, *args, **kwargs )
-		self.addWidget( widget )
-		if widget.id:
-			self.setText( 0, QtCore.QCoreApplication.translate("WidgetHandler", "Edit entry") )
-			self.setIcon( 0, QtGui.QIcon("icons/actions/edit_small.png") )
-		else:
-			self.setText( 0, QtCore.QCoreApplication.translate("WidgetHandler", "Add entry") )
-			self.setIcon( 0, QtGui.QIcon("icons/actions/add_small.png") )
-		self.focus()
-		widget.connect( widget, QtCore.SIGNAL("descriptionChanged(PyQt_PyObject)"), self.on_widget_descriptionChanged )
-		
-	def on_widget_descriptionChanged( self, descr ):
-		self.setText( 0, descr )
-		self.focus()
 
-	def clicked( self ):
-		if self.widgets:
-			self.focus()
-	
-	def close( self ):
-		super( WidgetHandler, self).close()
-		if not self.widgets:
-			self.remove()
 
 class MainWindow( QtGui.QMainWindow ):
 	"""
@@ -147,22 +118,150 @@ class MainWindow( QtGui.QMainWindow ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )
-		self.ui.treeWidget.setColumnWidth(0,244)
+		self.ui.treeWidget.setColumnWidth(0,269)
 		self.ui.treeWidget.setColumnWidth(1,25)
-		self.ui.treeWidget.setColumnWidth(2,25)
 		event.connectWithPriority( QtCore.SIGNAL('loginSucceeded()'), self.setup, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('focusWidget(PyQt_PyObject,PyQt_PyObject)'), self.focusWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('closeWidget(PyQt_PyObject)'), self.closeWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), self.addHandler, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessage, event.lowestPriority )
-		self.currentHandler = None
+		event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler, event.lowestPriority )
+		event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
+		self.handlerStack = []
+		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs( )
 
+	def addHandler( self, handler, parent=None ):
+		"""
+		Adds an handler as child of parent.
+		If parent is None, handler is added to the toplevel.
+		
+		@param handler: Handler to add
+		@type handler: BaseHandler
+		@param parent: Parent to stack handler to. If None, stack it to the toplevel
+		@type handler: BaseHandler or None
+		"""
+		if parent:
+			parent.addChild( handler )
+			self.ui.treeWidget.expandItem( parent )
+		else:
+			self.ui.treeWidget.invisibleRootItem().addChild( handler )
+		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
+
+
+	def focusHandler( self, handler ):
+		"""
+		Ensures that the widget gains focus.
+		
+		@type handler: BaseHandler
+		@param handler: Handler requesting the focus
+		"""
+		if self.handlerStack:
+			self.ui.treeWidget.setItemSelected( self.handlerStack[-1], False )
+		if handler in self.handlerStack:
+			self.handlerStack.remove( handler )
+		self.handlerStack.append( handler )
+		if handler.parent():
+			self.ui.treeWidget.expandItem( handler.parent() )
+		self.ui.treeWidget.setItemSelected( self.handlerStack[-1], True )
+		if self.currentWidget:
+			self.currentWidget.setParent( None )
+			self.ui.verticalLayout.removeWidget( self.currentWidget )
+		self.ui.verticalLayout.addWidget( handler.widgets[-1] )
+		self.currentWidget = handler.widgets[-1]
+		#handler.widget.setParent( self.ui.stackedWidget )
+		self.currentWidget.show()
+		self.rebuildBreadCrumbs()
+	
+	def stackHandler( self, handler ):
+		"""
+			Stacks a new handler to the current handler
+		
+			@param handler: handler to stack
+			@type handler: BaseHandler
+		"""
+		assert self.handlerStack
+		self.handlerStack[-1].addChild( handler )
+		handler.focus()
+	
+	def stackWidget(self, widget ):
+		"""
+			Stacks a new widget to the current handler.
+			This widget doesnt have its own handler, so it wont appear in the QTreeWidget.
+			The last widget on a handler's stack allways hides all other widgets of that handler.
+			
+			@param widget: Widget to stack on the current handler
+			@type widget: QWidget
+		"""
+		assert self.handlerStack
+		self.handlerStack[-1].widgets.append( widget )
+		self.handlerStack[-1].focus()
+		
+	
+	def popWidget( self, widget ):
+		"""
+			Removes a widget from the currentHandler's stack.
+			The widget looses focus and gets detached from that handler.
+			If no more referents are left to that widget, its garbarge-collected.
+			
+			@type widget: QWidget
+			@param widget: Widget to remove. Must be on the current handler's stack.
+		"""
+		assert self.handlerStack
+		assert widget in self.handlerStack[-1].widgets
+		self.handlerStack[-1].close()
+		self.rebuildBreadCrumbs()
+
+	def unfocusHandler(self, handler ):
+		"""
+			Moves the focus to the next handler on our stack (if any).
+			
+			@param handler: The handler requesting the unfocus. *Must* be the last on the stack.
+			@type handler: BaseHandler
+		"""
+		if not self.handlerStack or not self.handlerStack[-1] == handler:
+			return
+		self.handlerStack = self.handlerStack[ : -1 ]
+		if self.handlerStack:
+			self.focusHandler( self.handlerStack[ -1 ] )
+		else:
+			if self.currentWidget:
+				self.currentWidget.setParent( None )
+				self.ui.verticalLayout.removeWidget( self.currentWidget )
+			self.currentWidget = None
+
+	def removeHandler( self, handler ):
+		"""
+			Removes a handler added by addHandler or stackHandler.
+			@type handler: EntryHandler
+		"""
+		def removeRecursive( handler, parent ):
+			for subIdx in range( 0 , parent.childCount() ):
+					child = parent.child( subIdx )
+					if child == handler:
+						parent.removeChild( handler )
+						return
+					removeRecursive( handler, child )
+		removeRecursive( handler, self.ui.treeWidget.invisibleRootItem() )
+		if handler in self.handlerStack:
+			self.handlerStack.remove( handler )
+		if self.currentWidget:
+			self.currentWidget.setParent( None )
+			self.ui.verticalLayout.removeWidget( self.currentWidget )
+			self.currentWidget = None
+		if self.handlerStack:
+			self.focusHandler( self.handlerStack[ -1 ] )
+		self.rebuildBreadCrumbs()
+
+	def on_treeWidget_itemClicked (self, item, colum):
+		if colum==0:
+			item.clicked()
+		elif colum==1: #Close
+			item.close()
 
 	def rebuildBreadCrumbs( self ):
 		"""
@@ -172,164 +271,18 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		self.ui.modulLbl.setText( QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!")  )
 		self.ui.iconLbl.setPixmap( QtGui.QPixmap("icons/viur_logo.png").scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
-		if self.currentHandler:
-			data = self.currentHandler.getBreadCrumb()
-			if data:
-				txt, icon = data
-				self.ui.modulLbl.setText( txt[ : 35 ] )
-				if icon:
-					sizes = icon.availableSizes()
-					if len(sizes):
-						pixmap = icon.pixmap( sizes[0] )
-						self.ui.iconLbl.setPixmap( pixmap.scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
-			if self.currentHandler.parent() and not isinstance( self.currentHandler.parent(), GroupHandler): #Its on the 2nd Level
-				self.currentHandler.takeChildren()
-				currentHandler = self.currentHandler
-				for widget in self.currentHandler.widgets[1:]:
-					if "getBreadCrumb" in dir(widget):
-						data = widget.getBreadCrumb()
-						if data:
-							txt, icon = data
-							newHandler = QtGui.QTreeWidgetItem()
-							newHandler.setText(0, txt )
-							def mkClickHandler( handler ):
-								return lambda *args, **kwargs: handler.parent().clicked()
-							newHandler.clicked = mkClickHandler( newHandler )
-							currentHandler.addChild( newHandler )
-							currentHandler = newHandler 
-							self.ui.modulLbl.setText( txt )
-							if icon:
-								newHandler.setIcon(0, icon )
-								sizes = icon.availableSizes()
-								if len(sizes):
-									pixmap = icon.pixmap( sizes[0] )
-									self.ui.iconLbl.setPixmap( pixmap.scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
-				def expandRecursive( handler ):
-					self.ui.treeWidget.expandItem( handler )
-					for idx in range( 0, handler.childCount() ):
-						expandRecursive( handler.child( idx ) )
-				expandRecursive( self.currentHandler )
-			
-		
-	def focusWidget( self, widget, handler ):
-		"""
-		Ensures that the widget gains focus.
-		If the widget is not a child of stackedWidget, it gets added.
-		
-		@type widget: QWidget
-		@param widget: Widget to focus
-		@type handler: EntryHandler
-		@param handler: Handler requesting the focus
-		"""
-		if self.ui.stackedWidget.indexOf( widget )==-1:
-			self.ui.stackedWidget.addWidget( widget )
-		self.ui.stackedWidget.setCurrentWidget( widget )
-		if self.currentHandler:
-			self.ui.treeWidget.setItemSelected( self.currentHandler, False )
-		self.currentHandler = handler
-		if self.currentHandler.parent():
-			self.ui.treeWidget.expandItem( self.currentHandler.parent() )
-		self.ui.treeWidget.setItemSelected( self.currentHandler, True )
-		self.rebuildBreadCrumbs()
-	
-	def stackWidget( self, widget ):
-		"""
-		Stacks a new widget to the current handler
-		
-		@type widget: QWidget
-		@param widget: Widget to stack
-		"""
-		self.currentHandler.addWidget( widget )
-		self.rebuildBreadCrumbs()
-		
-	def popWidget( self, widget ):
-		"""
-		Removes a widget from the currentHandler's stack.
-		The widget looses focus and gets deleted.
-		
-		@type widget: QWidget
-		@param widget: Widget to remove. Must be on the current handler's stack.
-		"""
-		if self.currentHandler:
-			assert widget in self.currentHandler.widgets
-			self.currentHandler.close()
-		self.rebuildBreadCrumbs()
-	
-	def closeWidget( self, widget ):
-		"""
-		Removes a widget from the stackWidget.
-		The widget is *not* removed from any handler nor it gets deleted.
-		
-		@type widget: QWidget
-		@param widget: Widget to remove
-		"""
-		self.ui.stackedWidget.removeWidget( widget )
-		def findCurrentHandler( currentWidget, widgetItem ):
-			if "widgets" in dir( widgetItem ):
-				if currentWidget in widgetItem.widgets:
-					return( widgetItem )
-			for i in range(0,widgetItem.childCount()):
-				c = widgetItem.child( i )
-				res = findCurrentHandler( currentWidget, c )
-				if res:
-					return( res )
-			return( None )
-		r = findCurrentHandler( self.ui.stackedWidget.currentWidget(), self.ui.treeWidget.invisibleRootItem() )
-		if r:
-			self.ui.treeWidget.setItemSelected( self.currentHandler, False )
-			self.ui.treeWidget.setItemSelected( self.currentHandler, True )
-		self.currentHandler = r
-		self.rebuildBreadCrumbs()
-	
-	def on_treeWidget_itemClicked (self, item, colum):
-		if colum==0:
-			item.clicked()
-		elif colum==1: #Stick it
-			pass #This is obsolete
-		elif colum==2: #Close
-			item.close()
-	
-	def addHandler( self, handler ):
-		"""
-		Adds an handler as child of the matching toplevel handler for its modul.
-		
-		Note: The toplevel handler are created during startup via 
-		QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)')
-		
-		@type handler: EntryHandler
-		"""
-		for idx in range( 0 , self.ui.treeWidget.topLevelItemCount() ):
-			item = self.ui.treeWidget.topLevelItem( idx )
-			if item.modul == handler.modul:
-				item.addChild( handler )
-				self.ui.treeWidget.expandItem( item )
-			elif isinstance( item, GroupHandler ):
-				for subIdx in range( 0 , item.childCount() ):
-					child = item.child( subIdx )
-					if child.modul == handler.modul:
-						child.addChild( handler )
-						self.ui.treeWidget.expandItem( item )
-						self.ui.treeWidget.expandItem( child )
-		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
-	
-	def removeHandler( self, handler ):
-		"""
-		Removes a subhandler added by L{addHandler}.
-		It does *not* remove toplevel handlers, even if requested to do so.
-		
-		@type handler: EntryHandler
-		"""
-		for idx in range( 0 , self.ui.treeWidget.topLevelItemCount() ):
-			item = self.ui.treeWidget.topLevelItem( idx )
-			if item.modul == handler.modul:
-				item.removeChild( handler )
-			elif isinstance( item, GroupHandler ):
-				for subIdx in range( 0 , item.childCount() ):
-					child = item.child( subIdx )
-					if child.modul == handler.modul:
-						child.removeChild( handler )
-		self.rebuildBreadCrumbs()
-	
+		if self.handlerStack:
+			try:
+				txt, icon = self.handlerStack[-1].getBreadCrumb()
+			except:
+				return
+			self.ui.modulLbl.setText( txt[ : 35 ] )
+			if icon:
+				sizes = icon.availableSizes()
+				if len(sizes):
+					pixmap = icon.pixmap( sizes[0] )
+					self.ui.iconLbl.setPixmap( pixmap.scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
+
 	def resetLoginWindow( self ):
 		"""
 		Emits QtCore.SIGNAL('resetLoginWindow()')
@@ -347,7 +300,7 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		if not self.startPage:
 			self.startPage = AnalytisWidget()
-			self.ui.stackedWidget.addWidget( self.startPage )
+			#self.ui.stackedWidget.addWidget( self.startPage )
 		self.ui.treeWidget.clear()
 		data = conf.serverConfig
 		event.emit( QtCore.SIGNAL('downloadedConfig(PyQt_PyObject)'), data )
@@ -391,14 +344,12 @@ class MainWindow( QtGui.QMainWindow ):
 		event.emit( QtCore.SIGNAL('mainWindowInitialized()') )
 		QtGui.QApplication.restoreOverrideCursor()
 
-
 	def on_modulsList_itemClicked (self, item):
 		"""
 		Forwards the clicked-event to the selected handler
 		"""
 		if item and "clicked" in dir( item ):
 			item.clicked()
-
 
 	def on_modulsList_itemDoubleClicked( self, item ):
 		"""Called if the user selects an Item from the ModuleTree"""

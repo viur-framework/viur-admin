@@ -106,16 +106,16 @@ class FileRepoHandler( ListCoreHandler ):
 		else:
 			self.focus()
 
-class FileBaseHandler( ListCoreHandler ):
+class FileBaseHandler( WidgetHandler ):
 	def __init__( self, modul, *args, **kwargs ):
-		super( FileBaseHandler, self ).__init__( modul, *args, **kwargs )
+		super( FileBaseHandler, self ).__init__( lambda: FileList( modul ), *args, **kwargs )
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
 			self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
-		self.fetchTask = NetworkService.request("/%s/listRootNodes" % self.modul )
+		self.fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
 		self.tmpObj.connect(self.fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
 	
 	def setRepos( self ):
@@ -129,18 +129,11 @@ class FileBaseHandler( ListCoreHandler ):
 			for repo in self.repos:
 				d = FileRepoHandler( self.modul, repo )
 				self.addChild( d )
-	
-	def clicked( self ):
-		if not self.widgets:
-			self.addWidget( FileList( self.modul ) )
-		else:
-			self.focus()
 
 class FileHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
 		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
-		self.connect( event, QtCore.SIGNAL('modulHandlerInitializion(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.initWidgetItem )
 		self.connect( event, QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
 
 	def requestModulListActions(self, queue, modul, parent ):
@@ -159,20 +152,6 @@ class FileHandler( QtCore.QObject ):
 			f = lambda: FileBaseHandler( modul )
 			queue.registerHandler( 5, f )
 
-	def initWidgetItem(self, queue, modulName, config ):
-		if( modulName!="file"):
-			return
-		listOpener = lambda *args, **kwargs: self.openList( modulName, config )
-		contextHandler = lambda *args, **kwargs: None 
-		if not "icon" in config.keys():
-			config["icon"]="icons/conesofticons/ihre_idee.png"
-		res= {"name":config["name"], "icon":config["icon"], "functions":[
-				{"name":"Meine Dateien", "icon":config["icon"], "handler":listOpener, "contextHandler":contextHandler }
-			], "defaulthandler":listOpener }
-		queue.registerHandler(10,res)
-	
-	def openList(self, modulName, config ):
-		event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), FileList( modulName, config ), "Liste", None ) 
 
 _fileHandler = FileHandler()
 

@@ -7,14 +7,16 @@ import os, os.path
 from ui.editpreviewUI import Ui_EditPreview
 from utils import RegisterQueue, Overlay, formatString
 from config import conf
-from mainwindow import EntryHandler, WidgetHandler
+from mainwindow import WidgetHandler
 from widgets.list import ListWidget, ListTableModel
 from widgets.edit import EditWidget
-
+import gc
+gc.set_debug( gc.DEBUG_STATS )
 
 class List( QtGui.QWidget ):
 	def __init__(self, modul, fields=None, filter=None, *args, **kwargs ):
 		super( List, self ).__init__( *args, **kwargs )
+		print("Im UP", self, modul, self.parent() )
 		self.modul = modul
 		self.ui = Ui_List()
 		self.ui.setupUi( self )
@@ -38,6 +40,11 @@ class List( QtGui.QWidget ):
 				self.toolBar.addWidget( i )
 		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
+		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
+	
+	def onListChanged(self, *args, **kwargs ):
+		print("Im still up", self )
+		#print( gc.get_referrers( self.parent() ) )
 
 	def on_editSearch_clicked(self, *args, **kwargs):
 		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
@@ -66,13 +73,20 @@ class List( QtGui.QWidget ):
 			@param clone: Clone the given entry?
 			@type clone: Bool
 		"""
-		if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
-			name = conf.serverConfig["modules"][ self.list.modul ]["name"]
+		if clone:
+			icon = QtGui.QIcon("icons/actions/clone.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Clone: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Clone entry")
 		else:
-			name = self.list.modul
-		widget = EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone )
-		handler = WidgetHandler( self.list.modul, widget )
-		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+			icon = QtGui.QIcon("icons/actions/edit.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Edit: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Edit entry")
+		handler = WidgetHandler( lambda: EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone ), descr, icon  )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	
 class ListAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
@@ -86,9 +100,8 @@ class ListAddAction( QtGui.QAction ):
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
-		widget = EditWidget( self.parentWidget().list.modul, EditWidget.appList, 0 )
-		handler = WidgetHandler( self.parentWidget().list.modul, widget )
-		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+		handler = WidgetHandler( lambda: EditWidget( self.parentWidget().list.modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add_small.png") )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 		#event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), Edit(self.parentWidget().list.modul, 0), descr, "icons/onebiticonset/onebit_31.png" )
 
 
@@ -215,12 +228,12 @@ class Preview( QtGui.QWidget ):
 
 class ListPreviewAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListPreviewAction, self ).__init__(  QtGui.QIcon("icons/actions/preview_small.png"),"Vorschau", parent )
+		super( ListPreviewAction, self ).__init__(  QtGui.QIcon("icons/actions/preview_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
 		self.modul = self.parentWidget().list.modul
 		self.widget = None
 		if self.modul in conf.serverConfig["modules"].keys():
 			modulConfig = conf.serverConfig["modules"][self.modul]
-			if "previewurls" in modulConfig.keys():
+			if "previewurls" in modulConfig.keys() and modulConfig["previewurls"]:
 				self.setEnabled( True )
 				self.previewURLs = modulConfig["previewurls"]
 			else: 
@@ -236,7 +249,7 @@ class ListPreviewAction( QtGui.QAction ):
 			if not row in rows:
 				rows.append( row )
 		if len( rows )>0:
-			data = self.parentWidget().list.model.getData()[ rows[0] ]
+			data = self.parentWidget().list.model().getData()[ rows[0] ]
 			self.widget = Preview( self.previewURLs, self.modul, data )
 	
 	def __del__( self ):
@@ -244,62 +257,50 @@ class ListPreviewAction( QtGui.QAction ):
 			self.widget.deleteLater()
 
 
-class PredefinedViewHandler( EntryHandler ):
+class PredefinedViewHandler( WidgetHandler ): #EntryHandler
 	"""Holds one view for this modul (preconfigured from Server)"""
 	
 	def __init__( self, modul, viewName, *args, **kwargs ):
-		super( PredefinedViewHandler, self ).__init__( modul, *args, **kwargs )
-		self.viewName = viewName
 		config = conf.serverConfig["modules"][ modul ]
-		assert "views" in config.keys()
 		myview = [ x for x in config["views"] if x["name"]==viewName][0]
+		if all ( [(x in myview.keys()) for x in ["filter", "columns"]] ):
+			widgetFactory = lambda: List( modul, myview["columns"],  myview["filter"] )
+		else:
+			widgetFactory = lambda: List( modul )
+		super( PredefinedViewHandler, self ).__init__( widgetFactory, vanishOnClose=False, *args, **kwargs )
+		self.viewName = viewName
 		self.setText( 0, myview["name"] )
 		if "icon" in myview.keys():
 			self.setIcon( 0, QtGui.QIcon( myview["icon"] ) )
 	
-	def clicked( self ):
-		if not self.widgets:
-			config = conf.serverConfig["modules"][ self.modul ]
-			myview = [ x for x in config["views"] if x["name"]==self.viewName][0]
-			if all ( [(x in myview.keys()) for x in ["filter", "columns"]] ):
-				self.addWidget( List( self.modul, myview["columns"],  myview["filter"] ) )
-			else:
-				self.addWidget( List( self.modul) )
-		else:
-			self.focus()
 
-
-class ListCoreHandler( EntryHandler ):
+class ListCoreHandler( WidgetHandler ): #EntryHandler
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
-		super( ListCoreHandler, self ).__init__( modul, *args, **kwargs )
-		if modul in conf.serverConfig["modules"].keys():
-			config = conf.serverConfig["modules"][ modul ]
-			if config["icon"]:
-				lastDot = config["icon"].rfind(".")
-				smallIcon = config["icon"][ : lastDot ]+"_small"+config["icon"][ lastDot: ]
-				if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
-					self.setIcon( 0, QtGui.QIcon( smallIcon ) )
-				else:
-					self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
-			self.setText( 0, config["name"] )
-			if "views" in config.keys():
-				for view in config["views"]:
-					self.addChild( PredefinedViewHandler( modul, view["name"] ) )
-	
-	def clicked( self ):
-		if not self.widgets:
-			config = conf.serverConfig["modules"][ self.modul ]
-			if "columns" in config.keys():
-				if "filter" in config.keys():
-					self.addWidget( List( self.modul, config["columns"], config["filter"]  ) )
-				else:
-					self.addWidget( List( self.modul, config["columns"] ) )
+		# Config parsen
+		config = conf.serverConfig["modules"][ modul ]
+		if "columns" in config.keys():
+			if "filter" in config.keys():
+				widgetGen = lambda :List( modul, config["columns"], config["filter"]  )
 			else:
-				self.addWidget( List( self.modul ) )
+				widgetGen = lambda: List( modul, config["columns"] )
 		else:
-			self.focus()
+			widgetGen = lambda: List( modul)
+		icon = QtGui.QIcon(  )
+		if config["icon"]:
+			lastDot = config["icon"].rfind(".")
+			smallIcon = config["icon"][ : lastDot ]+"_small"+config["icon"][ lastDot: ]
+			if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
+				icon = QtGui.QIcon( smallIcon )
+			else:
+				icon = QtGui.QIcon( config["icon"] )
+		super( ListCoreHandler, self ).__init__( widgetGen, descr=config["name"], icon=icon, vanishOnClose=False, *args, **kwargs )
+		if "views" in config.keys():
+			for view in config["views"]:
+				self.addChild( PredefinedViewHandler( modul, view["name"] ) )
+			
+	
 	
 class ListHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):

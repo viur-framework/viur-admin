@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\admin.ui'
+# Form implementation generated from reading ui file 'admin.ui'
 #
-# Created: Mon Nov 26 19:34:48 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Wed Feb 20 11:17:21 2013
+#      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -32,49 +41,41 @@ class Ui_MainWindow(object):
         self.treeWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.treeWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.treeWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.treeWidget.setColumnCount(3)
+        self.treeWidget.setColumnCount(2)
         self.treeWidget.setObjectName(_fromUtf8("treeWidget"))
         self.treeWidget.headerItem().setText(1, _fromUtf8("2"))
-        self.treeWidget.headerItem().setText(2, _fromUtf8("3"))
         self.treeWidget.header().setVisible(False)
         self.horizontalLayout_2.addWidget(self.treeWidget)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.stackedWidget_2 = QtGui.QStackedWidget(self.centralwidget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        self.widget = QtGui.QWidget(self.centralwidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(68)
-        sizePolicy.setHeightForWidth(self.stackedWidget_2.sizePolicy().hasHeightForWidth())
-        self.stackedWidget_2.setSizePolicy(sizePolicy)
-        self.stackedWidget_2.setLineWidth(0)
-        self.stackedWidget_2.setObjectName(_fromUtf8("stackedWidget_2"))
-        self.page_2 = QtGui.QWidget()
-        self.page_2.setObjectName(_fromUtf8("page_2"))
-        self.horizontalLayout_4 = QtGui.QHBoxLayout(self.page_2)
-        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        self.iconLbl = QtGui.QLabel(self.page_2)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy)
+        self.widget.setMinimumSize(QtCore.QSize(0, 100))
+        self.widget.setMaximumSize(QtCore.QSize(16777215, 100))
+        self.widget.setObjectName(_fromUtf8("widget"))
+        self.horizontalLayout = QtGui.QHBoxLayout(self.widget)
+        self.horizontalLayout.setMargin(0)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.iconLbl = QtGui.QLabel(self.widget)
         self.iconLbl.setObjectName(_fromUtf8("iconLbl"))
-        self.horizontalLayout_4.addWidget(self.iconLbl)
-        self.modulLbl = QtGui.QLabel(self.page_2)
+        self.horizontalLayout.addWidget(self.iconLbl)
+        self.modulLbl = QtGui.QLabel(self.widget)
         font = QtGui.QFont()
         font.setPointSize(22)
         font.setBold(False)
         font.setWeight(50)
         self.modulLbl.setFont(font)
         self.modulLbl.setObjectName(_fromUtf8("modulLbl"))
-        self.horizontalLayout_4.addWidget(self.modulLbl)
+        self.horizontalLayout.addWidget(self.modulLbl)
         spacerItem = QtGui.QSpacerItem(368, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem)
-        self.stackedWidget_2.addWidget(self.page_2)
-        self.page_3 = QtGui.QWidget()
-        self.page_3.setObjectName(_fromUtf8("page_3"))
-        self.stackedWidget_2.addWidget(self.page_3)
-        self.horizontalLayout.addWidget(self.stackedWidget_2)
-        self.verticalLayout.addLayout(self.horizontalLayout)
-        self.stackedWidget = QtGui.QStackedWidget(self.centralwidget)
-        self.stackedWidget.setLineWidth(0)
+        self.horizontalLayout.addItem(spacerItem)
+        self.verticalLayout.addWidget(self.widget)
+        self.stackedWidget = QtGui.QWidget(self.centralwidget)
+        self.stackedWidget.setMinimumSize(QtCore.QSize(0, 0))
         self.stackedWidget.setObjectName(_fromUtf8("stackedWidget"))
         self.verticalLayout.addWidget(self.stackedWidget)
         self.horizontalLayout_2.addLayout(self.verticalLayout)
@@ -130,27 +131,17 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "ViUR Admin", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ViUR Admin", None))
         self.treeWidget.setSortingEnabled(False)
-        self.treeWidget.headerItem().setText(0, QtGui.QApplication.translate("MainWindow", "Module", None, QtGui.QApplication.UnicodeUTF8))
-        self.iconLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
-        self.modulLbl.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuInfo.setTitle(QtGui.QApplication.translate("MainWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuErweitert.setTitle(QtGui.QApplication.translate("MainWindow", "Advanced", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Beenden", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionErste_Schritte.setText(QtGui.QApplication.translate("MainWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionHelp.setText(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionLogout.setText(QtGui.QApplication.translate("MainWindow", "Ausloggen", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionTasks.setText(QtGui.QApplication.translate("MainWindow", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Module", None))
+        self.iconLbl.setText(_translate("MainWindow", "TextLabel", None))
+        self.modulLbl.setText(_translate("MainWindow", "TextLabel", None))
+        self.menuInfo.setTitle(_translate("MainWindow", "Info", None))
+        self.menuErweitert.setTitle(_translate("MainWindow", "Advanced", None))
+        self.actionQuit.setText(_translate("MainWindow", "Beenden", None))
+        self.actionErste_Schritte.setText(_translate("MainWindow", "Erste Schritte", None))
+        self.actionHelp.setText(_translate("MainWindow", "Help", None))
+        self.actionAbout.setText(_translate("MainWindow", "About", None))
+        self.actionLogout.setText(_translate("MainWindow", "Ausloggen", None))
+        self.actionTasks.setText(_translate("MainWindow", "Tasks", None))
 

@@ -8,7 +8,7 @@ import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error,
 from time import sleep, time
 import sys, os, os.path
 from utils import RegisterQueue, Overlay,  formatString
-from mainwindow import EntryHandler, WidgetHandler
+from mainwindow import WidgetHandler
 from widgets.hierarchy import HierarchyWidget
 from widgets.edit import EditWidget
 
@@ -96,9 +96,9 @@ class HierarchyList( QtGui.QWidget ):
 		"""
 			Open a editor for this entry.
 		"""
-		widget = EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
-		handler = WidgetHandler( self.modul, widget )
-		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
+		handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 	def loadPreview( self, url ):
 		self.request = NetworkService.request( url )
@@ -117,20 +117,33 @@ class HierarchyList( QtGui.QWidget ):
 
 class HierarchyAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), "Eintrag hinzufügen", parent )
+		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
 	def onTriggered( self, e ):
-		config = conf.serverConfig["modules"][ self.parent().modul ]
-		widget = EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, rootNode=self.parent().hierarchy.currentRootNode)
-		handler = WidgetHandler( self.parentWidget().modul, widget )
-		event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+		#config = conf.serverConfig["modules"][ self.parent().modul ]
+		widget = lambda: EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, rootNode=self.parent().hierarchy.currentRootNode)
+		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add_small.png") )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 		
+
+class HierarchyEditAction( QtGui.QAction ):
+	def __init__(self, parent, *args, **kwargs ):
+		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
+		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.setShortcut( "Return" )
+	
+	def onTriggered( self, e ):
+		parent = self.parent()
+		for item in parent.hierarchy.selectedItems():
+			widget = lambda: EditWidget(parent.modul, EditWidget.appHierarchy, item.data["id"] )
+			handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png")  )
+			event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 class HierarchyDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), "Eintrag Löschen", parent )
+		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 	
@@ -149,40 +162,19 @@ class HierarchyDeleteAction( QtGui.QAction ):
 										)
 			if res == QtGui.QMessageBox.Yes:
 				parent.hierarchy.delete( item.data["id"] )
-			
-class HierarchyEditAction( QtGui.QAction ):
-	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("HierarchyHandler", "Edit entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( "Return" )
-	
-	def onTriggered( self, e ):
-		parent = self.parent()
-		for item in parent.hierarchy.selectedItems():
-			widget = EditWidget(parent.modul, EditWidget.appHierarchy, item.data["id"] )
-			handler = WidgetHandler( parent.modul, widget  )
-			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
-
-class HierarchyRepoHandler( EntryHandler ):
+class HierarchyRepoHandler( WidgetHandler ): #FIXME
 	"""Class for holding one Repo-Entry within the modules-list"""
 	def __init__( self, modul, repo, *args, **kwargs ):
-		super( HierarchyRepoHandler, self ).__init__( modul, *args, **kwargs )	
-		self.repo = repo
-		self.setText(0, repo["name"] )
-
-	def clicked( self ):
-		if not self.widgets:
-			self.addWidget( HierarchyList( self.modul, self.repo["key"]  ) )
-		else:
-			self.focus()
+		super( HierarchyRepoHandler, self ).__init__( lambda: HierarchyList( modul, repo["key"]  ), descr=repo["name"], vanishOnClose=False, *args, **kwargs )
 
 
-class HierarchyCoreHandler( EntryHandler ):
+class HierarchyCoreHandler( WidgetHandler ): #FIXME
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
-		super( HierarchyCoreHandler, self ).__init__( modul, *args, **kwargs )
+		super( HierarchyCoreHandler, self ).__init__( lambda: HierarchyList( modul ), vanishOnClose=False, *args, **kwargs )
+		self.modul = modul
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
 			lastDot = config["icon"].rfind(".")
@@ -194,7 +186,7 @@ class HierarchyCoreHandler( EntryHandler ):
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
-		self.fetchTask = NetworkService.request("/%s/listRootNodes" % self.modul )
+		self.fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
 		self.tmpObj.connect(self.fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
 
 	def setRepos( self ):
@@ -209,17 +201,9 @@ class HierarchyCoreHandler( EntryHandler ):
 				d = HierarchyRepoHandler( self.modul, repo )
 				self.addChild( d )
 
-	def clicked( self ):
-		if not self.widgets:
-			self.addWidget( HierarchyList( self.modul ) )
-		else:
-			self.focus()
-
-
 class HierarchyHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('modulHandlerInitializion(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.initWidgetItem )
 		self.connect( event, QtCore.SIGNAL('requestHierarchyListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestHierarchyListActions )
 		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
 
@@ -236,28 +220,6 @@ class HierarchyHandler( QtCore.QObject ):
 			f = lambda: HierarchyCoreHandler( modul )
 			queue.registerHandler( 5, f )
 
-	def initWidgetItem(self, queue, modulName, config ):
-		if( config["handler"]!="hierarchy"):
-			return
-		listOpener = lambda *args, **kwargs: self.openList( modulName, config )
-		contextHandler = lambda *args, **kwargs: None 
-		if not "icon" in config.keys():
-			config["icon"]="icons/conesofticons/ihre_idee.png"
-		res= {"name":config["name"], "icon":config["icon"], "functions":[
-				{"name":"Alle Einträge", "icon":config["icon"],  "handler":listOpener, "contextHandler":contextHandler }
-			], "defaulthandler":listOpener }
-		queue.registerHandler(15,res)
-	
-	def openList(self, modulName, config ):
-		if "name" in config.keys():
-			name = config["name"]
-		else:
-			name = "Liste"
-		if "icon" in config.keys():
-			icon = config["icon"]
-		else:
-			icon = None
-		event.emit( QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), HierarchyList( modulName, config ), name, icon )
 
 _hierarchyHandler = HierarchyHandler()
 
