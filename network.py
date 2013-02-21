@@ -17,7 +17,7 @@ from queue import Queue, Empty as QEmpty, Full as QFull
 from hashlib import sha1
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl, QVariant, QObject
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate
+from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 import traceback
 import logging
 import weakref
@@ -53,6 +53,7 @@ class SecurityTokenProvider( QObject ):
 		As they dont have to be requested before the original request can be send,
 		the whole process speeds up
 	"""
+	errorCount = 0
 	
 	def __init__(self, *args, **kwargs ):
 		super( SecurityTokenProvider, self ).__init__( *args, **kwargs )
@@ -75,11 +76,14 @@ class SecurityTokenProvider( QObject ):
 			Requests a new SKey if theres currently no request pending
 		"""
 		if not self.isRequesting:
+			if SecurityTokenProvider.errorCount>5: #We got 5 Errors in a row
+				raise RuntimeError("Error-limit exceeded on fetching skey")
 			self.logger.debug( "Fetching new skey" )
 			self.isRequesting = True
 			NetworkService.request("/skey", successHandler=self.onSkeyAvailable, failureHandler=self.onError )
 	
 	def onError(self, request, error ):
+		SecurityTokenProvider.errorCount += 1
 		self.logger.warning( "Error fetching skey: %s", str(error) )
 		self.isRequesting = False
 	
@@ -88,6 +92,8 @@ class SecurityTokenProvider( QObject ):
 			New SKey got avaiable
 		"""
 		self.isRequesting = False
+		if SecurityTokenProvider.errorCount>0:
+			SecurityTokenProvider.errorCount = 0
 		try:
 			skey = NetworkService.decode( request )
 		except:
@@ -157,6 +163,9 @@ class RequestWrapper( QtCore.QObject ):
 	def onFinished(self ):
 		if self.requestStatus==True:
 			self.emit( QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), self )
+		elif self.requestStatus==None: #We neither got a up/download-progress nor an error first :/
+			self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), QNetworkReply.ProtocolUnknownError )
+			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, QNetworkReply.ProtocolUnknownError )
 		else: 
 			self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.requestStatus )
 			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
