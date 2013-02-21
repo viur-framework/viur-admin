@@ -1,6 +1,12 @@
 from PyQt4 import QtCore, QtGui
 from event import event
+from bones.base import BaseViewBoneDelegate
 
+class StringViewBoneDelegate( BaseViewBoneDelegate ):
+	def displayText(self, value, locale ):
+		if self.boneName in self.skelStructure.keys() and "multiple" in self.skelStructure[ self.boneName ].keys() and self.skelStructure[ self.boneName ]["multiple"]:
+			value = ", ".join( value )
+		return( super(StringViewBoneDelegate, self).displayText( value, locale ) )
 
 class Tag( QtGui.QWidget ):
 	def __init__( self, tag, editMode, *args, **kwargs ):
@@ -75,13 +81,11 @@ class StringHandler( QtCore.QObject ):
 	"""Override the default if we are a selectMulti String Bone"""
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		#self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
+		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
 		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
-	
-	#FIXME: 
-	#def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
-	#	if skelStucture[boneName]["type"]=="str" and skelStucture[boneName]["multiple"]:
-	#		registerObject.registerHandler( 10, lambda: StringViewBoneDelegate( registerObject,  modulName, boneName, skelStucture) )
+
+	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
+		registerObject.registerHandler( 5, lambda: StringViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
 
 	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
 		if skelStucture[boneName]["type"]=="str" and skelStucture[boneName]["multiple"]:
