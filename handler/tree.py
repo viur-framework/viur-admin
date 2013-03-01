@@ -59,7 +59,7 @@ class TreeList( QtGui.QWidget ):
 
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_icon_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
+		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
@@ -69,6 +69,21 @@ class TreeAddAction( QtGui.QAction ):
 		handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/add_small.png") )
 		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
+class TreeEditAction( QtGui.QAction ):
+	def __init__(self, parent, *args, **kwargs ):
+		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
+		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+	
+	def onTriggered( self, e ):
+		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
+		entries = []
+		for item in self.parent().tree.selectedItems():
+			if not isinstance( item, DirItem ):
+				entries.append( item.data )
+		for entry in entries:
+			widget = lambda: EditWidget(self.parent().tree.modul, EditWidget.appTree, entry["id"], rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
+			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
+			event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 class TreeDirUpAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
@@ -112,7 +127,7 @@ class TreeDeleteAction( QtGui.QAction ):
 
 class TreeBaseHandler( WidgetHandler ):
 	def __init__( self, modul, *args, **kwargs ):
-		super( TreeBaseHandler, self ).__init__(  lambda: TreeList( modul ), *args, **kwargs )
+		super( TreeBaseHandler, self ).__init__(  lambda: TreeList( modul ), vanishOnClose=False, *args, **kwargs )
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
 			lastDot = config["icon"].rfind(".")
@@ -157,6 +172,7 @@ class TreeHandler( QtCore.QObject ):
 		if config and config["handler"]=="tree":
 			queue.registerHandler( 2, TreeDirUpAction )
 			queue.registerHandler( 4, TreeAddAction )
+			queue.registerHandler( 4, TreeEditAction )
 			queue.registerHandler( 8, TreeMkDirAction )
 			queue.registerHandler( 10, TreeDeleteAction )
 			

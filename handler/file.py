@@ -108,20 +108,18 @@ class FileRepoHandler( ListCoreHandler ):
 
 class FileBaseHandler( WidgetHandler ):
 	def __init__( self, modul, *args, **kwargs ):
-		super( FileBaseHandler, self ).__init__( lambda: FileList( modul ), *args, **kwargs )
+		super( FileBaseHandler, self ).__init__( lambda: FileList( modul ), vanishOnClose=False, *args, **kwargs )
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
 			self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
-		self.fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
-		self.tmpObj.connect(self.fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
+		fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
+		self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos) 
 	
-	def setRepos( self ):
-		data = NetworkService.decode( self.fetchTask )
-		self.fetchTask.deleteLater()
-		self.fetchTask = None
+	def setRepos( self, fetchTask ):
+		data = NetworkService.decode( fetchTask )
 		self.tmpObj.deleteLater()
 		self.tmpObj = None
 		self.repos = data
