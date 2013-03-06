@@ -359,7 +359,7 @@ class FileWidget( TreeWidget ):
 	def onTransferFailed(self, task):
 		QtGui.QMessageBox.information( self, QtCore.QCoreApplication.translate("FileHandler", "Error during upload") , QtCore.QCoreApplication.translate("FileHandler", "There was an error uploading your files")  )
 		self.flushCache( task.rootNode )
-		self.reloadData()
+		self.loadData()
 		task.deleteLater()
 
 	def download( self, targetDir, currentRootNode, path, files, dirs ):
