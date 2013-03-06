@@ -80,6 +80,13 @@ class HierarchyList( QtGui.QWidget ):
 		self.connect( self.hierarchy, QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.onItemClicked )
 		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.onItemDoubleClicked )
 
+	def deleteLater(self):
+		"""
+			Ensure that all our childs have the chance to clean up.
+		"""
+		self.hierarchy.deleteLater()
+		self.toolBar.deleteLater()
+		super( HierarchyList, self ).deleteLater()
 
 	def onItemClicked( self, item ):
 		"""

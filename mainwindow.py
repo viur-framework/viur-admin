@@ -7,6 +7,7 @@ import time, os
 from utils import RegisterQueue, showAbout
 from tasks import TaskViewer
 from analytics import AnalytisWidget
+import gc
 
 
 class BaseHandler( QtGui.QTreeWidgetItem ):
@@ -67,6 +68,7 @@ class WidgetHandler( BaseHandler ):
 		"""
 		if not self.widgets:
 			self.widgets.append( self.widgetGenerator() )
+			event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
 			self.setIcon( 1, QtGui.QIcon( "icons/actions/exit_small.png") )
 		event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
 	
@@ -74,6 +76,8 @@ class WidgetHandler( BaseHandler ):
 		"""
 		Closes *all* widgets of this handler
 		"""
+		if self.widgets:
+			event.emit( QtCore.SIGNAL("removeWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
 		if len( self.widgets ) > 1:
 			self.widgets = self.widgets[ : -1]
 			self.focus()
@@ -105,8 +109,6 @@ class GroupHandler( BaseHandler ):
 	pass
 
 
-
-
 class MainWindow( QtGui.QMainWindow ):
 	"""
 	The main window.
@@ -128,6 +130,8 @@ class MainWindow( QtGui.QMainWindow ):
 		event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowPriority )
 		event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowPriority )
 		event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
+		event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
 		event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
 		self.handlerStack = []
 		self.currentWidget = None
@@ -162,19 +166,14 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		if self.handlerStack:
 			self.ui.treeWidget.setItemSelected( self.handlerStack[-1], False )
-		if handler in self.handlerStack:
+		while handler in self.handlerStack:
 			self.handlerStack.remove( handler )
 		self.handlerStack.append( handler )
 		if handler.parent():
 			self.ui.treeWidget.expandItem( handler.parent() )
 		self.ui.treeWidget.setItemSelected( self.handlerStack[-1], True )
-		if self.currentWidget:
-			self.currentWidget.setParent( None )
-			self.ui.verticalLayout.removeWidget( self.currentWidget )
-		self.ui.verticalLayout.addWidget( handler.widgets[-1] )
-		self.currentWidget = handler.widgets[-1]
-		#handler.widget.setParent( self.ui.stackedWidget )
-		self.currentWidget.show()
+		assert self.ui.stackedWidget.indexOf( handler.widgets[-1] ) != -1
+		self.ui.stackedWidget.setCurrentWidget( handler.widgets[-1] )
 		self.rebuildBreadCrumbs()
 	
 	def stackHandler( self, handler ):
@@ -201,6 +200,20 @@ class MainWindow( QtGui.QMainWindow ):
 		self.handlerStack[-1].widgets.append( widget )
 		self.handlerStack[-1].focus()
 		
+	def addWidget( self, widget ):
+		assert self.ui.stackedWidget.indexOf( widget ) == -1
+		self.ui.stackedWidget.addWidget( widget )
+
+	def removeWidget( self, widget ):
+		assert self.ui.stackedWidget.indexOf( widget ) != -1
+		self.ui.stackedWidget.removeWidget( widget )
+		try:
+			widget.prepareDeletion()
+		except AttributeError:
+			pass
+		widget.setParent( None )
+		widget = None
+		gc.collect()
 	
 	def popWidget( self, widget ):
 		"""
@@ -223,16 +236,10 @@ class MainWindow( QtGui.QMainWindow ):
 			@param handler: The handler requesting the unfocus. *Must* be the last on the stack.
 			@type handler: BaseHandler
 		"""
-		if not self.handlerStack or not self.handlerStack[-1] == handler:
-			return
-		self.handlerStack = self.handlerStack[ : -1 ]
+		while handler in self.handlerStack:
+			self.handlerStack.remove( handler )
 		if self.handlerStack:
 			self.focusHandler( self.handlerStack[ -1 ] )
-		else:
-			if self.currentWidget:
-				self.currentWidget.setParent( None )
-				self.ui.verticalLayout.removeWidget( self.currentWidget )
-			self.currentWidget = None
 
 	def removeHandler( self, handler ):
 		"""
@@ -249,10 +256,9 @@ class MainWindow( QtGui.QMainWindow ):
 		removeRecursive( handler, self.ui.treeWidget.invisibleRootItem() )
 		if handler in self.handlerStack:
 			self.handlerStack.remove( handler )
-		if self.currentWidget:
-			self.currentWidget.setParent( None )
-			self.ui.verticalLayout.removeWidget( self.currentWidget )
-			self.currentWidget = None
+		for widget in handler.widgets:
+			if self.ui.stackedWidget.indexOf( widget ) != -1:
+				self.ui.stackedWidget.removeWidget( widget )
 		if self.handlerStack:
 			self.focusHandler( self.handlerStack[ -1 ] )
 		self.rebuildBreadCrumbs()
@@ -298,8 +304,8 @@ class MainWindow( QtGui.QMainWindow ):
 			- Requests a toplevel handler for each modul
 			- Finnaly emits QtCore.SIGNAL('mainWindowInitialized()')
 		"""
-		if not self.startPage:
-			self.startPage = AnalytisWidget()
+		#if not self.startPage:
+		#	self.startPage = AnalytisWidget()
 			#self.ui.stackedWidget.addWidget( self.startPage )
 		self.ui.treeWidget.clear()
 		data = conf.serverConfig

@@ -10,13 +10,10 @@ from config import conf
 from mainwindow import WidgetHandler
 from widgets.list import ListWidget, ListTableModel
 from widgets.edit import EditWidget
-import gc
-gc.set_debug( gc.DEBUG_STATS )
 
 class List( QtGui.QWidget ):
 	def __init__(self, modul, fields=None, filter=None, *args, **kwargs ):
 		super( List, self ).__init__( *args, **kwargs )
-		print("Im UP", self, modul, self.parent() )
 		self.modul = modul
 		self.ui = Ui_List()
 		self.ui.setupUi( self )
@@ -40,11 +37,14 @@ class List( QtGui.QWidget ):
 				self.toolBar.addWidget( i )
 		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
-		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
-	
-	def onListChanged(self, *args, **kwargs ):
-		print("Im still up", self )
-		#print( gc.get_referrers( self.parent() ) )
+
+	def deleteLater(self):
+		"""
+			Ensure that all our childs have the chance to clean up.
+		"""
+		self.list.deleteLater()
+		self.toolBar.deleteLater()
+		super( List, self ).deleteLater()
 
 	def on_editSearch_clicked(self, *args, **kwargs):
 		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :

@@ -13,6 +13,7 @@ from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
 from mainwindow import WidgetHandler
 from utils import RegisterQueue
+import gc
 
 class FileList( QtGui.QWidget ):
 	treeItem = FileItem
@@ -29,21 +30,27 @@ class FileList( QtGui.QWidget ):
 		layout.addWidget( self.tree )
 		self.tree.show()
 		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked
-		self.toolBar = QtGui.QToolBar( self )
-		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
-		self.ui.boxActions.addWidget( self.toolBar )
+		toolBar = QtGui.QToolBar( self )
+		toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( toolBar )
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, modul, self )
 		for item in queue.getAll():
 			i = item( self )
 			if isinstance( i, QtGui.QAction ):
-				self.toolBar.addAction( i )
+				toolBar.addAction( i )
 				self.ui.listWidget.addAction( i )
 			else:
-				self.toolBar.addWidget( i )
-		self.ui.boxActions.addWidget( self.toolBar )
+				toolBar.addWidget( i )
 		self.connect( self.tree, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
-		
+
+	def prepareDeletion(self):
+		"""
+			Ensure that all our childs have the chance to clean up.
+		"""
+		self.ui.editSearch.mousePressEvent = None
+		self.tree.prepareDeletion()
+
 	def on_listWidget_itemDoubleClicked(self, item ):
 		if( isinstance( item, self.tree.treeItem ) ):
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'admin.ui'
 #
-# Created: Wed Feb 20 11:17:21 2013
+# Created: Wed Mar  6 10:58:19 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -74,8 +74,7 @@ class Ui_MainWindow(object):
         spacerItem = QtGui.QSpacerItem(368, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addWidget(self.widget)
-        self.stackedWidget = QtGui.QWidget(self.centralwidget)
-        self.stackedWidget.setMinimumSize(QtCore.QSize(0, 0))
+        self.stackedWidget = QtGui.QStackedWidget(self.centralwidget)
         self.stackedWidget.setObjectName(_fromUtf8("stackedWidget"))
         self.verticalLayout.addWidget(self.stackedWidget)
         self.horizontalLayout_2.addLayout(self.verticalLayout)
@@ -128,6 +127,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuErweitert.menuAction())
 
         self.retranslateUi(MainWindow)
+        self.stackedWidget.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

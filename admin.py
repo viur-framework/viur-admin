@@ -80,7 +80,6 @@ conf.cmdLineOpts = options #Store the command-line options
 
 import plugin
 
-
 app = Qt.QApplication(sys.argv)
 #Load translations
 transFiles = os.listdir("./locales/")

@@ -250,7 +250,7 @@ class EditWidget( QtGui.QWidget ):
 		for key, bone in data["structure"]:
 			tmpDict[ key ] = bone
 		for key, bone in data["structure"]:
-			if key=="id" or bone["visible"]==False:
+			if bone["visible"]==False:
 				continue
 			if "params" in bone.keys() and bone["params"] and "category" in bone["params"].keys():
 				tabName = bone["params"]["category"]

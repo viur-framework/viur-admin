@@ -13,8 +13,6 @@ from mainwindow import WidgetHandler
 from widgets.tree import TreeWidget, TreeItem, DirItem
 from widgets.edit import EditWidget
 
-
-
 class TreeList( QtGui.QWidget ):
 	treeItem = None #Allow override of these on class level
 	dirItem = None
@@ -26,7 +24,7 @@ class TreeList( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.listWidget )
 		self.ui.listWidget.setLayout( layout )
-		self.tree = TreeWidget( self.ui.listWidget, modul, currentRootNode, path, treeItem=self.treeItem, dirItem=self.dirItem )
+		self.tree = TreeWidget( self, modul, currentRootNode, path, treeItem=self.treeItem, dirItem=self.dirItem )
 		layout.addWidget( self.tree )
 		self.tree.show()
 		self.toolBar = QtGui.QToolBar( self )
@@ -43,7 +41,7 @@ class TreeList( QtGui.QWidget ):
 				self.toolBar.addWidget( i )
 		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
-		
+
 	def on_btnSearch_released(self, *args, **kwargs):
 		self.tree.search( self.ui.editSearch.text() )
 
@@ -56,6 +54,12 @@ class TreeList( QtGui.QWidget ):
 			handler = WidgetHandler( lambda: EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"]), descr )
 			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
 
+	def prepareDeletion(self):
+		"""
+			Ensure that all our childs have the chance to clean up.
+		"""
+		self.tree.prepareDeletion()
+		super( TreeList, self ).prepareDeletion()
 
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
