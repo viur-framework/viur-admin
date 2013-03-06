@@ -198,6 +198,7 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		assert self.handlerStack
 		self.handlerStack[-1].widgets.append( widget )
+		self.ui.stackedWidget.addWidget( widget )
 		self.handlerStack[-1].focus()
 		
 	def addWidget( self, widget ):

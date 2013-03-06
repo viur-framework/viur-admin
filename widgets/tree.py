@@ -316,12 +316,10 @@ class TreeWidget( QtGui.QWidget ):
 		homeicon = "icons/menu/home_small.png"
 		pathlist = self.ui.pathlist
 		pathlist.clear()
-		if self.getPath()==None:
-			homeitem= IndexItem(0,homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home"))
-			pathlist.addItem(homeitem)
-			return
 		homeitem= IndexItem(0,homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home") )
 		pathlist.addItem(homeitem)
+		if self.getPath()==None:
+			return
 		counter=1
 		for acaption in self.path:
 			aitem= IndexItem(counter, foldericon, acaption)

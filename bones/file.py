@@ -125,6 +125,7 @@ class BaseFileBoneSelector( BaseTreeItemBoneSelector ):
 	
 	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None, widget=None, *args, **kwargs ):
 		super( BaseFileBoneSelector, self ).__init__( modulName, boneName, skelStructure, selection, setSelection, parent, widget = FileWidget, *args, **kwargs )
+		self.selection.deleteLater()
 		self.selection = SelectedFilesWidget( self, self.modul, selection )
 		self.ui.listSelected.layout().addWidget( self.selection )
 		self.selection.show()
