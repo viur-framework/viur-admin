@@ -2,6 +2,19 @@ import sys
 from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseEditBone
+from bones.base import BaseViewBoneDelegate
+
+class NumericViewBoneDelegate( BaseViewBoneDelegate ):
+	def displayText(self, value, locale ):
+		if self.boneName in self.skelStructure.keys() and "precision" in self.skelStructure[ self.boneName ].keys():
+			try:
+				if not self.skelStructure[ self.boneName ]["precision"]: #Its an int:
+					value = str( int( value ) )
+				else:
+					value = ("%#."+str( int( self.skelStructure[ self.boneName ]["precision"] ) )+"f" ) % value
+			except:
+				value = str(value)
+		return( super(NumericViewBoneDelegate, self).displayText( value, locale ) )
 
 class NumericEditBone( BaseEditBone ):
 	def getLineEdit(self):
@@ -39,13 +52,18 @@ class NumericEditBone( BaseEditBone ):
 		return( self.serialize( ) )
 
 class NumericHandler( QtCore.QObject ):
-	"""Override the default if we are a selectMulti String Bone"""
+	"""Override the default if we are a numericBone"""
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
+		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) 
 		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"]=="numeric":
-			registerObject.registerHandler( 10, NumericEditBone( modulName, boneName, skelStucture ) )
+	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
+		if skelStructure[boneName]["type"]=="numeric":
+			registerObject.registerHandler( 10, NumericEditBone( modulName, boneName, skelStructure ) )
+
+	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
+		if skelStructure[boneName]["type"]=="numeric":
+			registerObject.registerHandler( 5, lambda: NumericViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
 
 _numericHandler = NumericHandler()

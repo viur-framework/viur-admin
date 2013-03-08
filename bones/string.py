@@ -85,10 +85,11 @@ class StringHandler( QtCore.QObject ):
 		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
 
 	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
-		registerObject.registerHandler( 5, lambda: StringViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
+		if skelStructure[boneName]["type"]=="str" and skelStructure[boneName]["multiple"]:
+			registerObject.registerHandler( 5, lambda: StringViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"]=="str" and skelStucture[boneName]["multiple"]:
-			registerObject.registerHandler( 10, StringEditBone( modulName, boneName, skelStucture ) )
+	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
+		if skelStructure[boneName]["type"]=="str" and skelStructure[boneName]["multiple"]:
+			registerObject.registerHandler( 10, StringEditBone( modulName, boneName, skelStructure ) )
 
 _stringHandler = StringHandler()
