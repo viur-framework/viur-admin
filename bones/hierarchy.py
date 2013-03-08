@@ -129,6 +129,7 @@ class BaseHierarchyBoneSelector( QtGui.QWidget ):
 			self.ui.lblSelected.hide()
 		self.ui.listSelected.keyPressEvent = self.on_listSelection_event
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
+		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.on_treeWidget_itemDoubleClicked )
 		
 	
 	def on_cbRepository_currentIndexChanged( self, text ):
@@ -152,16 +153,11 @@ class BaseHierarchyBoneSelector( QtGui.QWidget ):
 	
 	def on_treeWidget_itemDoubleClicked(self, item):
 		if not self.multiple:
-			self.setSelection( [item.data] )
+			self.setSelection( [item] )
 			event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 			return
 		else:
-			if not self.selection:
-				self.selection = []
-			if item.data["id"] in [x["id"] for x in self.selection]:
-				return
-			self.ui.listSelected.addItem( BaseHierarchyBoneSelector.SelectionItem( item.data ) )
-			self.selection.append( item.data )
+			self.selection.extend( [item] )
 
 	def on_listSelection_event(self, event ):
 		if event.key()==QtCore.Qt.Key_Delete:
@@ -170,24 +166,6 @@ class BaseHierarchyBoneSelector( QtGui.QWidget ):
 				self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
 				self.selection.remove( item.data )
 	
-		
-	def dropEvent(self, event):
-		if event.source()==self.ui.treeWidget and self.ui.listSelected.childrenRect().contains( self.ui.listSelected.mapFromGlobal( self.mapToGlobal(event.pos()) ) ):
-			if not self.selection:
-				self.selection = []
-			for item in self.ui.treeWidget.selectedItems():
-				if item.data["id"] in [x["id"] for x in self.selection]:
-					continue
-				self.ui.listSelected.addItem( BaseHierarchyBoneSelector.SelectionItem( item.data ) )
-				self.selection.append( item.data )
-		else:
-			super( BaseHierarchyBoneSelector, self ).dropEvent( event )
-
-
-	def dragEnterEvent(self, event):
-		event.accept()
-
-
 class HierarchyHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
