@@ -210,8 +210,12 @@ class RecursiveUploader( QtGui.QWidget ):
 			if file[ file.rfind("/")+1: ] in [ x["name"] for x in data["entrys"]]: #Filename already exists
 				tmp = self.askOverwriteFile(	QtCore.QCoreApplication.translate("FileHandler", "Please confirm"), 
 										QtCore.QCoreApplication.translate("FileHandler", "File %s exists in %s. Overwrite?") % (file[ file.rfind("/")+1: ], path) )
-				if not tmp: #Dont overwrite
+				if tmp is None: #Dont overwrite
 					files.pop(0) #Were done with this element
+					self.doUploadRecursive()
+					return
+				elif tmp is False: #Abort
+					self.cancel = True
 					self.doUploadRecursive()
 					return
 			self.currentFileSize = os.stat( file.encode(sys.getfilesystemencoding() ) ).st_size

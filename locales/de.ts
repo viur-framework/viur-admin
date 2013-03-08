@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="de_DE">
+<!DOCTYPE TS><TS version="2.0" language="de_DE" sourcelanguage="">
 <context>
     <name>Accountmanager</name>
     <message>
-        <location filename="accountmanager.py" line="57"/>
+        <location filename="accountmanager.py" line="58"/>
         <source>New</source>
         <translation>Neu</translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="69"/>
+        <location filename="accountmanager.py" line="70"/>
         <source>Account deletion</source>
         <translation>Account löschen</translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="69"/>
+        <location filename="accountmanager.py" line="70"/>
         <source>Really delete the account &quot;%s&quot;?</source>
         <translation>Den Account &quot;%s&quot; wirklich löschen?</translation>
     </message>
@@ -434,7 +433,7 @@
     <message>
         <location filename="file.py" line="232"/>
         <source>Files: %s/%s, Directories: %s/%s, Bytes: %s/%s</source>
-        <translation>Dateien: %s%s, Verzeichnisse: %s%s, Bytes: %s%s</translation>
+        <translation>Dateien: %s von %s, Verzeichnisse: %s von %s, Bytes: %s von %s</translation>
     </message>
     <message>
         <location filename="file.py" line="294"/>
@@ -557,12 +556,12 @@
         <source>em</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="81"/>
         <source>Größe</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="93"/>
         <source>Auswählen</source>
         <translation type="unfinished"></translation>
@@ -587,7 +586,7 @@
         <source>Rechts</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="130"/>
         <source>FolgendenText umfließen lassen</source>
         <translation type="unfinished"></translation>
@@ -607,7 +606,7 @@
         <source>Alternativ-Text</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="166"/>
         <source>Verknüpfen mit</source>
         <translation type="unfinished"></translation>
@@ -617,12 +616,12 @@
         <source>-Keine Verlinkung-</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="187"/>
         <source>Vergrößern</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditfileEdit.ui" line="195"/>
         <source>In neuem Fenster öffnen</source>
         <translation type="unfinished"></translation>
@@ -644,17 +643,17 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchy.py" line="149"/>
+        <location filename="hierarchy.py" line="148"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="135"/>
+        <location filename="hierarchy.py" line="134"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="154"/>
+        <location filename="hierarchy.py" line="153"/>
         <source>Delete entry</source>
         <translation>Eintrag löschen</translation>
     </message>
@@ -672,17 +671,17 @@
 <context>
     <name>HierarchyHandler</name>
     <message>
-        <location filename="hierarchy.py" line="163"/>
+        <location filename="hierarchy.py" line="162"/>
         <source>Delete entry %s and everything beneath?</source>
         <translation>Eintrag %s und alles darunter löschen?</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="165"/>
+        <location filename="hierarchy.py" line="164"/>
         <source>Delete this entry and everything beneath?</source>
         <translation>Diesen Eintrag und alles darunter löschen?</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="166"/>
+        <location filename="hierarchy.py" line="165"/>
         <source>Confirm delete</source>
         <translation>Löschen bestätigen</translation>
     </message>
@@ -712,12 +711,12 @@
         <source>Form</source>
         <translation>Form</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditlinkEdit.ui" line="20"/>
         <source>Verknüpfungsziel</source>
         <translation type="unfinished"></translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="docEditlinkEdit.ui" line="30"/>
         <source>In neuem Fenster öffnen</source>
         <translation type="unfinished"></translation>
@@ -817,17 +816,17 @@
 <context>
     <name>ListWidget</name>
     <message>
-        <location filename="list.py" line="274"/>
+        <location filename="list.py" line="280"/>
         <source>Confirm delete</source>
         <translation>Löschen bestätigen</translation>
     </message>
     <message>
-        <location filename="list.py" line="274"/>
+        <location filename="list.py" line="280"/>
         <source>Delete %s entries?</source>
         <translation>%s Einträge Löschen?</translation>
     </message>
     <message>
-        <location filename="list.py" line="289"/>
+        <location filename="list.py" line="295"/>
         <source>Deleting: %s of %s removed.</source>
         <translation>Lösche: %s von %s gelöscht</translation>
     </message>
@@ -943,7 +942,7 @@
         <source>Generel settigs</source>
         <translation>Allgemeine Einstellungen</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="loginform.ui" line="26"/>
         <source>ViurAdmin – Hello!</source>
         <translation>ViurAdmin – Hallo!</translation>

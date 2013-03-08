@@ -3,17 +3,17 @@
 <context>
     <name>Accountmanager</name>
     <message>
-        <location filename="accountmanager.py" line="57"/>
+        <location filename="accountmanager.py" line="58"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="69"/>
+        <location filename="accountmanager.py" line="70"/>
         <source>Account deletion</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="69"/>
+        <location filename="accountmanager.py" line="70"/>
         <source>Really delete the account &quot;%s&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -643,17 +643,17 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchy.py" line="149"/>
+        <location filename="hierarchy.py" line="148"/>
         <source>Edit entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="135"/>
+        <location filename="hierarchy.py" line="134"/>
         <source>Add entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="154"/>
+        <location filename="hierarchy.py" line="153"/>
         <source>Delete entry</source>
         <translation type="unfinished"></translation>
     </message>
@@ -671,17 +671,17 @@
 <context>
     <name>HierarchyHandler</name>
     <message>
-        <location filename="hierarchy.py" line="163"/>
+        <location filename="hierarchy.py" line="162"/>
         <source>Delete entry %s and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="165"/>
+        <location filename="hierarchy.py" line="164"/>
         <source>Delete this entry and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="166"/>
+        <location filename="hierarchy.py" line="165"/>
         <source>Confirm delete</source>
         <translation type="unfinished"></translation>
     </message>
@@ -816,17 +816,17 @@
 <context>
     <name>ListWidget</name>
     <message>
-        <location filename="list.py" line="274"/>
+        <location filename="list.py" line="280"/>
         <source>Confirm delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="274"/>
+        <location filename="list.py" line="280"/>
         <source>Delete %s entries?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="289"/>
+        <location filename="list.py" line="295"/>
         <source>Deleting: %s of %s removed.</source>
         <translation type="unfinished"></translation>
     </message>
