@@ -123,6 +123,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if "cursor" in data.keys():
 			self.cursor = data["cursor"]
 		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.emit(QtCore.SIGNAL("dataRecived()"))
 
 	
 	def repaint(self): #Currently an ugly hack to redraw the table
@@ -168,12 +169,20 @@ class ListWidget( QtGui.QTableView ):
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		self.verticalHeader().hide()
-		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.on_layoutChanged) #Hook Data-Avaiable event
 		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
 		self.connect( model, QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.realignHeaders )
 		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
+		self.connect( model, QtCore.SIGNAL("dataRecived()"), self.onDataRecived )
+		self.overlay.inform( self.overlay.BUSY )
+
+	def onDataRecived(self):
+		"""
+			The model just recived data from the server,
+			clear our overlay
+		"""
+		self.overlay.clear()
 
 	def onItemClicked(self, index ):
 		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
@@ -266,9 +275,6 @@ class ListWidget( QtGui.QTableView ):
 		if selection:
 			self.model().setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
 
-	def on_layoutChanged( self, *args, **kwargs ):
-		self.overlay.clear()
-		
 	def delete(self, ids, ask=False ):
 		if ask:
 			if QtGui.QMessageBox.question(	self,
