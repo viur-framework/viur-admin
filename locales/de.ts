@@ -636,7 +636,7 @@
 <context>
     <name>Help</name>
     <message>
-        <location filename="mainwindow.py" line="387"/>
+        <location filename="mainwindow.py" line="394"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
@@ -644,17 +644,17 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchy.py" line="148"/>
+        <location filename="hierarchy.py" line="149"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="134"/>
+        <location filename="hierarchy.py" line="135"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="153"/>
+        <location filename="hierarchy.py" line="154"/>
         <source>Delete entry</source>
         <translation>Eintrag löschen</translation>
     </message>
@@ -672,17 +672,17 @@
 <context>
     <name>HierarchyHandler</name>
     <message>
-        <location filename="hierarchy.py" line="162"/>
+        <location filename="hierarchy.py" line="163"/>
         <source>Delete entry %s and everything beneath?</source>
         <translation>Eintrag %s und alles darunter löschen?</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="164"/>
+        <location filename="hierarchy.py" line="165"/>
         <source>Delete this entry and everything beneath?</source>
         <translation>Diesen Eintrag und alles darunter löschen?</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="165"/>
+        <location filename="hierarchy.py" line="166"/>
         <source>Confirm delete</source>
         <translation>Löschen bestätigen</translation>
     </message>
@@ -903,11 +903,6 @@
         <translation>Account Manager</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="229"/>
-        <source>TextLabel</source>
-        <translation>Beschriftung</translation>
-    </message>
-    <message>
         <location filename="loginform.ui" line="241"/>
         <source>Language</source>
         <translation>Sprache</translation>
@@ -962,6 +957,11 @@
         <location filename="loginform.ui" line="325"/>
         <source>Help</source>
         <translation>Hilfe</translation>
+    </message>
+    <message>
+        <location filename="loginform.ui" line="229"/>
+        <source>Not required</source>
+        <translation>Nicht benötigt</translation>
     </message>
 </context>
 <context>
@@ -1019,7 +1019,7 @@
     <message>
         <location filename="admin.ui" line="14"/>
         <source>ViUR Admin</source>
-        <translation type="unfinished"></translation>
+        <translation>ViUR Admin</translation>
     </message>
     <message>
         <location filename="admin.ui" line="62"/>
@@ -1138,24 +1138,24 @@
         <translation>%s Bestellungen stornieren?</translation>
     </message>
     <message>
-        <location filename="order.py" line="122"/>
-        <source>View Bill</source>
-        <translation>Rechnung anzeigen</translation>
-    </message>
-    <message>
         <location filename="order.py" line="147"/>
         <source>Bill</source>
         <translation>Rechnung</translation>
     </message>
     <message>
-        <location filename="order.py" line="159"/>
-        <source>View delivery note</source>
-        <translation>Lieferschein anzeigen</translation>
-    </message>
-    <message>
         <location filename="order.py" line="184"/>
         <source>Delivery Note</source>
         <translation>Lieferschein</translation>
+    </message>
+    <message>
+        <location filename="order.py" line="122"/>
+        <source>Download Bill</source>
+        <translation>Rechnung herunterladen</translation>
+    </message>
+    <message>
+        <location filename="order.py" line="159"/>
+        <source>Download delivery note</source>
+        <translation>Lieferschein herunterladen</translation>
     </message>
 </context>
 <context>
@@ -1225,7 +1225,7 @@
     <message>
         <location filename="tree.ui" line="35"/>
         <source>Search</source>
-        <translation type="unfinished">Suchen</translation>
+        <translation>Suchen</translation>
     </message>
 </context>
 <context>

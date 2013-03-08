@@ -6,7 +6,7 @@ from config import conf
 import time, os
 from utils import RegisterQueue, showAbout
 from tasks import TaskViewer
-from analytics import AnalytisWidget
+import startpages
 import gc
 
 
@@ -305,9 +305,16 @@ class MainWindow( QtGui.QMainWindow ):
 			- Requests a toplevel handler for each modul
 			- Finnaly emits QtCore.SIGNAL('mainWindowInitialized()')
 		"""
-		#if not self.startPage:
-		#	self.startPage = AnalytisWidget()
-			#self.ui.stackedWidget.addWidget( self.startPage )
+		if not self.startPage:
+			if "configuration" in conf.serverConfig.keys():
+				if "analyticsKey" in conf.serverConfig["configuration"].keys():
+					self.startPage = startpages.AnalytisWidget()
+				elif "startPage" in conf.serverConfig["configuration"].keys():
+					self.startPage = startpages.WebWidget()
+			if not self.startPage: #Still not
+				self.startPage = startpages.DefaultWidget()
+			self.ui.stackedWidget.addWidget( self.startPage )
+			
 		self.ui.treeWidget.clear()
 		data = conf.serverConfig
 		event.emit( QtCore.SIGNAL('downloadedConfig(PyQt_PyObject)'), data )

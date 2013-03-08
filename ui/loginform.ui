@@ -226,7 +226,7 @@
         <item>
          <widget class="QLabel" name="lblCaptcha">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Not required</string>
           </property>
          </widget>
         </item>

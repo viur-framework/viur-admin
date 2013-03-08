@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\loginform.ui'
+# Form implementation generated from reading ui file 'loginform.ui'
 #
-# Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Fri Mar  8 12:00:58 2013
+#      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
@@ -160,31 +169,21 @@ class Ui_LoginWindow(object):
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
 
     def retranslateUi(self, LoginWindow):
-        LoginWindow.setWindowTitle(QtGui.QApplication.translate("LoginWindow", "ViurAdmin – Hello!", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblPortal.setText(QtGui.QApplication.translate("LoginWindow", "Portal", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblUrl.setText(QtGui.QApplication.translate("LoginWindow", "Server", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblApikey.setText(QtGui.QApplication.translate("LoginWindow", "Captcha", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblUsername.setText(QtGui.QApplication.translate("LoginWindow", "User", "xy<", QtGui.QApplication.UnicodeUTF8))
-        self.lblPassword.setText(QtGui.QApplication.translate("LoginWindow", "Password", None, QtGui.QApplication.UnicodeUTF8))
-        self.startAccManagerBTN.setText(QtGui.QApplication.translate("LoginWindow", "Accountmannager", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblCaptcha.setText(QtGui.QApplication.translate("LoginWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("LoginWindow", "Language", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnLogin.setText(QtGui.QApplication.translate("LoginWindow", "Login", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuInfo.setTitle(QtGui.QApplication.translate("LoginWindow", "Info", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuEinstellungen.setTitle(QtGui.QApplication.translate("LoginWindow", "Settings", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionErste_Schritte.setText(QtGui.QApplication.translate("LoginWindow", "Erste Schritte", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionHelp.setText(QtGui.QApplication.translate("LoginWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAbout.setText(QtGui.QApplication.translate("LoginWindow", "About this Software", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSettings.setText(QtGui.QApplication.translate("LoginWindow", "Generel settigs", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAccountmanager.setText(QtGui.QApplication.translate("LoginWindow", "Accountmanager", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    LoginWindow = QtGui.QMainWindow()
-    ui = Ui_LoginWindow()
-    ui.setupUi(LoginWindow)
-    LoginWindow.show()
-    sys.exit(app.exec_())
+        LoginWindow.setWindowTitle(_translate("LoginWindow", "ViurAdmin – Hello!", None))
+        self.lblPortal.setText(_translate("LoginWindow", "Portal", None))
+        self.lblUrl.setText(_translate("LoginWindow", "Server", None))
+        self.lblApikey.setText(_translate("LoginWindow", "Captcha", None))
+        self.lblUsername.setText(_translate("LoginWindow", "User", "xy<"))
+        self.lblPassword.setText(_translate("LoginWindow", "Password", None))
+        self.startAccManagerBTN.setText(_translate("LoginWindow", "Accountmannager", None))
+        self.lblCaptcha.setText(_translate("LoginWindow", "Not required", None))
+        self.label.setText(_translate("LoginWindow", "Language", None))
+        self.btnLogin.setText(_translate("LoginWindow", "Login", None))
+        self.menuInfo.setTitle(_translate("LoginWindow", "Info", None))
+        self.menuEinstellungen.setTitle(_translate("LoginWindow", "Settings", None))
+        self.actionErste_Schritte.setText(_translate("LoginWindow", "Erste Schritte", None))
+        self.actionHelp.setText(_translate("LoginWindow", "Help", None))
+        self.actionAbout.setText(_translate("LoginWindow", "About this Software", None))
+        self.actionSettings.setText(_translate("LoginWindow", "Generel settigs", None))
+        self.actionAccountmanager.setText(_translate("LoginWindow", "Accountmanager", None))
 

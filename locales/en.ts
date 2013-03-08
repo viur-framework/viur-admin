@@ -635,7 +635,7 @@
 <context>
     <name>Help</name>
     <message>
-        <location filename="mainwindow.py" line="387"/>
+        <location filename="mainwindow.py" line="394"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
@@ -643,17 +643,17 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchy.py" line="148"/>
+        <location filename="hierarchy.py" line="149"/>
         <source>Edit entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="134"/>
+        <location filename="hierarchy.py" line="135"/>
         <source>Add entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="153"/>
+        <location filename="hierarchy.py" line="154"/>
         <source>Delete entry</source>
         <translation type="unfinished"></translation>
     </message>
@@ -671,17 +671,17 @@
 <context>
     <name>HierarchyHandler</name>
     <message>
-        <location filename="hierarchy.py" line="162"/>
+        <location filename="hierarchy.py" line="163"/>
         <source>Delete entry %s and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="164"/>
+        <location filename="hierarchy.py" line="165"/>
         <source>Delete this entry and everything beneath?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="165"/>
+        <location filename="hierarchy.py" line="166"/>
         <source>Confirm delete</source>
         <translation type="unfinished"></translation>
     </message>
@@ -902,11 +902,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="229"/>
-        <source>TextLabel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="loginform.ui" line="241"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
@@ -960,6 +955,11 @@
     <message>
         <location filename="loginform.ui" line="325"/>
         <source>Help</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="loginform.ui" line="229"/>
+        <source>Not required</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1137,23 +1137,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="122"/>
-        <source>View Bill</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="order.py" line="147"/>
         <source>Bill</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="159"/>
-        <source>View delivery note</source>
+        <location filename="order.py" line="184"/>
+        <source>Delivery Note</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="order.py" line="184"/>
-        <source>Delivery Note</source>
+        <location filename="order.py" line="122"/>
+        <source>Download Bill</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="order.py" line="159"/>
+        <source>Download delivery note</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
