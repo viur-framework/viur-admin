@@ -56,7 +56,7 @@ class RawTextEdit(QtGui.QMainWindow):
 		self.ui.textEdit.setFolding(QsciScintilla.BoxedTreeFoldStyle, 2)
 		self.ui.textEdit.setText( text )
 		self.ui.textEdit.setAutoCompletionSource( QsciScintilla.AcsAll )
-		self.ui.textEdit.setAutoCompletionThreshold( 1 )
+		self.ui.textEdit.setAutoCompletionThreshold( 5 )
 		#self.ui.textEdit.setWrapMode(QsciScintilla.WrapWord )
 		self.ui.textEdit.setFocus()
 		self.saveCallback = saveCallback
