@@ -47,6 +47,7 @@ class Accountmanager( QtGui.QMainWindow ):
 		for itemIndex in range(0, self.ui.acclistWidget.count() ):
 			conf.accounts.append( self.ui.acclistWidget.item( itemIndex ).account )
 		event.emit( QtCore.SIGNAL( "accountListChanged()" ) )
+		conf.saveConfig()
 		self.close()
 
 	def statusMessageUpdate(self, type, message ):
