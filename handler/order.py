@@ -119,7 +119,7 @@ class ShopDownloadBillAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
-		super( ShopDownloadBillAction, self ).__init__( QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("OrderHandler","View Bill"), parent )
+		super( ShopDownloadBillAction, self ).__init__( QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("OrderHandler","Download Bill"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
 	def onTriggered( self, e ):
@@ -156,7 +156,7 @@ class ShopDownloadDeliveryNoteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
-		super( ShopDownloadDeliveryNoteAction, self ).__init__( QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("OrderHandler","View delivery note"), parent )
+		super( ShopDownloadDeliveryNoteAction, self ).__init__( QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("OrderHandler","Download delivery note"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
 	def onTriggered( self, e ):
@@ -205,6 +205,7 @@ class OrderHandler( QtCore.QObject ):
 		queue.registerHandler( 10, ShopMarkPayedAction )
 		queue.registerHandler( 10, ShopMarkCanceledAction )
 		queue.registerHandler( 10, ShopDownloadBillAction )
+		queue.registerHandler( 10, ShopDownloadDeliveryNoteAction )
 		
 
 _orderHandler = OrderHandler()
