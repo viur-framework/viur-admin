@@ -39,7 +39,6 @@ class TreeList( QtGui.QWidget ):
 				self.ui.listWidget.addAction( i )
 			else:
 				self.toolBar.addWidget( i )
-		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 
 	def on_btnSearch_released(self, *args, **kwargs):

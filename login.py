@@ -330,15 +330,19 @@ class Login( QtGui.QMainWindow ):
 		conf.adminConfig["language"] = newLanguage
 	
 	def on_editUsername_textChanged( self, txt ):
+		"""
+			Check if the Username given is a valid email-address, and warn
+			the user if it isnt
+		"""
 		regex = re.compile("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}")
 		res = regex.findall( txt.lower() )
 		palette = self.ui.editUsername.palette()
 		if len( res ) == 1:
 			palette.setColor(palette.Active, palette.Text, QtGui.QColor(0, 0, 0))
-			self.ui.editUsername.setToolTip( QtCore.QCoreApplication.translate("Login", "This Email-address looks valid") )
+			self.ui.editUsername.setToolTip( QtCore.QCoreApplication.translate("Login", "This Email address looks valid") )
 		else:
 			palette.setColor(palette.Active, palette.Text, QtGui.QColor(255, 0, 0))
-			self.ui.editUsername.setToolTip( QtCore.QCoreApplication.translate("Login", "This Email-address is invalid") )
+			self.ui.editUsername.setToolTip( QtCore.QCoreApplication.translate("Login", "This Email address is invalid") )
 		self.ui.editUsername.setPalette(palette)
 
 		

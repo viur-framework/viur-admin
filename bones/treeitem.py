@@ -24,12 +24,11 @@ class TreeItemEditBone( QtGui.QWidget ):
 		if "format" in skelStructure[ boneName ].keys():
 			self.format = skelStructure[ boneName ]["format"]
 		self.layout = QtGui.QHBoxLayout( self )
-		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TreeItemEditBone", "Select"), parent=self )
+		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TreeItemEditBone", "Change selection"), parent=self )
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
-		self.layout.addWidget( self.addBtn )
 		if not skelStructure[boneName]["multiple"]:
 			self.entry = QtGui.QLineEdit( self )
 			self.entry.setReadOnly(True)
@@ -38,10 +37,12 @@ class TreeItemEditBone( QtGui.QWidget ):
 			icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
+			self.layout.addWidget( self.addBtn )
 			self.layout.addWidget( self.delBtn )
 			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.on_delBtn_released )
 			self.selection = None
 		else:
+			self.layout.addWidget( self.addBtn )
 			self.selection = []
 
 	def setSelection(self, selection):
@@ -105,12 +106,24 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 		self.multiple = skelStructure[boneName]["multiple"]
 		self.ui = Ui_TreeSelector()
 		self.ui.setupUi( self )
-		layout = QtGui.QHBoxLayout( self.ui.listWidget )
-		self.ui.listWidget.setLayout( layout )
 		if not widget:
 			widget = TreeWidget
 		self.tree = widget( self.ui.listWidget, self.modul, None, None, treeItem=self.treeItem, dirItem=self.dirItem )
+		layout = QtGui.QVBoxLayout( self.ui.listWidget )
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		queue = RegisterQueue()
+		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, self )
+		for item in queue.getAll():
+			i = item( self )
+			if isinstance( i, QtGui.QAction ):
+				self.toolBar.addAction( i )
+				self.ui.listWidget.addAction( i )
+			else:
+				self.toolBar.addWidget( i )
+		layout.addWidget( self.toolBar )
 		layout.addWidget( self.tree )
+		self.ui.listWidget.setLayout( layout )
 		self.tree.show()
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
 		self.ui.listSelected.setLayout( layout )
