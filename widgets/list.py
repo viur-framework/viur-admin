@@ -98,8 +98,14 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if self.cursor:
 			filter["cursor"] = self.cursor
 		elif self.dataCache:
+			invertedOrderDir = False
+			if "orderdir" in filter.keys() and str(filter["orderdir"]) == "1":
+				invertedOrderDir = True
 			if filter["orderby"] in self.dataCache[-1].keys():
-				filter[ filter["orderby"]+"$gt" ] = self.dataCache[-1][filter["orderby"]]
+				if invertedOrderDir:
+					filter[ filter["orderby"]+"$lt" ] = self.dataCache[-1][filter["orderby"]]
+				else:
+					filter[ filter["orderby"]+"$gt" ] = self.dataCache[-1][filter["orderby"]]
 		req = NetworkService.request("/%s/list?amount=%s" % (self.modul, self._chunkSize), filter, successHandler=self.addData)
 		req.requestIndex = index
 
