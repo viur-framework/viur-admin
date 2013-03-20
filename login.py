@@ -56,8 +56,7 @@ class LoginTask( QtCore.QObject ):
 		else: #Fallback to google account auth
 			logging.debug("LoginTask using method x-google-account")
 			if self.isLocalServer:
-				argsStr = urllib.parse.urlencode( {"email": self.username, "admin": "True", "action":"Login"} )
-				NetworkService.request("http://%s:%s/_ah/login?%s" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, argsStr ), None, finishedHandler=self.onLocalAuth  )
+				NetworkService.request("http://%s:%s/_ah/login?email=%s&admin=True&action=login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, self.username ), None, finishedHandler=self.onLocalAuth  )
 			else:
 				credDict = {	"Email": self.username,
 							"Passwd":self.password,
