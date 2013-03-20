@@ -7,7 +7,7 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os, os.path
-from utils import RegisterQueue, Overlay,  formatString
+from utils import RegisterQueue, Overlay, formatString, loadIcon
 from mainwindow import WidgetHandler
 from widgets.hierarchy import HierarchyWidget
 from widgets.edit import EditWidget
@@ -184,12 +184,7 @@ class HierarchyCoreHandler( WidgetHandler ): #FIXME
 		self.modul = modul
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
-			lastDot = config["icon"].rfind(".")
-			smallIcon = config["icon"][ : lastDot ]+"_small"+config["icon"][ lastDot: ]
-			if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
-				self.setIcon( 0, QtGui.QIcon( smallIcon ) )
-			else:
-				self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
+			self.setIcon(0, loadIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()

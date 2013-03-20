@@ -5,7 +5,7 @@ from ui.listUI import Ui_List
 import time
 import os, os.path
 from ui.editpreviewUI import Ui_EditPreview
-from utils import RegisterQueue, Overlay, formatString
+from utils import RegisterQueue, Overlay, formatString, loadIcon
 from config import conf
 from mainwindow import WidgetHandler
 from widgets.list import ListWidget, ListTableModel
@@ -287,14 +287,10 @@ class ListCoreHandler( WidgetHandler ): #EntryHandler
 				widgetGen = lambda: List( modul, config["columns"] )
 		else:
 			widgetGen = lambda: List( modul)
-		icon = QtGui.QIcon(  )
 		if config["icon"]:
-			lastDot = config["icon"].rfind(".")
-			smallIcon = config["icon"][ : lastDot ]+"_small"+config["icon"][ lastDot: ]
-			if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
-				icon = QtGui.QIcon( smallIcon )
-			else:
-				icon = QtGui.QIcon( config["icon"] )
+			icon = loadIcon( config["icon"] )
+		else:
+			icon = loadIcon( None )
 		super( ListCoreHandler, self ).__init__( widgetGen, descr=config["name"], icon=icon, vanishOnClose=False, *args, **kwargs )
 		if "views" in config.keys():
 			for view in config["views"]:

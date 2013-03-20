@@ -4,6 +4,7 @@ from event import event
 from config import conf
 from mainwindow import WidgetHandler
 from widgets.edit import EditWidget
+from utils import loadIcon
 import os
 
 class SingletonEntryHandler( WidgetHandler ): #FIXME
@@ -15,12 +16,9 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 		if modul in conf.serverConfig["modules"].keys():
 			config = conf.serverConfig["modules"][ modul ]
 			if config["icon"]:
-				lastDot = config["icon"].rfind(".")
-				smallIcon = config["icon"][ : lastDot ]+"_small"+config["icon"][ lastDot: ]
-				if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
-					self.setIcon( 0, QtGui.QIcon( smallIcon ) )
-				else:
-					self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
+				self.setIcon(0, loadIcon( config["icon"] ) )
+			else:
+				self.setIcon(0, loadIcon( None ) )
 			self.setText( 0, config["name"] )
 
 class SingletonHandler( QtCore.QObject ):

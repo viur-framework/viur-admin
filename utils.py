@@ -293,6 +293,27 @@ def formatString( format, data, prefix=None ):
 			res = res.replace( "$(%s)" % (".".join( prefix + [key] ) ), str(data[key]) )
 	return( res )
 
+def loadIcon( iconFile ):
+	"""
+		Tries to create an icon from the given filename.
+		If that image exists in different sizes, all of them are loaded.
+	"""
+	icon = QtGui.QIcon()
+	if not iconFile:
+		return( icon )
+	if os.path.isfile( iconFile ):
+		icon.addFile( iconFile )
+	baseName = os.path.basename( iconFile ) #Strip the path
+	baseName = baseName[ : baseName.rfind(".") ] #Strip the file-ext
+	for f in os.listdir( os.path.dirname( iconFile ) ):
+		if f.startswith( baseName ):
+			res = f.replace( baseName, "" )
+			res = res[ : res.rfind(".") ]
+			if res.lower().strip("-").replace("x","",1).isdigit():
+				icon.addFile( os.path.join( os.path.dirname( iconFile ), f ) )
+	return( icon )
+
+
 def showAbout( parent=None ):
 	"""
 	Shows the about-dialog

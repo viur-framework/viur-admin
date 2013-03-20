@@ -101,21 +101,16 @@ class FileDownloadAction( QtGui.QAction ):
 		self.parent().tree.download( targetDir, self.parent().tree.currentRootNode, self.parent().tree.getPath(), files, dirs )
 
 
-class FileRepoHandler( ListCoreHandler ):
+class FileRepoHandler( WidgetHandler ):
 	def __init__( self, modul, repo, *args, **kwargs ):
-		super( FileRepoHandler, self ).__init__( modul, *args, **kwargs )	
+		super( FileRepoHandler, self ).__init__( lambda: FileList( modul, repo["key"] ), vanishOnClose=False, *args, **kwargs )	
 		self.repo = repo
 		self.setText(0, repo["name"] )
-
-	def clicked( self ):
-		if not self.widgets:
-			self.addWidget( FileList( self.modul, self.repo["key"] ) )
-		else:
-			self.focus()
 
 class FileBaseHandler( WidgetHandler ):
 	def __init__( self, modul, *args, **kwargs ):
 		super( FileBaseHandler, self ).__init__( lambda: FileList( modul ), vanishOnClose=False, *args, **kwargs )
+		self.modul = modul
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
 			self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
