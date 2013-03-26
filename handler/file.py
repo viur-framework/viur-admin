@@ -12,7 +12,7 @@ from widgets.edit import EditWidget
 from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
 from mainwindow import WidgetHandler
-from utils import RegisterQueue
+from utils import RegisterQueue, loadIcon
 import gc
 
 class FileList( QtGui.QWidget ):
@@ -113,7 +113,7 @@ class FileBaseHandler( WidgetHandler ):
 		self.modul = modul
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
-			self.setIcon( 0, QtGui.QIcon( config["icon"] ) )
+			self.setIcon( 0, loadIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
