@@ -7,6 +7,7 @@ from ui.texteditUI import Ui_textEditWindow
 from ui.rawtexteditUI import Ui_rawTextEditWindow
 import html.parser
 from ui.docEditlinkEditUI import Ui_LinkEdit
+from html.entities import entitydefs
 
 rsrcPath = "icons/actions/text"
 
@@ -515,7 +516,7 @@ class HtmlSerializer( html.parser.HTMLParser ): #html.parser.HTMLParser
 		self.result += "&#%s;" % ( name )
 
 	def handle_entityref(self, name): #FIXME
-		if name in htmlentitydefs.entitydefs.keys(): 
+		if name in entitydefs.keys(): 
 			self.result += "&%s;" % ( name )
 
 	def handle_starttag(self, tag, attrs):
