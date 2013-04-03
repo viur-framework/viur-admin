@@ -54,9 +54,9 @@ class FileList( QtGui.QWidget ):
 	def on_listWidget_itemDoubleClicked(self, item ):
 		if( isinstance( item, self.tree.treeItem ) ):
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			widget = EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"])
-			handler = WidgetHandler( self.tree.modul, widget )
-			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+			widgetGen = lambda: EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"])
+			handler = WidgetHandler( widgetGen, descr )
+			event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 	def on_editSearch_clicked(self, *args, **kwargs):
 		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
