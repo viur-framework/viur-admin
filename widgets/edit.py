@@ -282,6 +282,12 @@ class EditWidget( QtGui.QWidget ):
 				iconLbl.setToolTip( str(bone["error"]) )
 			else:
 				dataWidget =  widget
+			## Temporary MacOS Fix
+			import sys
+			if sys.platform.startswith("darwin"):
+				dataWidget.setMaximumWidth(500)
+				dataWidget.setMinimumWidth(500)
+			## Temporary MacOS Fix
 			lblWidget = QtGui.QWidget( self )
 			layout = QtGui.QHBoxLayout(lblWidget)
 			if "params" in bone.keys() and isinstance( bone["params"], dict ) and "tooltip" in bone["params"].keys():
