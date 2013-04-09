@@ -267,11 +267,16 @@ class PredefinedViewHandler( WidgetHandler ): #EntryHandler
 			widgetFactory = lambda: List( modul, myview["columns"],  myview["filter"] )
 		else:
 			widgetFactory = lambda: List( modul )
-		super( PredefinedViewHandler, self ).__init__( widgetFactory, vanishOnClose=False, *args, **kwargs )
+		if "icon" in myview.keys():
+			if myview["icon"].lower().startswith("http://") or myview["icon"].lower().startswith("https://"):
+				icon = myview["icon"]
+			else:
+				icon = loadIcon( myview["icon"] )
+		else:
+			icon = loadIcon( None )
+		super( PredefinedViewHandler, self ).__init__( widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs )
 		self.viewName = viewName
 		self.setText( 0, myview["name"] )
-		if "icon" in myview.keys():
-			self.setIcon( 0, QtGui.QIcon( myview["icon"] ) )
 	
 
 class ListCoreHandler( WidgetHandler ): #EntryHandler
@@ -288,7 +293,10 @@ class ListCoreHandler( WidgetHandler ): #EntryHandler
 		else:
 			widgetGen = lambda: List( modul)
 		if config["icon"]:
-			icon = loadIcon( config["icon"] )
+			if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
+				icon = config["icon"]
+			else:
+				icon = loadIcon( config["icon"] )
 		else:
 			icon = loadIcon( None )
 		super( ListCoreHandler, self ).__init__( widgetGen, descr=config["name"], icon=icon, vanishOnClose=False, *args, **kwargs )

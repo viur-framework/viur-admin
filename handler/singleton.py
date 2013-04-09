@@ -12,14 +12,19 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 	
 	def __init__( self, modul,  *args, **kwargs ):
 		widgetFactory = lambda: EditWidget( modul, EditWidget.appSingleton, "singleton"  )
-		super( SingletonEntryHandler, self ).__init__( widgetFactory, vanishOnClose=False , *args, **kwargs )
+		name = ""
 		if modul in conf.serverConfig["modules"].keys():
 			config = conf.serverConfig["modules"][ modul ]
 			if config["icon"]:
-				self.setIcon(0, loadIcon( config["icon"] ) )
+				if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
+					icon = config["icon"]
+				else:
+					icon = loadIcon( config["icon"] )
 			else:
-				self.setIcon(0, loadIcon( None ) )
-			self.setText( 0, config["name"] )
+				icon = loadIcon( None )
+			name = config["name"]
+		super( SingletonEntryHandler, self ).__init__( widgetFactory, icon=icon, vanishOnClose=False , *args, **kwargs )
+		self.setText(0,name)
 
 class SingletonHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):

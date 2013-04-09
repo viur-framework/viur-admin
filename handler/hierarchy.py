@@ -180,11 +180,16 @@ class HierarchyCoreHandler( WidgetHandler ): #FIXME
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
-		super( HierarchyCoreHandler, self ).__init__( lambda: HierarchyList( modul ), vanishOnClose=False, *args, **kwargs )
 		self.modul = modul
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
-			self.setIcon(0, loadIcon( config["icon"] ) )
+			if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
+				icon = config["icon"]
+			else:
+				icon = loadIcon( config["icon"] )
+		else:
+			icon = loadIcon( None )
+		super( HierarchyCoreHandler, self ).__init__( lambda: HierarchyList( modul ), icon=icon, vanishOnClose=False, *args, **kwargs )
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()

@@ -291,6 +291,7 @@ class RemoteFile( QtCore.QObject ):
 	def onTimerEvent( self ):
 		self.logger.debug("Checkpoint: onTimerEvent")
 		s = self.successHandlerSelf()
+		print( s )
 		if s:
 			try:
 				getattr( s, self.successHandlerName )( self )
@@ -303,7 +304,7 @@ class RemoteFile( QtCore.QObject ):
 	
 	def loadFile(self ):
 		dlKey = self.dlKey
-		if not dlKey.lower().startswith("http://") or not dlKey.lower().startswith("https://"):
+		if not dlKey.lower().startswith("http://") and not dlKey.lower().startswith("https://"):
 			dlKey = "/file/view/%s/file.dat" % dlKey
 		req = NetworkService.request( dlKey, successHandler=self.onFileAvaiable  )
 

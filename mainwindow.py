@@ -8,7 +8,7 @@ from utils import RegisterQueue, showAbout
 from tasks import TaskViewer
 import startpages
 import gc
-
+from network import NetworkService, RemoteFile
 
 class BaseHandler( QtGui.QTreeWidgetItem ):
 	
@@ -52,14 +52,21 @@ class WidgetHandler( BaseHandler ):
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		self.setText(0, descr)
-		if icon:
-			self.setIcon(0, icon )
+		if icon is not None:
+			if isinstance( icon, QtGui.QIcon):
+				self.setIcon(0, icon )
+			elif isinstance( icon, str ):
+				RemoteFile( icon, successHandler=self.loadIconFromRequest )
 		self.vanishOnClose = vanishOnClose
 		#self.largeIcon = None
 		#if modul in conf.serverConfig["modules"].keys():
 		#	config = conf.serverConfig["modules"][ modul ]
 		#	if config["icon"]:
 		#		self.largeIcon = QtGui.QIcon( config["icon"] )
+
+	def loadIconFromRequest( self, request ):
+		icon = QtGui.QIcon( request.getFileName() )
+		self.setIcon(0, icon)
 
 	def focus( self ):
 		"""

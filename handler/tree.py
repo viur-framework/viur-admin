@@ -130,10 +130,15 @@ class TreeDeleteAction( QtGui.QAction ):
 
 class TreeBaseHandler( WidgetHandler ):
 	def __init__( self, modul, *args, **kwargs ):
-		super( TreeBaseHandler, self ).__init__(  lambda: TreeList( modul ), vanishOnClose=False, *args, **kwargs )
 		config = conf.serverConfig["modules"][ modul ]
 		if config["icon"]:
-			self.setIcon( 0, loadIcon( config["icon"] ) )
+			if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
+				icon = config["icon"]
+			else:
+				icon = loadIcon( config["icon"] )
+		else:
+			icon = loadIcon( None )
+		super( TreeBaseHandler, self ).__init__(  lambda: TreeList( modul ), icon=icon, vanishOnClose=False, *args, **kwargs )
 		self.setText( 0, config["name"] )
 
 
