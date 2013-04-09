@@ -13,6 +13,23 @@ http://docs.viur.is
 import sys, os, traceback
 from io import StringIO
 from optparse import OptionParser
+
+## Some basic checks to ensure that the current python interpreter meets our minimum requirements
+min_version = (3,2)
+if sys.version_info<min_version:
+	print("You need python3.2 or newer!")
+	sys.exit(1)
+try:
+	from PyQt4 import Qt, QtGui, QtCore, QtOpenGL, QtWebKit
+except ImportError:
+	print( "QT Bindings are missing or incomplete! Ensure PyQT is build with Qt, QtGui, QtCore, QtOpenGL and QtWebKit" )
+	sys.exit(1)
+try:
+	from PyQt4 import Qsci
+except ImportError:
+	print( "Error importing QScintilla2 (Qsci)!")
+	sys.exit(1)
+
 import logging
 
 #Fixing the path
@@ -35,7 +52,6 @@ parser.add_option('-i', '--no-ignore', dest='noignore', default=False, help="Dis
 #Apply options
 logging.getLogger().setLevel( getattr( logging, options.debug.upper()  ) )
 
-from PyQt4 import Qt, QtCore
 from mainwindow import MainWindow
 from handler import *
 from bones import *
