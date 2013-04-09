@@ -61,33 +61,37 @@ import urllib, urllib.request
 from urllib.parse import quote_plus
 from event import EventDispatcher
 
+from bugsnag import Notification
 
 def reportError( type, value, tb ):
 	print( "*"*40 )
 	print( type )
 	print( value )
 	traceback.print_tb(tb)
-	def dict2Data( data ):
-		l = []
-		for k, v in data.items():
-			k = quote_plus(k)
-			if isinstance(v,  str):
-				v = [v]
-			elif isinstance(v,  int) or isinstance(v,  int):
-				v = [str(v)]
-			for i in v:
-				l.append("%s=%s" % (k, quote_plus(i)))
-		return "&".join( l ).encode("UTF8" )
+	
+	if os.path.exists( ".git" ):
+		releaseStage = "development"
+	else:
+		releaseStage = "production"
 	try:
-		report_url = "https://viur-is.appspot.com/bugtracker/logError"
-		io = StringIO()
-		traceback.print_tb(tb, file=io)
-		io.seek(0)
-		tbs = io.read()
-		params = dict2Data( {"err_type":str(type), "err_tracebak":tbs} )
-		assert urllib.request.urlopen( report_url, params ).read()=="OK"
-	except:
-		traceback.print_exc()
+		import BUILD_CONSTANTS
+		appVersion = BUILD_CONSTANTS.BUILD_RELEASE_STRING
+	except: #Local development or not a freezed Version
+		appVersion = "unknown"
+		try: #Reading the head-revision from git
+			gitHead = open(".git/FETCH_HEAD", "r").read()
+			for line in gitHead.splitlines():
+				line = line.replace("\t", " ")
+				if "branch 'master'" in line:
+					appVersion = line.split(" ")[0]
+		except:
+			pass
+	n = Notification( type, value, tb, { "appVersion": appVersion,
+				"apiKey": "9ceeab3886a9ff81c184a6d60d970421" #Our API-Key for that project
+				}
+			)
+	n.deliver()
+
 
 if (options.report == "auto" and not os.path.exists( ".git" )) or options.report=="yes": #Report errors only if not beeing a local development instance
 	sys.excepthook = reportError
