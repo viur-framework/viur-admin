@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'hierarchy.ui'
 #
 # Created: Wed Feb 20 11:18:14 2013
-#      by: PyQt4 UI code generator 4.9.6
+#      by: PySide UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -66,4 +66,4 @@ class Ui_Hierarchy(object):
     def retranslateUi(self, Hierarchy):
         Hierarchy.setWindowTitle(_translate("Hierarchy", "Form", None))
 
-from PyQt4 import QtWebKit
+from PySide import QtWebKit

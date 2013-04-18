@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'list.ui'
 #
 # Created: Tue Jan 15 11:25:50 2013
-#      by: PyQt4 UI code generator 4.9.6
+#      by: PySide UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

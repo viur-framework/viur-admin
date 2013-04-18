@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 import math
 import os, os.path
 import os

@@ -1,7 +1,6 @@
 from ui.accountmanagerUI import Ui_MainWindow
-from PyQt4 import Qt
 import sys
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from config import conf
 import json

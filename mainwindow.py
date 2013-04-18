@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PySide import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
 import time, os
@@ -140,6 +140,7 @@ class MainWindow( QtGui.QMainWindow ):
 		event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
 		event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
 		event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
+		self.ui.treeWidget.itemClicked.connect( self.on_treeWidget_itemClicked )
 		self.handlerStack = []
 		self.currentWidget = None
 		self.helpBrowser = None
@@ -365,17 +366,6 @@ class MainWindow( QtGui.QMainWindow ):
 		event.emit( QtCore.SIGNAL('mainWindowInitialized()') )
 		QtGui.QApplication.restoreOverrideCursor()
 
-	def on_modulsList_itemClicked (self, item):
-		"""
-		Forwards the clicked-event to the selected handler
-		"""
-		if item and "clicked" in dir( item ):
-			item.clicked()
-
-	def on_modulsList_itemDoubleClicked( self, item ):
-		"""Called if the user selects an Item from the ModuleTree"""
-		if item and "doubleClicked" in dir( item ):
-			item.doubleClicked()
 
 	def statusMessage(self, type, message):
 		"""

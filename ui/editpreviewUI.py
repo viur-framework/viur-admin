@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'ui\editpreview.ui'
 #
 # Created: Mon Nov 26 19:34:50 2012
-#      by: PyQt4 UI code generator 4.9.5
+#      by: PySide UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -45,7 +45,7 @@ class Ui_EditPreview(object):
     def retranslateUi(self, BasePreview):
         self.btnReload.setText(QtGui.QApplication.translate("EditPreview", "Reload", None, QtGui.QApplication.UnicodeUTF8))
 
-from PyQt4 import QtWebKit
+from PySide import QtWebKit
 
 if __name__ == "__main__":
     import sys

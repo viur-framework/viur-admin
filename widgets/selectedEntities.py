@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from utils import RegisterQueue,  formatString, itemFromUrl
 from handler.list import ListTableModel

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.treeUI import Ui_Tree
-from PyQt4 import QtCore, QtGui, QtNetwork
+from PySide import QtCore, QtGui, QtNetwork
 from network import NetworkService
 from event import event
 from config import conf

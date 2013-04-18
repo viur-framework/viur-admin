@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'ui\textedit.ui'
 #
 # Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+#      by: PySide UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

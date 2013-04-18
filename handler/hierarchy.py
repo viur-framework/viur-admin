@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.hierarchyUI import Ui_Hierarchy
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf

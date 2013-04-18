@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from network import NetworkService
 from event import event
 from ui.listUI import Ui_List
@@ -252,10 +252,6 @@ class ListPreviewAction( QtGui.QAction ):
 			data = self.parentWidget().list.model().getData()[ rows[0] ]
 			self.widget = Preview( self.previewURLs, self.modul, data )
 	
-	def __del__( self ):
-		if self.widget:
-			self.widget.deleteLater()
-
 
 class PredefinedViewHandler( WidgetHandler ): #EntryHandler
 	"""Holds one view for this modul (preconfigured from Server)"""

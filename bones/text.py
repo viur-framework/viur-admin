@@ -1,5 +1,5 @@
-from PyQt4 import QtCore, QtGui, QtWebKit, Qsci
-from PyQt4.Qsci import QsciScintilla, QsciLexerHTML
+from PySide import QtCore, QtGui, QtWebKit
+#from PySide.Qsci import QsciScintilla, QsciLexerHTML
 import sys
 from event import event
 from utils import RegisterQueue

@@ -19,16 +19,16 @@ min_version = (3,2)
 if sys.version_info<min_version:
 	print("You need python3.2 or newer!")
 	sys.exit(1)
-try:
-	from PyQt4 import Qt, QtGui, QtCore, QtOpenGL, QtWebKit
-except ImportError:
+if 1:
+	from PySide import QtGui, QtCore, QtOpenGL, QtWebKit
+else: # ImportError:
 	print( "QT Bindings are missing or incomplete! Ensure PyQT is build with Qt, QtGui, QtCore, QtOpenGL and QtWebKit" )
 	sys.exit(1)
-try:
-	from PyQt4 import Qsci
-except ImportError:
-	print( "Error importing QScintilla2 (Qsci)!")
-	sys.exit(1)
+#try:
+#	from PySide import Qsci
+#except ImportError:
+#	print( "Error importing QScintilla2 (Qsci)!")
+#	sys.exit(1)
 
 import logging
 
@@ -100,7 +100,7 @@ conf.cmdLineOpts = options #Store the command-line options
 
 import plugin
 
-app = Qt.QApplication(sys.argv)
+app = QtGui.QApplication(sys.argv)
 #Load translations
 transFiles = os.listdir("./locales/")
 for file in transFiles:
@@ -116,6 +116,11 @@ mw = MainWindow()
 l = Login()
 l.show()
 app.exec_()
+print("don1e")
+sys.stdout.flush()
 conf.savePortalConfig()
 conf.saveConfig()
-EventDispatcher.shutdown()
+#EventDispatcher.shutdown()
+print("done")
+sys.stdout.flush()
+

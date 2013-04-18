@@ -1,13 +1,13 @@
 from ui.loginformUI import Ui_LoginWindow
 from accountmanager import Accountmanager
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PySide import QtCore, QtGui, QtWebKit
 from network import NetworkService
 from event import event
 from config import conf
 from utils import Overlay, showAbout
 import urllib.parse
 from urllib.error import HTTPError
-from PyQt4 import QtCore
+from PySide import QtCore
 import json
 from locales import ISO639CODES
 import logging
@@ -50,7 +50,7 @@ class LoginTask( QtCore.QObject ):
 	
 	def onAuthMethodKnown(self, request ):
 		self.logger.debug("Checkpoint: onAuthMethodKnown")
-		method = bytes( request.readAll() ).decode("UTF-8").lower()
+		method = request.readAll().data().decode("UTF-8").lower()
 		if method == "x-viur-internal":
 			logging.debug("LoginTask using method x-viur-internal")
 			NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True, successHandler=self.onViurAuth, failureHandler=self.onError )
@@ -179,6 +179,7 @@ class Login( QtGui.QMainWindow ):
 		if currentLang in self.langKeys:
 			self.ui.cbLanguages.setCurrentIndex( self.langKeys.index( currentLang ) )
 		self.ui.cbLanguages.blockSignals( False )
+		self.ui.btnLogin.clicked.connect( self.on_btnLogin_released )
 		
 	def changeEvent(self, *args, **kwargs):
 		super( Login, self ).changeEvent( *args, **kwargs )

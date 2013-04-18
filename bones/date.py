@@ -1,5 +1,5 @@
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from datetime import datetime, date, time, tzinfo
 

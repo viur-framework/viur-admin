@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'ui\rawtextedit.ui'
 #
 # Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+#      by: PySide UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -44,7 +44,7 @@ class Ui_rawTextEditWindow(object):
         rawTextEditWindow.setWindowTitle(QtGui.QApplication.translate("rawTextEditWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSave.setText(QtGui.QApplication.translate("rawTextEditWindow", "Apply", None, QtGui.QApplication.UnicodeUTF8))
 
-from PyQt4 import Qsci
+
 
 if __name__ == "__main__":
     import sys

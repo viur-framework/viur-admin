@@ -1,4 +1,4 @@
-from PyQt4 import QtCore
+from PySide import QtCore
 import weakref
 import logging
 
@@ -21,7 +21,7 @@ class EventWrapper( QtCore.QObject ):
 		self.targetFuncSelf = weakref.ref( targetFunc.__self__)
 		self.targetFuncName = targetFunc.__name__
 		#targetFunc.__self__.connect( self, signal, targetFunc )
-		self.connect( targetFunc.__self__, QtCore.SIGNAL( "destroyed (QObject *)" ), self.onDestroyed )
+		#self.connect( targetFunc.__self__, QtCore.SIGNAL( "destroyed (QObject *)" ), self.onDestroyed )
 	
 	def onDestroyed( self, ref=None ):
 		"""
@@ -90,7 +90,7 @@ class EventDispatcher(  QtCore.QObject ):
 			EventDispatcher.eventMap[ signal ][ "low" ].append( obj )
 
 	def emit(self, signal, *args ):
-		super( EventDispatcher, self ).emit( signal, *args )
+		#super( EventDispatcher, self ).emit( signal, *args )
 		if signal in EventDispatcher.eventMap.keys():
 			try:
 				for e in EventDispatcher.eventMap[ signal ]["high"]:
