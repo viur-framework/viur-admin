@@ -89,15 +89,6 @@ class EventDispatcher(  QtCore.QObject ):
 			except StopIteration:
 				pass
 	
-	@staticmethod
-	def shutdown():
-		"""
-			Shutdown this eventdispatcher.
-			Dont call yourself
-		"""
-		for signalHandler in EventDispatcher.eventMap.values():
-			for e in signalHandler["high"]+signalHandler["normal"]+signalHandler["low"]:
-				e.onDestroyed()
 
 event = EventDispatcher()
 
