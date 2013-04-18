@@ -13,37 +13,12 @@ class EventWrapper( QtCore.QObject ):
 		and destroyes itself if its parent gets destroyed.
 	"""
 	
-	
 	def __init__(self, signal, targetFunc ):
 		super( EventWrapper, self ).__init__()
 		self.logger = logging.getLogger("EventWrapper")
 		self.signal = signal
 		self.targetFuncSelf = weakref.ref( targetFunc.__self__)
 		self.targetFuncName = targetFunc.__name__
-		#targetFunc.__self__.connect( self, signal, targetFunc )
-		self.connect( targetFunc.__self__, QtCore.SIGNAL( "destroyed (QObject *)" ), self.onDestroyed )
-	
-	def onDestroyed( self, ref=None ):
-		"""
-			Our parent is gone. Remove this wrapper so it doesnt get events anymore.
-		"""
-		self.logger.debug("Checkpoint onDestroyed: %s", str(self) )
-		if not self.signal in EventDispatcher.eventMap.keys():
-			self.logger.error("This eventwrapper's event has been failed to register somehow!")
-			return
-		try:
-			EventDispatcher.eventMap[ self.signal ]["high"].remove( self )
-		except ValueError: #We might not be in *that* list
-			pass
-		try:
-			EventDispatcher.eventMap[ self.signal ]["normal"].remove( self )
-		except ValueError: #We might not be in *that* list
-			pass
-		try:
-			EventDispatcher.eventMap[ self.signal ]["low"].remove( self )
-		except ValueError: #We might not be in *that* list
-			pass
-		self.deleteLater()
 	
 	def emitUsingParams(self, *args):
 		"""
@@ -52,6 +27,9 @@ class EventWrapper( QtCore.QObject ):
 		s = self.targetFuncSelf()
 		if s:
 			getattr( s, self.targetFuncName )( *args )
+	
+	def isDead( self ):
+		return( self.targetFuncSelf()==None )
 
 class EventDispatcher(  QtCore.QObject ):
 	"""
@@ -94,11 +72,20 @@ class EventDispatcher(  QtCore.QObject ):
 		if signal in EventDispatcher.eventMap.keys():
 			try:
 				for e in EventDispatcher.eventMap[ signal ]["high"]:
-					e.emitUsingParams( *args )
+					if e.isDead():
+						EventDispatcher.eventMap[ signal ]["high"].remove( e )
+					else:
+						e.emitUsingParams( *args )
 				for e in EventDispatcher.eventMap[ signal ]["normal"]:
-					e.emitUsingParams( *args )
+					if e.isDead():
+						EventDispatcher.eventMap[ signal ]["normal"].remove( e )
+					else:
+						e.emitUsingParams( *args )
 				for e in EventDispatcher.eventMap[ signal ]["low"]:
-					e.emitUsingParams( *args )
+					if e.isDead():
+						EventDispatcher.eventMap[ signal ]["low"].remove( e )
+					else:
+						e.emitUsingParams( *args )
 			except StopIteration:
 				pass
 	
