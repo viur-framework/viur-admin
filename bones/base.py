@@ -35,8 +35,8 @@ class BaseEditBone( QtGui.QWidget ):
 		if self.boneName in data.keys():
 			self.lineEdit.setText( str( data[ self.boneName ] ) if data[ self.boneName ] else "" )
 	
-	def serialize(self):
-		return( str( self.lineEdit.displayText() ) )
+	def serializeForPost(self):
+		return( { self.boneName: self.lineEdit.displayText() } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

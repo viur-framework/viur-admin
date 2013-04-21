@@ -46,8 +46,8 @@ class DocumentEditBone( QtGui.QWidget ):
 		self.html = data[ self.boneName ]
 		self.webView.setHtml (self.html)
 
-	def serialize(self):
-		return( self.html )
+	def serializeForPost(self):
+		return( { self.boneName: self.html } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

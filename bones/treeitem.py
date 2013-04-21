@@ -73,14 +73,14 @@ class TreeItemEditBone( QtGui.QWidget ):
 		if not self.skelStructure[self.boneName]["multiple"]:
 			self.entry.setText( formatString( self.format, data[ self.boneName ] ) )
 
-	def serialize(self):
+	def serializeForPost(self):
 		if self.selection:
 			if not self.skelStructure[self.boneName]["multiple"]:
-				return( str( self.selection["id"] ) )
+				return( { self.boneName: str( self.selection["id"] ) } )
 			else:
-				return( [ str( x["id"] ) for x in self.selection ] )
+				return( { self.boneName: [ str( x["id"] ) for x in self.selection ] } )
 		else:
-			return( None )
+			return( { self.boneName: None } )
 	
 	def serializeForDocument(self):
 		if self.selection:

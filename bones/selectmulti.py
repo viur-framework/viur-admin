@@ -33,8 +33,8 @@ class SelectMultiEditBone( QtGui.QWidget ):
 		for key, checkbox in self.checkboxes.items():
 			checkbox.setChecked( key in data[self.boneName] )
 
-	def serialize(self):
-		return( [ key for key, checkbox in self.checkboxes.items() if checkbox.isChecked() ] )
+	def serializeForPost(self):
+		return( { self.boneName: [ key for key, checkbox in self.checkboxes.items() if checkbox.isChecked() ] } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

@@ -158,15 +158,15 @@ class RelationalEditBone( QtGui.QWidget ):
 		self.selection = data[ self.boneName ]
 		self.updateVisiblePreview()
 
-	def serialize(self):
+	def serializeForPost(self):
 		if not self.selection:
-			return( None )
+			return( { self.boneName:None } )
 		if self.skelStructure[self.boneName]["multiple"]:
-			return( [ str( x["id"] ) for x in self.selection ] )
+			return( { self.boneName: [ str( x["id"] ) for x in self.selection ] } )
 		elif self.selection:
-			return( str( self.selection["id"] ) )
+			return( { self.boneName: str( self.selection["id"] ) } )
 		else:
-			return( None )
+			return( { self.boneName: None } )
 
 
 class BaseRelationalBoneSelector( QtGui.QWidget ):

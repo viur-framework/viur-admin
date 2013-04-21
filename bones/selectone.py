@@ -31,11 +31,11 @@ class SelectOneEditBone( QtGui.QWidget ):
 		except:
 			self.comboBox.setCurrentIndex(-1)
 
-	def serialize(self):
+	def serializeForPost(self):
 		for key, value in self.skelStructure[ self.boneName ]["values"].items():
 			if str(value) == str( self.comboBox.currentText() ):
-				return( str(key) )
-		return( None )
+				return( { self.boneName: str(key) } )
+		return( { self.boneName: None } )
 		
 	def serializeForDocument(self):
 		return( self.serialize( ) )

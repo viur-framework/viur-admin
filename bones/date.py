@@ -65,7 +65,7 @@ class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
 				pass
 			self.lineEdit.setTime(QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second))
 	
-	def serialize(self):
+	def serializeForPost(self):
 		erg=""
 		if (self.time and self.date):#date AND time
 			erg=self.lineEdit.dateTime().toString("dd.MM.yyyy hh:mm:ss")
@@ -73,7 +73,7 @@ class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
 			erg=self.lineEdit.date().toString("dd.MM.yyyy")
 		else: # time only
 			erg=self.lineEdit.time().toString("hh:mm:ss")
-		return(erg)
+		return( { self.boneName: erg} )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

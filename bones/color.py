@@ -41,8 +41,8 @@ class ColorEditBone( BaseEditBone ):
 		self.lineEdit1.setText( data )
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)
 
-	def serialize(self):
-		return( str( self.lineEdit1.displayText() ) )
+	def serializeForPost(self):
+		return( { self.boneName: str( self.lineEdit1.displayText() ) } )
 
 
 class colorHandler( QtCore.QObject ):
