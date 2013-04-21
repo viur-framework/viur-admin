@@ -148,7 +148,7 @@ class StringEditBone( QtGui.QWidget ):
 			assert isinstance(data,dict)
 			for lang in self.languages:
 				if lang in data.keys():
-					self.langEdits[ lang ].setText( data[ lang ] )
+					self.langEdits[ lang ].setText( str(data[ lang ]) )
 		elif not self.languages and self.multiple:
 			if isinstance( data,list ):
 				for tagStr in data:
