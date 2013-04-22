@@ -324,9 +324,7 @@ class EditWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 		res = {}
 		for key, bone in self.bones.items():
-			value = bone.serialize()
-			if value!=None:
-				res[ key ] = value
+			res.update( bone.serializeForPost( ) )
 		self.save( res )
 
 	def on_btnPreview_released( self, *args, **kwargs ):
