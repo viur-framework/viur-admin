@@ -667,8 +667,8 @@ class TextEditBone( QtGui.QWidget ):
 				else:
 					self.html[ lang ] = ""
 				self.languageContainer[ lang ].webView.setHtml( self.html[ lang ] )
-		else:
-			self.html = data[ self.boneName ].replace( "target=\"_blank\" href=\"", "href=\"!" ) if (data and data.get( self.boneName ) ) else ""
+		elif not self.languages:
+			self.html = str(data[ self.boneName ]).replace( "target=\"_blank\" href=\"", "href=\"!" ) if (data and data.get( self.boneName ) ) else ""
 			self.webView.setHtml (self.html)
 
 	def serializeForPost(self):
