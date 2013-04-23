@@ -113,7 +113,7 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 		self.selection = selection or []
 		if isinstance( self.selection, dict ): #This was a singleSelection before
 			self.selection = [ self.selection ]
-		self.setModel( SelectedEntitiesTableModel( self, modul, selection ) )
+		self.setModel( SelectedEntitiesTableModel( self, modul, self.selection ) )
 		self.setAcceptDrops( True )
 		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
 		self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
