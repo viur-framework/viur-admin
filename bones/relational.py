@@ -15,20 +15,23 @@ class BaseBone:
 
 class RelationalViewBoneDelegate(QtGui.QStyledItemDelegate):
 	cantSort = True
-	def __init__(self, structure):
+	def __init__(self, structure, boneName):
 		super(RelationalViewBoneDelegate, self).__init__()
 		self.format = "$(name)"
-		if "format" in structure.keys():
-			self.format = structure["format"]
+		if "format" in structure[boneName].keys():
+			self.format = structure[boneName]["format"]
+		self.structure = structure
+		self.boneName = boneName
 
 	def displayText(self, value, locale ):
-		return( formatString( self.format, value ) )
+		return( formatString( self.format, self.structure, value ) )
 
 class AutocompletionModel( QtCore.QAbstractListModel ):
-	def __init__( self,  modul, format, *args, **kwargs ):
+	def __init__( self,  modul, format, structure, *args, **kwargs ):
 		super( AutocompletionModel, self ).__init__( *args, **kwargs )
 		self.modul = modul
 		self.format = format
+		self.structure = structure
 		self.dataCache = []
 	
 	def rowCount(self, *args, **kwargs):
@@ -40,7 +43,7 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 		elif role != QtCore.Qt.ToolTipRole and role != QtCore.Qt.EditRole and role != QtCore.Qt.DisplayRole: 
 			return None
 		if( index.row() >=0 and index.row()< self.rowCount() ):
-			return( formatString( self.format, self.dataCache[ index.row() ] ) )
+			return( formatString( self.format, self.structure, self.dataCache[ index.row() ] ) )
 
 	def setCompletionPrefix(self, prefix ):
 		NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix, "orderby":"name" }, successHandler=self.addCompletionData )
@@ -57,7 +60,7 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 		self.emit(QtCore.SIGNAL("layoutChanged()"))
 	
 	def getItem(self, label):
-		res = [ x for x in self.dataCache if formatString( self.format, x)==label ]
+		res = [ x for x in self.dataCache if formatString( self.format, self.structure, x)==label ]
 		if len(res):
 			return( res[0] )
 		return( None )
@@ -84,7 +87,7 @@ class RelationalEditBone( QtGui.QWidget ):
 		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
 		if not skelStructure[boneName]["multiple"]:
 			self.entry = QtGui.QLineEdit( self )
-			self.autoCompletionModel = AutocompletionModel( self.toModul, self.skelStructure[ self.boneName ]["format"] )
+			self.autoCompletionModel = AutocompletionModel( self.toModul, self.skelStructure[ self.boneName ]["format"], self.skelStructure )
 			self.autoCompleter = QtGui.QCompleter( self.autoCompletionModel )
 			self.autoCompleter.setModel( self.autoCompletionModel )
 			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
@@ -113,14 +116,14 @@ class RelationalEditBone( QtGui.QWidget ):
 			if self.selection and len(self.selection)>0:
 				for item in self.selection:
 					lbl = QtGui.QLabel( self.previewWidget )
-					lbl.setText( formatString( self.skelStructure[ self.boneName ]["format"], item ) )
+					lbl.setText( formatString( self.skelStructure[ self.boneName ]["format"], self.skelStructure, item ) )
 					self.previewLayout.addWidget( lbl )
 				self.addBtn.setText("Auswahl ändern")
 			else:
 				self.addBtn.setText("Auswählen")
 		else:
 			if self.selection:
-				self.entry.setText( formatString( self.skelStructure[ self.boneName ]["format"], self.selection ) )
+				self.entry.setText( formatString( self.skelStructure[ self.boneName ]["format"], self.skelStructure, self.selection ) )
 			else:
 				self.entry.setText( "" )
 
@@ -279,7 +282,7 @@ class RelationalHandler( QtCore.QObject ):
 	
 	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
 		if skelStucture[boneName]["type"].startswith("relational."):
-			registerObject.registerHandler( 5, lambda: RelationalViewBoneDelegate(skelStucture[boneName]) )
+			registerObject.registerHandler( 5, lambda: RelationalViewBoneDelegate(skelStucture,boneName) )
 
 	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
 		if skelStucture[boneName]["type"].startswith("relational."):

@@ -261,7 +261,7 @@ def itemFromUrl( url ):
 	else:
 		return( modul, parts[2], "" )
 
-def formatString( format, data, prefix=None ):
+def formatString( format, skelStructure, data, prefix=None ):
 	""" Parses a String given by format and substitutes Placeholders using values specified by data.
 	Syntax for Placeholders is $(%s). Its possible to traverse to subdictionarys by using a dot as seperator.
 	If data is a list, the result each element from this list applied to the given string; joined by ", ".
@@ -272,13 +272,35 @@ def formatString( format, data, prefix=None ):
 	
 	@type format: String
 	@param format: String contining the format
+	@type skelStructure: Dict
+	@param skelStructure: Parses along the structure of the given skeleton
 	@type data: List or Dict
 	@param data: Data applied to the format String
 	@return: String
 	"""
+	def chooseLang( value, prefs ): #FIXME: Copy&Paste from bones/string
+		"""
+			Tries to select the best language for the current user.
+			Value is the dictionary of lang -> text recived from the server,
+			prefs the list of languages (in order of preference) for that bone.
+		"""
+		if not isinstance( value, dict ):
+			return( value )
+		try:
+			lang = conf.adminConfig["language"]
+		except:
+			lang = ""
+		if lang in value.keys() and value[ lang ]:
+			return( value[ lang ] )
+		for lang in prefs:
+			if lang in value.keys():
+				if value[ lang ]:
+					return( value[ lang ] )
+		return( None )
+	
 	prefix = prefix or []
 	if isinstance( data,  list ):
-		return(", ".join( [ formatString( format, x, prefix ) for x in data ] ) )
+		return(", ".join( [ formatString( format, skelStructure, x, prefix ) for x in data ] ) )
 	res = format
 	if isinstance( data, str ):
 		return( data )
@@ -286,11 +308,16 @@ def formatString( format, data, prefix=None ):
 		return( "" )
 	for key in data.keys():
 		if isinstance( data[ key ], dict ):
-			res = formatString( res, data[key], prefix + [key] )
+			res = formatString( res, skelStructure, data[key], prefix + [key] )
 		elif isinstance( data[ key ], list ) and len( data[ key ] )>0 and isinstance( data[ key ][0], dict) :
-			res = formatString( res, data[key][0], prefix + [key] )
+			res = formatString( res, skelStructure, data[key][0], prefix + [key] )
 		else:
 			res = res.replace( "$(%s)" % (".".join( prefix + [key] ) ), str(data[key]) )
+	#Check for translated top-level bones
+	if not prefix:
+		for key, bone in skelStructure.items():
+			if key in data.keys() and isinstance( data[key], dict ) and "languages" in bone.keys() and bone[ "languages" ]:
+				res = res.replace( "$(%s)" % key, chooseLang( data[ key ], bone[ "languages" ]) )
 	return( res )
 
 def loadIcon( iconFile ):

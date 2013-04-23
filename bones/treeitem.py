@@ -50,7 +50,7 @@ class TreeItemEditBone( QtGui.QWidget ):
 			self.selection = selection
 		elif len( selection )>0 :
 			self.selection = selection[0]
-			self.entry.setText( formatString( self.format, self.selection ) )
+			self.entry.setText( formatString( self.format, self.skelStructure, self.selection ) )
 		else:
 			self.selection = None
 	
@@ -71,7 +71,7 @@ class TreeItemEditBone( QtGui.QWidget ):
 			return
 		self.selection = data[ self.boneName ]
 		if not self.skelStructure[self.boneName]["multiple"]:
-			self.entry.setText( formatString( self.format, data[ self.boneName ] ) )
+			self.entry.setText( formatString( self.format, self.skelStructure, data[ self.boneName ] ) )
 
 	def serializeForPost(self):
 		if self.selection:
