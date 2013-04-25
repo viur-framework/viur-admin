@@ -12,29 +12,6 @@ from mainwindow import WidgetHandler
 from widgets.hierarchy import HierarchyWidget
 from widgets.edit import EditWidget
 
-class HierarchyItem(QtGui.QTreeWidgetItem):
-	def __init__( self, data ):
-		if "name" in data.keys():
-			name = data["name"]
-		else:
-			name = "---"
-		super( HierarchyItem, self ).__init__( [str( name )] )
-		self.loaded = False
-		self.data = data
-		self.setChildIndicatorPolicy( QtGui.QTreeWidgetItem.ShowIndicator )
-
-	def __gt__( self, other ):
-		if isinstance( other, HierarchyItem ) and "sortindex" in self.data.keys() and "sortindex" in other.data.keys():
-			return( self.data["sortindex"] > other.data["sortindex"] )
-		else:
-			return( super( HierarchyItem, self ).__gt__( other ) )
-
-	def __lt__( self, other ):
-		if isinstance( other, HierarchyItem ) and "sortindex" in self.data.keys() and "sortindex" in other.data.keys():
-			return( self.data["sortindex"] < other.data["sortindex"] )
-		else:
-			return( super( HierarchyItem, self ).__lt__( other ) )
-
 
 class HierarchyList( QtGui.QWidget ):
 	
