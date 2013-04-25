@@ -3,7 +3,7 @@ from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from collections import OrderedDict
-from utils import RegisterQueue, Overlay
+from utils import RegisterQueue, Overlay, formatString
 from config import conf
 from ui.editUI import Ui_Edit
 from ui.editpreviewUI import Ui_EditPreview
@@ -92,7 +92,7 @@ class EditWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 		self.reloadData( )
 		self.closeOnSuccess = False
-		self._itemName = "" #Name of the item were currently editing (if known)
+		self._lastData = {} #Dict of structure and values recived
 		#Hide Previewbuttons if no PreviewURLs are set
 		if modul in conf.serverConfig["modules"].keys():
 			if not "previewurls" in conf.serverConfig["modules"][ self.modul  ].keys() \
@@ -105,15 +105,24 @@ class EditWidget( QtGui.QWidget ):
 			self.ui.btnReset.hide()
 
 	def getBreadCrumb( self ):
+		if self._lastData:
+			config = conf.serverConfig["modules"][ self.modul ]
+			if "format" in config.keys():
+				format = config["format"]
+			else:
+				format = "$(name)"
+			itemName = formatString( format, self._lastData["structure"], self._lastData["values"] )
+		else:
+			itemName = ""
 		if self.clone:
-			if self._itemName:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % self._itemName
+			if itemName:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % itemName
 			else:
 				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone entry")
 			icon = QtGui.QIcon( "icons/actions/clone.png" )
 		elif self.id or self.applicationType == EditWidget.appSingleton: #Were editing
-			if self._itemName:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % self._itemName
+			if itemName:
+				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % itemName
 			else:
 				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit entry")
 			icon = QtGui.QIcon( "icons/actions/edit.png" )
@@ -299,10 +308,7 @@ class EditWidget( QtGui.QWidget ):
 			dataWidget.show()
 			self.bones[ key ] = widget
 		self.unserialize( data["values"] )
-		if self.id and "name" in data["values"].keys(): #Update name in Menu
-			self._itemName = str( data["values"]["name"] )
-		else:
-			self._itemName = ""
+		self._lastData = data
 		event.emit( QtCore.SIGNAL("rebuildBreadCrumbs()") )
 		if self.overlay.status==self.overlay.BUSY:
 			self.overlay.clear()

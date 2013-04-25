@@ -296,8 +296,15 @@ def formatString( format, skelStructure, data, prefix=None ):
 			if lang in value.keys():
 				if value[ lang ]:
 					return( value[ lang ] )
-		return( None )
-	
+		return( "" )
+	if isinstance( skelStructure, list):
+		# The server sends the information as list; but the first thing
+		# editWidget etc does, is building up an dictionary again.
+		# It this hasn't happen yet, we do it here		
+		tmpDict = {}
+		for key, bone in skelStructure:
+			tmpDict[ key ] = bone
+		skelStructure = tmpDict
 	prefix = prefix or []
 	if isinstance( data,  list ):
 		return(", ".join( [ formatString( format, skelStructure, x, prefix ) for x in data ] ) )
@@ -305,7 +312,7 @@ def formatString( format, skelStructure, data, prefix=None ):
 	if isinstance( data, str ):
 		return( data )
 	if not data:
-		return( "" )
+		return( res )
 	for key in data.keys():
 		if isinstance( data[ key ], dict ):
 			res = formatString( res, skelStructure, data[key], prefix + [key] )
