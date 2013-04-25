@@ -94,6 +94,9 @@ class StringEditBone( QtGui.QWidget ):
 		if self.languages and self.multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
+			self.tabWidget.blockSignals(True)
+			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
+			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
@@ -106,16 +109,21 @@ class StringEditBone( QtGui.QWidget ):
 				def genLambda( lang ):
 					return lambda *args, **kwargs: self.genTag("",True,lang)
 				self.connect( btnAdd, QtCore.SIGNAL("released()"), genLambda( lang ) )
+			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
 		elif self.languages and not self.multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
+			self.tabWidget.blockSignals(True)
+			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
+			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
 				edit = QtGui.QLineEdit()
 				self.langEdits[ lang ] = edit
 				self.tabWidget.addTab( edit, lang )
+			self.tabWidget.blockSignals(False)
 		elif not self.languages and self.multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.btnAdd = QtGui.QPushButton( "Hinzufügen", self )
@@ -127,6 +135,20 @@ class StringEditBone( QtGui.QWidget ):
 			self.lineEdit = QtGui.QLineEdit( self )
 			self.layout().addWidget( self.lineEdit )
 			self.lineEdit.show()
+
+	def onTabLanguageChanged(self, lang):
+		if lang in self.langEdits.keys():
+			self.tabWidget.blockSignals(True)
+			self.tabWidget.setCurrentWidget( self.langEdits[ lang ] )
+			self.tabWidget.blockSignals(False)
+	
+	def onTabCurrentChanged( self, idx ):
+		wdg = self.tabWidget.widget( idx )
+		for k, v in self.langEdits.items():
+			if v == wdg:
+				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				wdg.setFocus()
+				return
 
 	def unserialize( self, data ):
 		if not self.boneName in data.keys():

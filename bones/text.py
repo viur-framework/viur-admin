@@ -587,6 +587,9 @@ class TextEditBone( QtGui.QWidget ):
 			self.languageContainer = {}
 			self.html = {}
 			self.tabWidget = QtGui.QTabWidget( self )
+			self.tabWidget.blockSignals(True)
+			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
+			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			for lang in self.languages:
 				self.html[ lang ] = ""
@@ -605,6 +608,7 @@ class TextEditBone( QtGui.QWidget ):
 				container.layout().addWidget( webView )
 				container.layout().addWidget( btn )
 				self.tabWidget.addTab( container, lang )
+			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
 		else:
 			btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
@@ -619,6 +623,20 @@ class TextEditBone( QtGui.QWidget ):
 			self.layout().addWidget( btn )
 			self.html = ""
 		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred ) )
+
+	def onTabLanguageChanged(self, lang):
+		if lang in self.languageContainer.keys():
+			self.tabWidget.blockSignals(True)
+			self.tabWidget.setCurrentWidget( self.languageContainer[ lang ] )
+			self.tabWidget.blockSignals(False)
+	
+	def onTabCurrentChanged( self, idx ):
+		wdg = self.tabWidget.widget( idx )
+		for k, v in self.languageContainer.items():
+			if v == wdg:
+				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				wdg.setFocus()
+				return
 
 	def sizeHint(self):
 		return( QtCore.QSize( 150, 150 ) )
