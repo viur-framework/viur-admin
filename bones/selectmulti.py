@@ -21,7 +21,16 @@ class SelectMultiEditBone( QtGui.QWidget ):
 		self.boneName = boneName
 		self.layout = QtGui.QVBoxLayout( self ) 
 		self.checkboxes = {}
-		for key, descr in self.skelStructure[ boneName ]["values"].items():
+		if "sortBy" in self.skelStructure[ boneName ].keys():
+			sortBy = self.skelStructure[ boneName ][ "sortBy" ]
+		else:
+			sortBy = "keys"
+		tmpList = list( self.skelStructure[ boneName ]["values"].items() )
+		if sortBy=="keys":
+			tmpList.sort( key=lambda x: x[0] ) #Sort by keys
+		else:
+			tmpList.sort( key=lambda x: x[1] ) #Values
+		for key, descr in tmpList:
 			cb = QtGui.QCheckBox( descr, self )
 			self.layout.addWidget( cb )
 			cb.show()
