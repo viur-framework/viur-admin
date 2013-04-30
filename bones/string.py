@@ -129,7 +129,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.btnAdd = QtGui.QPushButton( "Hinzufügen", self )
 			self.layout().addWidget( self.btnAdd )
 			self.connect( self.btnAdd, QtCore.SIGNAL("released()"), lambda *args, **kwargs: self.genTag("",True) )
-			btnAdd.show()
+			self.btnAdd.show()
 		else: #not languages and not multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.lineEdit = QtGui.QLineEdit( self )
