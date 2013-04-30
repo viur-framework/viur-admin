@@ -119,7 +119,6 @@ class TextEdit(QtGui.QMainWindow):
 		start = html.find(">", html.find("<body") )+1
 		html = html[ start : html.rfind("</body>") ]
 		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
-		print( html )
 		self.ui.textEdit.setText( self.serializer.santinize( html ) )
 	
 	def openLinkEditor(self, fragment):
@@ -568,56 +567,136 @@ class HtmlSerializer( html.parser.HTMLParser ): #html.parser.HTMLParser
 
 ### Copy&Paste: End
 
+class ClickableWebView( QtWebKit.QWebView ):
+	
+	def mousePressEvent(self, ev):
+		super( ClickableWebView, self ).mousePressEvent( ev ) 
+		self.emit( QtCore.SIGNAL("clicked()") )
 
 class TextEditBone( QtGui.QWidget ):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( TextEditBone,  self ).__init__( *args, **kwargs )
 		self.skelStructure = skelStructure
 		self.boneName = boneName
-		self.layout = QtGui.QVBoxLayout( self ) 
-		self.btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
-		iconbtn = QtGui.QIcon()
-		iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		self.btn.setIcon(iconbtn)
-		self.btn.connect( self.btn, QtCore.SIGNAL("released()"), self.openEditor )
-		self.webView = QtWebKit.QWebView(self)
-		self.webView.mousePressEvent = self.openEditor
-		self.layout.addWidget( self.webView )
-		self.layout.addWidget( self.btn )
+		self.setLayout( QtGui.QVBoxLayout( self ) )
+		if self.boneName in skelStructure.keys() and "languages" in skelStructure[ self.boneName ].keys():
+			self.languages = skelStructure[ self.boneName ][ "languages"]
+		else:
+			self.languages = None
+		if self.languages:
+			self.languageContainer = {}
+			self.html = {}
+			self.tabWidget = QtGui.QTabWidget( self )
+			self.tabWidget.blockSignals(True)
+			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
+			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.layout().addWidget( self.tabWidget )
+			for lang in self.languages:
+				self.html[ lang ] = ""
+				container = QtGui.QWidget()
+				container.setLayout( QtGui.QVBoxLayout( container ) )
+				self.languageContainer[ lang ] = container
+				btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
+				iconbtn = QtGui.QIcon()
+				iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+				btn.setIcon(iconbtn)
+				self.connect( btn, QtCore.SIGNAL("released()"), self.openEditor )
+				btn.lang = lang
+				webView = ClickableWebView(self)
+				self.connect( webView, QtCore.SIGNAL("clicked()"), self.openEditor )
+				container.webView = webView
+				container.layout().addWidget( webView )
+				container.layout().addWidget( btn )
+				self.tabWidget.addTab( container, lang )
+			self.tabWidget.blockSignals(False)
+			self.tabWidget.show()
+		else:
+			btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
+			iconbtn = QtGui.QIcon()
+			iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			btn.setIcon(iconbtn)
+			btn.lang = None
+			self.connect( btn, QtCore.SIGNAL("released()"), self.openEditor )
+			self.webView = ClickableWebView(self)
+			self.connect( self.webView, QtCore.SIGNAL("clicked()"), self.openEditor )
+			self.layout().addWidget( self.webView )
+			self.layout().addWidget( btn )
+			self.html = ""
 		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred ) )
-		self.html = ""
-		self.editor = None
+
+	def onTabLanguageChanged(self, lang):
+		if lang in self.languageContainer.keys():
+			self.tabWidget.blockSignals(True)
+			self.tabWidget.setCurrentWidget( self.languageContainer[ lang ] )
+			self.tabWidget.blockSignals(False)
+	
+	def onTabCurrentChanged( self, idx ):
+		wdg = self.tabWidget.widget( idx )
+		for k, v in self.languageContainer.items():
+			if v == wdg:
+				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				wdg.setFocus()
+				return
 
 	def sizeHint(self):
 		return( QtCore.QSize( 150, 150 ) )
 
-	def openEditor(self, *args, **kwargs ):
+	def openEditor(self,  *args, **kwargs ):
 		global _defaultTags
-		if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
-			editor = RawTextEdit( self.onSave, self.html )
-		elif self.skelStructure[self.boneName]["params"] and "plaintext" in self.skelStructure[self.boneName]["params"].keys(): #FIXME:!
-			editor = RawTextEdit( self.onSave, self.html, contentType=self.skelStructure[self.boneName]["params"]["plaintext"] )
-		elif "validHtml" in self.skelStructure[self.boneName].keys():
-			if self.skelStructure[self.boneName]["validHtml"]:
-				editor = TextEdit( self.onSave, self.html, self.skelStructure[self.boneName]["validHtml"] )
+		if self.languages:
+			lang = self.languages[ self.tabWidget.currentIndex() ]
+			if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
+				editor = RawTextEdit( self.onSave, self.html[ lang ] )
+			elif "validHtml" in self.skelStructure[self.boneName].keys():
+				if self.skelStructure[self.boneName]["validHtml"]:
+					editor = TextEdit( self.onSave, self.html[ lang ], self.skelStructure[self.boneName]["validHtml"] )
+				else:
+					editor = RawTextEdit( self.onSave, self.html[ lang ] )
 			else:
-				editor = RawTextEdit( self.onSave, self.html )
+				editor = TextEdit( self.onSave, self.html[ lang ], _defaultTags )
 		else:
-			editor = TextEdit( self.onSave, self.html, _defaultTags )
+			if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
+				editor = RawTextEdit( self.onSave, self.html )
+			elif "validHtml" in self.skelStructure[self.boneName].keys():
+				if self.skelStructure[self.boneName]["validHtml"]:
+					editor = TextEdit( self.onSave, self.html, self.skelStructure[self.boneName]["validHtml"] )
+				else:
+					editor = RawTextEdit( self.onSave, self.html )
+			else:
+				editor = TextEdit( self.onSave, self.html, _defaultTags )
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), editor )
 
 	def onSave(self, text ):
-		self.html = str(text)
-		self.webView.setHtml (text)
+		if self.languages:
+			lang = self.languages[ self.tabWidget.currentIndex() ]
+			self.html[ lang ] = str(text)
+			self.languageContainer[ lang ].webView.setHtml( text )
+		else:
+			self.html = str(text)
+			self.webView.setHtml (text)
 	
 	def unserialize( self, data ):
 		if not self.boneName in data.keys():
 			return
-		self.html = data[ self.boneName ].replace( "target=\"_blank\" href=\"", "href=\"!" ) if (data and data.get( self.boneName ) ) else ""
-		self.webView.setHtml (self.html)
+		if self.languages and isinstance( data[ self.boneName ], dict ):
+			for lang in self.languages:
+				if lang in data[ self.boneName ].keys():
+					self.html[ lang ] = data[ self.boneName ][lang].replace( "target=\"_blank\" href=\"", "href=\"!" )
+				else:
+					self.html[ lang ] = ""
+				self.languageContainer[ lang ].webView.setHtml( self.html[ lang ] )
+		elif not self.languages:
+			self.html = str(data[ self.boneName ]).replace( "target=\"_blank\" href=\"", "href=\"!" ) if (data and data.get( self.boneName ) ) else ""
+			self.webView.setHtml (self.html)
 
-	def serialize(self):
-		return( self.html.replace("href=\"!", "target=\"_blank\" href=\"" ) )
+	def serializeForPost(self):
+		if self.languages:
+			res = {}
+			for lang in self.languages:
+				res[ "%s.%s" % (self.boneName, lang) ] = self.html[ lang ]
+			return( res )
+		else:
+			return( { self.boneName: self.html.replace("href=\"!", "target=\"_blank\" href=\"" ) } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

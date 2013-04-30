@@ -21,7 +21,16 @@ class SelectMultiEditBone( QtGui.QWidget ):
 		self.boneName = boneName
 		self.layout = QtGui.QVBoxLayout( self ) 
 		self.checkboxes = {}
-		for key, descr in self.skelStructure[ boneName ]["values"].items():
+		if "sortBy" in self.skelStructure[ boneName ].keys():
+			sortBy = self.skelStructure[ boneName ][ "sortBy" ]
+		else:
+			sortBy = "keys"
+		tmpList = list( self.skelStructure[ boneName ]["values"].items() )
+		if sortBy=="keys":
+			tmpList.sort( key=lambda x: x[0] ) #Sort by keys
+		else:
+			tmpList.sort( key=lambda x: x[1] ) #Values
+		for key, descr in tmpList:
 			cb = QtGui.QCheckBox( descr, self )
 			self.layout.addWidget( cb )
 			cb.show()
@@ -33,8 +42,8 @@ class SelectMultiEditBone( QtGui.QWidget ):
 		for key, checkbox in self.checkboxes.items():
 			checkbox.setChecked( key in data[self.boneName] )
 
-	def serialize(self):
-		return( [ key for key, checkbox in self.checkboxes.items() if checkbox.isChecked() ] )
+	def serializeForPost(self):
+		return( { self.boneName: [ key for key, checkbox in self.checkboxes.items() if checkbox.isChecked() ] } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

@@ -4,6 +4,7 @@ from utils import Overlay
 from network import NetworkService
 from event import event
 import utils
+from config import conf
 from widgets.edit import EditWidget
 
 
@@ -12,12 +13,14 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 		Displayes one entry in a QTreeWidget.
 		Its comparison-methods have been overriden to reflect the sort-order on the server.
 	"""	
-	def __init__( self, data ):
-		if "name" in data.keys():
-			name = data["name"]
+	def __init__( self, modul, structure, data ):
+		config = conf.serverConfig["modules"][ modul ]
+		if "format" in config.keys():
+			format = config["format"]
 		else:
-			name = "---"
-		super( HierarchyItem, self ).__init__( [str( name )] )
+			format = "$(name)"
+		itemName = utils.formatString( format, structure, data )
+		super( HierarchyItem, self ).__init__( [str( itemName )] )
 		self.loaded = False
 		self.data = data
 		self.setChildIndicatorPolicy( QtGui.QTreeWidgetItem.ShowIndicator )
@@ -162,7 +165,7 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 			if data["skellist"][0]["parententry"] == self.currentRootNode:
 				self.clear()
 		for itemData in data["skellist"]:
-			tvItem = HierarchyItem( itemData )
+			tvItem = HierarchyItem( self.modul, data["structure"], itemData )
 			if( itemData["parententry"] == self.currentRootNode ):
 				self.addTopLevelItem( tvItem )
 			else:

@@ -45,8 +45,8 @@ class NumericEditBone( BaseEditBone ):
 			self.lineEdit.setValue( float ( data[ self.boneName ] ) if data[ self.boneName ] else 0 )
 		
 
-	def serialize(self):
-		return( str( self.lineEdit.value() ) )
+	def serializeForPost(self):
+		return( { self.boneName: str( self.lineEdit.value() ) } )
 
 	def serializeForDocument(self):
 		return( self.serialize( ) )

@@ -75,14 +75,14 @@ class TreeDirEditBone( QtGui.QWidget ):
 				pass
 			self.entry.setText( path )
 
-	def serialize(self):
+	def serializeForPost(self):
 		if self.selection:
 			if not self.skelStructure[self.boneName]["multiple"]:
-				return( str( self.selection ) )
+				return( { self.boneName: str( self.selection ) } )
 			else:
-				return( self.selection )
+				return( { self.boneName: self.selection } )
 		else:
-			return( None )
+			return( { self.boneName: None } )
 
 
 class BaseTreeDirBoneSelector( TreeList ):

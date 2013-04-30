@@ -655,7 +655,6 @@ class FileEdit( QtGui.QWidget ):
 			body += "<br>"+self.loremIpsum
 			srcUrl = QtCore.QUrl.fromLocalFile( os.getcwd() )
 			self.ui.webView.setHtml( res % ( body ), srcUrl )
-			
 	
 	def getAttrs(self):
 		attrs = [	("src",  "/file/view/%s/%s?id=%s" % (self.fileDlKey, self.fileName, self.fileID) ), 

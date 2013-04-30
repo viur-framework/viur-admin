@@ -59,8 +59,6 @@ from login import Login
 from config import conf
 import urllib, urllib.request
 from urllib.parse import quote_plus
-from event import EventDispatcher
-
 from bugsnag import Notification
 
 def reportError( type, value, tb ):
@@ -120,7 +118,5 @@ print("don1e")
 sys.stdout.flush()
 conf.savePortalConfig()
 conf.saveConfig()
-#EventDispatcher.shutdown()
-print("done")
-sys.stdout.flush()
+
 
