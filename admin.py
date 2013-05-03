@@ -60,6 +60,7 @@ from config import conf
 import urllib, urllib.request
 from urllib.parse import quote_plus
 from bugsnag import Notification
+import protocolwrapper
 
 def reportError( type, value, tb ):
 	print( "*"*40 )
@@ -99,6 +100,7 @@ conf.cmdLineOpts = options #Store the command-line options
 import plugin
 
 app = Qt.QApplication(sys.argv)
+#import garbarge
 #Load translations
 transFiles = os.listdir("./locales/")
 for file in transFiles:

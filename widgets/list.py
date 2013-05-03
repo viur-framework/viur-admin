@@ -3,13 +3,14 @@ from PyQt4 import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event
+from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector
 
 class ListTableModel( QtCore.QAbstractTableModel ):
 	"""Model for displaying data within a listView"""
+	GarbargeTypeName = "ListTableModel"
 	_chunkSize = 25
-	def __init__(self, tableView, modul, fields=None, filter=None, parent=None, *args): 
+	def __init__(self, modul, fields=None, filter=None, parent=None, *args): 
 		QtCore.QAbstractTableModel.__init__(self, parent, *args) 
-		self.tableView = tableView
 		self.modul = modul
 		self.fields = fields or ["name"]
 		self._validFields = [] #Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
@@ -20,7 +21,10 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.completeList = False #Have we all items?
 		self.isLoading = 0
 		self.cursor = None
-		self.setIndex = 0 #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
+		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
 		self.reload()
 
 	def setDisplayedFields(self, fields ):
@@ -48,7 +52,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 	
 	def reload( self ):
 		self.emit(QtCore.SIGNAL("modelAboutToBeReset()"))
-		self.setIndex += 1
 		self.dataCache = []
 		self.completeList = False
 		self.cursor = False
@@ -91,7 +94,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if self.isLoading and not forceLoading:
 			return
 		self.isLoading += 1
-		index = self.setIndex
 		filter = self.filter.copy() or {}
 		if not "orderby" in filter.keys():
 			filter["orderby"] = "creationdate"
@@ -106,28 +108,31 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 					filter[ filter["orderby"]+"$lt" ] = self.dataCache[-1][filter["orderby"]]
 				else:
 					filter[ filter["orderby"]+"$gt" ] = self.dataCache[-1][filter["orderby"]]
-		req = NetworkService.request("/%s/list?amount=%s" % (self.modul, self._chunkSize), filter, successHandler=self.addData)
-		req.requestIndex = index
+		#req = NetworkService.request("/%s/list?amount=%s" % (self.modul, self._chunkSize), filter, successHandler=self.addData)
+		#req.requestIndex = index
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		filter["amount"] = self._chunkSize 
+		self.loadingKey = protoWrap.queryData( self.addData, **filter )
 
-	def addData( self, query ):
-		data = NetworkService.decode( query )
+	def addData( self, queryKey, data, cursor ):
 		self.isLoading -= 1
-		if query.requestIndex!=self.setIndex: #The Data is for a list we dont display anymore
+		if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
 			return
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
 		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		if( data["structure"] ): #Reset Headers
-			self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), data["structure"] )
-			#Rebuild our local cache of valid fields
-			bones = {}
-			for key, bone in data["structure"]:
-				bones[ key ] = bone
-			self._validFields = [ x for x in self.fields if x in bones.keys() ]
-		for item in data["skellist"]: #Insert the new Data at the coresponding Position
+		self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
+		#Rebuild our local cache of valid fields
+		bones = {}
+		for key, bone in protoWrap.structure:
+			bones[ key ] = bone
+		self._validFields = [ x for x in self.fields if x in bones.keys() ]
+		for item in data: #Insert the new Data at the coresponding Position
 			self.dataCache.append( item )
-		if len(data["skellist"]) < self._chunkSize:
+		if len(data) < self._chunkSize:
 			self.completeList = True
-		if "cursor" in data.keys():
-			self.cursor = data["cursor"]
+		self.cursor = cursor
 		self.emit(QtCore.SIGNAL("layoutChanged()"))
 		self.emit(QtCore.SIGNAL("dataRecived()"))
 
@@ -162,13 +167,14 @@ class ListWidget( QtGui.QTableView ):
 		@emits onItemActivated(PyQt_PyObject=item.data)
 		
 	"""
-	
+	GarbargeTypeName = "ListWidget"
+
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
 		super( ListWidget, self ).__init__( parent,  *args, **kwargs )
 		self.modul = modul
 		filter = filter or {}
 		self.structureCache = None
-		model = ListTableModel( self, self.modul, fields or ["name"], filter  )
+		model = ListTableModel( self.modul, fields or ["name"], filter  )
 		self.setModel( model )
 		self.overlay = Overlay( self )
 		header = self.horizontalHeader()
@@ -233,10 +239,9 @@ class ListWidget( QtGui.QTableView ):
 		for field in fields:
 			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
-			queue = RegisterQueue()
-			event.emit( QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, field, self.structureCache)
-			delegate = queue.getBest()()
-			self.setItemDelegateForColumn( colum, delegate  )
+			delegateFactory = viewDelegateSelector.select( self.modul, field, self.structureCache )
+			delegate = delegateFactory( self.modul, field, self.structureCache )
+			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )
 			self.connect( delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint )
 			colum += 1

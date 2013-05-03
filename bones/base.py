@@ -1,10 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 from event import event
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class BaseViewBoneDelegate(QtGui.QStyledItemDelegate):
-	def __init__(self,registerObject, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( QtGui.QStyledItemDelegate,self ).__init__()
 		self.skelStructure = skelStructure
 		self.boneName = boneName
@@ -16,20 +19,25 @@ class BaseEditBone( QtGui.QWidget ):
 		return (QtGui.QLineEdit( self ))
 	
 	def setParams(self):
-		if "readonly" in self.boneStructure.keys() and self.boneStructure["readonly"]:
+		if self.readOnly:
 			self.lineEdit.setReadOnly( True )
 		else:
 			self.lineEdit.setReadOnly( False )
 
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, *args, **kwargs ):
 		super( BaseEditBone,  self ).__init__( *args, **kwargs )
-		self.boneStructure=skelStructure[boneName]
 		self.boneName = boneName
+		self.readOnly = readOnly
 		self.layout = QtGui.QHBoxLayout( self ) 
 		self.lineEdit = self.getLineEdit()
 		self.layout.addWidget( self.lineEdit )
 		self.setParams()
 		self.lineEdit.show()
+		
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		return( BaseEditBone( modulName, boneName, readOnly ) ) 
 	
 	def unserialize(self, data):
 		if self.boneName in data.keys():
@@ -41,16 +49,7 @@ class BaseEditBone( QtGui.QWidget ):
 	def serializeForDocument(self):
 		return( self.serialize( ) )
 		
-class BaseHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
 
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
-		registerObject.registerHandler( 0, lambda: BaseViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
-
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelData ):
-		registerObject.registerHandler( 0, BaseEditBone( modulName, boneName, skelData ) )
-
-_baseHandler = BaseHandler()
+#Register this Bone in the global queue
+editBoneSelector.insert( 0, lambda *args, **kwargs: True, BaseEditBone)
+viewDelegateSelector.insert( 0, lambda *args, **kwargs: True, BaseViewBoneDelegate)

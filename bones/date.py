@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 from event import event
 from datetime import datetime, date, time, tzinfo
+from priorityqueue import editBoneSelector
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -12,16 +15,15 @@ class DateBone:
 	pass
 
 
-class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+class DateEditBone( QtGui.QWidget ):
+	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, *args, **kwargs ):
 		super( DateEditBone,  self ).__init__( *args, **kwargs )
 		
 		self.boneName = boneName
 		self.layout = QtGui.QHBoxLayout( self ) 
 		
-		self.time = skelStructure[boneName]["time"]
-		self.date = skelStructure[boneName]["date"]
-		
+		self.time = hasDate
+		self.date = hasTime
 		
 		#builds inputspecific Widgets
 		if (self.time and self.date):#(...skelStructure ...) #date AND time
@@ -40,6 +42,13 @@ class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
 		self.lineEdit.setObjectName(_fromUtf8(boneName))
 		self.layout.addWidget( self.lineEdit )
 		self.lineEdit.show()
+		
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		hasDate = skelStructure[boneName]["date"]
+		hasTime = skelStructure[boneName]["time"]
+		return( DateEditBone( modulName, boneName, readOnly, hasDate, hasTime ) )
 	
 	def unserialize(self, data):
 		value = None
@@ -78,13 +87,7 @@ class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
 	def serializeForDocument(self):
 		return( self.serialize( ) )
 
-class DateHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
+def CheckForDateBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="date" )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelData ):
-		if (skelData[boneName]["type"]=="date"):
-			registerObject.registerHandler( 10, DateEditBone( modulName, boneName, skelData ) )
-
-_DateHandler = DateHandler()
+editBoneSelector.insert( 2, CheckForDateBone, DateEditBone )

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui, QtWebKit, Qsci
 from PyQt4.Qsci import QsciScintilla, QsciLexerHTML
 import sys
@@ -8,6 +9,7 @@ from ui.rawtexteditUI import Ui_rawTextEditWindow
 import html.parser
 from ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 rsrcPath = "icons/actions/text"
 
@@ -46,7 +48,7 @@ class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 
 
 class RawTextEdit(QtGui.QMainWindow):
-	def __init__(self,  saveCallback, text, contentType=None, parent=None):
+	def __init__(self, text, contentType=None, parent=None):
 		super(RawTextEdit, self).__init__(parent)
 		self.ui = Ui_rawTextEditWindow()
 		self.ui.setupUi( self )
@@ -63,7 +65,8 @@ class RawTextEdit(QtGui.QMainWindow):
 		self.saveCallback = saveCallback
 
 	def save(self, *args, **kwargs ):
-		self.saveCallback( self.ui.textEdit.text() )
+		self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), self.ui.textEdit.text() )
+		#self.saveCallback( self.ui.textEdit.text() )
 		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
 	
 	def sizeHint( self, *args, **kwargs ):
@@ -75,7 +78,7 @@ class RawTextEdit(QtGui.QMainWindow):
 
 
 class TextEdit(QtGui.QMainWindow):
-	def __init__(self,  saveCallback, text, validHtml, parent=None):
+	def __init__(self, text, validHtml, parent=None):
 		super(TextEdit, self).__init__(parent)
 		self.validHtml = validHtml
 		self.serializer = HtmlSerializer( validHtml )
@@ -107,10 +110,10 @@ class TextEdit(QtGui.QMainWindow):
 		QtGui.QApplication.clipboard().dataChanged.connect(self.clipboardDataChanged)
 		self.actionInsertLink.triggered.connect(self.insertLink)
 		self.ui.textEdit.setHtml( text )
-		self.saveCallback = saveCallback
+		#self.saveCallback = saveCallback
 		self.linkEditor = None
-		self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent
-		self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData
+		#self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent  # FIXME: !!!
+		#self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData # FIXME: !!!
 		
 
 	def on_textEdit_insertFromMimeData(self, source):
@@ -326,7 +329,8 @@ class TextEdit(QtGui.QMainWindow):
 		start = html.find(">", html.find("<body") )+1
 		html = html[ start : html.rfind("</body>") ]
 		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
-		self.saveCallback( html )
+		#self.saveCallback( html )
+		self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), html )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
 
@@ -574,15 +578,15 @@ class ClickableWebView( QtWebKit.QWebView ):
 		self.emit( QtCore.SIGNAL("clicked()") )
 
 class TextEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, *args, **kwargs ):
 		super( TextEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
+		self.modulName = modulName
 		self.boneName = boneName
+		self.readOnly = readOnly
 		self.setLayout( QtGui.QVBoxLayout( self ) )
-		if self.boneName in skelStructure.keys() and "languages" in skelStructure[ self.boneName ].keys():
-			self.languages = skelStructure[ self.boneName ][ "languages"]
-		else:
-			self.languages = None
+		self.languages = languages
+		self.plaintext = plaintext
+		self.validHtml = validHtml
 		if self.languages:
 			self.languageContainer = {}
 			self.html = {}
@@ -624,6 +628,24 @@ class TextEditBone( QtGui.QWidget ):
 			self.html = ""
 		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred ) )
 
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		if boneName in skelStructure.keys():
+			if "languages" in skelStructure[ boneName ].keys():
+				languages = skelStructure[ boneName ]["languages"]
+			else:
+				languages = None
+			if "plaintext" in skelStructure[boneName].keys() and skelStructure[boneName]["plaintext"]:
+				plaintext = True
+			else:
+				plaintext = False
+			if "validHtml" in skelStructure[boneName].keys():
+				validHtml = skelStructure[boneName][ "validHtml" ]
+			else:
+				validHtml = None
+		return( TextEditBone( modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml ) ) 
+
 	def onTabLanguageChanged(self, lang):
 		if lang in self.languageContainer.keys():
 			self.tabWidget.blockSignals(True)
@@ -642,28 +664,24 @@ class TextEditBone( QtGui.QWidget ):
 		return( QtCore.QSize( 150, 150 ) )
 
 	def openEditor(self,  *args, **kwargs ):
-		global _defaultTags
 		if self.languages:
 			lang = self.languages[ self.tabWidget.currentIndex() ]
-			if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
-				editor = RawTextEdit( self.onSave, self.html[ lang ] )
-			elif "validHtml" in self.skelStructure[self.boneName].keys():
-				if self.skelStructure[self.boneName]["validHtml"]:
-					editor = TextEdit( self.onSave, self.html[ lang ], self.skelStructure[self.boneName]["validHtml"] )
-				else:
-					editor = RawTextEdit( self.onSave, self.html[ lang ] )
+			if self.plaintext:
+				editor = RawTextEdit( self.html[ lang ] )
 			else:
-				editor = TextEdit( self.onSave, self.html[ lang ], _defaultTags )
+				if self.validHtml:
+					editor = TextEdit( self.html[ lang ], self.validHtml )
+				else:
+					editor = RawTextEdit( self.html[ lang ] )
 		else:
-			if "plaintext" in self.skelStructure[self.boneName].keys() and self.skelStructure[self.boneName]["plaintext"]:
-				editor = RawTextEdit( self.onSave, self.html )
-			elif "validHtml" in self.skelStructure[self.boneName].keys():
-				if self.skelStructure[self.boneName]["validHtml"]:
-					editor = TextEdit( self.onSave, self.html, self.skelStructure[self.boneName]["validHtml"] )
-				else:
-					editor = RawTextEdit( self.onSave, self.html )
+			if self.plaintext:
+				editor = RawTextEdit( self.html )
 			else:
-				editor = TextEdit( self.onSave, self.html, _defaultTags )
+				if self.validHtml:
+					editor = TextEdit( self.html, self.validHtml )
+				else:
+					editor = RawTextEdit( self.html )
+		self.connect( editor, QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), self.onSave )
 		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), editor )
 
 	def onSave(self, text ):
@@ -704,20 +722,11 @@ class TextEditBone( QtGui.QWidget ):
 	def remove( self ):
 		pass
 
-class TextHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
-		if skelStucture[boneName]["type"]=="text":
-			registerObject.registerHandler( 5, lambda: TextViewBoneDelegate( registerObject, modulName, boneName, skelStucture ) )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"]=="text":
-			registerObject.registerHandler( 10, TextEditBone( modulName, boneName, skelStucture ) )
+def CheckForTextBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="text" )
 
-_textHandler = TextHandler()
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForTextBone, TextEditBone)
+viewDelegateSelector.insert( 2, CheckForTextBone, TextViewBoneDelegate)
 

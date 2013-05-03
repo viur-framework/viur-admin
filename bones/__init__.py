@@ -1,14 +1,20 @@
-from bones.base import BaseHandler
-from bones.selectmulti import SelectMultiHandler
-from bones.selectone import SelectOneHandler
-from bones.text import TextHandler
-from bones.relational import RelationalHandler
-from bones.date import DateHandler
-from bones.file import FileHandler
-from bones.treeitem import TreeItemHandler
-from bones.treedir import TreeDirHandler
-from bones.hierarchy import HierarchyHandler
-from bones.string import StringHandler
-from bones.document import DocumentHandler
-from bones.numeric import NumericHandler
-from bones.color import colorHandler
+import bones.base
+import bones.color
+import bones.date
+#from bones.document import DocumentHandler
+import bones.file
+import bones.hierarchy
+import bones.numeric
+import bones.relational
+import bones.selectmulti
+import bones.selectone
+import bones.string
+import bones.text
+import bones.treedir
+import bones.treeitem
+
+
+
+
+
+

@@ -6,20 +6,22 @@ from event import event
 import utils
 from config import conf
 from widgets.edit import EditWidget
-
+from priorityqueue import protocolWrapperInstanceSelector
 
 class HierarchyItem(QtGui.QTreeWidgetItem):
 	"""
 		Displayes one entry in a QTreeWidget.
 		Its comparison-methods have been overriden to reflect the sort-order on the server.
 	"""	
-	def __init__( self, modul, structure, data ):
+	def __init__( self, modul, data ):
 		config = conf.serverConfig["modules"][ modul ]
 		if "format" in config.keys():
 			format = config["format"]
 		else:
 			format = "$(name)"
-		itemName = utils.formatString( format, structure, data )
+		protoWrap = protocolWrapperInstanceSelector.select( modul )
+		assert protoWrap is not None
+		itemName = utils.formatString( format, protoWrap.structure, data )
 		super( HierarchyItem, self ).__init__( [str( itemName )] )
 		self.loaded = False
 		self.data = data
@@ -60,15 +62,20 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		super( HierarchyWidget, self ).__init__( parent, *args, **kwargs )
 		self.modul = modul
 		self.currentRootNode = rootNode
+		self.loadingKey = None
 		self.overlay = Overlay( self )
 		self.expandList = []
 		self.setHeaderHidden( True )
 		self.setAcceptDrops( True )
 		self.setDragDropMode( self.InternalMove )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
 		if not self.currentRootNode:
-			self.loadRootNodes()
+			protoWrap.getRootNodes( self.onRootNodesAvaiable )
+			#self.loadRootNodes( self.)
+		self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onHierarchyChanged )
 		self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
-		self.connect( event, QtCore.SIGNAL("hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onHierarchyChanged )
+		#self.connect( event, QtCore.SIGNAL("hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onHierarchyChanged )
 		self.connect( self,  QtCore.SIGNAL("itemClicked(QTreeWidgetItem *,int)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QTreeWidgetItem *,int)"), self.onItemDoubleClicked )
 
@@ -85,16 +92,10 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		"""
 		self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), item.data )
 		
-	def onHierarchyChanged(self, emitter, modul, rootNode, itemID ):
+	def onHierarchyChanged(self ):
 		"""
 			Respond to changed Data - refresh our view
 		"""
-		if emitter==self: #We issued this event - ignore it as we allready knew
-			return
-		if modul and modul!=self.modul: #Not our modul
-			return
-		if rootNode and rootNode!=self.currentRootNode: #Not in our Hierarchy
-			return
 		#Well, seems to affect us, refresh our view
 		#First, save all expanded items
 		self.expandList = []
@@ -130,14 +131,8 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 				pass
 			self.loadData( item.data["id"] )
 
-	def loadRootNodes(self):
-		self.overlay.inform( self.overlay.BUSY )
-		NetworkService.request("/%s/listRootNodes" % ( self.modul ), successHandler=self.onLoadRepositories )
-		#self.connect(self.request, QtCore.SIGNAL("finished()"), self.onLoadRepositories )
-	
-	def onLoadRepositories(self, request ):
-		data = NetworkService.decode( request )
-		self.rootNodes = data
+	def onRootNodesAvaiable(self, rootNodes ):
+		self.rootNodes = rootNodes
 		if not self.currentRootNode:
 			try:
 				self.currentRootNode = list( self.rootNodes )[0]["key"]
@@ -157,15 +152,19 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		
 	def loadData(self, parent=None):
 		self.overlay.inform( self.overlay.BUSY )
-		NetworkService.request( "/%s/list/%s" % (self.modul, (parent or self.currentRootNode) ), successHandler=self.setData, failureHandler=self.onLoadError )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.queryData( self.setData, (parent or self.currentRootNode) )
+		#NetworkService.request( "/%s/list/%s" % (self.modul, (parent or self.currentRootNode) ), successHandler=self.setData, failureHandler=self.onLoadError )
 
-	def setData(self, request):
-		data = NetworkService.decode( request )
-		if len( data["skellist"] ):
-			if data["skellist"][0]["parententry"] == self.currentRootNode:
+	def setData(self, queryKey, data, cursor ):
+		#if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
+		#	return
+		if len( data ):
+			if data[0]["parententry"] == self.currentRootNode:
 				self.clear()
-		for itemData in data["skellist"]:
-			tvItem = HierarchyItem( self.modul, data["structure"], itemData )
+		for itemData in data:
+			tvItem = HierarchyItem( self.modul, itemData )
 			if( itemData["parententry"] == self.currentRootNode ):
 				self.addTopLevelItem( tvItem )
 			else:
@@ -272,14 +271,22 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 					currChild = self.topLevelItem( childIndex )
 
 	def reparent(self, itemKey, destParent):
-		NetworkService.request( "/%s/reparent" % self.modul, { "item": itemKey, "dest": destParent }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.reparent( itemKey, destParent )
+		self.overlay.inform( self.overlay.BUSY )
 
 	def updateSortIndex(self, itemKey, newIndex):
-		self.request = NetworkService.request( "/%s/setIndex" % self.modul, { "item": itemKey, "index": newIndex }, True, successHandler=self.onRequestSucceeded, failureHandler=self.onLoadError )
-
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.updateSortIndex( itemKey, newIndex )
+		self.overlay.inform( self.overlay.BUSY )
 
 	def delete( self, id ):
 		"""
 			Delete the entity with the given id
 		"""
-		NetworkService.request("/%s/delete/%s" % (self.modul, id), secure=True, successHandler=self.onRequestSucceeded )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.delete( id )
+		self.overlay.inform( self.overlay.BUSY )

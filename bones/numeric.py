@@ -1,8 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseEditBone
 from bones.base import BaseViewBoneDelegate
+from priorityqueue import editBoneSelector, viewDelegateSelector
+from math import pow
 
 class NumericViewBoneDelegate( BaseViewBoneDelegate ):
 	def displayText(self, value, locale ):
@@ -17,29 +22,41 @@ class NumericViewBoneDelegate( BaseViewBoneDelegate ):
 		return( super(NumericViewBoneDelegate, self).displayText( value, locale ) )
 
 class NumericEditBone( BaseEditBone ):
-	def getLineEdit(self):
-		if not isinstance(  self.boneStructure, dict ):
-			return( QtGui.QSpinBox( self ) )
-		if "precision" in self.boneStructure.keys():
-			if self.boneStructure["precision"]:
-				spinBox=QtGui.QDoubleSpinBox( self )
-				spinBox.setDecimals(self.boneStructure["precision"])
-			else: #Just ints
-				spinBox=QtGui.QSpinBox( self )
-		elif "mode" in self.boneStructure.keys() and self.boneStructure["mode"]=="float": #Old API
-			spinBox=QtGui.QDoubleSpinBox( self )
-			spinBox.setDecimals(8)
+
+	def __init__( self, modulName, boneName, readOnly, precision=0, min=-pow(2,30), max=pow(2,30), *args, **kwargs ):
+		self.precision = precision #Needed for getLineEdit
+		self.min = min
+		self.max = max
+		super( NumericEditBone, self ).__init__( modulName, boneName, readOnly )
+
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		precision = int( skelStructure[ boneName ]["precision"] ) if "precision" in skelStructure[boneName].keys() else 0
+		if "min" in skelStructure[ boneName ].keys() and "max" in skelStructure[ boneName ].keys():
+			minVal = skelStructure[ boneName ]["min"]
+			maxVal = skelStructure[ boneName ]["max"]
 		else:
+			minVal = -pow(2,30)
+			maxVal = pow(2,30)
+		return( NumericEditBone( modulName, boneName, readOnly, precision=precision, min=minVal, max=maxVal ) ) 
+
+	def getLineEdit(self):
+		if self.precision:
+			spinBox=QtGui.QDoubleSpinBox( self )
+			spinBox.setDecimals( self.precision )
+		else: #Just ints
 			spinBox=QtGui.QSpinBox( self )
-		if "min" in self.boneStructure.keys() and "max" in self.boneStructure.keys():
-			spinBox.setRange(self.boneStructure["min"],self.boneStructure["max"])
+		spinBox.setRange( self.min , self.max)
 		return (spinBox)
+
+#		if "min" in self.boneStructure.keys() and "max" in self.boneStructure.keys():
 
 
 	def unserialize(self, data):
 		if not self.boneName in data.keys():
 			return
-		if "precision" in self.boneStructure.keys() and not self.boneStructure["precision"]:
+		if not self.precision:
 			self.lineEdit.setValue( int( data[ self.boneName ] ) if data[ self.boneName ] else 0 )
 		else:
 			self.lineEdit.setValue( float ( data[ self.boneName ] ) if data[ self.boneName ] else 0 )
@@ -51,19 +68,10 @@ class NumericEditBone( BaseEditBone ):
 	def serializeForDocument(self):
 		return( self.serialize( ) )
 
-class NumericHandler( QtCore.QObject ):
-	"""Override the default if we are a numericBone"""
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) 
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"]=="numeric":
-			registerObject.registerHandler( 10, NumericEditBone( modulName, boneName, skelStructure ) )
+def CheckForNumericBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="numeric" )
 
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"]=="numeric":
-			registerObject.registerHandler( 5, lambda: NumericViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
-
-_numericHandler = NumericHandler()
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForNumericBone, NumericEditBone)
+viewDelegateSelector.insert( 2, CheckForNumericBone, NumericViewBoneDelegate)

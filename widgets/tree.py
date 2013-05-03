@@ -6,6 +6,7 @@ from event import event
 import utils
 from ui.treeWidgetUI import Ui_TreeWidget
 import gc
+from priorityqueue import protocolWrapperInstanceSelector
 
 class IndexItem (QtGui.QListWidgetItem):
 	"""
@@ -95,19 +96,20 @@ class TreeWidget( QtGui.QWidget ):
 		self.currentRootNode = rootNode
 		self.path = path or []
 		self.searchStr = ""
+		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		self.dirItem = dirItem or DirItem
 		self.treeItem = treeItem or TreeItem
-		self.ui.listWidget.dropEvent = self.dropEvent
-		self.ui.listWidget.dragEnterEvent = self.dragEnterEvent
-		self.ui.listWidget.dragMoveEvent = self.dragMoveEvent
-		self.ui.pathlist.dropEvent = self.pathListDropEvent
-		self.ui.pathlist.dragEnterEvent = self.pathListDragEnterEvent
-		self.ui.pathlist.dragMoveEvent = self.pathListDragMoveEvent
-		self._mouseMoveEvent = self.ui.listWidget.mouseMoveEvent
-		self.ui.listWidget.mouseMoveEvent = self.mouseMoveEvent
-		self._mousePressEvent = self.ui.listWidget.mousePressEvent
-		self.ui.listWidget.mousePressEvent = self.mousePressEvent
-		self.ui.pathlist.setAcceptDrops(True)
+		#self.ui.listWidget.dropEvent = self.dropEvent
+		#self.ui.listWidget.dragEnterEvent = self.dragEnterEvent
+		#self.ui.listWidget.dragMoveEvent = self.dragMoveEvent
+		#self.ui.pathlist.dropEvent = self.pathListDropEvent
+		#self.ui.pathlist.dragEnterEvent = self.pathListDragEnterEvent
+		#self.ui.pathlist.dragMoveEvent = self.pathListDragMoveEvent
+		#self._mouseMoveEvent = self.ui.listWidget.mouseMoveEvent
+		#self.ui.listWidget.mouseMoveEvent = self.mouseMoveEvent
+		#self._mousePressEvent = self.ui.listWidget.mousePressEvent
+		#self.ui.listWidget.mousePressEvent = self.mousePressEvent
+		#self.ui.pathlist.setAcceptDrops(True)
 		self.overlay = Overlay( self )
 		if not self.currentRootNode:
 			self.setDefaultRootNode()
@@ -115,19 +117,23 @@ class TreeWidget( QtGui.QWidget ):
 			self.loadData()
 		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
 		self.startDrag = False
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onTreeChanged )
+		if protoWrap.rootNodes:
+			self.setRootNode( protoWrap.rootNodes[0]["key"], protoWrap.rootNodes[0]["name"] )
 		#self.connect( event, QtCore.SIGNAL("treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onTreeChanged )
 
-	def onTreeChanged( self, emitter, modul, rootNode, itemID ):
-		gc.collect()
-		print("i am %s" % str(self) )
-		for x in gc.get_referrers( self ):
-			print( x )
-		if emitter==self: #We issued this event - ignore it as we allready knew
-			return
-		if modul and modul!=self.modul: #Not our modul
-			return
-		if rootNode and rootNode!=self.currentRootNode: #Not in our Hierarchy
-			return
+	def onTreeChanged( self ):
+		#gc.collect()
+		#print("i am %s" % str(self) )
+		#for x in gc.get_referrers( self ):
+		#	print( x )
+		#if emitter==self: #We issued this event - ignore it as we allready knew
+		#	return
+		#if modul and modul!=self.modul: #Not our modul
+		#	return
+		#if rootNode and rootNode!=self.currentRootNode: #Not in our Hierarchy
+		#	return
 		#Well, seems to affect us, refresh our view
 		self.loadData()
 
@@ -306,10 +312,13 @@ class TreeWidget( QtGui.QWidget ):
 		#if path in TreeWidget.cache[ self.currentRootNode ].keys() and not queryObj: # We have this Cached
 		#	self.updatePathList()
 		#	self.setData( data=TreeWidget.cache[ self.currentRootNode ][ path ] )
-		if 1:#else: # We need to fetch this
-			self.overlay.inform( self.overlay.BUSY )
-			self.updatePathList()
-			NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path}, successHandler=self.setData )
+		
+		#if 1:#else: # We need to fetch this
+		#	self.overlay.inform( self.overlay.BUSY )
+		#	self.updatePathList()
+		#	NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path}, successHandler=self.setData )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		self.loadingKey = protoWrap.queryData( self.setData, self.currentRootNode, self.path )
 	
 	def updatePathList(self ):
 		foldericon= "icons/menu/folder_small.png"
@@ -333,10 +342,9 @@ class TreeWidget( QtGui.QWidget ):
 			self.path = self.path[ : clickeditem.i ]
 		self.loadData()
 
-	def setData( self, request=None, data=None ):
-		if not data:
-			assert request
-			data = NetworkService.decode( request )
+	def setData( self, queryKey, data, cursor ):
+		if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
+			return
 		# event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modul, self ) FIXME: ??
 		#if self.getPath()!=None:
 		#	TreeWidget.cache[ self.currentRootNode ][ self.getPath() ] = data
@@ -345,6 +353,7 @@ class TreeWidget( QtGui.QWidget ):
 			self.ui.listWidget.addItem( self.dirItem( dir ) )
 		for entry in data["entrys"]:
 			self.ui.listWidget.addItem( self.treeItem( entry ) )
+		self.updatePathList()
 		self.overlay.clear( )
 	
 	def getPath(self):
@@ -411,21 +420,8 @@ class TreeWidget( QtGui.QWidget ):
 			@param dirs: List of directories in that directory.
 			@type dirs: List
 		"""
-		self.overlay.inform( self.overlay.BUSY )
-		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
-		for file in files:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
-										"path": path, 
-										"name": file, 
-										"type": "entry" } ) )
-		for dir in dirs:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
-										"path": path, 
-										"name": dir, 
-										"type": "dir" } ) )
-		#request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
-		request.queryType = "delete"
-		self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		protoWrap.delete( rootNode, path, files, dirs )
 		self.overlay.inform( self.overlay.BUSY )
 
 	def copy(self, clipboard, rootNode, path ):
@@ -440,29 +436,8 @@ class TreeWidget( QtGui.QWidget ):
 			@type path: String
 		"""
 		srcRepo, srcPath, doMove, files, dirs = clipboard
-		request = RequestGroup( finishedHandler=self.onRequestSucceeded)
-		for file in files:
-			request.addQuery( NetworkService.request( "/%s/copy" % self.modul , {"srcrepo": srcRepo,
-									"srcpath": srcPath,
-									"name": file,
-									"destrepo": rootNode,
-									"destpath": path,
-									"deleteold": "1" if doMove else "0",
-									"type":"entry"} ) )
-		for dir in dirs:
-			request.addQuery( NetworkService.request( "/%s/copy" % self.modul, {"srcrepo": srcRepo,
-									"srcpath": srcPath,
-									"name": dir,
-									"destrepo": rootNode,
-									"destpath": path,
-									"deleteold": "1" if doMove else "0",
-									"type":"dir"} ) )
-		#request.flushList = [
-		#					lambda *args, **kwargs: self.flushCache( rootNode, path ),  #Target Path
-		#					lambda *args, **kwargs: self.flushCache( srcRepo, srcPath ) #Source Path
-		#				]
-		request.queryType = "move" if doMove else "copy"
-		self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		protoWrap.copy( srcRepo, srcPath, files, dirs, rootNode, path, doMove )
 		self.overlay.inform( self.overlay.BUSY )
 	
 	def onProgessUpdate(self, request, done, maximum ):
@@ -489,8 +464,8 @@ class TreeWidget( QtGui.QWidget ):
 			@param newName: The new name for that element
 			@type newName: String
 		"""
-		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path":path, "src": oldName, "dest":newName }, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
-		#request.flushList = [ lambda *args, **kwargs: self.flushCache(rootNode, path) ]
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		protoWrap.rename( rootNode, path, oldName, newName )
 		self.overlay.inform( self.overlay.BUSY )
 
 	def showError(self, reqWrapper, error):

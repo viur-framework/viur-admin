@@ -8,6 +8,7 @@ from ui.hierarchySelectorUI import Ui_HierarchySelector
 from widgets.hierarchy import HierarchyWidget, HierarchyItem
 from widgets.selectedEntities import SelectedEntitiesWidget
 from os import path
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 def formatBoneDescr( data ):
 	if data and "name" in data.keys():
@@ -16,12 +17,14 @@ def formatBoneDescr( data ):
 		return( "" )
 
 class HierarchyEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", *args, **kwargs ):
 		super( HierarchyEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
 		self.modulName = modulName
 		self.boneName = boneName
-		self.toModul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
+		self.toModul = destModul
+		self.readOnly = readOnly
+		self.multiple = multiple
+		self.format = format
 		self.layout = QtGui.QHBoxLayout( self )
 		self.addBtn = QtGui.QPushButton( "Auswählen", parent=self )
 		iconadd = QtGui.QIcon()
@@ -29,7 +32,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
 		self.layout.addWidget( self.addBtn )
-		if not skelStructure[boneName]["multiple"]:
+		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
 			self.entry.setReadOnly(True)
 			self.layout.addWidget( self.entry )
@@ -42,6 +45,16 @@ class HierarchyEditBone( QtGui.QWidget ):
 			self.selection = None
 		else:
 			self.selection = []
+			
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		multiple = skelStructure[boneName]["multiple"]
+		destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		format= "$(name)"
+		if "format" in skelStructure[ boneName ].keys():
+			format = skelStructure[ boneName ]["format"]
+		return( HierarchyEditBone( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
 
 	def setSelection(self, selection):
 		if self.skelStructure[self.boneName]["multiple"]:
@@ -68,7 +81,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 		if not self.boneName in data.keys():
 			return
 		self.selection = data[ self.boneName ]
-		if not self.skelStructure[self.boneName]["multiple"]:
+		if not self.multiple:
 			self.entry.setText( formatBoneDescr( data[ self.boneName ] ) )
 
 	def serializeForPost(self):
@@ -91,99 +104,10 @@ class HierarchyEditBone( QtGui.QWidget ):
 
 
 
-class BaseHierarchyBoneSelector( QtGui.QWidget ):
-	
-	class SelectionItem(QtGui.QListWidgetItem):
-		def __init__( self, data ):
-			if isinstance( data, dict ) and "name" in data:
-				name = str( data["name"] )
-			else:
-				name = " - "
-			super( BaseHierarchyBoneSelector.SelectionItem, self ).__init__( QtGui.QIcon("icons/filetypes/unknown.png"), str( name ) )
-			self.data = data
 
-	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, parent=None,  *args, **kwargs ):
-		super( BaseHierarchyBoneSelector, self ).__init__( parent, *args, **kwargs )
-		self.modul = skelStructure[ boneName ]["type"].split(".")[1]
-		self.boneName = boneName
-		self.skelStructure = skelStructure
-		self.setSelection = setSelection
-		self.multiple = skelStructure[boneName]["multiple"]
-		self.ui = Ui_HierarchySelector()
-		self.ui.setupUi( self )		
-		layout = QtGui.QHBoxLayout( self.ui.hierarchyWidget )
-		self.ui.hierarchyWidget.setLayout( layout )
-		self.hierarchy = HierarchyWidget( self.ui.hierarchyWidget, self.modul )
-		layout.addWidget( self.hierarchy )
-		layout = QtGui.QHBoxLayout( self.ui.listSelected )
-		self.ui.listSelected.setLayout( layout )
-		#parent, modul, selection=None, treeItem=None, dragSource=None,
-		self.selection = SelectedEntitiesWidget( self, self.modul, selection )
-		layout.addWidget( self.selection )
-		self.selection.show()
-		#self.ui.treeWidget.addChild( self.hierarchy )
-		self.hierarchy.show()
-		#self.clipboard = None  #(str repo,str path, bool doMove, list Hierarchys, list dirs )
-		if not self.multiple:
-			self.ui.listSelected.hide()
-			self.ui.lblSelected.hide()
-		self.ui.listSelected.keyPressEvent = self.on_listSelection_event
-		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
-		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.on_treeWidget_itemDoubleClicked )
-		
-	
-	def on_cbRepository_currentIndexChanged( self, text ):
-		if not isinstance( text, str ):
-			return
-		for repo in self.repositorys:
-			if repo["name"] == text:
-				self.setRepository( repo["key"], repo["name"] )
-		
-	def on_btnSelect_released(self, *args, **kwargs):
-		if not self.multiple:
-			for item in self.ui.listWidget.selectedItems():
-				if isinstance( item, self.Hierarchy ):
-					self.setSelection( [item.data] )
-					event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
-					return
-			return
-		else:
-			self.setSelection( self.selection.get() )
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
-	
-	def on_treeWidget_itemDoubleClicked(self, item):
-		if not self.multiple:
-			self.setSelection( [item] )
-			event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
-			return
-		else:
-			self.selection.extend( [item] )
+def CheckForHierarchyBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"].startswith("hierarchy.") )
 
-	def on_listSelection_event(self, event ):
-		if event.key()==QtCore.Qt.Key_Delete:
-			items = self.ui.listSelected.selectedItems()
-			for item in items:
-				self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
-				self.selection.remove( item.data )
-	
-class HierarchyHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		#self.connect( event, QtCore.SIGNAL('requestHierarchyViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		self.connect( event, QtCore.SIGNAL('requestHierarchyBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.RelationalBoneSeletor )
-	
-	# Fixme: sad
-	#def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure):
-	#	if skelStructure[boneName]["type"].startswith("hierarchy."):
-	#		registerObject.registerHandler( 10, lambda: HierarchyViewBoneDelegate() )
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForHierarchyBone, HierarchyEditBone)
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"].startswith("hierarchy."):
-			registerObject.registerHandler( 10, HierarchyEditBone( modulName, boneName, skelStructure ) )
-
-	def RelationalBoneSeletor(self, registerObject, modulName, boneName, skelStructure, selection, setSelection ):
-		if skelStructure[boneName]["type"].startswith("hierarchy."):
-			registerObject.registerHandler( 10, lambda: BaseHierarchyBoneSelector( modulName, boneName, skelStructure, selection, setSelection ) )
-
-_HierarchyHandler = HierarchyHandler()

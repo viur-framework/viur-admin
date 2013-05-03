@@ -7,8 +7,8 @@ import time, os
 from utils import RegisterQueue, showAbout
 from tasks import TaskViewer
 import startpages
-import gc
 from network import NetworkService, RemoteFile
+from priorityqueue import protocolWrapperClassSelector
 
 class BaseHandler( QtGui.QTreeWidgetItem ):
 	
@@ -219,9 +219,9 @@ class MainWindow( QtGui.QMainWindow ):
 			widget.prepareDeletion()
 		except AttributeError:
 			pass
-		widget.setParent( None )
+		#widget.setParent( None )
+		widget.deleteLater()
 		widget = None
-		gc.collect()
 	
 	def popWidget( self, widget ):
 		"""
@@ -360,6 +360,9 @@ class MainWindow( QtGui.QMainWindow ):
 				self.ui.treeWidget.addTopLevelItem( handler )
 			handlers.append( handler )
 			event.emit( QtCore.SIGNAL('modulHandlerInitialized(PyQt_PyObject)'), modul )
+			wrapperClass = protocolWrapperClassSelector.select( modul, data["modules"] )
+			if wrapperClass is not None:
+				wrapperClass( modul )
 		self.show()
 		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
 		event.emit( QtCore.SIGNAL('mainWindowInitialized()') )

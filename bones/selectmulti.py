@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 from event import event
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 class SelectMultiViewBoneDelegate(QtGui.QStyledItemDelegate):
 	def __init__(self,registerObject, modulName, boneName, skelStructure, *args, **kwargs ):
@@ -15,17 +18,13 @@ class SelectMultiViewBoneDelegate(QtGui.QStyledItemDelegate):
 		return( super( SelectMultiViewBoneDelegate, self ).displayText( resStr, locale ) )
 
 class SelectMultiEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
-		super( SelectMultiEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
+	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs ):
+		super( SelectMultiEditBone,  self ).__init__(  *args, **kwargs )
+		self.modulName = modulName
 		self.boneName = boneName
 		self.layout = QtGui.QVBoxLayout( self ) 
 		self.checkboxes = {}
-		if "sortBy" in self.skelStructure[ boneName ].keys():
-			sortBy = self.skelStructure[ boneName ][ "sortBy" ]
-		else:
-			sortBy = "keys"
-		tmpList = list( self.skelStructure[ boneName ]["values"].items() )
+		tmpList = values
 		if sortBy=="keys":
 			tmpList.sort( key=lambda x: x[0] ) #Sort by keys
 		else:
@@ -35,6 +34,16 @@ class SelectMultiEditBone( QtGui.QWidget ):
 			self.layout.addWidget( cb )
 			cb.show()
 			self.checkboxes[ key ] = cb
+
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		if "sortBy" in skelStructure[ boneName ].keys():
+			sortBy = skelStructure[ boneName ][ "sortBy" ]
+		else:
+			sortBy = "keys"
+		values = list( skelStructure[ boneName ]["values"].items() )
+		return( SelectMultiEditBone( modulName, boneName, readOnly, values=values, sortBy=sortBy ) ) 
 
 	def unserialize( self, data ):
 		if not self.boneName in data.keys():
@@ -48,19 +57,10 @@ class SelectMultiEditBone( QtGui.QWidget ):
 	def serializeForDocument(self):
 		return( self.serialize( ) )
 
-class SelectMultiHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
-		if skelStucture[boneName]["type"]=="selectmulti":
-			registerObject.registerHandler( 5, lambda: SelectMultiViewBoneDelegate( registerObject, modulName, boneName, skelStucture) )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"]=="selectmulti":
-			registerObject.registerHandler( 10, SelectMultiEditBone( modulName, boneName, skelStucture ) )
+def CheckForSelectMultiBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="selectmulti" )
 
-_selectMultiHandler = SelectMultiHandler()
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForSelectMultiBone, SelectMultiEditBone)
+viewDelegateSelector.insert( 2, CheckForSelectMultiBone, SelectMultiViewBoneDelegate)

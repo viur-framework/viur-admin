@@ -9,27 +9,27 @@ from os import path
 from bones.relational import RelationalViewBoneDelegate
 from widgets.tree import TreeWidget, TreeItem, DirItem
 from widgets.selectedEntities import SelectedEntitiesWidget
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 class TreeItemViewBoneDelegate( RelationalViewBoneDelegate ):
 	pass
 
 class TreeItemEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", *args, **kwargs ):
 		super( TreeItemEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
 		self.modulName = modulName
 		self.boneName = boneName
-		self.toModul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
-		self.format = "$(name)"
-		if "format" in skelStructure[ boneName ].keys():
-			self.format = skelStructure[ boneName ]["format"]
+		self.readOnly = readOnly
+		self.toModul = destModul
+		self.multiple = multiple
+		self.format = format
 		self.layout = QtGui.QHBoxLayout( self )
 		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TreeItemEditBone", "Change selection"), parent=self )
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
-		if not skelStructure[boneName]["multiple"]:
+		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
 			self.entry.setReadOnly(True)
 			self.layout.addWidget( self.entry )
@@ -45,12 +45,22 @@ class TreeItemEditBone( QtGui.QWidget ):
 			self.layout.addWidget( self.addBtn )
 			self.selection = []
 
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		multiple = skelStructure[boneName]["multiple"]
+		destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		format= "$(name)"
+		if "format" in skelStructure[ boneName ].keys():
+			format = skelStructure[ boneName ]["format"]
+		return( TreeItemEditBone( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
+
 	def setSelection(self, selection):
-		if self.skelStructure[self.boneName]["multiple"]:
+		if self.multiple:
 			self.selection = selection
 		elif len( selection )>0 :
 			self.selection = selection[0]
-			self.entry.setText( formatString( self.format, self.skelStructure, self.selection ) )
+			self.entry.setText( formatString( self.format, {}, self.selection ) ) #FIXME: {} was self.skelStructure
 		else:
 			self.selection = None
 	
@@ -70,8 +80,8 @@ class TreeItemEditBone( QtGui.QWidget ):
 		if not self.boneName in data.keys():
 			return
 		self.selection = data[ self.boneName ]
-		if not self.skelStructure[self.boneName]["multiple"]:
-			self.entry.setText( formatString( self.format, self.skelStructure, data[ self.boneName ] ) )
+		if not self.multiple:
+			self.entry.setText( formatString( self.format, {}, data[ self.boneName ] ) ) #FIXME: {} was self.skelStructure
 
 	def serializeForPost(self):
 		if self.selection:
@@ -184,24 +194,10 @@ class BaseTreeItemBoneSelector( QtGui.QWidget ):
 
 
 
+def CheckForTreeItemBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"].startswith("treeitem.") )
 
-class TreeItemHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestTreeItemViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		self.connect( event, QtCore.SIGNAL('requestTreeItemBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.RelationalBoneSeletor )
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure):
-		if skelStructure[boneName]["type"].startswith("treeitem."):
-			registerObject.registerHandler( 10, lambda: TreeItemViewBoneDelegate() )
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForTreeItemBone, TreeItemEditBone)
+viewDelegateSelector.insert( 2, CheckForTreeItemBone, TreeItemViewBoneDelegate)
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"].startswith("treeitem."):
-			registerObject.registerHandler( 10, TreeItemEditBone( modulName, boneName, skelStructure ) )
-
-	def RelationalBoneSeletor(self, registerObject, modulName, boneName, skelStructure, selection, setSelection ):
-		if skelStructure[boneName]["type"].startswith("treeitem."):
-			registerObject.registerHandler( 10, lambda: BaseTreeItemBoneSelector( modulName, boneName, skelStructure, selection, setSelection ) )
-
-_TreeItemHandler = TreeItemHandler()

@@ -1,9 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseEditBone
+from priorityqueue import editBoneSelector
 
 class ColorEditBone( BaseEditBone ):
+
 	def getLineEdit(self):
 		aWidget=QtGui.QWidget()
 		aWidget.layout = QtGui.QHBoxLayout( aWidget )
@@ -19,7 +24,7 @@ class ColorEditBone( BaseEditBone ):
 		return (aWidget)
 		
 	def setParams(self):
-		if "readonly" in self.boneStructure.keys() and self.boneStructure["readonly"]:
+		if self.readOnly:
 			self.setEnabled( False )
 		else:
 			self.setEnabled( True )
@@ -45,15 +50,7 @@ class ColorEditBone( BaseEditBone ):
 		return( { self.boneName: str( self.lineEdit1.displayText() ) } )
 
 
-class colorHandler( QtCore.QObject ):
-	"""Override the default if we are a selectMulti String Bone"""
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
+def CheckForColorBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="color" )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"]=="color":
-			registerObject.registerHandler( 10, ColorEditBone( modulName, boneName, skelStucture ) )
-
-
-_colorHandler = colorHandler()
+editBoneSelector.insert( 2, CheckForColorBone, ColorEditBone )

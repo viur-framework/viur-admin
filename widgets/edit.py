@@ -7,7 +7,8 @@ from utils import RegisterQueue, Overlay, formatString
 from config import conf
 from ui.editUI import Ui_Edit
 from ui.editpreviewUI import Ui_EditPreview
-
+from priorityqueue import editBoneSelector
+from priorityqueue import protocolWrapperInstanceSelector
 
 class Preview( QtGui.QWidget ):
 	"""Livepreview for unsaved changes"""
@@ -159,40 +160,37 @@ class EditWidget( QtGui.QWidget ):
 			raise NotImplementedError() #Should never reach this
 
 	def save(self, data ):
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
 		if self.modul=="_tasks":
 			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appList: ## Application: List
 			if self.id and not self.clone:
-				request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.edit( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.id, **data )
+				#request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
-				request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.add( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, **data )
+				#request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
 			self.overlay.inform( self.overlay.BUSY )
-			data.update( {"parent": self.rootNode } )
+			#data.update( {"parent": self.rootNode } )
 			if self.id and not self.clone:
-				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.edit( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.id, **data )
+				#self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
-				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.add( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.rootNode, **data )
+				#self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appTree: ## Application: Tree
-			data.update( {"rootNode": self.rootNode, "path": self.path } )
+			#data.update( {"rootNode": self.rootNode, "path": self.path } )
 			if self.id and not self.clone:
-				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.edit( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.id, **data )
+				#self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
-				self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
+				protoWrap.add( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.rootNode, self.path, **data )
+				#self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
-			self.request = NetworkService.request("/%s/edit" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
-		else:
-			raise NotImplementedError() #Should never reach this
-
-	def emitEntryChanged( self, modul ):
-		if self.applicationType == EditWidget.appList: ## Application: List
-			event.emit( QtCore.SIGNAL('listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.id )
-		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
-			event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, modul, self.rootNode, self.id )
-		elif self.applicationType == EditWidget.appTree: ## Application: Tree
-			event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.rootNode, self.id )
-		elif self.applicationType == EditWidget.appSingleton: ## Application: Tree
-			event.emit( QtCore.SIGNAL('singletonChanged(PyQt_PyObject,PyQt_PyObject)'), self, self.modul )
+			protoWrap.edit( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, **data )
+			#self.request = NetworkService.request("/%s/edit" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		else:
 			raise NotImplementedError() #Should never reach this
 
@@ -234,7 +232,6 @@ class EditWidget( QtGui.QWidget ):
 			open( fileName, "w+b" ).write( data )	
 		return( fileName )
 
-
 	def setData( self, request=None, data=None ):
 		"""
 		Rebuilds the UI according to the skeleton recived from server
@@ -274,9 +271,11 @@ class EditWidget( QtGui.QWidget ):
 				containerWidget.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred) )
 				self.ui.tabWidget.addTab( scrollArea,  tabName )
 				scrollArea.setWidgetResizable(True)
-			queue = RegisterQueue()
-			event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),queue, self.modul, key, tmpDict )
-			widget = queue.getBest()
+			#queue = RegisterQueue()
+			#event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),queue, self.modul, key, tmpDict )
+			#widget = queue.getBest()
+			wdgGen = editBoneSelector.select( self.modul, key, tmpDict )
+			widget = wdgGen.fromSkelStructure( self.modul, key, tmpDict )
 			if bone["error"]:
 				dataWidget = QtGui.QWidget()
 				layout = QtGui.QHBoxLayout(dataWidget)
@@ -360,7 +359,31 @@ class EditWidget( QtGui.QWidget ):
 		else:
 			self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditHandler", "Missing data") )
 			self.setData( data=data )
-		self.emitEntryChanged( self.modul )
+	
+	def onSaveSuccess( self ):
+		"""
+			Adding/editing an entry just succeeded
+		"""
+		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditHandler", "Entry saved")  )
+		if self.closeOnSuccess:
+			event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
+		else:
+			self.reloadData()
+	
+	def onSaveMissing( self, data ):
+		"""
+			Adding/editing failed, cause some required fields are missing/invalid
+		"""
+		self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditHandler", "Missing data") )
+		self.setData( data=data )
+	
+	def onSaveError( self, error ):
+		"""
+			Unspecified error on saving/editing
+		"""
+		self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditHandler", "There was an error saving your changes") )
+		return
+	
 
 	def taskAdded(self):
 		QtGui.QMessageBox.information(	self,

@@ -10,6 +10,7 @@ from config import conf
 from mainwindow import WidgetHandler
 from widgets.list import ListWidget, ListTableModel
 from widgets.edit import EditWidget
+from priorityqueue import protocolWrapperInstanceSelector
 
 class List( QtGui.QWidget ):
 	def __init__(self, modul, fields=None, filter=None, *args, **kwargs ):
@@ -24,7 +25,7 @@ class List( QtGui.QWidget ):
 		self.list.show()
 		self.toolBar = QtGui.QToolBar( self )
 		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
-		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked
+		self.ui.editSearch.mousePressEvent = self.on_editSearch_clicked #FIXME: BOOM
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText( filter["search"] )
 		queue = RegisterQueue()
@@ -38,13 +39,13 @@ class List( QtGui.QWidget ):
 		self.ui.boxActions.addWidget( self.toolBar )
 		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
 
-	def deleteLater(self):
-		"""
-			Ensure that all our childs have the chance to clean up.
-		"""
-		self.list.deleteLater()
-		self.toolBar.deleteLater()
-		super( List, self ).deleteLater()
+	#def deleteLater(self):
+	#	"""
+	#		Ensure that all our childs have the chance to clean up.
+	#	"""
+	#	self.list.deleteLater()
+	#	self.toolBar.deleteLater()
+	#	super( List, self ).deleteLater()
 
 	def on_editSearch_clicked(self, *args, **kwargs):
 		if self.ui.editSearch.text()==QtCore.QCoreApplication.translate("ListHandler", "Search") :
@@ -146,14 +147,15 @@ class DeleteTask( QtCore.QObject ):
 			item = self.iter.__next__()
 		except StopIteration:
 			self.emit( QtCore.SIGNAL("taskFinished()") )
-			self.request.deleteLater()
+			#self.request.deleteLater()
 			return
 		except AssertionError:
 			self.emit( QtCore.SIGNAL("taskError(PyQt_PyObject)"), QtCore.QCoreApplication.translate("ListHandler", "Aborted") )
-			self.request.deleteLater()
+			#self.request.deleteLater()
 			return
 		if self.request:
-			self.request.deleteLater()
+			pass
+			#self.request.deleteLater()
 		self.request = NetworkService.request("/%s/delete/%s" % ( self.modul, item["id"] ), secure=True )
 		self.connect( self.request, QtCore.SIGNAL("finished()"), self.processNext )
 		self.connect( self.request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.onError )
@@ -175,7 +177,10 @@ class ListDeleteAction( QtGui.QAction ):
 			if not row in rows:
 				rows.append( row )
 		deleteData = [ self.parentWidget().list.model().getData()[ row ] for row in rows ]
-		self.parent().list.delete( [x["id"] for x in deleteData], ask=True )
+		reqWrap = protocolWrapperInstanceSelector.select( self.parent().list.modul )
+		assert reqWrap is not None
+		reqWrap.deleteEntries( [x["id"] for x in deleteData] )
+		#self.parent().list.delete( [x["id"] for x in deleteData], ask=True )
 	
 
 
@@ -209,7 +214,7 @@ class Preview( QtGui.QWidget ):
 		else:
 			"""Its the originating server - Load the page in our context (cookies!)"""
 			if self.request:
-				self.request.deleteLater()
+				#self.request.deleteLater()
 				self.request=None
 			self.request = NetworkService.request( NetworkService.url.replace("/admin","")+url )
 			self.connect( self.request, QtCore.SIGNAL("finished()"), self.setHTML )
@@ -252,9 +257,9 @@ class ListPreviewAction( QtGui.QAction ):
 			data = self.parentWidget().list.model().getData()[ rows[0] ]
 			self.widget = Preview( self.previewURLs, self.modul, data )
 	
-	def __del__( self ):
-		if self.widget:
-			self.widget.deleteLater()
+	#def __del__( self ):
+	#	if self.widget:
+	#		#self.widget.deleteLater()
 
 
 class PredefinedViewHandler( WidgetHandler ): #EntryHandler

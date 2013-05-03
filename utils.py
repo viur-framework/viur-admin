@@ -278,7 +278,7 @@ def formatString( format, skelStructure, data, prefix=None ):
 	@param data: Data applied to the format String
 	@return: String
 	"""
-	def chooseLang( value, prefs ): #FIXME: Copy&Paste from bones/string
+	def chooseLang( value, prefs, key ): #FIXME: Copy&Paste from bones/string
 		"""
 			Tries to select the best language for the current user.
 			Value is the dictionary of lang -> text recived from the server,
@@ -286,16 +286,30 @@ def formatString( format, skelStructure, data, prefix=None ):
 		"""
 		if not isinstance( value, dict ):
 			return( value )
+		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
-			lang = conf.adminConfig["language"]
+			lang = "%s.%s" % (key,conf.adminConfig["language"]) 
 		except:
 			lang = ""
 		if lang in value.keys() and value[ lang ]:
 			return( value[ lang ] )
 		for lang in prefs:
-			if lang in value.keys():
-				if value[ lang ]:
-					return( value[ lang ] )
+			if "%s.%s" % (key,lang) in value.keys():
+				if value[ "%s.%s" % (key,lang) ]:
+					return( value[ "%s.%s" % (key,lang) ] )
+		# Normal edit format ( name : { lang: xx } ) format
+		if key in value.keys() and isinstance( value[ key ], dict ):
+			langDict = value[ key ]
+			try:
+				lang = conf.adminConfig["language"]
+			except:
+				lang = ""
+			if lang in langDict.keys():
+				return( langDict[ lang ] )
+			for lang in prefs:
+				if lang in langDict.keys():
+					if langDict[ lang ]:
+						return( langDict[ lang ] )
 		return( "" )
 	if isinstance( skelStructure, list):
 		# The server sends the information as list; but the first thing
@@ -323,8 +337,8 @@ def formatString( format, skelStructure, data, prefix=None ):
 	#Check for translated top-level bones
 	if not prefix:
 		for key, bone in skelStructure.items():
-			if key in data.keys() and isinstance( data[key], dict ) and "languages" in bone.keys() and bone[ "languages" ]:
-				res = res.replace( "$(%s)" % key, chooseLang( data[ key ], bone[ "languages" ]) )
+			if "languages" in bone.keys() and bone[ "languages" ]:
+				res = res.replace( "$(%s)" % key, chooseLang( data, bone[ "languages" ], key) )
 	return( res )
 
 def loadIcon( iconFile ):

@@ -126,6 +126,8 @@ class SecurityTokenProvider( QObject ):
 securityTokenProvider = SecurityTokenProvider()
 
 class RequestWrapper( QtCore.QObject ):
+	GarbargeTypeName = "RequestWrapper"
+	
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
 		super( RequestWrapper, self ).__init__()
 		self.logger = logging.getLogger( "RequestWrapper" )
@@ -174,12 +176,12 @@ class RequestWrapper( QtCore.QObject ):
 		self.logger.debug("Request finished: %s", str(self) )
 		NetworkService.currentRequests.remove( self )
 		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
-		self.request.deleteLater()
+		#self.request.deleteLater()
 		self.request = None
 		self.successHandler = None
 		self.failureHandler = None
 		self.finishedHandler = None
-		self.deleteLater()
+		#self.deleteLater()
 	
 	def readAll(self):
 		return( self.request.readAll() )
@@ -190,6 +192,7 @@ class RequestGroup( QtCore.QObject ):
 		Informs the creator whenever an Query finishes processing and allows
 		easy checking if there are more queries pending.
 	"""
+	GarbargeTypeName = "RequestGroup"
 	
 	def __init__(self, successHandler=None, failureHandler=None, finishedHandler=None, *args, **kwargs ):
 		super( RequestGroup, self ).__init__(*args, **kwargs)
@@ -230,7 +233,7 @@ class RequestGroup( QtCore.QObject ):
 			self.successHandler = None
 			self.failureHandler = None
 			self.finishedHandler = None
-			self.deleteLater()
+			#self.deleteLater()
 	
 	def isIdle(self):
 		"""
@@ -254,6 +257,8 @@ class RemoteFile( QtCore.QObject ):
 		Its loads a File from the server if needed and Caches it locally sothat further requests will 
 		not bother the server again
 	"""
+	GarbargeTypeName = "RemoteFile"
+	
 	maxBlockTime = 30 #Maximum seconds, we are willing to wait for a file to download in "blocking" mode
 	
 	def __init__(self, dlKey, successHandler=None, failureHandler=None, *args, **kwargs ):
@@ -285,7 +290,7 @@ class RemoteFile( QtCore.QObject ):
 		NetworkService.currentRequests.remove( self )
 		self.successHandler = None
 		self.failureHandler = None
-		self.deleteLater()
+		#self.deleteLater()
 		
 	
 	def onTimerEvent( self ):
@@ -297,7 +302,7 @@ class RemoteFile( QtCore.QObject ):
 				getattr( s, self.successHandlerName )( self )
 			except e:
 				self.logger.exception( e )
-		self._delayTimer.deleteLater()
+		#self._delayTimer.deleteLater()
 		self._delayTimer = None
 		self.remove()
 

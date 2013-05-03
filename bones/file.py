@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue
@@ -9,6 +11,7 @@ from widgets.file import FileWidget
 from widgets.selectedFiles import SelectedFilesWidget
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 def formatBoneDescr( data ):
 	if data and "name" in data.keys():
@@ -51,13 +54,12 @@ class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 
 class FileEditBone( TreeItemEditBone ):
 	treeItem = FileItem
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, multiple, destModul, format="$(name)",  *args, **kwargs ):
 		QtGui.QWidget.__init__( self )
-		self.skelStructure = skelStructure
 		self.modulName = modulName
 		self.boneName = boneName
-		self.toModul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
-		self.format = "$(name)"
+		self.toModul = destModul
+		self.format = format
 		if "format" in skelStructure[ boneName ].keys():
 			self.format = skelStructure[ boneName ]["format"]
 		self.layout = QtGui.QVBoxLayout( self )
@@ -74,7 +76,7 @@ class FileEditBone( TreeItemEditBone ):
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
-		if not skelStructure[boneName]["multiple"]:
+		if not self.multiple:
 			self.listWidget.hide()
 			self.entry = QtGui.QLineEdit( self )
 			self.entry.setReadOnly(True)
@@ -93,6 +95,16 @@ class FileEditBone( TreeItemEditBone ):
 			self.selection = []
 		self.layout.addWidget( self.w )
 	
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		multiple = skelStructure[boneName]["multiple"]
+		destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		format= "$(name)"
+		if "format" in skelStructure[ boneName ].keys():
+			format = skelStructure[ boneName ]["format"]
+		return( FileEditBone( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
+	
 	def onToolTipAvaiable(self, remoteFile):
 		"""
 			Called, as soon the File displayed inside the Tooltip is ready
@@ -110,7 +122,7 @@ class FileEditBone( TreeItemEditBone ):
 		self.updatePreview()
 		
 	def updatePreview( self ):
-		if self.skelStructure[ self.boneName ]["multiple"] and isinstance( self.selection, list ):
+		if self.multiple and isinstance( self.selection, list ):
 			self.listWidget.clear()
 			for item in self.selection:
 				fi = FileItem( item )
@@ -133,23 +145,11 @@ class BaseFileBoneSelector( BaseTreeItemBoneSelector ):
 	def getBreadCrumb( self ):
 		return( QtCore.QCoreApplication.translate("FileBone", "Select file"), QtGui.QIcon( QtGui.QPixmap( "icons/actions/relationalselect.png" ) ) )
 		
-class FileHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestTreeItemBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.RelationalBoneSeletor )
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
-		if skelStucture[boneName]["type"]=="treeitem.file":
-			registerObject.registerHandler( 15, lambda: FileViewBoneDelegate() )
-	
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"].startswith("treeitem.file"):
-			registerObject.registerHandler( 15, FileEditBone( modulName, boneName, skelStucture ) )
 
-	def RelationalBoneSeletor(self, registerObject, modulName, boneName, skelStructure, selection, setSelection ):
-		if skelStructure[ boneName ]["type"] == "treeitem.file":
-			registerObject.registerHandler( 15, lambda: BaseFileBoneSelector( modulName, boneName, skelStructure, selection, setSelection ) )
 
-_FileHandler = FileHandler()
+def CheckForFileBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="treeitem.file" )
+
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForFileBone, FileEditBone)
+viewDelegateSelector.insert( 2, CheckForFileBone, FileViewBoneDelegate)
