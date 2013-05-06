@@ -3,7 +3,6 @@ from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue
 from ui.relationalselectionUI import Ui_relationalSelector
-from handler.hierarchy import HierarchyList
 from ui.hierarchySelectorUI import Ui_HierarchySelector
 from widgets.hierarchy import HierarchyWidget, HierarchyItem
 from widgets.selectedEntities import SelectedEntitiesWidget

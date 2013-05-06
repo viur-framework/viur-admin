@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector
-from handler.tree import TreeList
+from widgets.tree import TreeWidget
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate
@@ -101,7 +101,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 			return( { self.boneName: None } )
 
 
-class BaseTreeDirBoneSelector( TreeList ):
+class BaseTreeDirBoneSelector( TreeWidget ):
 	def __init__(self, modulName, boneName, skelStructure, selection, setSelection,  *args, **kwargs ):
 		self.modul = skelStructure[ boneName ]["type"].split(".")[1]
 		self.boneName = boneName

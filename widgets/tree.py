@@ -4,9 +4,8 @@ from utils import Overlay
 from network import NetworkService, RequestGroup
 from event import event
 import utils
-from ui.treeWidgetUI import Ui_TreeWidget
-import gc
-from priorityqueue import protocolWrapperInstanceSelector
+from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from ui.treeUI import Ui_Tree
 
 class IndexItem (QtGui.QListWidgetItem):
 	"""
@@ -74,7 +73,7 @@ class TreeWidget( QtGui.QWidget ):
 	gridSizeList = (64,64)
 	cache = {} #Cache Requests sothat allready visited Dirs load much faster
 	
-	def __init__(self, parent, modul, rootNode=None, path=None, treeItem=None, dirItem=None, *args, **kwargs ):
+	def __init__(self, modul, rootNode=None, path=None, treeItem=None, dirItem=None, actions=None, *args, **kwargs ):
 		"""
 			@param parent: Parent widget.
 			@type parent: QWidget
@@ -89,8 +88,8 @@ class TreeWidget( QtGui.QWidget ):
 			@param treeItem: If set, use this class for displaying Directories inside the QListWidget.
 			@param treeItem: QListWidgetItem
 		"""
-		super( TreeWidget, self ).__init__( parent, *args, **kwargs )
-		self.ui = Ui_TreeWidget( )
+		super( TreeWidget, self ).__init__( *args, **kwargs )
+		self.ui = Ui_Tree( )
 		self.ui.setupUi( self )
 		self.modul = modul
 		self.currentRootNode = rootNode
@@ -122,6 +121,44 @@ class TreeWidget( QtGui.QWidget ):
 		if protoWrap.rootNodes:
 			self.setRootNode( protoWrap.rootNodes[0]["key"], protoWrap.rootNodes[0]["name"] )
 		#self.connect( event, QtCore.SIGNAL("treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onTreeChanged )
+
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( self.toolBar )
+		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
+		#self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
+
+	def on_btnSearch_released(self, *args, **kwargs):
+		self.search( self.ui.editSearch.text() )
+
+	def on_editSearch_returnPressed(self):
+		self.search( self.ui.editSearch.text() )
+		
+	def on_listWidget_itemDoubleClicked(self, item ):
+		if( isinstance( item, self.tree.treeItem ) ):
+			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
+			handler = WidgetHandler( lambda: EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"]), descr )
+			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+
+
+	def setActions( self, actions ):
+		"""
+			Sets the actions avaiable for this widget (ie. its toolBar contents).
+			Setting None removes all existing actions
+			@param actions: List of actionnames
+			@type actions: List or None
+		"""
+		self.toolBar.clear()
+		if not actions:
+			return
+		for action in actions:
+			actionWdg = actionDelegateSelector.select( "tree.%s" % self.modul, action )
+			if actionWdg is not None:
+				actionWdg = actionWdg( self )
+				if isinstance( actionWdg, QtGui.QAction ):
+					self.toolBar.addAction( actionWdg )
+				else:
+					self.toolBar.addWidget( actionWdg )
 
 	def onTreeChanged( self ):
 		#gc.collect()
@@ -545,4 +582,46 @@ class TreeWidget( QtGui.QWidget ):
 			self.delete( self.currentRootNode, self.getPath(), files, dirs )		
 		else:
 			super( TreeWidget, self ).keyPressEvent( e )
+
+
+class TreeList( QtGui.QWidget ):
+	treeItem = None #Allow override of these on class level
+	dirItem = None
+	
+	def __init__(self, modul, currentRootNode=None, path=None, *args, **kwargs ):
+		super( TreeList, self ).__init__( *args, **kwargs )
+		config = conf.serverConfig["modules"][ modul ]
+		self.ui = Ui_Tree()
+		self.ui.setupUi( self )
+		layout = QtGui.QHBoxLayout( self.ui.listWidget )
+		self.ui.listWidget.setLayout( layout )
+		self.tree = TreeWidget( self, modul, currentRootNode, path, treeItem=self.treeItem, dirItem=self.dirItem )
+		layout.addWidget( self.tree )
+		self.tree.show()
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( self.toolBar )
+		queue = RegisterQueue()
+		event.emit( QtCore.SIGNAL('requestTreeModulActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, modul, self )
+		for item in queue.getAll():
+			i = item( self )
+			if isinstance( i, QtGui.QAction ):
+				self.toolBar.addAction( i )
+				self.ui.listWidget.addAction( i )
+			else:
+				self.toolBar.addWidget( i )
+		self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
+
+	def on_btnSearch_released(self, *args, **kwargs):
+		self.tree.search( self.ui.editSearch.text() )
+
+	def on_editSearch_returnPressed(self):
+		self.tree.search( self.ui.editSearch.text() )
+		
+	def on_listWidget_itemDoubleClicked(self, item ):
+		if( isinstance( item, self.tree.treeItem ) ):
+			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
+			handler = WidgetHandler( lambda: EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"]), descr )
+			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
+
 

@@ -61,6 +61,7 @@ import urllib, urllib.request
 from urllib.parse import quote_plus
 from bugsnag import Notification
 import protocolwrapper
+import actions
 
 def reportError( type, value, tb ):
 	print( "*"*40 )

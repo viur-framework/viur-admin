@@ -6,7 +6,8 @@ from event import event
 import utils
 from config import conf
 from widgets.edit import EditWidget
-from priorityqueue import protocolWrapperInstanceSelector
+from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from ui.hierarchyUI import Ui_Hierarchy
 
 class HierarchyItem(QtGui.QTreeWidgetItem):
 	"""
@@ -40,7 +41,7 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 			return( super( HierarchyItem, self ).__lt__( other ) )
 			
 
-class HierarchyWidget( QtGui.QTreeWidget ):
+class HierarchyTreeWidget( QtGui.QTreeWidget ):
 	"""
 		Provides an interface for Data structured as a hierarchy on the server.
 		
@@ -59,7 +60,7 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 			@param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose one.
 			@type rootNode: String or None
 		"""
-		super( HierarchyWidget, self ).__init__( parent, *args, **kwargs )
+		super( HierarchyTreeWidget, self ).__init__( parent, *args, **kwargs )
 		self.modul = modul
 		self.currentRootNode = rootNode
 		self.loadingKey = None
@@ -290,3 +291,90 @@ class HierarchyWidget( QtGui.QTreeWidget ):
 		assert protoWrap is not None
 		protoWrap.delete( id )
 		self.overlay.inform( self.overlay.BUSY )
+		
+
+
+
+
+
+class HierarchyWidget( QtGui.QWidget ):
+	
+	def __init__(self, modul, repoID=None, actions=None, *args, **kwargs ):
+		super( HierarchyWidget, self ).__init__( *args, **kwargs )
+		self.ui = Ui_Hierarchy()
+		self.ui.setupUi( self )
+		layout = QtGui.QHBoxLayout( self.ui.treeWidget )
+		self.ui.treeWidget.setLayout( layout )
+		self.hierarchy = HierarchyTreeWidget( self.ui.treeWidget, modul )
+		layout.addWidget( self.hierarchy )
+		#self.ui.treeWidget.addChild( self.hierarchy )
+		self.hierarchy.show()
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( self.toolBar )
+		self.modul = modul
+		self.page = 0
+		self.rootNodes = {}
+		config = conf.serverConfig["modules"][ modul ]
+		self.currentRootNode = None
+		self.isSorting=False
+		self.path = []
+		self.request = None
+		self.overlay = Overlay( self )
+		self.setAcceptDrops( True )
+		self.ui.webView.hide()
+		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
+		self.connect( self.hierarchy, QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.onItemClicked )
+		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.onItemDoubleClicked )
+
+	def setActions( self, actions ):
+		"""
+			Sets the actions avaiable for this widget (ie. its toolBar contents).
+			Setting None removes all existing actions
+			@param actions: List of actionnames
+			@type actions: List or None
+		"""
+		self.toolBar.clear()
+		if not actions:
+			return
+		for action in actions:
+			actionWdg = actionDelegateSelector.select( "hierarchy.%s" % self.modul, action )
+			if actionWdg is not None:
+				actionWdg = actionWdg( self )
+				if isinstance( actionWdg, QtGui.QAction ):
+					self.toolBar.addAction( actionWdg )
+				else:
+					self.toolBar.addWidget( actionWdg )
+
+	def onItemClicked( self, item ):
+		"""
+			A item has been selected. If we have a previewURL -> show it
+		"""
+		config = conf.serverConfig["modules"][ self.modul ]
+		if "previewURL" in config.keys():
+			previewURL = config["previewURL"].replace("{{id}}",item["id"])
+			if not previewURL.lower().startswith("http"):
+				previewURL = NetworkService.url.replace("/admin","")+previewURL
+			self.loadPreview( previewURL )
+
+	def onItemDoubleClicked(self, item ):
+		"""
+			Open a editor for this entry.
+		"""
+		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
+		handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+
+	def loadPreview( self, url ):
+		self.request = NetworkService.request( url )
+		self.connect(self.request, QtCore.SIGNAL("finished()"), self.setHTML )
+	
+	def setHTML( self ):
+		try: #This request might got canceled meanwhile..
+			html = bytes( self.request.readAll() )
+		except:
+			return
+		self.request.deleteLater()
+		self.request= None
+		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
+		self.ui.webView.show()

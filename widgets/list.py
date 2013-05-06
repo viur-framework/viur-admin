@@ -3,7 +3,11 @@ from PyQt4 import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event
-from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector
+from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from widgets.edit import EditWidget
+from mainwindow import WidgetHandler
+from ui.listUI import Ui_List
+from config import conf
 
 class ListTableModel( QtCore.QAbstractTableModel ):
 	"""Model for displaying data within a listView"""
@@ -108,8 +112,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 					filter[ filter["orderby"]+"$lt" ] = self.dataCache[-1][filter["orderby"]]
 				else:
 					filter[ filter["orderby"]+"$gt" ] = self.dataCache[-1][filter["orderby"]]
-		#req = NetworkService.request("/%s/list?amount=%s" % (self.modul, self._chunkSize), filter, successHandler=self.addData)
-		#req.requestIndex = index
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		filter["amount"] = self._chunkSize 
@@ -125,7 +127,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
 		#Rebuild our local cache of valid fields
 		bones = {}
-		for key, bone in protoWrap.structure:
+		for key, bone in protoWrap.structure.items():
 			bones[ key ] = bone
 		self._validFields = [ x for x in self.fields if x in bones.keys() ]
 		for item in data: #Insert the new Data at the coresponding Position
@@ -157,7 +159,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			filter["orderdir"] = "0"
 		self.setFilter( filter )
 
-class ListWidget( QtGui.QTableView ):
+class ListTableView( QtGui.QTableView ):
 	"""
 		Provides an interface for Data structured as a simple list.
 		
@@ -167,10 +169,10 @@ class ListWidget( QtGui.QTableView ):
 		@emits onItemActivated(PyQt_PyObject=item.data)
 		
 	"""
-	GarbargeTypeName = "ListWidget"
+	GarbargeTypeName = "ListTableView"
 
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
-		super( ListWidget, self ).__init__( parent,  *args, **kwargs )
+		super( ListTableView, self ).__init__( parent,  *args, **kwargs )
 		self.modul = modul
 		filter = filter or {}
 		self.structureCache = None
@@ -222,16 +224,13 @@ class ListWidget( QtGui.QTableView ):
 		for x in range( 0, len( self.model().headers ) ):
 			self.setColumnWidth(x, int( width/len( self.model().headers ) ) )
 
-	def rebuildDelegates( self, data ):
+	def rebuildDelegates( self, bones ):
 		"""
 			(Re)Attach the viewdelegates to the table.
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
 		self.delegates = [] # Qt Dosnt take ownership of viewdelegates -> garbarge collected
-		bones = {}
-		for key, bone in data:
-			bones[ key ] = bone
 		self.structureCache = bones
 		self.model().headers = []
 		colum = 0
@@ -262,7 +261,7 @@ class ListWidget( QtGui.QTableView ):
 			for index in self.selectedIndexes():
 				self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
 		else:
-			super( ListWidget, self ).keyPressEvent( e )
+			super( ListTableView, self ).keyPressEvent( e )
 
 	def tableHeaderContextMenuEvent(self, point ):
 		class FieldAction( QtGui.QAction ):
@@ -289,10 +288,10 @@ class ListWidget( QtGui.QTableView ):
 	def delete(self, ids, ask=False ):
 		if ask:
 			if QtGui.QMessageBox.question(	self,
-										QtCore.QCoreApplication.translate("ListWidget", "Confirm delete"),
-										QtCore.QCoreApplication.translate("ListWidget", "Delete %s entries?") % len( ids ),
-										QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-										QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+							QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+							QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len( ids ),
+							QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+							QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
 				return
 		self.overlay.inform( self.overlay.BUSY )
 		reqGroup = RequestGroup( finishedHandler=self.onQuerySuccess )
@@ -303,7 +302,7 @@ class ListWidget( QtGui.QTableView ):
 	
 	def onProgessUpdate(self, request, done, maximum ):
 		if request.queryType == "delete":
-			descr =  QtCore.QCoreApplication.translate("ListWidget", "Deleting: %s of %s removed.")
+			descr =  QtCore.QCoreApplication.translate("ListTableView", "Deleting: %s of %s removed.")
 		else:
 			raise NotImplementedError()
 		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
@@ -312,3 +311,82 @@ class ListWidget( QtGui.QTableView ):
 		self.model().reload()
 		event.emit( QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.modul, None )
 		self.overlay.inform( self.overlay.SUCCESS )
+
+
+	
+class ListWidget( QtGui.QWidget ):
+	def __init__(self, modul, fields=None, filter=None, actions=None, *args, **kwargs ):
+		super( ListWidget, self ).__init__( *args, **kwargs )
+		self.modul = modul
+		self.ui = Ui_List()
+		self.ui.setupUi( self )
+		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
+		self.ui.tableWidget.setLayout( layout )
+		self.list = ListTableView( self.ui.tableWidget, modul, fields, filter )
+		layout.addWidget( self.list )
+		self.list.show()
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( self.toolBar )
+		if filter is not None and "search" in filter.keys():
+			self.ui.editSearch.setText( filter["search"] )
+		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
+		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
+
+	def setActions( self, actions ):
+		"""
+			Sets the actions avaiable for this widget (ie. its toolBar contents).
+			Setting None removes all existing actions
+			@param actions: List of actionnames
+			@type actions: List or None
+		"""
+		self.toolBar.clear()
+		if not actions:
+			return
+		for action in actions:
+			actionWdg = actionDelegateSelector.select( "list.%s" % self.modul, action )
+			if actionWdg is not None:
+				actionWdg = actionWdg( self )
+				if isinstance( actionWdg, QtGui.QAction ):
+					self.toolBar.addAction( actionWdg )
+				else:
+					self.toolBar.addWidget( actionWdg )
+
+	def on_editSearch_returnPressed(self):
+		self.search()
+
+	def on_searchBTN_released(self):
+		self.search()
+		
+	def search(self):
+		filter = self.list.model().getFilter()
+		searchstr=self.ui.editSearch.text()
+		if searchstr=="" and "search" in filter.keys():
+			del filter["search"]
+		elif searchstr!="":
+			filter["search"]=searchstr
+		self.list.model().setFilter( filter )
+	
+	def openEditor( self, item, clone=False ):
+		"""
+			Open a new Editor-Widget for the given entity.
+			@param item: Entity to open the editor for
+			@type item: Dict
+			@param clone: Clone the given entry?
+			@type clone: Bool
+		"""
+		if clone:
+			icon = QtGui.QIcon("icons/actions/clone.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Clone: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Clone entry")
+		else:
+			icon = QtGui.QIcon("icons/actions/edit.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Edit: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Edit entry")
+		handler = WidgetHandler( lambda: EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone ), descr, icon  )
+		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+

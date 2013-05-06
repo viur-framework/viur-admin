@@ -3,7 +3,6 @@ from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, Overlay, formatString
 from ui.relationalselectionUI import Ui_relationalSelector
-from handler.tree import TreeList
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate

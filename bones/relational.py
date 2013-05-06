@@ -2,9 +2,8 @@
 from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, formatString, Overlay
-from handler.list import ListTableModel
 from ui.relationalselectionUI import Ui_relationalSelector
-from widgets.list import ListWidget, ListTableModel
+from widgets.list import ListWidget
 from widgets.selectedEntities import SelectedEntitiesWidget
 from network import NetworkService
 from config import conf
