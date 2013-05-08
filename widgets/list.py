@@ -93,8 +93,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.isLoading += 1
 		index = self.setIndex
 		filter = self.filter.copy() or {}
-		if not "orderby" in filter.keys():
-			filter["orderby"] = "creationdate"
 		if self.cursor:
 			filter["cursor"] = self.cursor
 		elif self.dataCache:
