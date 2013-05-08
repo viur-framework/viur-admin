@@ -266,12 +266,12 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 	
 	def search(self):
 		searchstr=self.ui.editSearch.text()
-		filter = self.model().getFilter()
+		filter = self.list.model().getFilter()
 		if searchstr=="" and "search" in filter.keys():
 			del filter["search"]
 		elif searchstr!="":
 			filter["search"]= searchstr
-		self.model().setFilter( filter )
+		self.list.model().setFilter( filter )
 
 class RelationalHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
