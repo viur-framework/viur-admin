@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from network import NetworkService
 from event import event
 import time
@@ -8,8 +8,8 @@ from utils import RegisterQueue, Overlay, formatString, loadIcon
 from config import conf
 from mainwindow import WidgetHandler
 from widgets.list import ListWidget
-
 from priorityqueue import protocolWrapperInstanceSelector
+
 
 class PredefinedViewHandler( WidgetHandler ): #EntryHandler
 	"""Holds one view for this modul (preconfigured from Server)"""

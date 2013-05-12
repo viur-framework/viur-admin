@@ -15,9 +15,9 @@ import http.cookiejar
 import base64
 from queue import Queue, Empty as QEmpty, Full as QFull
 from hashlib import sha1
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import QUrl, QVariant, QObject
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
+from PySide import QtCore, QtGui
+from PySide.QtCore import QUrl, QObject
+from PySide.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 import traceback
 import logging
 import weakref
@@ -127,19 +127,23 @@ securityTokenProvider = SecurityTokenProvider()
 
 class RequestWrapper( QtCore.QObject ):
 	GarbargeTypeName = "RequestWrapper"
-	
+	requestSucceeded = QtCore.Signal( QtCore.QObject )
+	finished = QtCore.Signal( QtCore.QObject )
+
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
 		super( RequestWrapper, self ).__init__()
+
 		self.logger = logging.getLogger( "RequestWrapper" )
 		self.logger.debug("New network request: %s", str(self) )
 		self.request = request
 		self.requestStatus = None #None => In progress, True => Succeeded, QNetworkError => Failure
 		if successHandler and "__self__" in dir( successHandler ):
-			successHandler.__self__.connect( self, QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), successHandler )
+			print("connecting ", successHandler )
+			self.requestSucceeded.connect( successHandler )
 		if failureHandler and "__self__" in dir( failureHandler ):
 			failureHandler.__self__.connect( self, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), failureHandler )
 		if finishedHandler and "__self__" in dir( finishedHandler ):
-			finishedHandler.__self__.connect( self, QtCore.SIGNAL("finished(PyQt_PyObject)"), finishedHandler )
+			self.finished.connect( finishedHandler )
 		self.connect( request, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onDownloadProgress )
 		self.connect( request, QtCore.SIGNAL("uploadProgress(qint64,qint64)"), self.onUploadProgress )
 		self.connect( request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.onError )
@@ -164,15 +168,19 @@ class RequestWrapper( QtCore.QObject ):
 	
 	def onFinished(self ):
 		if self.requestStatus==True:
-			self.emit( QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), self )
+			self.requestSucceeded.emit( self )
+			#self.emit( QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), self )
 		elif self.requestStatus==None: #We neither got a up/download-progress nor an error first :/
-			self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), QNetworkReply.ProtocolUnknownError )
-			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, QNetworkReply.ProtocolUnknownError )
+			pass
+			#self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), QNetworkReply.ProtocolUnknownError )
+			#self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, QNetworkReply.ProtocolUnknownError )
 		else: 
-			self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.requestStatus )
-			self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
-		self.emit( QtCore.SIGNAL("finished()") )
-		self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
+			pass
+			#self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.requestStatus )
+			#self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
+		#self.emit( QtCore.SIGNAL("finished()") )
+		#self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
+		self.finished.emit( self )
 		self.logger.debug("Request finished: %s", str(self) )
 		NetworkService.currentRequests.remove( self )
 		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
@@ -418,7 +426,7 @@ class NetworkService():
 	
 	@staticmethod
 	def decode( req ):
-		return( json.loads( bytes( req.readAll() ).decode("UTF-8") ) )
+		return( json.loads( req.readAll().data().decode("UTF-8") ) )
 	
 	@staticmethod
 	def setup( url, *args, **kwargs ):

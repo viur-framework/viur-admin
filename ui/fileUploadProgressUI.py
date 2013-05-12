@@ -1,52 +1,47 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\fileUploadProgress.ui'
+# Form implementation generated from reading ui file 'fileUploadProgress.ui'
 #
-# Created: Mon Nov 26 19:34:48 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Sat May 11 13:49:31 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from PySide import QtCore, QtGui
 
 class Ui_FileUploadProgress(object):
     def setupUi(self, FileUploadProgress):
-        FileUploadProgress.setObjectName(_fromUtf8("FileUploadProgress"))
+        FileUploadProgress.setObjectName("FileUploadProgress")
         FileUploadProgress.resize(400, 300)
         self.horizontalLayout = QtGui.QHBoxLayout(FileUploadProgress)
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtGui.QFormLayout()
-        self.formLayout.setObjectName(_fromUtf8("formLayout"))
+        self.formLayout.setObjectName("formLayout")
         self.label = QtGui.QLabel(FileUploadProgress)
-        self.label.setObjectName(_fromUtf8("label"))
+        self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.pbarTotal = QtGui.QProgressBar(FileUploadProgress)
         self.pbarTotal.setProperty("value", 24)
-        self.pbarTotal.setObjectName(_fromUtf8("pbarTotal"))
+        self.pbarTotal.setObjectName("pbarTotal")
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.pbarTotal)
         self.label_2 = QtGui.QLabel(FileUploadProgress)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
         self.pbarFile = QtGui.QProgressBar(FileUploadProgress)
         self.pbarFile.setProperty("value", 24)
-        self.pbarFile.setObjectName(_fromUtf8("pbarFile"))
+        self.pbarFile.setObjectName("pbarFile")
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.pbarFile)
         self.verticalLayout.addLayout(self.formLayout)
         self.lblProgress = QtGui.QLabel(FileUploadProgress)
-        self.lblProgress.setObjectName(_fromUtf8("lblProgress"))
+        self.lblProgress.setObjectName("lblProgress")
         self.verticalLayout.addWidget(self.lblProgress)
         self.horizontalLayout.addLayout(self.verticalLayout)
         spacerItem = QtGui.QSpacerItem(124, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.btnCancel = QtGui.QPushButton(FileUploadProgress)
-        self.btnCancel.setObjectName(_fromUtf8("btnCancel"))
+        self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout.addWidget(self.btnCancel)
 
         self.retranslateUi(FileUploadProgress)
@@ -58,14 +53,4 @@ class Ui_FileUploadProgress(object):
         self.label_2.setText(QtGui.QApplication.translate("FileUploadProgress", "ProgressFile", None, QtGui.QApplication.UnicodeUTF8))
         self.lblProgress.setText(QtGui.QApplication.translate("FileUploadProgress", "Progress", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("FileUploadProgress", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    FileUploadProgress = QtGui.QWidget()
-    ui = Ui_FileUploadProgress()
-    ui.setupUi(FileUploadProgress)
-    FileUploadProgress.show()
-    sys.exit(app.exec_())
 

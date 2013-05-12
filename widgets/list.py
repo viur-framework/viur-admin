@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event

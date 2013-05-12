@@ -1,46 +1,41 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\fileDownloadProgress.ui'
+# Form implementation generated from reading ui file 'fileDownloadProgress.ui'
 #
-# Created: Mon Nov 26 19:34:48 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Sat May 11 13:49:20 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from PySide import QtCore, QtGui
 
 class Ui_FileDownloadProgress(object):
     def setupUi(self, FileDownloadProgress):
-        FileDownloadProgress.setObjectName(_fromUtf8("FileDownloadProgress"))
+        FileDownloadProgress.setObjectName("FileDownloadProgress")
         FileDownloadProgress.resize(400, 300)
         self.horizontalLayout = QtGui.QHBoxLayout(FileDownloadProgress)
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.ExpandingFieldsGrow)
-        self.formLayout.setObjectName(_fromUtf8("formLayout"))
+        self.formLayout.setObjectName("formLayout")
         self.label = QtGui.QLabel(FileDownloadProgress)
-        self.label.setObjectName(_fromUtf8("label"))
+        self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
         self.pbarTotal = QtGui.QProgressBar(FileDownloadProgress)
         self.pbarTotal.setProperty("value", 24)
-        self.pbarTotal.setObjectName(_fromUtf8("pbarTotal"))
+        self.pbarTotal.setObjectName("pbarTotal")
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.pbarTotal)
         self.verticalLayout.addLayout(self.formLayout)
         self.lblProgress = QtGui.QLabel(FileDownloadProgress)
-        self.lblProgress.setObjectName(_fromUtf8("lblProgress"))
+        self.lblProgress.setObjectName("lblProgress")
         self.verticalLayout.addWidget(self.lblProgress)
         self.horizontalLayout.addLayout(self.verticalLayout)
         spacerItem = QtGui.QSpacerItem(124, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.btnCancel = QtGui.QPushButton(FileDownloadProgress)
-        self.btnCancel.setObjectName(_fromUtf8("btnCancel"))
+        self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout.addWidget(self.btnCancel)
 
         self.retranslateUi(FileDownloadProgress)
@@ -51,14 +46,4 @@ class Ui_FileDownloadProgress(object):
         self.label.setText(QtGui.QApplication.translate("FileDownloadProgress", "ProgressTotal", None, QtGui.QApplication.UnicodeUTF8))
         self.lblProgress.setText(QtGui.QApplication.translate("FileDownloadProgress", "Progress", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("FileDownloadProgress", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    FileDownloadProgress = QtGui.QWidget()
-    ui = Ui_FileDownloadProgress()
-    ui.setupUi(FileDownloadProgress)
-    FileDownloadProgress.show()
-    sys.exit(app.exec_())
 

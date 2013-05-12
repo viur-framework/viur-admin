@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui, QtWebKit, Qsci
-from PyQt4.Qsci import QsciScintilla, QsciLexerHTML
+from PySide import QtCore, QtGui, QtWebKit
+#from PySide.Qsci import QsciScintilla, QsciLexerHTML
 import sys
 from event import event
 from utils import RegisterQueue
 from ui.texteditUI import Ui_textEditWindow
-from ui.rawtexteditUI import Ui_rawTextEditWindow
+#from ui.rawtexteditUI import Ui_rawTextEditWindow
 import html.parser
 from ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs

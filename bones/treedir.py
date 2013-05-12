@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector

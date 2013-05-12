@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PySide import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
 import time, os
@@ -10,7 +10,7 @@ import startpages
 from network import NetworkService, RemoteFile
 from priorityqueue import protocolWrapperClassSelector
 
-class BaseHandler( QtGui.QTreeWidgetItem ):
+class BaseHandler(  ):
 	
 	def focus( self ):
 		"""
@@ -22,33 +22,29 @@ class BaseHandler( QtGui.QTreeWidgetItem ):
 	def close( self ):
 		pass
 	
-	def clicked( self ):
-		"""
-		Called whenever the user selects the handler from the treeWidget.
-		"""
-		self.focus()
-		
-	def contextMenu( self ):
-		"""
-		Currently unused
-		"""
-		pass
+
 
 	def getBreadCrumb(self):
 		return( self.text(0), self.icon(0) )
 
-class WidgetHandler( BaseHandler ):
+class WidgetHandler( QtGui.QTreeWidgetItem ):
 	""" 
 	Holds the items displayed top-left within the admin.
 	Each of these provides access to one modul and holds the references
 	to the widgets shown inside L{MainWindow.ui.stackedWidget}
 	"""
-	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, *args, **kwargs ):
+	mainWindow = None
+	
+	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, *args, **kwargs ):
 		"""
 		@type modul: string
 		@param modul: Name of the modul handled
 		"""
 		super( WidgetHandler, self ).__init__( *args, **kwargs )
+		if mainWindow:
+			self.mainWindow = mainWindow
+		if self.mainWindow is None:
+			raise UnboundLocalError("You either have to create the mainwindow before using this class or specifiy an replacement.")
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		self.setText(0, descr)
@@ -108,6 +104,18 @@ class WidgetHandler( BaseHandler ):
 			except:
 				continue
 		return( self.text(0), self.icon(0) )
+
+	def clicked( self ):
+		"""
+		Called whenever the user selects the handler from the treeWidget.
+		"""
+		self.focus()
+		
+	def contextMenu( self ):
+		"""
+		Currently unused
+		"""
+		pass
 	
 class GroupHandler( BaseHandler ):
 	"""
@@ -130,16 +138,18 @@ class MainWindow( QtGui.QMainWindow ):
 		self.ui.treeWidget.setColumnWidth(0,269)
 		self.ui.treeWidget.setColumnWidth(1,25)
 		event.connectWithPriority( QtCore.SIGNAL('loginSucceeded()'), self.setup, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler, event.lowestPriority )
-		event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
-		event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler, event.lowestPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler, event.lowestPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self.stackWidget, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self.popWidget, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
+		#event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
+		WidgetHandler.mainWindow = self
+		self.ui.treeWidget.itemClicked.connect( self.on_treeWidget_itemClicked )
 		self.handlerStack = []
 		self.currentWidget = None
 		self.helpBrowser = None
@@ -368,17 +378,6 @@ class MainWindow( QtGui.QMainWindow ):
 		event.emit( QtCore.SIGNAL('mainWindowInitialized()') )
 		QtGui.QApplication.restoreOverrideCursor()
 
-	def on_modulsList_itemClicked (self, item):
-		"""
-		Forwards the clicked-event to the selected handler
-		"""
-		if item and "clicked" in dir( item ):
-			item.clicked()
-
-	def on_modulsList_itemDoubleClicked( self, item ):
-		"""Called if the user selects an Item from the ModuleTree"""
-		if item and "doubleClicked" in dir( item ):
-			item.doubleClicked()
 
 	def statusMessage(self, type, message):
 		"""

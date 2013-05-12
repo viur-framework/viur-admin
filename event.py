@@ -1,4 +1,4 @@
-from PyQt4 import QtCore
+from PySide import QtCore
 import weakref
 import logging
 
@@ -52,9 +52,9 @@ class EventDispatcher(  QtCore.QObject ):
 		"""
 		if not signal in EventDispatcher.eventMap.keys():
 			EventDispatcher.eventMap[ signal ] = {	"high": [], 
-									"normal": [], 
-									"low": []
-									}
+								"normal": [], 
+								"low": []
+								}
 		obj = EventWrapper( signal, func )
 		if priority == self.highestPriority: #Put this one first
 			EventDispatcher.eventMap[ signal ][ "high" ].insert(0, obj)
@@ -68,7 +68,7 @@ class EventDispatcher(  QtCore.QObject ):
 			EventDispatcher.eventMap[ signal ][ "low" ].append( obj )
 
 	def emit(self, signal, *args ):
-		super( EventDispatcher, self ).emit( signal, *args )
+		#super( EventDispatcher, self ).emit( signal, *args )
 		if signal in EventDispatcher.eventMap.keys():
 			try:
 				for e in EventDispatcher.eventMap[ signal ]["high"]:

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from bones.base import BaseViewBoneDelegate
 from config import conf

@@ -17,7 +17,7 @@ class ListWrapper( QtCore.QObject ):
 		self.modul = modul
 		self.dataCache = {}
 		self.structure = None
-		NetworkService.request( "/%s/list?amount=1" % self.modul, successHandler=self.onStructureAvaiable )
+		NetworkService.request( "/%s/edit/0" % self.modul, successHandler=self.onStructureAvaiable )
 		print("Initializing ListWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []

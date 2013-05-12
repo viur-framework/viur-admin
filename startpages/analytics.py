@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import urllib, urllib.request, urllib.error, urllib.parse
 from urllib.parse import quote_plus
 import sys, os, time

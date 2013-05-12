@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from event import event
 from utils import RegisterQueue
 from network import RemoteFile

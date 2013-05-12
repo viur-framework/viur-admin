@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 from config import conf
 
 """
