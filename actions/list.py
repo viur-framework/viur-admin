@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event
@@ -11,17 +11,19 @@ from config import conf
 class ListAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Add entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
-	def onTriggered( self, e ):
+	def onTriggered( self, e=None ):
 		if self.parentWidget().list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.parentWidget().list.modul ].keys() :
 			name = conf.serverConfig["modules"][ self.parentWidget().list.modul ]["name"]
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
 		handler = WidgetHandler( lambda: EditWidget( self.parentWidget().list.modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add_small.png") )
-		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+		handler.stackHandler()
+		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

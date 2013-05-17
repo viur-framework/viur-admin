@@ -97,7 +97,7 @@ class LoginTask( QtCore.QObject ):
 		except ValueError:
 			self.onError( msg = "Unable to decode response!" )
 			return
-		event.emit( QtCore.SIGNAL("loginSucceeded()") )
+		event.emit( "loginSucceeded()" )
 
 	def onGoogleAuthSuccess( self, request ):
 		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
@@ -158,8 +158,9 @@ class Login( QtGui.QMainWindow ):
 		self.helpBrowser = None
 		self.connect( event, QtCore.SIGNAL('resetLoginWindow()'), self.enableForm )
 		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
-		self.connect( event, QtCore.SIGNAL('loginSucceeded()'), self.closeWindow )
 		self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
+		self.ui.cbPortal.currentIndexChanged.connect( self.on_cbPortal_currentIndexChanged )
+		event.connectWithPriority( "loginSucceeded()", self.onLoginSucceeded, event.highPriority )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
 		self.captchaToken = None
@@ -208,7 +209,9 @@ class Login( QtGui.QMainWindow ):
 		self.ui.editPassword.setText(activeaccount["password"])
 		self.ui.editUrl.setText(activeaccount["url"])
 
-	def closeWindow(self):
+	def onLoginSucceeded(self):
+		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
+		conf.loadPortalConfig( NetworkService.url )
 		self.hide()
 
 	def statusMessageUpdate(self, type, message ):
@@ -307,12 +310,7 @@ class Login( QtGui.QMainWindow ):
 			self.loginTask = LoginTask( username, password )
 		self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
 		self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
-		self.connect( event, QtCore.SIGNAL("loginSucceeded()"), self.loginSucceeded )
 
-
-	def loginSucceeded( self ):
-		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
-		conf.loadPortalConfig( NetworkService.url )
 	
 	def enableForm(self, msg=None):
 		if msg:

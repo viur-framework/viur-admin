@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore
+from PySide import QtCore
 from network import NetworkService, RequestGroup
 from time import time
 import weakref
@@ -11,6 +11,7 @@ from collections import OrderedDict
 class ListWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
+	entitiesChanged = QtCore.Signal()
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( ListWrapper, self ).__init__()
@@ -38,6 +39,7 @@ class ListWrapper( QtCore.QObject ):
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
 	def queryData( self, callback, **kwargs ):
+		print( "Querying data")
 		key = self.cacheKeyFromFilter( kwargs )
 		if key in self.dataCache.keys():
 			ctime, data, cursor = self.dataCache[ key ]
@@ -131,7 +133,8 @@ class ListWrapper( QtCore.QObject ):
 			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
 			ctime, data, cursor = v
 			self.dataCache[ k ] = (1, data, cursor )
-		self.emit( QtCore.SIGNAL("entitiesChanged()") )
+		self.entitiesChanged.emit()
+		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 		
 def CheckForListModul( modulName, modulList ):

@@ -78,6 +78,9 @@ class RawTextEdit(QtGui.QMainWindow):
 
 
 class TextEdit(QtGui.QMainWindow):
+	
+	onDataChanged = QtCore.Signal( (object, ) )
+	
 	def __init__(self, text, validHtml, parent=None):
 		super(TextEdit, self).__init__(parent)
 		self.validHtml = validHtml
@@ -112,6 +115,7 @@ class TextEdit(QtGui.QMainWindow):
 		self.ui.textEdit.setHtml( text )
 		#self.saveCallback = saveCallback
 		self.linkEditor = None
+		self.ui.btnSave.released.connect( self.on_btnSave_released )
 		#self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent  # FIXME: !!!
 		#self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData # FIXME: !!!
 		
@@ -267,7 +271,8 @@ class TextEdit(QtGui.QMainWindow):
 			tb.addAction(self.actionTextUnderline)
 
 		if "p" in self.validHtml["validAttrs"].keys() and "align" in self.validHtml["validAttrs"]["p"]:
-			grp = QtGui.QActionGroup(self, triggered=self.textAlign)
+			grp = QtGui.QActionGroup(self)
+			grp.triggered.connect( self.textAlign )
 			# Make sure the alignLeft is always left of the alignRight.
 			if QtGui.QApplication.isLeftToRight():
 				self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
@@ -330,8 +335,9 @@ class TextEdit(QtGui.QMainWindow):
 		html = html[ start : html.rfind("</body>") ]
 		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
 		#self.saveCallback( html )
-		self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), html )
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+		self.onDataChanged.emit( html )
+		#self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), html )
+		event.emit( "popWidget(PyQt_PyObject)", self )
 
 
 	def textBold(self):
@@ -681,8 +687,8 @@ class TextEditBone( QtGui.QWidget ):
 					editor = TextEdit( self.html, self.validHtml )
 				else:
 					editor = RawTextEdit( self.html )
-		self.connect( editor, QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), self.onSave )
-		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), editor )
+		editor.onDataChanged.connect( self.onSave )
+		event.emit( "stackWidget(PyQt_PyObject)", editor )
 
 	def onSave(self, text ):
 		if self.languages:

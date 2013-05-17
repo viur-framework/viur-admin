@@ -104,6 +104,11 @@ class EditWidget( QtGui.QWidget ):
 			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditHandler", "Execute") )
 			self.ui.btnSaveContinue.hide()
 			self.ui.btnReset.hide()
+		self.ui.btnReset.released.connect( self.on_btnReset_released )
+		self.ui.btnSaveContinue.released.connect( self.on_btnSaveContinue_released )
+		self.ui.btnSaveClose.released.connect( self.on_btnSaveClose_released )
+		self.ui.btnPreview.released.connect( self.on_btnPreview_released )
+
 
 	def getBreadCrumb( self ):
 		if self._lastData:
@@ -315,7 +320,7 @@ class EditWidget( QtGui.QWidget ):
 	def unserialize(self, data):
 		for bone in self.bones.values():
 			bone.unserialize( data )
-	
+
 	def on_btnSaveContinue_released(self, *args, **kwargs ):
 		self.closeOnSuccess = False
 		self.overlay.inform( self.overlay.BUSY )

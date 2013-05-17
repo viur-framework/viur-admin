@@ -13,6 +13,9 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 	"""Model for displaying data within a listView"""
 	GarbargeTypeName = "ListTableModel"
 	_chunkSize = 25
+	
+	rebuildDelegates = QtCore.Signal( (object, ) )
+	
 	def __init__(self, modul, fields=None, filter=None, parent=None, *args): 
 		QtCore.QAbstractTableModel.__init__(self, parent, *args) 
 		self.modul = modul
@@ -28,7 +31,8 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
+		protoWrap.entitiesChanged.connect( self.reload )
+		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
 		self.reload()
 
 	def setDisplayedFields(self, fields ):
@@ -121,8 +125,10 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			return
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
+		self.layoutAboutToBeChanged.emit()
+		self.rebuildDelegates.emit( protoWrap.structure )
+		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		#self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
 		#Rebuild our local cache of valid fields
 		bones = {}
 		for key, bone in protoWrap.structure.items():
@@ -133,13 +139,17 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if len(data) < self._chunkSize:
 			self.completeList = True
 		self.cursor = cursor
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
-		self.emit(QtCore.SIGNAL("dataRecived()"))
+		self.layoutChanged.emit()
+		self.dataRecived.emit()
+		#self.emit(QtCore.SIGNAL("layoutChanged()"))
+		#self.emit(QtCore.SIGNAL("dataRecived()"))
 
 	
 	def repaint(self): #Currently an ugly hack to redraw the table
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutAboutToBeChanged.emit()
+		self.layoutChanged.emit()
+		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		#self.emit(QtCore.SIGNAL("layoutChanged()"))
 	
 	def getData(self):
 		return self.dataCache
@@ -168,6 +178,10 @@ class ListTableView( QtGui.QTableView ):
 		
 	"""
 	GarbargeTypeName = "ListTableView"
+	
+	itemClicked = QtCore.Signal( (object,) )
+	itemDoubleClicked = QtCore.Signal( (object,) )
+	itemActivated = QtCore.Signal( (object,) )
 
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
 		super( ListTableView, self ).__init__( parent,  *args, **kwargs )
@@ -182,8 +196,8 @@ class ListTableView( QtGui.QTableView ):
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		self.verticalHeader().hide()
 		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
-		self.connect( model, QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
-		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.realignHeaders )
+		model.rebuildDelegates.connect( self.rebuildDelegates )
+		model.layoutChanged.connect( self.realignHeaders )
 		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
 		self.connect( model, QtCore.SIGNAL("dataRecived()"), self.onDataRecived )
@@ -197,11 +211,12 @@ class ListTableView( QtGui.QTableView ):
 		self.overlay.clear()
 
 	def onItemClicked(self, index ):
-		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		self.itemClicked.emit( self.model().getData()[index.row()] )
 
 	def onItemDoubleClicked(self, index ):
-		self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
-		self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		self.itemDoubleClicked.emit( self.model().getData()[index.row()] )
+		#self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		#self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
 
 	def onListChanged(self, emitter, modul, itemID ):
 		"""
@@ -329,7 +344,8 @@ class ListWidget( QtGui.QWidget ):
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText( filter["search"] )
 		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
-		self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
+		self.list.itemDoubleClicked.connect( self.openEditor )
+		#self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
 
 	def setActions( self, actions ):
 		"""
@@ -385,6 +401,7 @@ class ListWidget( QtGui.QWidget ):
 				descr=QtCore.QCoreApplication.translate("List", "Edit: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
 			else:
 				descr=QtCore.QCoreApplication.translate("List", "Edit entry")
-		handler = WidgetHandler( lambda: EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone ), descr, icon  )
-		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+		handler = WidgetHandler( lambda: EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone ), descr, icon )
+		handler.stackHandler()
+		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 

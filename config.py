@@ -70,6 +70,7 @@ class Config( object ):
 		configFileObject.close()
 		
 	def loadPortalConfig( self, url ):
+		print("------------------ LOADING PORTAL CONFIG -------------_" )
 		self.currentPortalConfigDirectory = os.path.join( self.storagePath, sha512( url.encode("UTF-8") ).hexdigest() )
 		try:
 			if not os.path.isdir( self.currentPortalConfigDirectory ):
