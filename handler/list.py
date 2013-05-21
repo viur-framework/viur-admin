@@ -64,7 +64,7 @@ class ListCoreHandler( WidgetHandler ): #EntryHandler
 class ListHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		event.connectWithPriority( QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler, event.lowPriority )
+		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
 		#self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
 		#self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
 	

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PySide import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService
 from event import event
@@ -13,14 +13,15 @@ from mainwindow import WidgetHandler
 class HierarchyAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
-	def onTriggered( self, e ):
+	def onTriggered( self ):
 		#config = conf.serverConfig["modules"][ self.parent().modul ]
 		widget = lambda: EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, rootNode=self.parent().hierarchy.currentRootNode)
 		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add_small.png") )
-		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+		handler.stackHandler()
+		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
@@ -31,15 +32,16 @@ actionDelegateSelector.insert( 1, HierarchyAddAction.isSuitableFor, HierarchyAdd
 class HierarchyEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( "Return" )
 	
-	def onTriggered( self, e ):
+	def onTriggered( self ):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
-			widget = lambda: EditWidget(parent.modul, EditWidget.appHierarchy, item.data["id"] )
+			widget = lambda: EditWidget(parent.modul, EditWidget.appHierarchy, item.entryData["id"] )
 			handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png")  )
-			event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+			handler.stackHandler()
+			#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
@@ -50,10 +52,10 @@ actionDelegateSelector.insert( 1, HierarchyEditAction.isSuitableFor, HierarchyEd
 class HierarchyDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 	
-	def onTriggered( self, e ):
+	def onTriggered( self ):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
 			#config = conf.serverConfig["modules"][ self.parentWidget().modul ]

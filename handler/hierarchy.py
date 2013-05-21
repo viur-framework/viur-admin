@@ -56,7 +56,8 @@ class HierarchyHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
 		self.connect( event, QtCore.SIGNAL('requestHierarchyListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestHierarchyListActions )
-		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		#self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
 
 	def requestHierarchyListActions(self, queue, modul, parent ):
 		config = conf.serverConfig["modules"][ modul ]

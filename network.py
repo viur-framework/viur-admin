@@ -127,8 +127,11 @@ securityTokenProvider = SecurityTokenProvider()
 
 class RequestWrapper( QtCore.QObject ):
 	GarbargeTypeName = "RequestWrapper"
-	requestSucceeded = QtCore.Signal( QtCore.QObject )
-	finished = QtCore.Signal( QtCore.QObject )
+	requestSucceeded = QtCore.Signal( (QtCore.QObject,) )
+	requestFailed = QtCore.Signal( (QtCore.QObject,) )
+	finished = QtCore.Signal( (QtCore.QObject,) )
+	uploadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
+	downloadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
 
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
 		super( RequestWrapper, self ).__init__()
@@ -153,15 +156,17 @@ class RequestWrapper( QtCore.QObject ):
 	def onDownloadProgress(self, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
 			self.requestStatus = True
-		self.emit( QtCore.SIGNAL("downloadProgress(qint64,qint64)"),  bytesReceived, bytesTotal )
-		self.emit( QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesReceived, bytesTotal )
+		self.downloadProgress.emit( self, bytesReceived, bytesTotal )
+		#self.emit( QtCore.SIGNAL("downloadProgress(qint64,qint64)"),  bytesReceived, bytesTotal )
+		#self.emit( QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesReceived, bytesTotal )
 	
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
 		if bytesSend == bytesTotal:
 			self.requestStatus = True
-		self.emit( QtCore.SIGNAL("uploadProgress(qint64,qint64)"),  bytesSend, bytesTotal )
-		self.emit( QtCore.SIGNAL("uploadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesSend, bytesTotal )
+		self.uploadProgress.emit( self, bytesSend, bytesTotal )
+		#self.emit( QtCore.SIGNAL("uploadProgress(qint64,qint64)"),  bytesSend, bytesTotal )
+		#self.emit( QtCore.SIGNAL("uploadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesSend, bytesTotal )
 
 	def onError(self, error):
 		self.requestStatus = error
@@ -201,6 +206,10 @@ class RequestGroup( QtCore.QObject ):
 		easy checking if there are more queries pending.
 	"""
 	GarbargeTypeName = "RequestGroup"
+	requestsSucceeded = QtCore.Signal( (QtCore.QObject,) )
+	requestFailed = QtCore.Signal( (QtCore.QObject,) ) #FIXME.....What makes sense here?
+	finished = QtCore.Signal( (QtCore.QObject,) )
+	progessUpdate = QtCore.Signal( (QtCore.QObject,int,int) )
 	
 	def __init__(self, successHandler=None, failureHandler=None, finishedHandler=None, *args, **kwargs ):
 		super( RequestGroup, self ).__init__(*args, **kwargs)
@@ -209,6 +218,7 @@ class RequestGroup( QtCore.QObject ):
 		self.failureHandler = failureHandler
 		self.finishedHandler = finishedHandler
 		self.maxQueryCount = 0
+		self.hadErrors = False
 		NetworkService.currentRequests.append( self )
 
 	def addQuery( self, query ):
@@ -217,19 +227,24 @@ class RequestGroup( QtCore.QObject ):
 		"""
 		self.maxQueryCount += 1
 		self.querys.append( query )
-		self.connect( query, QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self.onProgress )
-		self.connect( query, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self.onError )
-		self.connect( query, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onFinished )
+		query.downloadProgress.connect( self.onProgress )
+		query.requestFailed.connect( self.onError )
+		query.finished.connect( self.onFinished )
+		#self.connect( query, QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self.onProgress )
+		#self.connect( query, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self.onError )
+		#self.connect( query, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onFinished )
 	
 	def onProgress(self, request, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
 			if self.successHandler:
 				self.successHandler( self, request )
-			self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
+			self.progessUpdate.emit( self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
+			#self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 	
 	def onError(self, request, error):
 		if self.failureHandler:
 			self.failureHandler( self, request, error )
+		#self.requestFailed.emit( self )
 		self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 	
 	def onFinished(self, queryWrapper ):

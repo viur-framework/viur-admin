@@ -41,7 +41,7 @@ class TreeHandler( QtCore.QObject ):
 		All parameters are passed to QObject.__init__
 		"""
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
 
 	
 	def requestModulHandler(self, queue, modul ):

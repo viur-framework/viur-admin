@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui, QtNetwork
+from PySide import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
@@ -95,14 +95,17 @@ class TreeDeleteAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		dirs = []
 		files = []
-		for item in self.parent().tree.selectedItems():
+		for item in self.parent().selectedItems():
 			if isinstance( item, DirItem ):
 				dirs.append( item.dirName )
 			else:
-				files.append( item.data )
+				files.append( item.entryData )
 		if not files and not dirs:
 			return
-		self.parent().tree.delete( self.parent().tree.currentRootNode, self.parent().tree.getPath(), [ x["name"] for x in files], dirs )
+		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
+		assert reqWrap is not None
+		reqWrap.delete( self.parent().currentRootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
+		#self.parent().delete( self.parent().currentRootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

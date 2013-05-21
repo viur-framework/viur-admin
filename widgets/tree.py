@@ -24,16 +24,22 @@ class DirItem(QtGui.QListWidgetItem):
 		self.dirName = dirName
 	
 	def __gt__( self, other ):
-		if isinstance( other, TreeItem ):
-			return( False )
-		else:
-			return( super( DirItem, self ).__gt__( other ) )
-
-	def __lt__( self, other ):
+		print( "gtDIR: %s %s" % (str(self),str(other)))
 		if isinstance( other, TreeItem ):
 			return( True )
+		elif isinstance( other, DirItem ):
+			return( self.dirName > other.dirName )
 		else:
-			return( super( DirItem, self ).__lt__( other ) )
+			return( str( self ) > str( other ) )
+
+	def __lt__( self, other ):
+		print( "ltDIR: %s %s" % (str(self),str(other)))
+		if isinstance( other, TreeItem ):
+			return( False )
+		elif isinstance( other, DirItem ):
+			return( self.dirName < other.dirName )
+		else:
+			return( str( self ) < str( other ) )
 
 class TreeItem(QtGui.QListWidgetItem):
 	"""
@@ -46,19 +52,25 @@ class TreeItem(QtGui.QListWidgetItem):
 		else:
 			name = " - "
 		super( TreeItem, self ).__init__( QtGui.QIcon("icons/filetypes/unknown.png"), str( name ) )
-		self.data = data
+		self.entryData = data
 
 	def __gt__( self, other ):
-		if isinstance( other, DirItem ):
-			return( True )
-		else:
-			return( super( TreeItem, self ).__gt__( other ) )
-
-	def __lt__( self, other ):
+		print( "gt: %s %s" % (str(self),str(other)))
 		if isinstance( other, DirItem ):
 			return( False )
+		elif isinstance( other, TreeItem ):
+			return( self.entryData["name"] > other.entryData["name"] )
 		else:
-			return( super( TreeItem, self ).__lt__( other ) )
+			return( str( self ) > str( other ) )
+
+	def __lt__( self, other ):
+		print( "lt: %s %s" % (str(self),str(other)))
+		if isinstance( other, DirItem ):
+			return( True )
+		elif isinstance( other, TreeItem ):
+			return( self.entryData["name"] < other.entryData["name"] )
+		else:
+			return( str( self ) < str( other ) )
 
 class TreeWidget( QtGui.QWidget ):
 	"""
@@ -117,7 +129,9 @@ class TreeWidget( QtGui.QWidget ):
 		self.clipboard = None  #(str repo,str path, bool doMove, list files, list dirs )
 		self.startDrag = False
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onTreeChanged )
+		assert protoWrap is not None
+		protoWrap.entitiesChanged.connect( self.onTreeChanged )
+		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onTreeChanged )
 		if protoWrap.rootNodes:
 			self.setRootNode( protoWrap.rootNodes[0]["key"], protoWrap.rootNodes[0]["name"] )
 		#self.connect( event, QtCore.SIGNAL("treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onTreeChanged )
@@ -253,12 +267,14 @@ class TreeWidget( QtGui.QWidget ):
 		self.ui.listWidget.reset()
 
 	def dragMoveEvent( self, event ):
+		print("xy2")
 		event.accept()
 
 	def dragEnterEvent(self, event ):
 		"""
 			Allow Drag&Drop inside this widget (ie. moving files to subdirs)
 		"""
+		print("xy1")
 		if event.source() == self:
 			event.accept()
 			dirs = []
@@ -271,6 +287,7 @@ class TreeWidget( QtGui.QWidget ):
 			self.clipboard = (self.currentRootNode, self.getPath(), True, files, dirs )
 
 	def dropEvent(self, event):
+		print("xy3")
 		if event.source() == self:
 			item = self.ui.listWidget.itemAt( event.pos() )
 			if isinstance( item, self.dirItem ) and self.clipboard:

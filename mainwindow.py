@@ -365,7 +365,7 @@ class MainWindow( QtGui.QMainWindow ):
 			conf.portal["modules"] = {}
 		for modul, cfg in data["modules"].items():
 			queue = RegisterQueue()
-			event.emit( QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'),queue, modul )
+			event.emit( 'requestModulHandler',queue, modul )
 			handler = queue.getBest()()
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None

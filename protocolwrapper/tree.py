@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore
+from PySide import QtCore
 from network import NetworkService, RequestGroup
 from time import time
 import weakref
@@ -13,6 +13,7 @@ class TreeWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	protocolWrapperInstancePriority = 1
+	entitiesChanged = QtCore.Signal()
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( TreeWrapper, self ).__init__()
@@ -245,12 +246,13 @@ class TreeWrapper( QtCore.QObject ):
 			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
 			ctime, data, cursor = v
 			self.dataCache[ k ] = (1, data, cursor )
-		self.emit( QtCore.SIGNAL("entitiesChanged()") )
+		self.entitiesChanged.emit()
+		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 		
 def CheckForTreeModul( modulName, modulList ):
 	modulData = modulList[ modulName ]
-	if "handler" in modulData.keys() and modulData["handler"].startswith("tree."):
+	if "handler" in modulData.keys() and ( modulData["handler"]=="tree" or modulData["handler"].startswith("tree.")):
 		return( True )
 	return( False )
 	

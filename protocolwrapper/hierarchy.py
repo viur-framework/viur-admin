@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore
+from PySide import QtCore
 from network import NetworkService, RequestGroup
 from time import time
 import weakref
@@ -12,6 +12,7 @@ from collections import OrderedDict
 class HierarchyWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
+	entitiesChanged = QtCore.Signal()
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( HierarchyWrapper, self ).__init__()
@@ -169,7 +170,8 @@ class HierarchyWrapper( QtCore.QObject ):
 			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
 			ctime, data, cursor = v
 			self.dataCache[ k ] = (1, data, cursor )
-		self.emit( QtCore.SIGNAL("entitiesChanged()") )
+		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
+		self.entitiesChanged.emit()
 
 		
 def CheckForHierarchyModul( modulName, modulList ):

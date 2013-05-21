@@ -47,7 +47,7 @@ class FileItem( TreeItem ):
 		return( "/file/view/%s/%s" % (self.data["dlkey"],self.data["name"]))
 		
 
-class RecursiveUploader( QtGui.QWidget ): #OBSOLETE!!
+class UploadStatusWidget( QtGui.QWidget ): 
 	"""
 		Upload files and/or directories from the the local filesystem to the server.
 		This one is recursive, it supports uploading of files in subdirectories as well.
@@ -57,7 +57,7 @@ class RecursiveUploader( QtGui.QWidget ): #OBSOLETE!!
 	"""
 	
 	directorySize = 15 #Letz count an directory as 15 Bytes
-	def __init__(self, files, rootNode, path, modul, *args, **kwargs ):
+	def __init__(self, uploader, *args, **kwargs ):
 		"""
 			@param files: List of local files or directories (including thier absolute path) which will be uploaded. 
 			@type files: List
@@ -68,130 +68,22 @@ class RecursiveUploader( QtGui.QWidget ): #OBSOLETE!!
 			@param modul: Modulname to upload to (usually "file")
 			@type modul: String
 		"""
-		super( RecursiveUploader, self ).__init__( *args, **kwargs )
+		super( UploadStatusWidget, self ).__init__( *args, **kwargs )
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi( self )
-		self.rootNode = rootNode
-		self.modul = modul
-		self.recursionInfo = [ ( [x for x in files if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ] , path, {}) ]
-		self.request = None
-		self.cancel = False
-		self.currentFileSize = 0
-		self.statsTotal = {	"bytes": 0, 
-						"files": 0, 
-						"dirs": 0 }
-		self.statsDone = {	"bytes": 0, 
-						"files": 0, 
-						"dirs": 0 }
-		for file in files:
-			self.addTotalStat( file )
-		self.ui.pbarTotal.setRange(0, self.statsTotal["bytes"])
-		self.doUploadRecursive()
+		self.uploader = uploader
+		self.uploader.uploadProgress.connect( self.onUploadProgress )
+		self.uploader.finished.connect( self.onFinished )
 	
 	def on_btnCancel_released(self, *args, **kwargs ):
 		self.cancel = True
 		if self.request:
 			self.request.abort()
 	
-	def addTotalStat( self, file ):
-		if os.path.isdir( file.encode(sys.getfilesystemencoding() ) ):
-			self.statsTotal["dirs"] += 1
-			self.statsTotal["bytes"] += self.directorySize
-			for file in [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/")]:
-				self.addTotalStat( file )
-		else:
-			self.statsTotal["bytes"] += os.stat( file.encode(sys.getfilesystemencoding() ) ).st_size
-			self.statsTotal["files"] += 1
-		
-
-	def addCacheInformation(self):
-		if not self.cancel:
-			files, path, cache = self.recursionInfo[ -1 ]
-			if not path.endswith( "/" ):
-				path += "/"
-			cache[ path ] = NetworkService.decode( self.request )
-		self.doUploadRecursive()
-	
-	def doUploadRecursive( self, data=None ):
-		"""
-			Uploads a list of Files/Dirs to the Server
-			Should only be called by doUpload to prevent raceconditions in which an
-			Subdirectory may be uploaded before its parent Direcotry has been created.
-		"""
-		self.statsDone["bytes"] += self.currentFileSize
-		self.currentFileSize = 0
-		self.updateStats()
-		if self.cancel or len( self.recursionInfo ) == 0:
-			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-			if self.request:
-				self.request = None
-			return
-		files, path, cache = self.recursionInfo[ -1 ]
-		if not path.endswith( "/" ):
-			path += "/"
-		if self.request:
-			self.request = None
-		#Upload the next file / create&process the next subdir
-		if len(files)>0:
-			file = files[0]
-		else: #Were done with this level
-			self.recursionInfo.pop() #Remove the last level
-			self.doUploadRecursive()
-			return
-		#Fetch the corresponding directoryentry
-		if not path in cache.keys():
-			self.request = NetworkService.request("/file/list", {"rootNode":self.rootNode, "path":path })
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.addCacheInformation )
-			return
-		data = cache[ path ]
-		if os.path.isdir( file.encode(sys.getfilesystemencoding() ) ):
-			#Check if the Directory exists on the server
-			dirname = file.rstrip("/").split("/")[-1]
-			if not dirname in data["subdirs"]:
-				msg = QtCore.QCoreApplication.translate("FileHandler", "Creating dir %s in %s") % ( dirname, path )
-				self.statsDone["dirs"] += 1
-				self.currentFileSize = self.directorySize
-				self.request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode": self.rootNode, "path":path, "dirname":dirname} )
-				self.connect( self.request, QtCore.SIGNAL("finished()"), self.doUploadRecursive )
-				del cache[ path ]
-				return
-			else:
-				files.pop(0) #Were done with this element
-				self.recursionInfo.append( ( [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/") if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ], path+dirname, {}  ) )
-				self.doUploadRecursive()
-				return
-		else: #Looks like a file
-			if file[ file.rfind("/")+1: ] in [ x["name"] for x in data["entrys"]]: #Filename already exists
-				tmp = self.askOverwriteFile(	QtCore.QCoreApplication.translate("FileHandler", "Please confirm"), 
-										QtCore.QCoreApplication.translate("FileHandler", "File %s exists in %s. Overwrite?") % (file[ file.rfind("/")+1: ], path) )
-				if tmp is None: #Dont overwrite
-					files.pop(0) #Were done with this element
-					self.doUploadRecursive()
-					return
-				elif tmp is False: #Abort
-					self.cancel = True
-					self.doUploadRecursive()
-					return
-			self.currentFileSize = os.stat( file.encode(sys.getfilesystemencoding() ) ).st_size
-			self.statsDone["files"] += 1
-			self.request = FileUploader( file, path, self.rootNode )
-			self.connect( self.request, QtCore.SIGNAL("uploadProgress (qint64,qint64)"), self.onUploadProgress )
-			self.connect( self.request, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.doUploadRecursive )
-			self.connect( self.request, QtCore.SIGNAL("failed()"), self.onFailed )
-			files.pop(0) #Were done with this element
-
-	def onFailed( self, *args, **kwargs ):
-		self.emit( QtCore.SIGNAL("failed(PyQt_PyObject)"), self )
-		if self.request:
-			self.request = None
-		return
-
-	def updateStats(self):
-		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( self.statsDone["files"], self.statsTotal["files"], self.statsDone["dirs"], self.statsTotal["dirs"], self.statsDone["bytes"], self.statsTotal["bytes"]) )
-		self.ui.pbarTotal.setValue(self.statsDone["bytes"])
-		self.ui.pbarFile.setValue( 0 )
-	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
+		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( self.uploader.statsDone["files"], self.uploader.statsTotal["files"], self.uploader.statsDone["dirs"], self.uploader.statsTotal["dirs"], self.uploader.statsDone["bytes"], self.uploader.statsTotal["bytes"]) )
+		self.ui.pbarTotal.setRange( 0, self.uploader.statsTotal["bytes"] )
+		self.ui.pbarTotal.setValue(self.uploader.statsDone["bytes"])
 		self.ui.pbarFile.setRange( 0, bytesTotal )
 		self.ui.pbarFile.setValue( bytesSend )
 		
@@ -202,6 +94,9 @@ class RecursiveUploader( QtGui.QWidget ): #OBSOLETE!!
 		elif res == QtGui.QMessageBox.Cancel:
 			return( False )
 		return( None )
+	
+	def onFinished( self, req ):
+		self.deleteLater()
 
 class RecursiveDownloader( QtGui.QWidget ):  #OBSOLETE!!
 	"""
@@ -291,6 +186,7 @@ class FileWidget( TreeWidget ):
 	def __init__( self, *args, **kwargs ):
 		super( FileWidget, self ).__init__( *args, **kwargs )
 		self.startDrag = False
+		self.setAcceptDrops( True )
 
 	def onTransferFinished(self, task):
 		self.flushCache( task.rootNode )
@@ -313,10 +209,14 @@ class FileWidget( TreeWidget ):
 			@param path: Path (server-side) relative to the given RootNode
 			@type path: String
 		"""
+		print("upl")
 		if not files:
+			print("err1")
 			return
+		print("doupl")
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		protoWrap.upload( files, rootNode, path )
+		uploader = protoWrap.upload( files, rootNode, path )
+		self.layout().addWidget( UploadStatusWidget( uploader ) )
 		#uploader = RecursiveUploader( files, rootNode, path, self.modul )
 		#self.ui.boxUpload.addWidget( uploader )
 		#self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
@@ -344,15 +244,21 @@ class FileWidget( TreeWidget ):
 		#self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 
 	def dropEvent(self, event):
+		print("p1")
 		if ( all( [ str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or ( len(str(file.toLocalFile()))>0 and str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
+			print("aa11")
 			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.currentRootNode, self.getPath() )
 		else:
+			print("aa22")
 			super( FileWidget, self ).dropEvent( event )
 
 	def dragEnterEvent( self, event ):
+		print("p2")
 		if ( all( [ file.toLocalFile() and (str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
+			print("x2222")
 			event.accept()
 		else:
+			print("y2222")
 			super( FileWidget, self ).dragEnterEvent( event )
 
 	def on_listWidget_customContextMenuRequested(self, point ):
