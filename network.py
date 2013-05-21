@@ -21,6 +21,7 @@ from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfigur
 import traceback
 import logging
 import weakref
+from event import event
 
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
@@ -60,12 +61,13 @@ class SecurityTokenProvider( QObject ):
 		self.logger = logging.getLogger( "RequestWrapper" )
 		self.queue = Queue( 5 ) #Queue of valid tokens
 		self.isRequesting = False
+		event.connectWithPriority( QtCore.SIGNAL("loginSucceeded()"), self.reset, event.lowPriority )
 	
 	def reset(self):
 		"""
 			Flushes the cache and tries to rebuild it
 		"""
-		self.logger.debug("Reset" )
+		self.logger.debug("Reset: SKey-Cache" )
 		while not self.queue.empty():
 			self.queue.get( False )
 		self.req = NetworkService.request("/skey" )
@@ -91,20 +93,20 @@ class SecurityTokenProvider( QObject ):
 		"""
 			New SKey got avaiable
 		"""
-		self.isRequesting = False
 		if SecurityTokenProvider.errorCount>0:
 			SecurityTokenProvider.errorCount = 0
 		try:
 			skey = NetworkService.decode( request )
 		except:
 			skey = None
-		self.isRequesting = False
 		if not skey:
+			self.isRequesting = False
 			return
 		try:
 			self.queue.put( skey, False )
 		except QFull:
 			print( "Err: Queue FULL" )
+		self.isRequesting = False
 	
 	def getKey(self):
 		"""
