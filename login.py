@@ -101,7 +101,7 @@ class LoginTask( QtCore.QObject ):
 
 	def onGoogleAuthSuccess( self, request ):
 		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
-		res = bytes( request.readAll() ).decode("UTF-8")
+		res = bytes( request.readAll().data() ).decode("UTF-8")
 		authToken=None
 		for line in res.splitlines():
 			if line.lower().startswith("auth="):

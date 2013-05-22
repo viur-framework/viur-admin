@@ -107,7 +107,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		"""
 		#Well, seems to affect us, refresh our view
 		#First, save all expanded items
-		print("p4")
 		self.expandList = []
 		it = QtGui.QTreeWidgetItemIterator( self )
 		while( it.value() ):
@@ -127,7 +126,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			@param repoName: Displayed name of the rootNode (currently unused)
 			@param repoName: String or None
 		"""
-		print("p14")
 		self.currentRootNode = rootNode
 		self.clear()
 		self.loadData()
@@ -137,14 +135,12 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			An item has just been expanded.
 			Check, if we allready have information about the elements beneath, otherwhise load them.
 		"""
-		print("p3")
 		if not item.loaded:
 			while( item.takeChild(0) ):
 				pass
 			self.loadData( item.entryData["id"] )
 
 	def onRootNodesAvaiable(self, rootNodes ):
-		print("p12")
 		self.rootNodes = rootNodes
 		if not self.currentRootNode:
 			try:
@@ -154,14 +150,12 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			self.loadData()
 	
 	def onLoadError(self, request, error ):
-		print("p11")
 		self.overlay.inform( self.overlay.ERROR, str(error) )
 	
 	def onRequestSucceeded(self, request):
 		"""
 			We modified something on the server, and that request succeded
 		"""
-		print("p10")
 		event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.currentRootNode, None )
 		self.loadData()
 		
@@ -175,7 +169,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 	def setData(self, queryKey, data, cursor ):
 		#if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
 		#	return
-		print("p9")
 		if len( data ):
 			if data[0]["parententry"] == self.currentRootNode:
 				self.clear()
@@ -195,7 +188,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		"""
 			New data got avaiable - insert it into the corresponding locations.
 		"""
-		print("p5")
 		if not fromChildren:
 			idx = 0
 			item = self.topLevelItem( idx )
@@ -223,7 +215,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		""""
 			Add URL-Mimedata to the dragevent, so it can be dropped outside.
 		"""
-		print("p2")
 		if event.source() == self:
 			mimeData = event.mimeData()
 			urls = []
@@ -237,7 +228,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			An Item has been moved inside our HierarchyWidget,
 			Move it to the correct location on the server.
 		"""
-		print("p1")
 		try:
 			dragedItem =  self.selectedItems()[0]
 		except:
@@ -289,21 +279,18 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 					currChild = self.topLevelItem( childIndex )
 
 	def reparent(self, itemKey, destParent):
-		print("p6")
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.reparent( itemKey, destParent )
 		self.overlay.inform( self.overlay.BUSY )
 
 	def updateSortIndex(self, itemKey, newIndex):
-		print("p7")
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.updateSortIndex( itemKey, newIndex )
 		self.overlay.inform( self.overlay.BUSY )
 
 	def delete( self, id ):
-		print("p8")
 		"""
 			Delete the entity with the given id
 		"""
@@ -354,7 +341,6 @@ class HierarchyWidget( QtGui.QWidget ):
 			@param actions: List of actionnames
 			@type actions: List or None
 		"""
-		print("x1")
 		self.toolBar.clear()
 		if not actions:
 			return
@@ -371,7 +357,6 @@ class HierarchyWidget( QtGui.QWidget ):
 		"""
 			A item has been selected. If we have a previewURL -> show it
 		"""
-		print("x2")
 		config = conf.serverConfig["modules"][ self.modul ]
 		if "previewURL" in config.keys():
 			previewURL = config["previewURL"].replace("{{id}}",item["id"])
@@ -383,18 +368,15 @@ class HierarchyWidget( QtGui.QWidget ):
 		"""
 			Open a editor for this entry.
 		"""
-		print("x3")
 		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
 		handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
 		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 	def loadPreview( self, url ):
-		print("x4")
 		self.request = NetworkService.request( url )
 		self.connect(self.request, QtCore.SIGNAL("finished()"), self.setHTML )
 	
 	def setHTML( self ):
-		print("x5")
 		try: #This request might got canceled meanwhile..
 			html = bytes( self.request.readAll() )
 		except:

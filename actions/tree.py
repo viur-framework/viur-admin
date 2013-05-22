@@ -26,7 +26,7 @@ class TreeAddAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.") and actionName=="add") )
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="add")
 		
 actionDelegateSelector.insert( 1, TreeAddAction.isSuitableFor, TreeAddAction )
 
@@ -34,21 +34,21 @@ class TreeEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-	
+
 	def onTriggered( self, e ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
 		entries = []
-		for item in self.parent().tree.selectedItems():
+		for item in self.parent().selectedItems():
 			if not isinstance( item, DirItem ):
-				entries.append( item.data )
+				entries.append( item.entryData )
 		for entry in entries:
-			widget = lambda: EditWidget(self.parent().tree.modul, EditWidget.appTree, entry["id"], rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
+			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], rootNode=self.parent().currentRootNode, path=self.parent().getPath() )
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
-			event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+			handler.stackHandler()
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.") and actionName=="edit") )
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="edit")
 		
 actionDelegateSelector.insert( 1, TreeEditAction.isSuitableFor, TreeEditAction )
 
@@ -58,12 +58,12 @@ class TreeDirUpAction( QtGui.QAction ):
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
 	def onTriggered( self, e ):
-		self.parent().tree.path = self.parent().tree.path[ : -1 ]
-		self.parent().tree.loadData()
+		self.parent().path = self.parent().path[ : -1 ]
+		self.parent().loadData()
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.") and actionName=="dirup") )
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="dirup")
 		
 actionDelegateSelector.insert( 1, TreeDirUpAction.isSuitableFor, TreeDirUpAction )
 
@@ -81,7 +81,7 @@ class TreeMkDirAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.") and actionName=="mkdir") )
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="mkdir")
 		
 actionDelegateSelector.insert( 1, TreeMkDirAction.isSuitableFor, TreeMkDirAction )
 
@@ -109,6 +109,6 @@ class TreeDeleteAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.") and actionName=="delete") )
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="delete")
 		
 actionDelegateSelector.insert( 1, TreeDeleteAction.isSuitableFor, TreeDeleteAction )

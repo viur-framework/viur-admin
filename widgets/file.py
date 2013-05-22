@@ -74,11 +74,10 @@ class UploadStatusWidget( QtGui.QWidget ):
 		self.uploader = uploader
 		self.uploader.uploadProgress.connect( self.onUploadProgress )
 		self.uploader.finished.connect( self.onFinished )
+		self.ui.btnCancel.released.connect( self.onBtnCancelReleased )
 	
-	def on_btnCancel_released(self, *args, **kwargs ):
-		self.cancel = True
-		if self.request:
-			self.request.abort()
+	def onBtnCancelReleased(self, *args, **kwargs ):
+		self.uploader.cancelUpload()
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
 		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( self.uploader.statsDone["files"], self.uploader.statsTotal["files"], self.uploader.statsDone["dirs"], self.uploader.statsTotal["dirs"], self.uploader.statsDone["bytes"], self.uploader.statsTotal["bytes"]) )
@@ -98,7 +97,7 @@ class UploadStatusWidget( QtGui.QWidget ):
 	def onFinished( self, req ):
 		self.deleteLater()
 
-class RecursiveDownloader( QtGui.QWidget ):  #OBSOLETE!!
+class DownloadStatusWidget( QtGui.QWidget ): 
 	"""
 		Download files and/or directories from the server into the local filesystem.
 		The functionality is bound to a widget displaying the current progress.
@@ -106,7 +105,7 @@ class RecursiveDownloader( QtGui.QWidget ):  #OBSOLETE!!
 	"""
 	
 	directorySize = 15 #Letz count an directory as 15 Bytes
-	def __init__(self, localTargetDir, rootNode, path, files, dirs, modul, *args, **kwargs ):
+	def __init__(self, downloader, *args, **kwargs ):
 		"""
 			@param localTargetDir: Local, existing and absolute destination-path
 			@type localTargetDir: String
@@ -121,62 +120,20 @@ class RecursiveDownloader( QtGui.QWidget ):  #OBSOLETE!!
 			@param modul: Modulname to download from (usually "file")
 			@type modul: String
 		"""
-		super( RecursiveDownloader, self ).__init__( *args, **kwargs )
+		super( DownloadStatusWidget, self ).__init__( *args, **kwargs )
 		self.ui = Ui_FileDownloadProgress()
 		self.ui.setupUi( self )
-		self.localTargetDir = localTargetDir
-		self.rootNode = rootNode
-		self.modul = modul
-		self.recursionInfo = [ (files, dirs, path, localTargetDir) ]
-		self.request = None
-		self.cancel = False
-		self.doDownloadRecursive()
+		self.downloader = downloader
+		self.downloader.downloadProgress.connect( self.onDownloadProgress )
+		self.downloader.finished.connect( self.onFinished )
+		#self.ui.btnCancel.released.connect( self.onBtnCancelReleased )
 	
-	
-	def doDownloadRecursive( self ):
-		if self.cancel or len( self.recursionInfo ) == 0:
-			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-			if self.request:
-				self.request = None
-			return
-		files, dirs,  path, localTargetDir = self.recursionInfo[ -1 ]
-		if not os.path.exists( localTargetDir ):
-			os.mkdir( localTargetDir )
-		if len( files ) > 0:
-			file = files.pop()
-			self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Downloading: %s") % file["name"] )
-			self.ui.pbarTotal.setValue( 0 )
-			dlkey = "/file/view/%s/file.dat" % file["dlkey"]
-			self.request = NetworkService.request( dlkey )
-			self.connect( self.request, QtCore.SIGNAL("downloadProgress (qint64,qint64)"), self.onDownloadProgress )
-			self.lastFileInfo = file["name"],localTargetDir
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.saveFile  )
-		elif len( dirs ) > 0:
-			dir = dirs.pop()
-			self.request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)} )
-			self.lastDirInfo = path, localTargetDir, dir
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.onDirList  )
-		else: # Were done with this recursion
-			self.recursionInfo.pop()
-			self.doDownloadRecursive()
-
-	
-	def onDirList( self ):
-		oldPath, oldTargetDir, dirName = self.lastDirInfo
-		data = NetworkService.decode( self.request )
-		self.recursionInfo.append( (data["entrys"], data["subdirs"], "%s/%s" % (oldPath, dirName), os.path.join(oldTargetDir, dirName) ) )
-		self.doDownloadRecursive()
-	
-	def saveFile( self ):
-		name, targetDir = self.lastFileInfo
-		fh = open( os.path.join( targetDir, name), "wb+" )
-		fh.write( self.request.readAll() )
-		self.doDownloadRecursive()
-
 	def onDownloadProgress(self, bytesDone, bytesTotal ):
 		self.ui.pbarTotal.setRange( 0, bytesTotal )
 		self.ui.pbarTotal.setValue( bytesDone )
 
+	def onFinished( self, req ):
+		self.deleteLater()
 
 class FileWidget( TreeWidget ):
 	"""
@@ -184,9 +141,10 @@ class FileWidget( TreeWidget ):
 	"""
 	
 	def __init__( self, *args, **kwargs ):
-		super( FileWidget, self ).__init__( *args, **kwargs )
+		super( FileWidget, self ).__init__( actions=["dirup", "upload", "download","edit","delete"], *args, **kwargs )
 		self.startDrag = False
 		self.setAcceptDrops( True )
+		
 
 	def onTransferFinished(self, task):
 		self.flushCache( task.rootNode )
@@ -209,11 +167,8 @@ class FileWidget( TreeWidget ):
 			@param path: Path (server-side) relative to the given RootNode
 			@type path: String
 		"""
-		print("upl")
 		if not files:
-			print("err1")
 			return
-		print("doupl")
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		uploader = protoWrap.upload( files, rootNode, path )
 		self.layout().addWidget( UploadStatusWidget( uploader ) )
@@ -237,28 +192,22 @@ class FileWidget( TreeWidget ):
 			@type dirs: List
 		"""
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		protoWrap.download( targetDir, currentRootNode, path, files, dirs )
-		
+		downloader = protoWrap.download( targetDir, currentRootNode, path, files, dirs )
+		self.layout().addWidget( DownloadStatusWidget( downloader ) )
 		#downloader = RecursiveDownloader( targetDir, self.currentRootNode, path, files, dirs, self.modul )
 		#self.ui.boxUpload.addWidget( downloader )
 		#self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 
 	def dropEvent(self, event):
-		print("p1")
 		if ( all( [ str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or ( len(str(file.toLocalFile()))>0 and str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
-			print("aa11")
 			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.currentRootNode, self.getPath() )
 		else:
-			print("aa22")
 			super( FileWidget, self ).dropEvent( event )
 
 	def dragEnterEvent( self, event ):
-		print("p2")
 		if ( all( [ file.toLocalFile() and (str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
-			print("x2222")
 			event.accept()
 		else:
-			print("y2222")
 			super( FileWidget, self ).dragEnterEvent( event )
 
 	def on_listWidget_customContextMenuRequested(self, point ):

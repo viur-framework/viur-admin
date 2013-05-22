@@ -25,7 +25,7 @@ class HierarchyAddAction( QtGui.QAction ):
 	
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "hierarchy" or modul.startswith("hierarchy.") and actionName=="add") )
+		return( (modul == "hierarchy" or modul.startswith("hierarchy.")) and actionName=="add")
 
 actionDelegateSelector.insert( 1, HierarchyAddAction.isSuitableFor, HierarchyAddAction )
 
@@ -45,7 +45,7 @@ class HierarchyEditAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "hierarchy" or modul.startswith("hierarchy.") and actionName=="edit") )
+		return( (modul == "hierarchy" or modul.startswith("hierarchy.")) and actionName=="edit")
 
 actionDelegateSelector.insert( 1, HierarchyEditAction.isSuitableFor, HierarchyEditAction )
 
@@ -73,6 +73,6 @@ class HierarchyDeleteAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "hierarchy" or modul.startswith("hierarchy.") and actionName=="delete") )
+		return( (modul == "hierarchy" or modul.startswith("hierarchy.")) and actionName=="delete")
 
 actionDelegateSelector.insert( 1, HierarchyDeleteAction.isSuitableFor, HierarchyDeleteAction )

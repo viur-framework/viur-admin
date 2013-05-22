@@ -6,6 +6,8 @@ from event import event
 import utils
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from ui.treeUI import Ui_Tree
+from mainwindow import WidgetHandler
+from widgets.edit import EditWidget
 
 class IndexItem (QtGui.QListWidgetItem):
 	"""
@@ -24,7 +26,6 @@ class DirItem(QtGui.QListWidgetItem):
 		self.dirName = dirName
 	
 	def __gt__( self, other ):
-		print( "gtDIR: %s %s" % (str(self),str(other)))
 		if isinstance( other, TreeItem ):
 			return( True )
 		elif isinstance( other, DirItem ):
@@ -33,7 +34,6 @@ class DirItem(QtGui.QListWidgetItem):
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		print( "ltDIR: %s %s" % (str(self),str(other)))
 		if isinstance( other, TreeItem ):
 			return( False )
 		elif isinstance( other, DirItem ):
@@ -55,7 +55,6 @@ class TreeItem(QtGui.QListWidgetItem):
 		self.entryData = data
 
 	def __gt__( self, other ):
-		print( "gt: %s %s" % (str(self),str(other)))
 		if isinstance( other, DirItem ):
 			return( False )
 		elif isinstance( other, TreeItem ):
@@ -64,7 +63,6 @@ class TreeItem(QtGui.QListWidgetItem):
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		print( "lt: %s %s" % (str(self),str(other)))
 		if isinstance( other, DirItem ):
 			return( True )
 		elif isinstance( other, TreeItem ):
@@ -110,6 +108,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		self.dirItem = dirItem or DirItem
 		self.treeItem = treeItem or TreeItem
+		self.editOnDoubleClick = True
 		#self.ui.listWidget.dropEvent = self.dropEvent
 		#self.ui.listWidget.dragEnterEvent = self.dragEnterEvent
 		#self.ui.listWidget.dragMoveEvent = self.dragMoveEvent
@@ -139,7 +138,10 @@ class TreeWidget( QtGui.QWidget ):
 		self.toolBar = QtGui.QToolBar( self )
 		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
 		self.ui.boxActions.addWidget( self.toolBar )
-		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
+		self.setActions( actions if actions is not None else ["dirup","add","edit","clone","preview","delete"] )
+		self.ui.listWidget.itemDoubleClicked.connect( self.listWidgetItemDoubleClicked )
+		self.ui.pathlist.itemClicked.connect( self.pathListItemClicked )
+		self.ui.listWidget.internalDrag( QtCore.Qt.MoveAction )
 		#self.connect( self.tree, QtCore.SIGNAL("itemDoubleClicked(PyQt_PyObject)"), self.on_listWidget_itemDoubleClicked)
 
 	def on_btnSearch_released(self, *args, **kwargs):
@@ -148,12 +150,14 @@ class TreeWidget( QtGui.QWidget ):
 	def on_editSearch_returnPressed(self):
 		self.search( self.ui.editSearch.text() )
 		
-	def on_listWidget_itemDoubleClicked(self, item ):
-		if( isinstance( item, self.tree.treeItem ) ):
+	def listWidgetItemDoubleClicked(self, item ):
+		if( isinstance( item, self.treeItem ) ) and self.editOnDoubleClick:
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			handler = WidgetHandler( lambda: EditWidget(self.tree.modul, EditWidget.appTree, item.data["id"]), descr )
-			event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
-
+			handler = WidgetHandler( lambda: EditWidget(self.modul, EditWidget.appTree, item.entryData["id"]), descr )
+			handler.stackHandler()
+		elif( isinstance( item, DirItem ) ):
+			self.path.append( item.dirName )
+			self.loadData()
 
 	def setActions( self, actions ):
 		"""
@@ -267,14 +271,13 @@ class TreeWidget( QtGui.QWidget ):
 		self.ui.listWidget.reset()
 
 	def dragMoveEvent( self, event ):
-		print("xy2")
 		event.accept()
 
 	def dragEnterEvent(self, event ):
 		"""
 			Allow Drag&Drop inside this widget (ie. moving files to subdirs)
 		"""
-		print("xy1")
+		print("----------------------------")
 		if event.source() == self:
 			event.accept()
 			dirs = []
@@ -287,7 +290,6 @@ class TreeWidget( QtGui.QWidget ):
 			self.clipboard = (self.currentRootNode, self.getPath(), True, files, dirs )
 
 	def dropEvent(self, event):
-		print("xy3")
 		if event.source() == self:
 			item = self.ui.listWidget.itemAt( event.pos() )
 			if isinstance( item, self.dirItem ) and self.clipboard:
@@ -353,24 +355,7 @@ class TreeWidget( QtGui.QWidget ):
 			self.loadData()
 
 	def loadData( self, queryObj=None ):
-		#if queryObj and "flushList" in dir( queryObj ):
-		#	while 1:
-		#		try:
-		#			task = queryObj.flushList.pop()
-		#		except IndexError:
-		#			break
-		#		task()
 		path = self.getPath()
-		#if not self.currentRootNode in TreeWidget.cache.keys():
-		#	TreeWidget.cache[ self.currentRootNode ] = {}
-		#if path in TreeWidget.cache[ self.currentRootNode ].keys() and not queryObj: # We have this Cached
-		#	self.updatePathList()
-		#	self.setData( data=TreeWidget.cache[ self.currentRootNode ][ path ] )
-		
-		#if 1:#else: # We need to fetch this
-		#	self.overlay.inform( self.overlay.BUSY )
-		#	self.updatePathList()
-		#	NetworkService.request("/%s/list" % self.modul, queryObj or {"rootNode":self.currentRootNode, "path":path}, successHandler=self.setData )
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		self.loadingKey = protoWrap.queryData( self.setData, self.currentRootNode, self.path )
 	
@@ -379,7 +364,7 @@ class TreeWidget( QtGui.QWidget ):
 		homeicon = "icons/menu/home_small.png"
 		pathlist = self.ui.pathlist
 		pathlist.clear()
-		homeitem= IndexItem(0,homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home") )
+		homeitem= IndexItem( 0, homeicon, QtCore.QCoreApplication.translate("TreeWidget", "Home") )
 		pathlist.addItem(homeitem)
 		if self.getPath()==None:
 			return
@@ -389,7 +374,7 @@ class TreeWidget( QtGui.QWidget ):
 			pathlist.addItem(aitem)
 			counter+=1
 
-	def on_pathlist_itemClicked (self,clickeditem):
+	def pathListItemClicked (self,clickeditem):
 		if self.getPath()==None:
 			self.path = []
 		else:
@@ -399,9 +384,6 @@ class TreeWidget( QtGui.QWidget ):
 	def setData( self, queryKey, data, cursor ):
 		if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
 			return
-		# event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modul, self ) FIXME: ??
-		#if self.getPath()!=None:
-		#	TreeWidget.cache[ self.currentRootNode ][ self.getPath() ] = data
 		self.ui.listWidget.clear()
 		for dir in data["subdirs"]:
 			self.ui.listWidget.addItem( self.dirItem( dir ) )
@@ -436,13 +418,6 @@ class TreeWidget( QtGui.QWidget ):
 		"""
 			We modified something on the server, and that request succeded
 		"""
-		#if "flushList" in dir(request):
-		#	while 1:
-		#		try:
-		#			task = request.flushList.pop()
-		#		except IndexError:
-		#			break
-		#		task()
 		event.emit( QtCore.SIGNAL('treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.currentRootNode, None )
 		self.loadData()
 
@@ -531,15 +506,7 @@ class TreeWidget( QtGui.QWidget ):
 		"""
 		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), item.data )
 
-	def on_listWidget_itemDoubleClicked(self, item ):
-		try:
-			self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), item )
-		except StopIteration:
-			return
-		if( isinstance( item, DirItem ) ):
-			self.path.append( item.dirName )
-			self.loadData()
-			
+
 	def on_listWidget_customContextMenuRequested(self, point ):
 		menu = QtGui.QMenu( self )
 		if self.ui.listWidget.itemAt(point):

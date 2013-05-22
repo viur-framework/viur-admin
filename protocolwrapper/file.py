@@ -113,9 +113,8 @@ class RecursiveUploader( QtCore.QObject ):
 			self.addTotalStat( file )
 		#self.ui.pbarTotal.setRange(0, self.statsTotal["bytes"])
 		self.doUploadRecursive()
-		print("h1")
 	
-	def on_btnCancel_released(self, *args, **kwargs ):
+	def cancelUpload(self, *args, **kwargs ):
 		self.cancel = True
 		if self.request:
 			self.request.abort()
@@ -145,7 +144,6 @@ class RecursiveUploader( QtCore.QObject ):
 			Should only be called by doUpload to prevent raceconditions in which an
 			Subdirectory may be uploaded before its parent Direcotry has been created.
 		"""
-		print("h2")
 		self.statsDone["bytes"] += self.currentFileSize
 		self.currentFileSize = 0
 		self.updateStats()
@@ -245,6 +243,10 @@ class RecursiveDownloader( QtCore.QObject ):
 	"""
 	
 	directorySize = 15 #Letz count an directory as 15 Bytes
+	finished = QtCore.Signal( QtCore.QObject )
+	failed = QtCore.Signal( QtCore.QObject )
+	downloadProgress = QtCore.Signal( (int,int) )
+
 	def __init__(self, localTargetDir, rootNode, path, files, dirs, modul, *args, **kwargs ):
 		"""
 			@param localTargetDir: Local, existing and absolute destination-path
@@ -265,16 +267,13 @@ class RecursiveDownloader( QtCore.QObject ):
 		self.rootNode = rootNode
 		self.modul = modul
 		self.recursionInfo = [ (files, dirs, path, localTargetDir) ]
-		self.request = None
 		self.cancel = False
 		self.doDownloadRecursive()
 	
 	
 	def doDownloadRecursive( self ):
 		if self.cancel or len( self.recursionInfo ) == 0:
-			self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-			if self.request:
-				self.request = None
+			self.finished.emit( self )
 			return
 		files, dirs,  path, localTargetDir = self.recursionInfo[ -1 ]
 		if not os.path.exists( localTargetDir ):
@@ -282,34 +281,34 @@ class RecursiveDownloader( QtCore.QObject ):
 		if len( files ) > 0:
 			file = files.pop()
 			dlkey = "/file/view/%s/file.dat" % file["dlkey"]
-			self.request = NetworkService.request( dlkey )
-			self.connect( self.request, QtCore.SIGNAL("downloadProgress (qint64,qint64)"), self.onDownloadProgress )
 			self.lastFileInfo = file["name"],localTargetDir
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.saveFile  )
+			request = NetworkService.request( dlkey )
+			request.downloadProgress.connect( self.onDownloadProgress )
+			request.finished.connect( self.saveFile )
 		elif len( dirs ) > 0:
 			dir = dirs.pop()
-			self.request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)} )
 			self.lastDirInfo = path, localTargetDir, dir
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.onDirList  )
+			request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)} )
+			request.finished.connect( self.onDirList )
 		else: # Were done with this recursion
 			self.recursionInfo.pop()
 			self.doDownloadRecursive()
 
 	
-	def onDirList( self ):
+	def onDirList( self, req ):
 		oldPath, oldTargetDir, dirName = self.lastDirInfo
-		data = NetworkService.decode( self.request )
+		data = NetworkService.decode( req )
 		self.recursionInfo.append( (data["entrys"], data["subdirs"], "%s/%s" % (oldPath, dirName), os.path.join(oldTargetDir, dirName) ) )
 		self.doDownloadRecursive()
 	
-	def saveFile( self ):
+	def saveFile( self, req ):
 		name, targetDir = self.lastFileInfo
 		fh = open( os.path.join( targetDir, name), "wb+" )
-		fh.write( self.request.readAll() )
+		fh.write( req.readAll().data() )
 		self.doDownloadRecursive()
 
 	def onDownloadProgress(self, bytesDone, bytesTotal ):
-		return
+		self.downloadProgress.emit( bytesDone, bytesTotal )
 		#self.ui.pbarTotal.setRange( 0, bytesTotal )
 		#self.ui.pbarTotal.setValue( bytesDone )
 

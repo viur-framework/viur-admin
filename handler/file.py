@@ -13,41 +13,6 @@ from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
 from mainwindow import WidgetHandler
 from utils import RegisterQueue, loadIcon
-import gc
-
-
-class FileUploadAction( QtGui.QAction ): 
-	def __init__(self, parent, *args, **kwargs ):
-		super( FileUploadAction, self ).__init__(  QtGui.QIcon("icons/actions/upload_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Upload files"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( QtGui.QKeySequence.New )
-	
-	def onTriggered( self, e ):
-		files = QtGui.QFileDialog.getOpenFileNames()
-		self.parent().tree.doUpload( files, self.parent().tree.currentRootNode, self.parent().tree.getPath() )
-
-
-class FileDownloadAction( QtGui.QAction ): 
-	def __init__(self, parent, *args, **kwargs ):
-		super( FileDownloadAction, self ).__init__(  QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Download files"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
-		self.setShortcut( QtGui.QKeySequence.Save )
-	
-	def onTriggered( self, e ):
-		dirs = []
-		files = []
-		for item in self.parent().tree.selectedItems():
-			if isinstance( item, DirItem ):
-				dirs.append( item.dirName )
-			else:
-				files.append( item.data )
-		if not files and not dirs:
-			return
-		targetDir = QtGui.QFileDialog.getExistingDirectory( self.parentWidget() )
-		if not targetDir:
-			return
-		self.parent().tree.download( targetDir, self.parent().tree.currentRootNode, self.parent().tree.getPath(), files, dirs )
-
 
 class FileRepoHandler( WidgetHandler ):
 	def __init__( self, modul, repo, *args, **kwargs ):
