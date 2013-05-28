@@ -99,6 +99,7 @@ class RecursiveUploader( QtCore.QObject ):
 		super( RecursiveUploader, self ).__init__( *args, **kwargs )
 		self.rootNode = rootNode
 		self.modul = modul
+		path = "/".join( path ) if path else "/"
 		self.recursionInfo = [ ( [x for x in files if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ] , path, {}) ]
 		self.request = None
 		self.cancel = False
@@ -282,13 +283,13 @@ class RecursiveDownloader( QtCore.QObject ):
 			file = files.pop()
 			dlkey = "/file/view/%s/file.dat" % file["dlkey"]
 			self.lastFileInfo = file["name"],localTargetDir
-			request = NetworkService.request( dlkey )
+			request = NetworkService.request( dlkey, parent=self )
 			request.downloadProgress.connect( self.onDownloadProgress )
 			request.finished.connect( self.saveFile )
 		elif len( dirs ) > 0:
 			dir = dirs.pop()
 			self.lastDirInfo = path, localTargetDir, dir
-			request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)} )
+			request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)}, parent=self )
 			request.finished.connect( self.onDirList )
 		else: # Were done with this recursion
 			self.recursionInfo.pop()

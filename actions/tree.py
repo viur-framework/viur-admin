@@ -20,7 +20,7 @@ class TreeAddAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
-		widget = lambda: EditWidget(self.parent().tree.modul, EditWidget.appTree, 0, rootNode=self.parent().tree.currentRootNode, path=self.parent().tree.getPath())
+		widget = lambda: EditWidget(self.parent().tree.modul, EditWidget.appTree, 0, rootNode=self.parent().tree.rootNode, path=self.parent().tree.getPath())
 		handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/add_small.png") )
 		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
@@ -33,7 +33,14 @@ actionDelegateSelector.insert( 1, TreeAddAction.isSuitableFor, TreeAddAction )
 class TreeEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
+		self.parent().currentItemChanged.connect( self.onCurrentItemChanged )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+
+	def onCurrentItemChanged( self, current, previous ):
+		if not isinstance( current, self.parent().getTreeItemClass() ): #Its a directory, we cant edit that
+			self.setEnabled( False )
+		else:
+			self.setEnabled( True )
 
 	def onTriggered( self, e ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
@@ -42,7 +49,7 @@ class TreeEditAction( QtGui.QAction ):
 			if not isinstance( item, DirItem ):
 				entries.append( item.entryData )
 		for entry in entries:
-			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], rootNode=self.parent().currentRootNode, path=self.parent().getPath() )
+			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], rootNode=self.parent().rootNode, path=self.parent().getPath() )
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
 			handler.stackHandler()
 
@@ -55,10 +62,16 @@ actionDelegateSelector.insert( 1, TreeEditAction.isSuitableFor, TreeEditAction )
 class TreeDirUpAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDirUpAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_back_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent )
+		self.parent().pathChanged.connect( self.onPathChanged )
+		if not self.parent().getPath():
+			self.setEnabled( False )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
+	def onPathChanged( self, path ):
+		self.setEnabled( path!=[] )
+	
 	def onTriggered( self, e ):
-		self.parent().path = self.parent().path[ : -1 ]
+		self.parent().setPath( self.parent().getPath()[ : -1 ], isInitialCall=True )
 		self.parent().loadData()
 
 	@staticmethod
@@ -77,7 +90,9 @@ class TreeMkDirAction( QtGui.QAction ):
 	def onTriggered( self, e ):
 		(dirName, okay) = QtGui.QInputDialog.getText( self.parent(), QtCore.QCoreApplication.translate("TreeHandler", "Create directory"), QtCore.QCoreApplication.translate("TreeHandler", "Directory name") )
 		if dirName and okay:
-			self.parent().tree.mkdir( self.parent().tree.currentRootNode, self.parent().tree.getPath(), dirName )
+			reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
+			assert reqWrap is not None
+			reqWrap.mkdir( self.parent().tree.rootNode, self.parent().tree.getPath(), dirName )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
@@ -104,8 +119,8 @@ class TreeDeleteAction( QtGui.QAction ):
 			return
 		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
 		assert reqWrap is not None
-		reqWrap.delete( self.parent().currentRootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
-		#self.parent().delete( self.parent().currentRootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
+		reqWrap.delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
+		#self.parent().delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

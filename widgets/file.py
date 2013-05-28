@@ -5,7 +5,7 @@ from PySide import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService, RemoteFile, RequestGroup
 from event import event
-from widgets.tree import TreeWidget, TreeItem
+from widgets.tree import TreeWidget, TreeItem, TreeListView
 from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
 import os, sys
@@ -19,8 +19,8 @@ class FileItem( TreeItem ):
 	"""
 	def __init__( self, data ):
 		super( FileItem, self ).__init__( data )
-		self.data = data
-		extension=self.data["name"].split(".")[-1].lower()
+		self.entryData = data
+		extension=self.entryData["name"].split(".")[-1].lower()
 		if os.path.isfile("icons/filetypes/%s.png"%(extension)):
 			icon = QtGui.QIcon("icons/filetypes/%s.png"%(extension))
 		else:
@@ -32,19 +32,19 @@ class FileItem( TreeItem ):
 		pixmap = QtGui.QPixmap()
 		pixmap.loadFromData( remoteFile.getFileContents() )
 		if( pixmap.isNull() ):
-			extension=self.data["name"].split(".")[-1].upper()
+			extension=self.entryData["name"].split(".")[-1].upper()
 			if os.path.isfile("icons/filetypes/%s.png"%(extension)):
 				icon = QtGui.QIcon("icons/filetypes/%s.png"%(extension))
 			else:
 				icon = QtGui.QIcon("icons/filetypes/unknown.png")
 		else:
-			icon = QtGui.QIcon( pixmap.scaled( 128,128 ) )
+			icon = QtGui.QIcon( pixmap.scaled( 64,64 ) )
 		self.setIcon( icon )
-		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( remoteFile.getFileName(), str( self.data["name"] ) ) )
+		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( remoteFile.getFileName(), str( self.entryData["name"] ) ) )
 
 	
 	def toURL( self ):
-		return( "/file/view/%s/%s" % (self.data["dlkey"],self.data["name"]))
+		return( "/file/view/%s/%s" % (self.entryData["dlkey"],self.entryData["name"]))
 		
 
 class UploadStatusWidget( QtGui.QWidget ): 
@@ -135,28 +135,10 @@ class DownloadStatusWidget( QtGui.QWidget ):
 	def onFinished( self, req ):
 		self.deleteLater()
 
-class FileWidget( TreeWidget ):
-	"""
-		Extension for TreeWidget to handle the specialities of files like Up&Downloading.
-	"""
+class FileListView( TreeListView ):
 	
-	def __init__( self, *args, **kwargs ):
-		super( FileWidget, self ).__init__( actions=["dirup", "upload", "download","edit","delete"], *args, **kwargs )
-		self.startDrag = False
-		self.setAcceptDrops( True )
-		
-
-	def onTransferFinished(self, task):
-		self.flushCache( task.rootNode )
-		self.loadData()
-		task.deleteLater()
+	treeItem = FileItem
 	
-	def onTransferFailed(self, task):
-		QtGui.QMessageBox.information( self, QtCore.QCoreApplication.translate("FileHandler", "Error during upload") , QtCore.QCoreApplication.translate("FileHandler", "There was an error uploading your files")  )
-		self.flushCache( task.rootNode )
-		self.loadData()
-		task.deleteLater()
-
 	def doUpload(self, files, rootNode, path ):
 		"""
 			Uploads a list of files to the Server and adds them to the given path on the server.
@@ -169,15 +151,15 @@ class FileWidget( TreeWidget ):
 		"""
 		if not files:
 			return
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		protoWrap = protocolWrapperInstanceSelector.select( self.getModul() )
 		uploader = protoWrap.upload( files, rootNode, path )
-		self.layout().addWidget( UploadStatusWidget( uploader ) )
-		#uploader = RecursiveUploader( files, rootNode, path, self.modul )
+		self.parent().layout().addWidget( UploadStatusWidget( uploader ) )
+		#uploader = RecursiveUploader( files, rootNode, path, self.getModul() )
 		#self.ui.boxUpload.addWidget( uploader )
 		#self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 		#self.connect( uploader, QtCore.SIGNAL("failed(PyQt_PyObject)"), self.onTransferFailed )
 
-	def download( self, targetDir, currentRootNode, path, files, dirs ):
+	def doDownload( self, targetDir, rootNode, path, files, dirs ):
 		"""
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
@@ -191,85 +173,57 @@ class FileWidget( TreeWidget ):
 			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
 			@type dirs: List
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		downloader = protoWrap.download( targetDir, currentRootNode, path, files, dirs )
-		self.layout().addWidget( DownloadStatusWidget( downloader ) )
-		#downloader = RecursiveDownloader( targetDir, self.currentRootNode, path, files, dirs, self.modul )
+		protoWrap = protocolWrapperInstanceSelector.select( self.getModul() )
+		downloader = protoWrap.download( targetDir, rootNode, path, files, dirs )
+		self.parent().layout().addWidget( DownloadStatusWidget( downloader ) )
+		#downloader = RecursiveDownloader( targetDir, self.getRootNode(), path, files, dirs, self.getModul() )
 		#self.ui.boxUpload.addWidget( downloader )
 		#self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 
 	def dropEvent(self, event):
+		"""
+			Allow Drag&Drop'ing from the local filesystem into our fileview
+		"""
 		if ( all( [ str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or ( len(str(file.toLocalFile()))>0 and str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
-			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.currentRootNode, self.getPath() )
+			#Its an upload (files/dirs draged from the local filesystem into our fileview)
+			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.getRootNode(), "/".join(self.getPath()) or "/" )
 		else:
-			super( FileWidget, self ).dropEvent( event )
+			super( FileListView, self ).dropEvent( event )
 
 	def dragEnterEvent( self, event ):
+		"""
+			Allow Drag&Drop'ing from the local filesystem into our fileview and dragging files out again
+			(drag directorys out isnt currently supported)
+		"""
 		if ( all( [ file.toLocalFile() and (str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
 			event.accept()
 		else:
-			super( FileWidget, self ).dragEnterEvent( event )
+			super( FileListView, self ).dragEnterEvent( event )
+			print( event.source() )
+			if event.source() == self:
+				# Its an internal drag&drop - add urls so it works outside, too
+				urls = []
+				for item in self.selectedItems():
+					if isinstance( item, self.treeItem ):
+						urls.append( "%s/file/view/%s/%s" % (NetworkService.url[ : -len("/admin")] , item.entryData["dlkey"], item.entryData["name"] ) )
+				event.mimeData().setUrls( urls )
 
-	def on_listWidget_customContextMenuRequested(self, point ):
-		"""
-			Provides the default context-menu for this modul.
-		"""
-		#FIXME: Copy&Paste from tree.py
-		menu = QtGui.QMenu( self )
-		if self.ui.listWidget.itemAt(point):
-			dirs = []
-			files = []
-			for item in self.ui.listWidget.selectedItems():
-				if isinstance( item, self.dirItem ):
-					dirs.append( item.dirName )
-				else:
-					files.append( item.data )
-			if len( files )+len( dirs ) == 1:
-				actionRename = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Rename") )
-			else: 
-				actionRename = "-unset-"
-			if not dirs and len( files ) == 1:
-				actionEdit = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Edit") )
-			else:
-				actionEdit = "-unset-"
-			menu.addSeparator ()
-			actionCopy = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Copy") )
-			actionMove = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Cut") )
-			actionDelete = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Delete") )
-			menu.addSeparator ()
-			actionDownload = menu.addAction( "Herunterladen" )
-			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
-			if( selection==actionRename and self.ui.listWidget.currentItem() ):
-				item = self.ui.listWidget.currentItem()
-				if isinstance( item, self.dirItem ):
-					oldName = item.dirName
-				else:
-					oldName = item.data["name"]
-				newName, okay = QtGui.QInputDialog.getText( 	self, 
-														QtCore.QCoreApplication.translate("FileHandler", "Rename"),
-														QtCore.QCoreApplication.translate("FileHandler", "New name"),
-														text=oldName )
-				if okay:
-					self.rename( self.currentRootNode, self.getPath(), oldName, newName )
-			elif selection == actionCopy or selection == actionMove:
-				doMove = (selection==actionMove)
-				self.clipboard = ( self.currentRootNode, self.getPath(), doMove, [ x["name"] for x in files] , dirs )
-			elif selection == actionDelete:
-				self.delete( self.currentRootNode, self.getPath(), [ x["name"] for x in files], dirs )
-			elif selection == actionDownload:
-				targetDir = QtGui.QFileDialog.getExistingDirectory( self )
-				if not targetDir:
-					return
-				self.download( targetDir, self.currentRootNode, self.getPath(), files, dirs )
-			elif selection == actionEdit:
-				descr = "Bearbeiten"
-				widget = EditWidget(self.modul, EditWidget.appTree, item.data["id"])
-				handler = WidgetHandler( self.modul, widget )
-				event.emit( QtCore.SIGNAL('addHandler(PyQt_PyObject)'), handler )
-		else:
-			actionPaste = menu.addAction( QtCore.QCoreApplication.translate("FileHandler", "Insert") )
-			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
-			if( selection==actionPaste and self.clipboard ):
-				# self.ui.listWidget.currentItem() ):
-				self.copy( self.clipboard, self.currentRootNode, self.getPath() )
+
+class FileWidget( TreeWidget ):
+	"""
+		Extension for TreeWidget to handle the specialities of files like Up&Downloading.
+	"""
+	
+	treeWidget = FileListView
+	
+	def __init__( self, *args, **kwargs ):
+		super( FileWidget, self ).__init__( actions=["dirup", "mkdir", "upload", "download", "edit", "delete"], *args, **kwargs )
+
+	def doUpload(self, files, rootNode, path ):
+		return( self.tree.doUpload( files, rootNode, path ) )
+
+	def doDownload( self, targetDir, rootNode, path, files, dirs ):
+		return( self.tree.doDownload( targetDir, rootNode, path, files, dirs ) )
+
+
 

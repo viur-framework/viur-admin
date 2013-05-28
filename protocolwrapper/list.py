@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PySide import QtCore
-from network import NetworkService, RequestGroup
+from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -12,16 +12,29 @@ class ListWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	entitiesChanged = QtCore.Signal()
+	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( ListWrapper, self ).__init__()
 		self.modul = modul
 		self.dataCache = {}
 		self.structure = None
+		self.busy = False
 		NetworkService.request( "/%s/edit/0" % self.modul, successHandler=self.onStructureAvaiable )
 		print("Initializing ListWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
+		self.checkBusyStatus()
+
+	def checkBusyStatus( self ):
+		busy = False
+		for child in self.children():
+			if isinstance( child, RequestWrapper ) and not child.hasFinished:
+				busy = True
+				break
+		if busy != self.busy:
+			self.busy = busy
+			self.busyStateChanged.emit( busy )
 
 	def checkForOurModul( self, modulName ):
 		return( self.modul==modulName )
@@ -32,6 +45,7 @@ class ListWrapper( QtCore.QObject ):
 		for k,v in tmp["structure"]:
 			self.structure[ k ] = v
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
+		self.checkBusyStatus()
 	
 	def cacheKeyFromFilter( self, filters ):
 		tmpList = list( filters.items() )
@@ -53,6 +67,7 @@ class ListWrapper( QtCore.QObject ):
 		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
 		r.wrapperCbTargetFuncName = callback.__name__
 		r.wrapperCbCacheKey = key
+		self.checkBusyStatus()
 		return( key )
 	
 	def execDefered( self, *args, **kwargs ):
@@ -62,6 +77,7 @@ class ListWrapper( QtCore.QObject ):
 			targetFunc = getattr( callFunc, callName )
 			ctime, data, cursor = self.dataCache[ key ]
 			targetFunc( key, data, cursor )
+		self.checkBusyStatus()
 	
 	def addCacheData( self, req ):
 		data = NetworkService.decode( req )
@@ -73,6 +89,7 @@ class ListWrapper( QtCore.QObject ):
 		if targetSelf is not None:
 			targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
 			targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
+		self.checkBusyStatus()
 			
 	def add( self, cbSuccess, cbMissing, cbError, **kwargs ):
 		req = NetworkService.request("/%s/add/" % ( self.modul ), kwargs, secure=True, finishedHandler=self.onSaveResult )
@@ -82,6 +99,7 @@ class ListWrapper( QtCore.QObject ):
 		req.wrapperCbMissingFuncName = cbMissing.__name__
 		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
 		req.wrapperCbErrorFuncName = cbError.__name__
+		self.checkBusyStatus()
 
 	def edit( self, cbSuccess, cbMissing, cbError, id, **kwargs ):
 		req = NetworkService.request("/%s/edit/%s" % ( self.modul, id ), kwargs, secure=True, finishedHandler=self.onSaveResult )
@@ -91,6 +109,7 @@ class ListWrapper( QtCore.QObject ):
 		req.wrapperCbMissingFuncName = cbMissing.__name__
 		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
 		req.wrapperCbErrorFuncName = cbError.__name__
+		self.checkBusyStatus()
 
 	def delete( self, ids ):
 		if isinstance( ids, list ):
@@ -100,6 +119,7 @@ class ListWrapper( QtCore.QObject ):
 				req.addQuery( r )
 		else: #We just delete one
 			NetworkService.request( "/%s/delete/%s" % ( self.modul, id ), secure=True, finishedHandler=self.delayEmitEntriesChanged )
+		self.checkBusyStatus()
 
 	def delayEmitEntriesChanged( self, *args, **kwargs ):
 		"""
@@ -107,6 +127,7 @@ class ListWrapper( QtCore.QObject ):
 			force all open views of that modul to reload its data
 		"""
 		QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
+		self.checkBusyStatus()
 
 	def onSaveResult( self, req ):
 		try:
@@ -127,6 +148,7 @@ class ListWrapper( QtCore.QObject ):
 			if missingFuncSelf:
 				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
 				missingFunc( data )
+		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):
 		for k,v in self.dataCache.items():
@@ -134,6 +156,7 @@ class ListWrapper( QtCore.QObject ):
 			ctime, data, cursor = v
 			self.dataCache[ k ] = (1, data, cursor )
 		self.entitiesChanged.emit()
+		self.checkBusyStatus()
 		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 		

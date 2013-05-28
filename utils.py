@@ -91,22 +91,35 @@ class Overlay(QtGui.QWidget):
 		
 		See http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/qwidget.html#paintEvent
 		"""
+		"""
+		Draws the message/busy overlay
+		
+		See http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/qwidget.html#paintEvent
+		"""
 		painter = QtGui.QPainter()
 		painter.begin(self)
 		painter.setRenderHint(QtGui.QPainter.Antialiasing)
 		if self.status == self.BUSY:
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
-			animIdx= int( (self.counter)%32 )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			animIdx= int( (self.counter)%7 )
 			painter.pen().setWidth( 4 )
-			for i in range(32):
-				color = QtGui.QColor( max( 127, 255-6*((animIdx-i)%32)), 0, 0, min(255, self.counter*10) )
-				painter.setPen( color )
-				painter.drawLine(
-					self.width()/2 + 30 * math.cos(2 * math.pi * i / 32.0),
-					self.height()/2 + 30 * math.sin(2 * math.pi * i / 32.0),
-					self.width()/2 + 40 * math.cos(2 * math.pi * i / 32.0),
-					self.height()/2 + 40 * math.sin(2 * math.pi * i / 32.0),
-					)
+			coords = [	(self.width()/2-30,self.height()/2-30), #Top left
+					(self.width()/2,(self.height()/2)-30), #Top center
+					(self.width()/2+30,(self.height()/2)-30), #Top right
+					(self.width()/2+30,(self.height()/2)), #Center right
+					(self.width()/2+30,(self.height()/2)+30), #Bottom right
+					(self.width()/2,(self.height()/2)+30), #Bottom center
+					(self.width()/2-30, (self.height()/2)+30), #Bottom left
+					(self.width()/2-30,(self.height()/2)) ] #Center left
+			for i in range(0,8):
+				if (animIdx-i)%8==0:
+					color = QtGui.QColor( 84, 1, 11, min(255, self.counter*10) )
+				elif (animIdx-i)%8==1:
+					color = QtGui.QColor( 147, 2, 20, min(255, self.counter*10) )
+				else:
+					color = QtGui.QColor( 211, 3, 28, min(255, self.counter*10) )
+				x,y = coords[ i ]
+				painter.fillRect( int(x-15), int(y-15), 20, 20, color )
 			painter.pen().setWidth( 1 )
 			painter.setPen(QtGui.QColor( 0,0,0, min(255, self.counter*10) ))
 			fm = QtGui.QFontMetrics( painter.font() )

@@ -108,7 +108,17 @@ class EditWidget( QtGui.QWidget ):
 		self.ui.btnSaveContinue.released.connect( self.on_btnSaveContinue_released )
 		self.ui.btnSaveClose.released.connect( self.on_btnSaveClose_released )
 		self.ui.btnPreview.released.connect( self.on_btnPreview_released )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
+		self.overlay.inform( self.overlay.BUSY )
 
+	def onBusyStateChanged( self, busy ):
+		print("GOT BUSY STATE CHANGE: ", busy )
+		if busy:
+			self.overlay.inform( self.overlay.BUSY )
+		else:
+			self.overlay.clear()
 
 	def getBreadCrumb( self ):
 		if self._lastData:
@@ -142,27 +152,29 @@ class EditWidget( QtGui.QWidget ):
 		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
 
 	def reloadData(self):
-		if self.modul == "_tasks":
-			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), successHandler=self.setData )
-		elif self.applicationType == EditWidget.appList: ## Application: List
-			if self.id: #We are in Edit-Mode
-				request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
-			else:
-				request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
-		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
-			if self.id: #We are in Edit-Mode
-				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
-			else:
-				self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
-		elif self.applicationType == EditWidget.appTree: ## Application: Tree
-			if self.id: #We are in Edit-Mode
-				self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-			else:
-				self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-		elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
-			request = NetworkService.request("/%s/edit" % ( self.modul ), successHandler=self.setData )
-		else:
-			raise NotImplementedError() #Should never reach this
+		self.save( {} )
+		return
+		#if self.modul == "_tasks":
+		#	request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), successHandler=self.setData )
+		#elif self.applicationType == EditWidget.appList: ## Application: List
+		#	if self.id: #We are in Edit-Mode
+		#		request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
+		#	else:
+		#		request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
+		#elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
+		#	if self.id: #We are in Edit-Mode
+		#		self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
+		#	else:
+		#		self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
+		#elif self.applicationType == EditWidget.appTree: ## Application: Tree
+		#	if self.id: #We are in Edit-Mode
+		#		self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
+		#	else:
+		#		self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
+		#elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
+		#	request = NetworkService.request("/%s/edit" % ( self.modul ), successHandler=self.setData )
+		#else:
+		#	raise NotImplementedError() #Should never reach this
 
 	def save(self, data ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
@@ -177,7 +189,7 @@ class EditWidget( QtGui.QWidget ):
 				protoWrap.add( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, **data )
 				#request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
-			self.overlay.inform( self.overlay.BUSY )
+			#self.overlay.inform( self.overlay.BUSY )
 			#data.update( {"parent": self.rootNode } )
 			if self.id and not self.clone:
 				protoWrap.edit( self.onSaveSuccess, self.onSaveMissing, self.onSaveError, self.id, **data )
@@ -314,8 +326,8 @@ class EditWidget( QtGui.QWidget ):
 		self.unserialize( data["values"] )
 		self._lastData = data
 		event.emit( QtCore.SIGNAL("rebuildBreadCrumbs()") )
-		if self.overlay.status==self.overlay.BUSY:
-			self.overlay.clear()
+		#if self.overlay.status==self.overlay.BUSY:
+		#	self.overlay.clear()
 
 	def unserialize(self, data):
 		for bone in self.bones.values():
@@ -323,7 +335,7 @@ class EditWidget( QtGui.QWidget ):
 
 	def on_btnSaveContinue_released(self, *args, **kwargs ):
 		self.closeOnSuccess = False
-		self.overlay.inform( self.overlay.BUSY )
+		#self.overlay.inform( self.overlay.BUSY )
 		res = {}
 		for key, bone in self.bones.items():
 			res.update( bone.serializeForPost( ) )
@@ -331,7 +343,7 @@ class EditWidget( QtGui.QWidget ):
 		
 	def on_btnSaveClose_released( self, *args, **kwargs ):
 		self.closeOnSuccess = True
-		self.overlay.inform( self.overlay.BUSY )
+		#self.overlay.inform( self.overlay.BUSY )
 		res = {}
 		for key, bone in self.bones.items():
 			res.update( bone.serializeForPost( ) )

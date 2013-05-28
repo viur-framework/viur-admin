@@ -3,8 +3,8 @@ from ui.adminUI import Ui_MainWindow
 from PySide import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
-import time, os
-from utils import RegisterQueue, showAbout
+import time, os, logging
+from utils import RegisterQueue, showAbout, Overlay
 from tasks import TaskViewer
 import startpages
 from network import NetworkService, RemoteFile
@@ -125,11 +125,12 @@ class MainWindow( QtGui.QMainWindow ):
 	
 	def __init__( self, *args, **kwargs ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
+		self.logger = logging.getLogger( "MainWindow" )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )
 		self.ui.treeWidget.setColumnWidth(0,269)
 		self.ui.treeWidget.setColumnWidth(1,25)
-		event.connectWithPriority( 'loginSucceeded()', self.setup, event.lowPriority )
+		event.connectWithPriority( 'loginSucceeded', self.loadConfig, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler, event.lowestPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler, event.lowestPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
@@ -142,10 +143,39 @@ class MainWindow( QtGui.QMainWindow ):
 		#event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
 		WidgetHandler.mainWindow = self
 		self.ui.treeWidget.itemClicked.connect( self.on_treeWidget_itemClicked )
+		self.overlay = Overlay( self )
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs( )
+
+	def loadConfig(self, request=None):
+		self.show()
+		self.overlay.inform( self.overlay.BUSY )
+		self.logger.debug("Checkpoint: loadConfig")
+		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError )
+		
+	def onLoadConfig(self, request):
+		self.logger.debug("Checkpoint: onLoadConfig")
+		try:
+			conf.serverConfig = NetworkService.decode( request )
+		except:
+			
+			self.onError( msg = "Unable to parse portalconfig!" )
+			return
+		event.emit("configDownloaded")
+		self.setup()
+		#event.emit( "loginSucceeded()" )
+	
+	def onError( self, msg="" ):
+		"""
+			Called if something went wrong while loading or parsing the 
+			portalconfig requested from the server.
+		"""
+		self.logger.error( msg )
+		self.overlay.inform( self.overlay.ERROR, msg )
+		QtCore.QTimer.singleShot( 3000, self.resetLoginWindow )
+		
 
 	def handlerForWidget( self, wdg = None ):
 		def findRekursive( wdg, node ):
@@ -321,7 +351,8 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		Emits QtCore.SIGNAL('resetLoginWindow()')
 		"""
-		event.emit( QtCore.SIGNAL('resetLoginWindow()') )
+		event.emit( 'resetLoginWindow' )
+		self.hide()
 
 	def setup( self ):
 		"""
@@ -344,7 +375,6 @@ class MainWindow( QtGui.QMainWindow ):
 			
 		self.ui.treeWidget.clear()
 		data = conf.serverConfig
-		event.emit( QtCore.SIGNAL('downloadedConfig(PyQt_PyObject)'), data )
 		handlers = []
 		groupHandlers = {}
 		if "configuration" in data.keys() and "modulGroups" in data["configuration"].keys():
@@ -379,13 +409,14 @@ class MainWindow( QtGui.QMainWindow ):
 			else:
 				self.ui.treeWidget.addTopLevelItem( handler )
 			handlers.append( handler )
-			event.emit( QtCore.SIGNAL('modulHandlerInitialized(PyQt_PyObject)'), modul )
+			event.emit( 'modulHandlerInitialized', modul )
 			wrapperClass = protocolWrapperClassSelector.select( modul, data["modules"] )
 			if wrapperClass is not None:
 				wrapperClass( modul )
 		self.show()
 		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
-		event.emit( QtCore.SIGNAL('mainWindowInitialized()') )
+		event.emit( 'mainWindowInitialized()' )
+		self.overlay.clear()
 		QtGui.QApplication.restoreOverrideCursor()
 
 

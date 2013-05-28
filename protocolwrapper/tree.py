@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PySide import QtCore
-from network import NetworkService, RequestGroup
+from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -14,6 +14,8 @@ class TreeWrapper( QtCore.QObject ):
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	protocolWrapperInstancePriority = 1
 	entitiesChanged = QtCore.Signal()
+	rootNodesAvaiable = QtCore.Signal()
+	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( TreeWrapper, self ).__init__()
@@ -21,11 +23,28 @@ class TreeWrapper( QtCore.QObject ):
 		self.dataCache = {}
 		self.structure = None
 		self.rootNodes = None
+		self.busy = False
 		NetworkService.request( "/%s/add" % self.modul, successHandler=self.onStructureAvaiable )
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
 		print("Initializing TreeWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( self.protocolWrapperInstancePriority, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
+
+	def checkBusyStatus( self ):
+		busy = False
+		i = 0
+		y = 0
+		for child in self.children():
+			if isinstance( child, RequestWrapper ):
+				i += 1
+				if not child.hasFinished:
+					y += 1
+					busy = True
+		print("reqw was %s is %s" % (self.busy, busy ) )
+		print("reqwrap total: %s, finished: %s" % (i, y ) )
+		if busy != self.busy:
+			self.busy = busy
+			self.busyStateChanged.emit( busy )
 
 	def checkForOurModul( self, modulName ):
 		return( self.modul==modulName )
@@ -36,12 +55,14 @@ class TreeWrapper( QtCore.QObject ):
 		for k,v in tmp["structure"]:
 			self.structure[ k ] = v
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
+		self.checkBusyStatus()
 		
 	def onRootNodesAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
 		if isinstance( tmp, list ):
 			self.rootNodes = tmp
-		self.emit( QtCore.SIGNAL("onRootNodesAvaiable()") )
+		self.rootNodesAvaiable.emit()
+		self.checkBusyStatus()
 
 	
 	def cacheKeyFromFilter( self, rootNode, path, filters ):
@@ -69,6 +90,7 @@ class TreeWrapper( QtCore.QObject ):
 		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
 		r.wrapperCbTargetFuncName = callback.__name__
 		r.wrapperCbCacheKey = key
+		self.checkBusyStatus()
 		return( key )
 	
 	def execDefered( self, *args, **kwargs ):
@@ -78,6 +100,7 @@ class TreeWrapper( QtCore.QObject ):
 			targetFunc = getattr( callFunc, callName )
 			ctime, data, cursor = self.dataCache[ key ]
 			targetFunc( key, data, cursor )
+		self.checkBusyStatus()
 	
 	def addCacheData( self, req ):
 		data = NetworkService.decode( req )
@@ -89,6 +112,7 @@ class TreeWrapper( QtCore.QObject ):
 		if targetSelf is not None:
 			targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
 			targetFunc( req.wrapperCbCacheKey, data, cursor )
+		self.checkBusyStatus()
 			
 	def add( self, cbSuccess, cbMissing, cbError, rootNone, path, **kwargs ):
 		tmp = {k:v for (k,v) in kwargs.items() }
@@ -101,6 +125,7 @@ class TreeWrapper( QtCore.QObject ):
 		req.wrapperCbMissingFuncName = cbMissing.__name__
 		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
 		req.wrapperCbErrorFuncName = cbError.__name__
+		self.checkBusyStatus()
 
 	def edit( self, cbSuccess, cbMissing, cbError, id, **kwargs ):
 		req = NetworkService.request("/%s/edit/%s" % ( self.modul, id ), kwargs, secure=True, finishedHandler=self.onSaveResult )
@@ -110,6 +135,7 @@ class TreeWrapper( QtCore.QObject ):
 		req.wrapperCbMissingFuncName = cbMissing.__name__
 		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
 		req.wrapperCbErrorFuncName = cbError.__name__
+		self.checkBusyStatus()
 
 
 	def mkdir(self, rootNode, path, dirName):
@@ -123,7 +149,8 @@ class TreeWrapper( QtCore.QObject ):
 			@param dirName: Name of the new directory
 			@type dirName: String
 		"""
-		request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode":rootNode, "path":path, "dirname":dirName}, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
+		request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode":rootNode, "path": ("/".join(path) or "/"), "dirname":dirName}, successHandler=self.delayEmitEntriesChanged )
+		self.checkBusyStatus()
 		#request.flushList = [ lambda*args, **kwargs: self.flushCache(rootNode, path) ]
 
 	def delete( self, rootNode, path, entries, dirs ):
@@ -153,6 +180,7 @@ class TreeWrapper( QtCore.QObject ):
 										"type": "dir" } ) )
 		#request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
+		self.checkBusyStatus()
 		#self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
 
 
@@ -167,24 +195,26 @@ class TreeWrapper( QtCore.QObject ):
 			@param path: Destination path
 			@type path: String
 		"""
+		print( srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove )
 		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
 		for file in files:
 			request.addQuery( NetworkService.request( "/%s/copy" % self.modul , {"srcrepo": srcRootNode,
-									"srcpath": srcPath,
+									"srcpath": ("/".join(srcPath) if srcPath else "/"),
 									"name": file,
 									"destrepo": destRootNode,
-									"destpath": destPath,
+									"destpath": ("/".join(destPath) if destPath else "/"),
 									"deleteold": "1" if doMove else "0",
-									"type":"entry"} ) )
+									"type":"entry"}, parent=self ) )
 		for dir in dirs:
 			request.addQuery( NetworkService.request( "/%s/copy" % self.modul, {"srcrepo": srcRootNode,
-									"srcpath": srcPath,
+									"srcpath": ("/".join(srcPath) if srcPath else "/"),
 									"name": dir,
 									"destrepo": destRootNode,
-									"destpath": destPath,
+									"destpath": ("/".join(destPath) if destPath else "/"),
 									"deleteold": "1" if doMove else "0",
-									"type":"dir"} ) )
+									"type":"dir"}, parent=self ) )
 		request.queryType = "move" if doMove else "copy"
+		self.checkBusyStatus()
 		#self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
 		#self.overlay.inform( self.overlay.BUSY )
 	
@@ -212,7 +242,8 @@ class TreeWrapper( QtCore.QObject ):
 			@param newName: The new name for that element
 			@type newName: String
 		"""
-		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path":path, "src": oldName, "dest":newName }, finishedHandler=self.delayEmitEntriesChanged )
+		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path": ("/".join(path) if path else "/"), "src": oldName, "dest":newName }, finishedHandler=self.delayEmitEntriesChanged )
+		self.checkBusyStatus()
 
 	def delayEmitEntriesChanged( self, *args, **kwargs ):
 		"""
@@ -240,6 +271,7 @@ class TreeWrapper( QtCore.QObject ):
 			if missingFuncSelf:
 				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
 				missingFunc( data )
+		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):
 		for k,v in self.dataCache.items():

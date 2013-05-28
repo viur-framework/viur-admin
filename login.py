@@ -14,15 +14,14 @@ import logging
 import re
 
 class LoginTask( QtCore.QObject ):
-	def __init__(self, username, password, captchaToken=None, captcha=None ):
-		QtCore.QObject.__init__( self )
+	loginFailed = QtCore.Signal( (str,) )
+	loginSucceeded = QtCore.Signal()
+	captchaRequired = QtCore.Signal( (str,str) )
+	
+	def __init__(self, username, password, captchaToken=None, captcha=None, *args, **kwargs ):
+		super( LoginTask, self ).__init__( *args, **kwargs )
 		self.logger = logging.getLogger( "LoginTask" )
 		self.logger.debug("Starting LoginTask")
-		try:
-			event.emit( QtCore.SIGNAL( "loginStarted(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)" ), username, password, captchaToken, captcha )
-		except StopIteration:
-			logging.info("Login aborted by StopIteration")
-			return
 		self.username = username
 		self.password = password
 		self.captcha = captcha
@@ -84,20 +83,8 @@ class LoginTask( QtCore.QObject ):
 
 	def onLocalAuth(self, request):
 		self.logger.debug("Checkpoint: onLocalAuth")
-		NetworkService.request("http://%s:%s/admin/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None, successHandler=self.loadConfig, failureHandler=self.onError )
+		NetworkService.request("http://%s:%s/admin/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None, successHandler=self.onLoginSucceeded, failureHandler=self.onError )
 		
-	def loadConfig(self, request=None):
-		self.logger.debug("Checkpoint: loadConfig")
-		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError )
-		
-	def onLoadConfig(self, request):
-		self.logger.debug("Checkpoint: onLoadConfig")
-		try:
-			conf.serverConfig = NetworkService.decode( request )
-		except ValueError:
-			self.onError( msg = "Unable to decode response!" )
-			return
-		event.emit( "loginSucceeded()" )
 
 	def onGoogleAuthSuccess( self, request ):
 		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
@@ -118,7 +105,8 @@ class LoginTask( QtCore.QObject ):
 					elif line.lower().startswith("captchaurl"):
 						captchaURL = line[ 11: ]
 				assert captchaToken and captchaURL
-				self.emit(QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), captchaToken, captchaURL)
+				self.captchaRequired.emit( captchaToken, captchaURL )
+				self.deleteLater()
 				return
 			else:
 				self.onError( msg="Found no authToken in response!" )
@@ -140,15 +128,17 @@ class LoginTask( QtCore.QObject ):
 	
 	def onGAEAuth( self, request=None ):
 		self.logger.debug("Checkpoint: onGAEAuth")
-		self.req = NetworkService.request( "/user/login", successHandler=self.loadConfig, failureHandler=self.onError )
+		self.req = NetworkService.request( "/user/login", successHandler=self.onLoginSucceeded, failureHandler=self.onError )
 	
 	def onError( self, request=None, error=None, msg=None ):
-		event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", msg or str( error ) ) )
-		self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), msg or str( error ) )
-		
+		self.loginFailed.emit( QtCore.QCoreApplication.translate("Login", msg or str( error ) ) )
+		self.deleteLater()
 
+	def onLoginSucceeded( self, req ):
+		self.loginSucceeded.emit()
+		self.deleteLater()
 	
-
+	
 class Login( QtGui.QMainWindow ):
 	def __init__( self, *args, **kwargs ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
@@ -156,11 +146,11 @@ class Login( QtGui.QMainWindow ):
 		self.ui.setupUi( self )
 		self.accman = None #Reference to our Account-MGR
 		self.helpBrowser = None
-		self.connect( event, QtCore.SIGNAL('resetLoginWindow()'), self.enableForm )
-		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
-		self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
+		event.connectWithPriority( 'resetLoginWindow', self.enableForm,  event.lowPriority )
+		#self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
+		#self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
 		self.ui.cbPortal.currentIndexChanged.connect( self.on_cbPortal_currentIndexChanged )
-		event.connectWithPriority( "loginSucceeded()", self.onLoginSucceeded, event.highPriority )
+		#event.connectWithPriority( "loginSucceeded()", self.onLoginSucceeded, event.highPriority )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
 		self.captchaToken = None
@@ -212,6 +202,7 @@ class Login( QtGui.QMainWindow ):
 	def onLoginSucceeded(self):
 		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
 		conf.loadPortalConfig( NetworkService.url )
+		event.emit("loginSucceeded")
 		self.hide()
 
 	def statusMessageUpdate(self, type, message ):
@@ -240,7 +231,7 @@ class Login( QtGui.QMainWindow ):
 					"url":url
 					}
 					conf.accounts.append(saveacc)
-		elif cb.currentIndex()!=0: #Move this account to the beginning, so it will be selected on the next start of apex
+		elif cb.currentIndex()!=0: #Move this account to the beginning, so it will be selected on the next start of admin
 			account = conf.accounts[ cb.currentIndex() ]
 			conf.accounts.remove( account )
 			conf.accounts.insert(0, account)
@@ -305,12 +296,18 @@ class Login( QtGui.QMainWindow ):
 		"""
 		self.overlay.inform( self.overlay.BUSY )
 		if captcha:
-			self.loginTask = LoginTask( username, password, self.captchaToken, captcha )
+			loginTask = LoginTask( username, password, self.captchaToken, captcha, parent=self )
 		else:
-			self.loginTask = LoginTask( username, password )
-		self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
-		self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
+			loginTask = LoginTask( username, password, parent=self )
+		loginTask.loginSucceeded.connect( self.onLoginSucceeded )
+		loginTask.captchaRequired.connect( self.setCaptcha )
+		loginTask.loginFailed.connect( self.onLoginFailed )
+		#self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
+		
+		#self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
 
+	def onLoginFailed( self, msg ):
+		self.overlay.inform( self.overlay.ERROR, msg )
 	
 	def enableForm(self, msg=None):
 		if msg:

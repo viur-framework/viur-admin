@@ -30,7 +30,7 @@ class FileBaseHandler( WidgetHandler ):
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
-		fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
+		fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
 		self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos) 
 	
 	def setRepos( self, fetchTask ):

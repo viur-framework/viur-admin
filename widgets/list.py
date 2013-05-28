@@ -201,7 +201,16 @@ class ListTableView( QtGui.QTableView ):
 		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
 		self.connect( model, QtCore.SIGNAL("dataRecived()"), self.onDataRecived )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		self.overlay.inform( self.overlay.BUSY )
+		
+	def onBusyStateChanged( self, busy ):
+		if busy:
+			self.overlay.inform( self.overlay.BUSY )
+		else:
+			self.overlay.clear()
 
 	def onDataRecived(self):
 		"""

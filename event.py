@@ -6,7 +6,36 @@ import logging
 	Just a small EventDispatcher to distribute application-wide events.
 """
 
-class EventWrapper( QtCore.QObject ):
+class WeakFuncWrapper( ):
+	def __init__( self, targetFunc ):
+		super( WeakFuncWrapper, self ).__init__()
+		if "__self__" in dir( targetFunc ):
+			self.targetFuncSelf = weakref.ref( targetFunc.__self__)
+			self.targetFuncName = targetFunc.__name__
+			self.targetFunc = None
+		else:
+			self.targetFuncSelf = None
+			self.targetFuncName = None
+			self.targetFunc = weakref.ref( targetFunc )
+	
+	def call( self, *args, **kwargs ):
+		if self.targetFuncName is not None: #Bound function
+			funcSelf = self.targetFuncSelf()
+			if funcSelf is not None:
+				getattr( funcSelf, self.targetFuncName )( *args, **kwargs )
+		else:
+			tf = self.targetFunc()
+			if tf is not None:
+				tf( *args, **kwargs )
+			
+	def isDead( self ):
+		if self.targetFuncName is not None: #Bound function
+			return( self.targetFuncSelf()==None )
+		else:
+			return( self.targetFunc()==None )
+
+
+class EventWrapper( QtCore.QObject ): ### REPLACED BY WEAK FUNC WRAPPER
 	"""
 		This is the actual class getting added to the queues.
 		It monitors that its parent object stayes alive and removes
@@ -17,13 +46,14 @@ class EventWrapper( QtCore.QObject ):
 		super( EventWrapper, self ).__init__()
 		self.logger = logging.getLogger("EventWrapper")
 		self.signal = signal
-		self.targetFuncSelf = weakref.ref( targetFunc.__self__)
-		self.targetFuncName = targetFunc.__name__
+		self.targetFunc = WeakFuncWrapper( targetFunc )
+
 	
 	def emitUsingParams(self, *args):
 		"""
 			Emits the stored event using the given params
 		"""
+		
 		s = self.targetFuncSelf()
 		if s:
 			getattr( s, self.targetFuncName )( *args )
@@ -55,7 +85,7 @@ class EventDispatcher(  QtCore.QObject ):
 								"normal": [], 
 								"low": []
 								}
-		obj = EventWrapper( signal, func )
+		obj = WeakFuncWrapper( func )
 		if priority == self.highestPriority: #Put this one first
 			EventDispatcher.eventMap[ signal ][ "high" ].insert(0, obj)
 		elif priority == self.highPriority: #Append to "high"
@@ -75,17 +105,17 @@ class EventDispatcher(  QtCore.QObject ):
 					if e.isDead():
 						EventDispatcher.eventMap[ signal ]["high"].remove( e )
 					else:
-						e.emitUsingParams( *args )
+						e.call( *args )
 				for e in EventDispatcher.eventMap[ signal ]["normal"]:
 					if e.isDead():
 						EventDispatcher.eventMap[ signal ]["normal"].remove( e )
 					else:
-						e.emitUsingParams( *args )
+						e.call( *args )
 				for e in EventDispatcher.eventMap[ signal ]["low"]:
 					if e.isDead():
 						EventDispatcher.eventMap[ signal ]["low"].remove( e )
 					else:
-						e.emitUsingParams( *args )
+						e.call( *args )
 			except StopIteration:
 				pass
 	

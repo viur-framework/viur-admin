@@ -21,6 +21,7 @@ from PySide.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfigu
 import traceback
 import logging
 import weakref
+from event import WeakFuncWrapper
 
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
@@ -68,8 +69,10 @@ class SecurityTokenProvider( QObject ):
 		self.logger.debug("Reset" )
 		while not self.queue.empty():
 			self.queue.get( False )
-		self.req = NetworkService.request("/skey" )
-		self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
+		self.isRequesting = False
+		self.fetchNext()
+		#req = NetworkService.request("/skey", finishedHandler=self.onSkeyAvailable )
+		#self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
 	
 	def fetchNext( self ):
 		"""
@@ -128,30 +131,32 @@ securityTokenProvider = SecurityTokenProvider()
 class RequestWrapper( QtCore.QObject ):
 	GarbargeTypeName = "RequestWrapper"
 	requestSucceeded = QtCore.Signal( (QtCore.QObject,) )
-	requestFailed = QtCore.Signal( (QtCore.QObject,) )
+	requestFailed = QtCore.Signal( (QtCore.QObject, QNetworkReply.NetworkError) )
 	finished = QtCore.Signal( (QtCore.QObject,) )
 	uploadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
 	downloadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
 
-	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None ):
+	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None ):
 		super( RequestWrapper, self ).__init__()
 
 		self.logger = logging.getLogger( "RequestWrapper" )
 		self.logger.debug("New network request: %s", str(self) )
 		self.request = request
-		self.requestStatus = None #None => In progress, True => Succeeded, QNetworkError => Failure
-		if successHandler and "__self__" in dir( successHandler ):
-			print("connecting ", successHandler )
+		self.hasFinished = False
+		if successHandler and "__self__" in dir( successHandler ) and isinstance( successHandler.__self__, QtCore.QObject ):
+			parent = parent or successHandler.__self__
 			self.requestSucceeded.connect( successHandler )
-		if failureHandler and "__self__" in dir( failureHandler ):
-			failureHandler.__self__.connect( self, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), failureHandler )
-		if finishedHandler and "__self__" in dir( finishedHandler ):
+		if failureHandler and "__self__" in dir( failureHandler ) and isinstance( failureHandler.__self__, QtCore.QObject ):
+			parent = parent or failureHandler.__self__
+			self.requestFailed.connect( failureHandler )
+		if finishedHandler and "__self__" in dir( finishedHandler ) and isinstance( finishedHandler.__self__, QtCore.QObject ):
+			parent = parent or finishedHandler.__self__
 			self.finished.connect( finishedHandler )
-		self.connect( request, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onDownloadProgress )
-		self.connect( request, QtCore.SIGNAL("uploadProgress(qint64,qint64)"), self.onUploadProgress )
-		self.connect( request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.onError )
-		self.connect( request, QtCore.SIGNAL("finished()"), self.onFinished )
-		NetworkService.currentRequests.append( self )
+		assert parent is not None
+		self.setParent( parent )
+		request.downloadProgress.connect( self.onDownloadProgress )
+		request.uploadProgress.connect( self.onUploadProgress )
+		request.finished.connect( self.onFinished )
 	
 	def onDownloadProgress(self, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
@@ -168,33 +173,21 @@ class RequestWrapper( QtCore.QObject ):
 		#self.emit( QtCore.SIGNAL("uploadProgress(qint64,qint64)"),  bytesSend, bytesTotal )
 		#self.emit( QtCore.SIGNAL("uploadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesSend, bytesTotal )
 
-	def onError(self, error):
-		self.requestStatus = error
-	
 	def onFinished(self ):
-		if self.requestStatus==True:
+		self.hasFinished = True
+		if self.request.error()==self.request.NoError:
 			self.requestSucceeded.emit( self )
-			#self.emit( QtCore.SIGNAL("requestSucceeded(PyQt_PyObject)"), self )
-		elif self.requestStatus==None: #We neither got a up/download-progress nor an error first :/
-			pass
-			#self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), QNetworkReply.ProtocolUnknownError )
-			#self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, QNetworkReply.ProtocolUnknownError )
-		else: 
-			pass
-			#self.emit( QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), self.requestStatus )
-			#self.emit( QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self, self.requestStatus )
-		#self.emit( QtCore.SIGNAL("finished()") )
-		#self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
+		else:
+			self.requestFailed.emit( self, self.request.error() )
 		self.finished.emit( self )
 		self.logger.debug("Request finished: %s", str(self) )
-		NetworkService.currentRequests.remove( self )
 		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
-		#self.request.deleteLater()
+		self.request.deleteLater()
 		self.request = None
 		self.successHandler = None
 		self.failureHandler = None
 		self.finishedHandler = None
-		#self.deleteLater()
+		self.deleteLater()
 	
 	def readAll(self):
 		return( self.request.readAll() )
@@ -340,7 +333,7 @@ class RemoteFile( QtCore.QObject ):
 		self.logger.debug("Checkpoint: onFileAvaiable")
 		fileName = os.path.join( conf.currentPortalConfigDirectory, sha1( self.dlKey.encode("UTF-8")).hexdigest() )
 		data = request.readAll()
-		open( fileName, "w+b" ).write( data )
+		open( fileName, "w+b" ).write( data.data() )
 		s = self.successHandlerSelf()
 		if s:
 			try:
@@ -400,7 +393,7 @@ class NetworkService():
 		return( res, boundary )
 
 	@staticmethod
-	def request( url, params=None, secure=False, extraHeaders=None, successHandler=None, failureHandler=None, finishedHandler=None ):
+	def request( url, params=None, secure=False, extraHeaders=None, successHandler=None, failureHandler=None, finishedHandler=None, parent=None ):
 		global nam, _isSecureSSL
 		if _isSecureSSL==False: #Warn the user of a potential security risk
 			msgRes = QtGui.QMessageBox.warning(	None, QtCore.QCoreApplication.translate("NetworkService", "Insecure connection"),
@@ -435,9 +428,9 @@ class NetworkService():
 			else:
 				print( params )
 				print( type( params ) )
-			return( RequestWrapper( nam.post( req, multipart ), successHandler, failureHandler, finishedHandler) )
+			return( RequestWrapper( nam.post( req, multipart ), successHandler, failureHandler, finishedHandler, parent ) )
 		else:
-			return( RequestWrapper( nam.get( req ), successHandler, failureHandler, finishedHandler) )
+			return( RequestWrapper( nam.get( req ), successHandler, failureHandler, finishedHandler, parent) )
 	
 	@staticmethod
 	def decode( req ):

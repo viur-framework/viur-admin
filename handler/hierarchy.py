@@ -37,13 +37,11 @@ class HierarchyCoreHandler( WidgetHandler ): #FIXME
 		self.setText( 0, config["name"] )
 		self.repos = []
 		self.tmpObj = QtGui.QWidget()
-		self.fetchTask = NetworkService.request("/%s/listRootNodes" % modul )
-		self.tmpObj.connect(self.fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
+		fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
+		self.tmpObj.connect(fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
 
 	def setRepos( self ):
 		data = NetworkService.decode( self.fetchTask )
-		self.fetchTask.deleteLater()
-		self.fetchTask = None
 		self.tmpObj.deleteLater()
 		self.tmpObj = None
 		self.repos = data
