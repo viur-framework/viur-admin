@@ -49,7 +49,7 @@ class TreeEditAction( QtGui.QAction ):
 			if not isinstance( item, DirItem ):
 				entries.append( item.entryData )
 		for entry in entries:
-			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], rootNode=self.parent().rootNode, path=self.parent().getPath() )
+			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], skelType="node" ) #Fixme: type is hardcoded
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
 			handler.stackHandler()
 
@@ -62,6 +62,7 @@ actionDelegateSelector.insert( 1, TreeEditAction.isSuitableFor, TreeEditAction )
 class TreeDirUpAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDirUpAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_back_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent )
+		return #FIXME
 		self.parent().pathChanged.connect( self.onPathChanged )
 		if not self.parent().getPath():
 			self.setEnabled( False )
@@ -92,7 +93,7 @@ class TreeMkDirAction( QtGui.QAction ):
 		if dirName and okay:
 			reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
 			assert reqWrap is not None
-			reqWrap.mkdir( self.parent().tree.rootNode, self.parent().tree.getPath(), dirName )
+			reqWrap.mkdir( self.parent().tree.node, dirName )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
@@ -112,14 +113,14 @@ class TreeDeleteAction( QtGui.QAction ):
 		files = []
 		for item in self.parent().selectedItems():
 			if isinstance( item, DirItem ):
-				dirs.append( item.dirName )
+				dirs.append( item.entryData )
 			else:
 				files.append( item.entryData )
 		if not files and not dirs:
 			return
 		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
 		assert reqWrap is not None
-		reqWrap.delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
+		reqWrap.delete( files, dirs )
 		#self.parent().delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
 
 	@staticmethod

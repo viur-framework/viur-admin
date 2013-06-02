@@ -18,7 +18,7 @@ class HierarchyAddAction( QtGui.QAction ):
 	
 	def onTriggered( self ):
 		#config = conf.serverConfig["modules"][ self.parent().modul ]
-		widget = lambda: EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, rootNode=self.parent().hierarchy.currentRootNode)
+		widget = lambda: EditWidget(self.parent().modul, EditWidget.appHierarchy, 0, node=self.parent().hierarchy.currentRootNode)
 		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add_small.png") )
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )

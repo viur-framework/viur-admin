@@ -30,6 +30,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.cursor = None
 		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		print( self.modul )
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect( self.reload )
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
@@ -126,12 +127,12 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		self.layoutAboutToBeChanged.emit()
-		self.rebuildDelegates.emit( protoWrap.structure )
+		self.rebuildDelegates.emit( protoWrap.viewStructure )
 		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
 		#self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
 		#Rebuild our local cache of valid fields
 		bones = {}
-		for key, bone in protoWrap.structure.items():
+		for key, bone in protoWrap.viewStructure.items():
 			bones[ key ] = bone
 		self._validFields = [ x for x in self.fields if x in bones.keys() ]
 		for item in data: #Insert the new Data at the coresponding Position
@@ -140,7 +141,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			self.completeList = True
 		self.cursor = cursor
 		self.layoutChanged.emit()
-		self.dataRecived.emit()
 		#self.emit(QtCore.SIGNAL("layoutChanged()"))
 		#self.emit(QtCore.SIGNAL("dataRecived()"))
 
@@ -190,7 +190,6 @@ class ListTableView( QtGui.QTableView ):
 		self.structureCache = None
 		model = ListTableModel( self.modul, fields or ["name"], filter  )
 		self.setModel( model )
-		self.overlay = Overlay( self )
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
@@ -200,24 +199,7 @@ class ListTableView( QtGui.QTableView ):
 		model.layoutChanged.connect( self.realignHeaders )
 		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
 		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
-		self.connect( model, QtCore.SIGNAL("dataRecived()"), self.onDataRecived )
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		assert protoWrap is not None
-		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
-		self.overlay.inform( self.overlay.BUSY )
-		
-	def onBusyStateChanged( self, busy ):
-		if busy:
-			self.overlay.inform( self.overlay.BUSY )
-		else:
-			self.overlay.clear()
 
-	def onDataRecived(self):
-		"""
-			The model just recived data from the server,
-			clear our overlay
-		"""
-		self.overlay.clear()
 
 	def onItemClicked(self, index ):
 		self.itemClicked.emit( self.model().getData()[index.row()] )
@@ -354,7 +336,17 @@ class ListWidget( QtGui.QWidget ):
 			self.ui.editSearch.setText( filter["search"] )
 		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
 		self.list.itemDoubleClicked.connect( self.openEditor )
-		#self.connect( self.list, QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.openEditor )
+		self.overlay = Overlay( self )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
+		#self.overlay.inform( self.overlay.BUSY )
+		
+	def onBusyStateChanged( self, busy ):
+		if busy:
+			self.overlay.inform( self.overlay.BUSY )
+		else:
+			self.overlay.clear()
 
 	def setActions( self, actions ):
 		"""

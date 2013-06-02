@@ -14,6 +14,9 @@ class HierarchyWrapper( QtCore.QObject ):
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	entitiesChanged = QtCore.Signal()
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
+	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( HierarchyWrapper, self ).__init__()
@@ -21,7 +24,7 @@ class HierarchyWrapper( QtCore.QObject ):
 		self.dataCache = {}
 		self.rootNodes = None
 		self.structure = None
-		self.busy = False
+		self.busy = True
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
 		print("Initializing HierarchyWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
@@ -122,27 +125,27 @@ class HierarchyWrapper( QtCore.QObject ):
 			targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
 		self.checkBusyStatus()
 			
-	def add( self, cbSuccess, cbMissing, cbError, parent, **kwargs ):
+	def add( self, parent, **kwargs ):
 		tmp = {k:v for (k,v) in kwargs.items() }
 		tmp["parent"] = parent
 		req = NetworkService.request("/%s/add/" % ( self.modul ), tmp, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
-	def edit( self, cbSuccess, cbMissing, cbError, id, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s" % ( self.modul, id ), kwargs, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+	def edit( self, key, **kwargs ):
+		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
 	def delete( self, ids ):
 		if isinstance( ids, list ):
@@ -174,21 +177,13 @@ class HierarchyWrapper( QtCore.QObject ):
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
-			errorFuncSelf = req.wrapperCbErrorFuncSelf()
-			if errorFuncSelf:
-				errorFunc = getattr( errorFuncSelf, req.wrapperCbErrorFuncName )
-				errorFunc( QtCore.QCoreApplication.translate("ListWrapper", "There was an error saving your changes") )
-		if data=="OKAY": #Saving succeeded
+			self.updatingFailedError.emit( str( id( req ) ) )
+			return
+		if data["action"] in ["addSuccess", "editSuccess","deleteSuccess"]: #Saving succeeded
 			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
-			successFuncSelf = req.wrapperCbSuccessFuncSelf()
-			if successFuncSelf:
-				successFunc = getattr( successFuncSelf, req.wrapperCbSuccessFuncName )
-				successFunc()
+			self.updatingSucceeded.emit( str( id( req ) ) )
 		else: #There were missing fields
-			missingFuncSelf = req.wrapperCbMissingFuncSelf()
-			if missingFuncSelf:
-				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
-				missingFunc( data )
+			self.updatingDataAvaiable.emit( str( id( req ) ), data, req.wasInitial )
 		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):

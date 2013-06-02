@@ -68,9 +68,10 @@ actionDelegateSelector.insert( 1, ListCloneAction.isSuitableFor, ListCloneAction
 class ListDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
+		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
-	def onTriggered( self, e ):
+	def onTriggered( self, e=None ):
 		indexes = self.parentWidget().list.selectedIndexes()
 		rows = []
 		for index in indexes:
@@ -80,7 +81,7 @@ class ListDeleteAction( QtGui.QAction ):
 		deleteData = [ self.parentWidget().list.model().getData()[ row ] for row in rows ]
 		reqWrap = protocolWrapperInstanceSelector.select( self.parent().list.modul )
 		assert reqWrap is not None
-		reqWrap.deleteEntries( [x["id"] for x in deleteData] )
+		reqWrap.deleteEntities( [x["id"] for x in deleteData] )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

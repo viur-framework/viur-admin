@@ -13,14 +13,21 @@ class ListWrapper( QtCore.QObject ):
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	entitiesChanged = QtCore.Signal()
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
+	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( ListWrapper, self ).__init__()
 		self.modul = modul
 		self.dataCache = {}
-		self.structure = None
-		self.busy = False
-		NetworkService.request( "/%s/edit/0" % self.modul, successHandler=self.onStructureAvaiable )
+		self.viewStructure = None
+		self.addStructure = None
+		self.editStructure = None
+		self.busy = True
+		for stype in ["view","edit","add"]:
+			req = NetworkService.request( "/getStructure/%s/%s" % (self.modul,stype), successHandler=self.onStructureAvaiable )
+			req.structureType = stype
 		print("Initializing ListWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
@@ -41,9 +48,18 @@ class ListWrapper( QtCore.QObject ):
 	
 	def onStructureAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
-		self.structure = OrderedDict()
-		for k,v in tmp["structure"]:
-			self.structure[ k ] = v
+		if tmp is None:
+			self.checkBusyStatus()
+			return
+		structure = OrderedDict()
+		for k,v in tmp:
+			structure[ k ] = v
+		if req.structureType=="view":
+			self.viewStructure = structure
+		elif req.structureType=="edit":
+			self.editStructure = structure
+		elif req.structureType=="add":
+			self.addStructure = structure
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
 		self.checkBusyStatus()
 	
@@ -91,31 +107,32 @@ class ListWrapper( QtCore.QObject ):
 			targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
 		self.checkBusyStatus()
 			
-	def add( self, cbSuccess, cbMissing, cbError, **kwargs ):
-		req = NetworkService.request("/%s/add/" % ( self.modul ), kwargs, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+	def add( self, **kwargs ):
+		req = NetworkService.request("/%s/add/" % ( self.modul ), kwargs, secure=(len(kwargs)>0), finishedHandler=self.onSaveResult )
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
-	def edit( self, cbSuccess, cbMissing, cbError, id, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s" % ( self.modul, id ), kwargs, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+	def edit( self, key, **kwargs ):
+		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
-	def delete( self, ids ):
+	def deleteEntities( self, ids ):
 		if isinstance( ids, list ):
 			req = RequestGroup( finishedHandler=self.delayEmitEntriesChanged )
 			for id in ids:
-				r = NetworkService.request( "/%s/delete/%s" % ( self.modul, id ), secure=True )
+				print( id )
+				r = NetworkService.request( "/%s/delete" % self.modul, {"id": id}, secure=True, parent=req )
 				req.addQuery( r )
 		else: #We just delete one
 			NetworkService.request( "/%s/delete/%s" % ( self.modul, id ), secure=True, finishedHandler=self.delayEmitEntriesChanged )
@@ -130,24 +147,18 @@ class ListWrapper( QtCore.QObject ):
 		self.checkBusyStatus()
 
 	def onSaveResult( self, req ):
+		print("onSaveResult")
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
-			errorFuncSelf = req.wrapperCbErrorFuncSelf()
-			if errorFuncSelf:
-				errorFunc = getattr( errorFuncSelf, req.wrapperCbErrorFuncName )
-				errorFunc( QtCore.QCoreApplication.translate("ListWrapper", "There was an error saving your changes") )
-		if data=="OKAY": #Saving succeeded
+			self.updatingFailedError.emit( str( id( req ) ) )
+			return
+		print( data )
+		if data["action"] in ["addSuccess", "editSuccess","deleteSuccess"]: #Saving succeeded
 			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
-			successFuncSelf = req.wrapperCbSuccessFuncSelf()
-			if successFuncSelf:
-				successFunc = getattr( successFuncSelf, req.wrapperCbSuccessFuncName )
-				successFunc()
+			self.updatingSucceeded.emit( str( id( req ) ) )
 		else: #There were missing fields
-			missingFuncSelf = req.wrapperCbMissingFuncSelf()
-			if missingFuncSelf:
-				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
-				missingFunc( data )
+			self.updatingDataAvaiable.emit( str( id( req ) ), data, req.wasInitial )
 		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):

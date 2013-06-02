@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Sat May 11 13:50:36 2013
+# Created: Sun Jun  2 00:28:25 2013
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -56,7 +56,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.addItem(spacerItem)
         self.btnSelect = QtGui.QPushButton(self.scrollAreaWidgetContents)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("icons/actions/save.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap("icons/actions/accept.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSelect.setIcon(icon2)
         self.btnSelect.setObjectName("btnSelect")
         self.horizontalLayout_2.addWidget(self.btnSelect)
@@ -73,5 +73,5 @@ class Ui_relationalSelector(object):
         self.btnSearch.setText(QtGui.QApplication.translate("relationalSelector", "Search", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSelected.setText(QtGui.QApplication.translate("relationalSelector", "Selected:", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("relationalSelector", "Abort", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSelect.setText(QtGui.QApplication.translate("relationalSelector", "Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnSelect.setText(QtGui.QApplication.translate("relationalSelector", "Apply", None, QtGui.QApplication.UnicodeUTF8))
 

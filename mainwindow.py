@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
+from ui.preloaderUI import Ui_Preloader
 from PySide import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
@@ -8,7 +9,7 @@ from utils import RegisterQueue, showAbout, Overlay
 from tasks import TaskViewer
 import startpages
 from network import NetworkService, RemoteFile
-from priorityqueue import protocolWrapperClassSelector
+from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 
 
 class WidgetHandler( QtGui.QTreeWidgetItem ):
@@ -89,6 +90,8 @@ class WidgetHandler( QtGui.QTreeWidgetItem ):
 					icon = QtGui.QIcon()
 				elif not isinstance( icon, QtGui.QIcon ):
 					icon = QtGui.QIcon( icon )
+				self.setIcon( 0, icon )
+				self.setText( 0, txt )
 				return( txt, icon )
 			except:
 				continue
@@ -115,6 +118,58 @@ class GroupHandler( QtGui.QTreeWidgetItem ):
 	"""
 	pass
 
+class Preloader( QtGui.QWidget ):
+	
+	finished = QtCore.Signal( ) 
+	
+	def __init__( self, *args, **kwargs ):
+		super( Preloader, self ).__init__( *args, **kwargs )
+		self.ui = Ui_Preloader()
+		self.ui.setupUi( self )
+		self.timerID = None
+		self.itemMap = {} # Modul -> TreeWidgetItem
+		event.connectWithPriority( "configDownloaded", self.configDownloaded, event.lowPriority )
+		event.connectWithPriority( "modulHandlerInitialized", self.modulHandlerInitialized, event.lowPriority )
+
+
+	def configDownloaded( self ):
+		self.ui.listWidget.clear()
+		self.itemMap = {}
+		for modul, cfg in conf.serverConfig["modules"].items():
+			if modul in self.itemMap.keys():
+				#We have this allready
+				continue
+			if "icon" in cfg.keys():
+				icon = QtGui.QIcon(cfg["icon"])
+			else:
+				icon = QtGui.QIcon()
+			item = QtGui.QListWidgetItem( icon, cfg["name"] )
+			item.setBackground( QtGui.QBrush( QtGui.QColor("red") ) )
+			self.itemMap[ modul ] = item
+			self.ui.listWidget.addItem( item )
+			#self.ui.listWidget.setItemWidget( item, utils.
+		self.timerID = self.startTimer(100)
+
+	def modulHandlerInitialized( self, modul ):
+		print( modul )
+		print( protocolWrapperInstanceSelector.select( modul ) )
+	
+	def timerEvent(self, event):
+		hasMissing = False
+		for modul in conf.serverConfig["modules"].keys():
+			protoWrap = protocolWrapperInstanceSelector.select( modul )
+			if protoWrap is None:
+				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("white") ) )
+				continue
+			if protoWrap.busy:
+				hasMissing = True
+				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("red") ) )
+			else:
+				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("white") ) )
+		if not hasMissing:
+			self.finished.emit()
+			self.killTimer(self.timerID)
+			self.timerID = None
 
 class MainWindow( QtGui.QMainWindow ):
 	"""
@@ -140,21 +195,27 @@ class MainWindow( QtGui.QMainWindow ):
 		event.connectWithPriority( 'popWidget(PyQt_PyObject)', self.popWidget, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
-		#event.connectWithPriority( QtCore.SIGNAL('rebuildBreadCrumbs()'), self.rebuildBreadCrumbs, event.lowPriority )
+		event.connectWithPriority( 'rebuildBreadCrumbs()', self.rebuildBreadCrumbs, event.lowPriority )
 		WidgetHandler.mainWindow = self
 		self.ui.treeWidget.itemClicked.connect( self.on_treeWidget_itemClicked )
-		self.overlay = Overlay( self )
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs( )
 
 	def loadConfig(self, request=None):
-		self.show()
-		self.overlay.inform( self.overlay.BUSY )
+		#self.show()
+		self.preloader = Preloader( )
+		self.preloader.show()
+		self.preloader.finished.connect( self.onPreloaderFinished )
 		self.logger.debug("Checkpoint: loadConfig")
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError )
-		
+	
+	def onPreloaderFinished( self ):
+		self.preloader.deleteLater()
+		self.preloader = None
+		self.show()
+	
 	def onLoadConfig(self, request):
 		self.logger.debug("Checkpoint: onLoadConfig")
 		try:
@@ -173,7 +234,6 @@ class MainWindow( QtGui.QMainWindow ):
 			portalconfig requested from the server.
 		"""
 		self.logger.error( msg )
-		self.overlay.inform( self.overlay.ERROR, msg )
 		QtCore.QTimer.singleShot( 3000, self.resetLoginWindow )
 		
 
@@ -409,14 +469,12 @@ class MainWindow( QtGui.QMainWindow ):
 			else:
 				self.ui.treeWidget.addTopLevelItem( handler )
 			handlers.append( handler )
-			event.emit( 'modulHandlerInitialized', modul )
 			wrapperClass = protocolWrapperClassSelector.select( modul, data["modules"] )
 			if wrapperClass is not None:
 				wrapperClass( modul )
-		self.show()
+			event.emit( 'modulHandlerInitialized', modul )
 		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
 		event.emit( 'mainWindowInitialized()' )
-		self.overlay.clear()
 		QtGui.QApplication.restoreOverrideCursor()
 
 

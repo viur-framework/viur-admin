@@ -221,7 +221,7 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
 		self.ui.tableWidget.setLayout( layout )
-		self.list = ListWidget( self.ui.tableWidget, self.modul )
+		self.list = ListWidget( self.modul )
 		layout.addWidget( self.list )
 		self.list.show()
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
@@ -240,7 +240,7 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		#header = self.ui.tableView.horizontalHeader()
 		#header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		#header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
-		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
+		event.emit( 'stackWidget(PyQt_PyObject)', self )
 		self.connect( self.list, QtCore.SIGNAL("doubleClicked(const QModelIndex&)"), self.onSourceItemDoubleClicked )
 
 	def onSourceItemDoubleClicked(self, index):

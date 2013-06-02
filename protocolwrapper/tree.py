@@ -13,18 +13,26 @@ class TreeWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	protocolWrapperInstancePriority = 1
-	entitiesChanged = QtCore.Signal()
+	entitiesChanged = QtCore.Signal( (str,) ) # Node,
 	rootNodesAvaiable = QtCore.Signal()
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
+	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( TreeWrapper, self ).__init__()
 		self.modul = modul
 		self.dataCache = {}
-		self.structure = None
+		#self.parentMap = {} #Stores references from child -> parent
+		self.viewStructure = None
+		self.addStructure = None
+		self.editStructure = None
 		self.rootNodes = None
-		self.busy = False
-		NetworkService.request( "/%s/add" % self.modul, successHandler=self.onStructureAvaiable )
+		self.busy = True
+		for stype in ["view","edit","add"]:
+			req = NetworkService.request( "/getStructure/%s/%s" % (self.modul,stype), successHandler=self.onStructureAvaiable )
+			req.structureType = stype
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
 		print("Initializing TreeWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( self.protocolWrapperInstancePriority, self.checkForOurModul, self )
@@ -32,28 +40,47 @@ class TreeWrapper( QtCore.QObject ):
 
 	def checkBusyStatus( self ):
 		busy = False
-		i = 0
-		y = 0
 		for child in self.children():
 			if isinstance( child, RequestWrapper ):
-				i += 1
 				if not child.hasFinished:
-					y += 1
 					busy = True
-		print("reqw was %s is %s" % (self.busy, busy ) )
-		print("reqwrap total: %s, finished: %s" % (i, y ) )
+					break
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit( busy )
 
+
 	def checkForOurModul( self, modulName ):
 		return( self.modul==modulName )
-	
+
+
+	def clearCache( self ):
+		"""
+			Resets our Cache.
+			Does not emit entitiesChanged!
+		"""
+		self.dataCache = {}
+		for node in self.rootNodes:
+			node = node.copy()
+			node["_type"] = "node"
+			node["id"] = node["key"]
+			node["_isRootNode"] = 1
+			node["parentdir"] = None
+			self.dataCache[ node["key"] ] = node
+		
 	def onStructureAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
-		self.structure = OrderedDict()
-		for k,v in tmp["structure"]:
-			self.structure[ k ] = v
+		if tmp is None:
+			return
+		structure = OrderedDict()
+		for k,v in tmp:
+			structure[ k ] = v
+		if req.structureType=="view":
+			self.viewStructure = structure
+		elif req.structureType=="edit":
+			self.editStructure = structure
+		elif req.structureType=="add":
+			self.addStructure = structure
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
 		self.checkBusyStatus()
 		
@@ -61,35 +88,45 @@ class TreeWrapper( QtCore.QObject ):
 		tmp = NetworkService.decode( req )
 		if isinstance( tmp, list ):
 			self.rootNodes = tmp
+		#for node in tmp:
+		#	self.dataCache[ node["key"] ] = None #Rootnodes dont have a parent
+		print( "nodes avaiable")
+		print( tmp )
+		self.clearCache()
+		print( self.dataCache )
 		self.rootNodesAvaiable.emit()
 		self.checkBusyStatus()
 
 	
-	def cacheKeyFromFilter( self, rootNode, path, filters ):
+	def cacheKeyFromFilter( self, node, filters ):
 		tmp = { k:v for k,v in filters.keys()}
-		tmp["rootNode"] = rootNode
-		tmp["path"] = "/".join( path ) if path else "/"
+		tmp["node"] = node
 		tmpList = list( tmp.items() )
 		tmpList.sort( key=lambda x: x[0] )
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
-	def queryData( self, callback, rootNode, path, **kwargs ):
-		key = self.cacheKeyFromFilter( rootNode, path, kwargs )
-		if key in self.dataCache.keys():
+	def queryData( self, node, **kwargs ):
+		key = self.cacheKeyFromFilter( node, kwargs )
+		if 0 and key in self.dataCache.keys():
 			ctime, data, cursor = self.dataCache[ key ]
 			if ctime+self.maxCacheTime>time(): #This cache-entry is still valid
-				self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, key ) )
+				self.deferedTaskQueue.append( ( node ) )
 				QtCore.QTimer.singleShot( 25, self.execDefered )
 				#callback( None, data, cursor )
 				return( key )
 		#Its a cache-miss or cache too old
 		tmp = { k:v for k,v in kwargs.keys()}
-		tmp["rootNode"] = rootNode
-		tmp["path"] = "/".join( path ) if path else "/"
-		r = NetworkService.request( "/%s/list" % self.modul, tmp, successHandler=self.addCacheData )
-		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
-		r.wrapperCbTargetFuncName = callback.__name__
-		r.wrapperCbCacheKey = key
+		tmp["node"] = node
+		for skelType in ["node","leaf"]:
+			tmp["skelType"] = skelType
+			r = NetworkService.request( "/%s/list" % self.modul, tmp, successHandler=self.addCacheData )
+			r.wrapperCacheKey = key
+			r.skelType =skelType
+			r.node = node
+		if not node in [ x["key"] for x in self.rootNodes ]: #Dont query rootNodes again..
+			r = NetworkService.request( "/%s/view/%s/node" % (self.modul, node), successHandler=self.addCacheData )
+			r.skelType = "node"
+			r.node = node
 		self.checkBusyStatus()
 		return( key )
 	
@@ -102,43 +139,61 @@ class TreeWrapper( QtCore.QObject ):
 			targetFunc( key, data, cursor )
 		self.checkBusyStatus()
 	
+	def findParentNode( self, nodeKey ):
+		for key, item in self.dataCache.items():
+			for node in item["nodes"]:
+				if node["id"] == nodeKey:
+					return( key, item )
+		return( None )
+	
+	def childrenForNode( self, node ):
+		assert isinstance( node, str )
+		res = []
+		for item in self.dataCache.values():
+			if item["parentdir"] == node:
+				res.append( item )
+		return( res )
+	
 	def addCacheData( self, req ):
 		data = NetworkService.decode( req )
 		cursor = None
 		if "cursor" in data.keys():
 			cursor=data["cursor"]
-		self.dataCache[ req.wrapperCbCacheKey ] = (time(), data, cursor)
-		targetSelf = req.wrapperCbTargetFuncSelf()
-		if targetSelf is not None:
-			targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
-			targetFunc( req.wrapperCbCacheKey, data, cursor )
+		if data["action"] == "list":
+			for skel in data["skellist"]:
+				skel["_type"] = req.skelType
+				self.dataCache[ skel["id"] ] = skel
+		elif data["action"] == "view":
+			skel = data["values"]
+			skel["_type"] = req.skelType
+			self.dataCache[ skel["id"] ] = skel
+		self.entitiesChanged.emit( req.node )
 		self.checkBusyStatus()
 			
-	def add( self, cbSuccess, cbMissing, cbError, rootNone, path, **kwargs ):
+	def add( self, node, skelType, **kwargs ):
 		tmp = {k:v for (k,v) in kwargs.items() }
-		tmp["rootNode"] = rootNone
-		tmp["path"] = path
+		tmp["node"] = node
+		tmp["skelType"] = skelType
 		req = NetworkService.request("/%s/add/" % ( self.modul ), tmp, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
-	def edit( self, cbSuccess, cbMissing, cbError, id, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s" % ( self.modul, id ), kwargs, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
+	def edit( self, key, skelType, **kwargs ):
+		req = NetworkService.request("/%s/edit/%s/%s" % ( self.modul, key, skelType ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
 		self.checkBusyStatus()
+		return( str( id( req ) ) )
 
-
-	def mkdir(self, rootNode, path, dirName):
+	def mkdir(self, node, dirName):
 		"""
 			Creates a new directory on the server.
 			
@@ -149,11 +204,11 @@ class TreeWrapper( QtCore.QObject ):
 			@param dirName: Name of the new directory
 			@type dirName: String
 		"""
-		request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode":rootNode, "path": ("/".join(path) or "/"), "dirname":dirName}, successHandler=self.delayEmitEntriesChanged )
+		req = NetworkService.request("/%s/add"% self.modul, {"node":node, "skelType":"node", "name":dirName}, secure=True, successHandler=self.delayEmitEntriesChanged )
 		self.checkBusyStatus()
-		#request.flushList = [ lambda*args, **kwargs: self.flushCache(rootNode, path) ]
+		return( str( id( req ) ) )
 
-	def delete( self, rootNode, path, entries, dirs ):
+	def delete( self, entries, dirs ):
 		"""
 			Delete files and/or directories from the server.
 			Directories dont need to be empty, the server handles that case internally.
@@ -169,19 +224,15 @@ class TreeWrapper( QtCore.QObject ):
 		"""
 		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
 		for entry in entries:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
-										"path": path, 
-										"name": entry, 
-										"type": "entry" } ) )
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id": entry["id"], 
+												"skelType": "leaf" }, parent=self ) )
 		for dir in dirs:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"rootNode":rootNode, 
-										"path": path, 
-										"name": dir, 
-										"type": "dir" } ) )
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id":dir["id"], 
+												"skelType": "node" }, parent=self ) )
 		#request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
 		self.checkBusyStatus()
-		#self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
+		return( str( id( request ) ) )
 
 
 	def copy(self, srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove ):
@@ -196,7 +247,7 @@ class TreeWrapper( QtCore.QObject ):
 			@type path: String
 		"""
 		print( srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove )
-		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
+		drequest = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
 		for file in files:
 			request.addQuery( NetworkService.request( "/%s/copy" % self.modul , {"srcrepo": srcRootNode,
 									"srcpath": ("/".join(srcPath) if srcPath else "/"),
@@ -215,20 +266,8 @@ class TreeWrapper( QtCore.QObject ):
 									"type":"dir"}, parent=self ) )
 		request.queryType = "move" if doMove else "copy"
 		self.checkBusyStatus()
-		#self.connect( request, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
-		#self.overlay.inform( self.overlay.BUSY )
-	
-	def onProgessUpdate(self, request, done, maximum ):
-		if request.queryType == "move":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
-		elif request.queryType == "copy":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Copying: %s of %s finished.")
-		elif request.queryType == "delete":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Deleting: %s of %s removed.")
-		else:
-			raise NotImplementedError()
-		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
-	
+		return( str( id( request ) ) )
+
 	def rename(self, rootNode, path, oldName, newName ):
 		"""
 			Rename an entity or directory.
@@ -244,41 +283,53 @@ class TreeWrapper( QtCore.QObject ):
 		"""
 		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path": ("/".join(path) if path else "/"), "src": oldName, "dest":newName }, finishedHandler=self.delayEmitEntriesChanged )
 		self.checkBusyStatus()
-
-	def delayEmitEntriesChanged( self, *args, **kwargs ):
+		return( str( id( request ) ) )
+	
+	def onProgessUpdate(self, request, done, maximum ):
+		if request.queryType == "move":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
+		elif request.queryType == "copy":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Copying: %s of %s finished.")
+		elif request.queryType == "delete":
+			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Deleting: %s of %s removed.")
+		else:
+			raise NotImplementedError()
+		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
+	
+	def delayEmitEntriesChanged( self, req=None, *args, **kwargs ):
 		"""
 			Give the GAE a chance to apply recent changes and then
 			force all open views of that modul to reload its data
 		"""
+		if req is not None:
+			try:
+				print( NetworkService.decode( req ) )
+			except:
+				print("error decoding response")
 		QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
 
 	def onSaveResult( self, req ):
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
-			errorFuncSelf = req.wrapperCbErrorFuncSelf()
-			if errorFuncSelf:
-				errorFunc = getattr( errorFuncSelf, req.wrapperCbErrorFuncName )
-				errorFunc( QtCore.QCoreApplication.translate("ListWrapper", "There was an error saving your changes") )
+			self.updatingFailedError.emit( str( id( req ) ) )
+			return
 		if data=="OKAY": #Saving succeeded
 			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
-			successFuncSelf = req.wrapperCbSuccessFuncSelf()
-			if successFuncSelf:
-				successFunc = getattr( successFuncSelf, req.wrapperCbSuccessFuncName )
-				successFunc()
+			self.updatingSucceeded.emit( str( id( req ) ) )
 		else: #There were missing fields
-			missingFuncSelf = req.wrapperCbMissingFuncSelf()
-			if missingFuncSelf:
-				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
-				missingFunc( data )
+			self.updatingDataAvaiable.emit( str( id( req ) ), data, req.wasInitial )
 		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):
-		for k,v in self.dataCache.items():
-			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
-			ctime, data, cursor = v
-			self.dataCache[ k ] = (1, data, cursor )
-		self.entitiesChanged.emit()
+		self.clearCache()
+		self.entitiesChanged.emit( None )
+		self.checkBusyStatus()
+		#for k,v in self.dataCache.items():
+		#	# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
+		#	ctime, data, cursor = v
+		#	self.dataCache[ k ] = (1, data, cursor )
+		#self.entitiesChanged.emit( None )
 		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 		

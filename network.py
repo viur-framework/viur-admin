@@ -138,10 +138,10 @@ class RequestWrapper( QtCore.QObject ):
 
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None ):
 		super( RequestWrapper, self ).__init__()
-
 		self.logger = logging.getLogger( "RequestWrapper" )
 		self.logger.debug("New network request: %s", str(self) )
 		self.request = request
+		request.setParent( self )
 		self.hasFinished = False
 		if successHandler and "__self__" in dir( successHandler ) and isinstance( successHandler.__self__, QtCore.QObject ):
 			parent = parent or successHandler.__self__
@@ -182,7 +182,7 @@ class RequestWrapper( QtCore.QObject ):
 		self.finished.emit( self )
 		self.logger.debug("Request finished: %s", str(self) )
 		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
-		self.request.deleteLater()
+		#self.request.deleteLater()
 		self.request = None
 		self.successHandler = None
 		self.failureHandler = None
@@ -191,6 +191,9 @@ class RequestWrapper( QtCore.QObject ):
 	
 	def readAll(self):
 		return( self.request.readAll() )
+	
+	def abort( self ):
+		self.request.abort()
 
 class RequestGroup( QtCore.QObject ):
 	"""
@@ -203,68 +206,66 @@ class RequestGroup( QtCore.QObject ):
 	requestFailed = QtCore.Signal( (QtCore.QObject,) ) #FIXME.....What makes sense here?
 	finished = QtCore.Signal( (QtCore.QObject,) )
 	progessUpdate = QtCore.Signal( (QtCore.QObject,int,int) )
+	cancel = QtCore.Signal()
 	
-	def __init__(self, successHandler=None, failureHandler=None, finishedHandler=None, *args, **kwargs ):
+	def __init__(self, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, *args, **kwargs ):
 		super( RequestGroup, self ).__init__(*args, **kwargs)
-		self.querys = []
-		self.successHandler = successHandler
-		self.failureHandler = failureHandler
-		self.finishedHandler = finishedHandler
-		self.maxQueryCount = 0
+		if successHandler is not None:
+			parent = parent or successHandler.__self__
+			self.requestsSucceeded.connect( successHandler )
+		if failureHandler is not None:
+			parent = parent or failureHandler.__self__
+			self.requestFailed.connect( failureHandler )
+		if finishedHandler is not None:
+			parent = parent or finishedHandler.__self__
+			self.finished.connect( finishedHandler )
+		assert parent is not None
+		self.setParent( parent )
+		self.queryCount = 0 # Total amount of subqueries remaining
+		self.maxQueryCount = 0 # Total amount of all queries
 		self.hadErrors = False
-		NetworkService.currentRequests.append( self )
 
 	def addQuery( self, query ):
 		"""
 			Add an RequestWrapper to the Group
 		"""
-		self.maxQueryCount += 1
-		self.querys.append( query )
+		query.setParent( self )
 		query.downloadProgress.connect( self.onProgress )
 		query.requestFailed.connect( self.onError )
 		query.finished.connect( self.onFinished )
-		#self.connect( query, QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self.onProgress )
-		#self.connect( query, QtCore.SIGNAL("error(PyQt_PyObject,QNetworkReply::NetworkError)"), self.onError )
-		#self.connect( query, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onFinished )
+		self.cancel.connect( query.abort )
+		self.queryCount += 1
+		self.maxQueryCount += 1
+
 	
 	def onProgress(self, request, bytesReceived, bytesTotal ):
 		if bytesReceived == bytesTotal:
-			if self.successHandler:
-				self.successHandler( self, request )
-			self.progessUpdate.emit( self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
+			self.progessUpdate.emit( self, self.maxQueryCount-self.queryCount, self.maxQueryCount )
 			#self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 	
 	def onError(self, request, error):
-		if self.failureHandler:
-			self.failureHandler( self, request, error )
-		#self.requestFailed.emit( self )
-		self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.maxQueryCount-len( self.querys ), self.maxQueryCount )
+		self.requestFailed.emit( self )
+		self.progessUpdate.emit( self, self.maxQueryCount-self.queryCount, self.maxQueryCount )
 	
 	def onFinished(self, queryWrapper ):
-		self.querys.remove( queryWrapper )
-		if len( self.querys ) == 0:
-			if self.finishedHandler:
-				self.finishedHandler( self )
-			NetworkService.currentRequests.remove( self )
-			self.successHandler = None
-			self.failureHandler = None
-			self.finishedHandler = None
-			#self.deleteLater()
+		self.queryCount -= 1
+		if self.queryCount == 0:
+			self.finished.emit( self )
+			self.deleteLater()
 	
 	def isIdle(self):
 		"""
 			Check whenever no more querys are pending.
 			@returns: Bool
 		"""
-		return( len(self.querys) == 0 )
+		return( self.queryCount == 0 )
 	
 	def abort(self):
 		"""
 			Abort all remaining queries.
 			If there was at least one running query, the finishedHandler will be called shortly after.
 		"""
-		for req in self.querys:
-			req.abort()
+		self.cancel.emit()
 
 
 class RemoteFile( QtCore.QObject ):
@@ -303,6 +304,7 @@ class RemoteFile( QtCore.QObject ):
 			Unregister this object, so it gets garbarge collected
 		"""
 		self.logger.debug("Checkpoint: remove")
+		self._delayTimer = None
 		NetworkService.currentRequests.remove( self )
 		self.successHandler = None
 		self.failureHandler = None
@@ -312,15 +314,14 @@ class RemoteFile( QtCore.QObject ):
 	def onTimerEvent( self ):
 		self.logger.debug("Checkpoint: onTimerEvent")
 		s = self.successHandlerSelf()
-		print( s )
 		if s:
 			try:
 				getattr( s, self.successHandlerName )( self )
 			except e:
 				self.logger.exception( e )
 		#self._delayTimer.deleteLater()
-		self._delayTimer = None
-		self.remove()
+		self._delayTimer = QtCore.QTimer( self )
+		self._delayTimer.singleShot( 250, self.remove )
 
 	
 	def loadFile(self ):
@@ -340,7 +341,8 @@ class RemoteFile( QtCore.QObject ):
 				getattr( s, self.successHandlerName )( self )
 			except e:
 				self.logger.exception( e )
-		self.remove()
+		self._delayTimer = QtCore.QTimer( self ) # Queue our deletion, sothat our child (networkReply) has a chance to finnish
+		self._delayTimer.singleShot( 250, self.remove )
 
 	def getFileName( self ):
 		"""

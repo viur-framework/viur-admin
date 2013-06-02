@@ -74,17 +74,19 @@ class UploadStatusWidget( QtGui.QWidget ):
 		self.uploader = uploader
 		self.uploader.uploadProgress.connect( self.onUploadProgress )
 		self.uploader.finished.connect( self.onFinished )
-		self.ui.btnCancel.released.connect( self.onBtnCancelReleased )
+		self.ui.btnCancel.released.connect( uploader.cancel )
 	
 	def onBtnCancelReleased(self, *args, **kwargs ):
 		self.uploader.cancelUpload()
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
-		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( self.uploader.statsDone["files"], self.uploader.statsTotal["files"], self.uploader.statsDone["dirs"], self.uploader.statsTotal["dirs"], self.uploader.statsDone["bytes"], self.uploader.statsTotal["bytes"]) )
-		self.ui.pbarTotal.setRange( 0, self.uploader.statsTotal["bytes"] )
-		self.ui.pbarTotal.setValue(self.uploader.statsDone["bytes"])
-		self.ui.pbarFile.setRange( 0, bytesTotal )
-		self.ui.pbarFile.setValue( bytesSend )
+		print( "upload progress" )
+		stats = self.uploader.getStats()
+		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( stats["filesDone"], stats["filesTotal"], stats["dirsDone"], stats["dirsTotal"], stats["bytesDone"], stats["bytesTotal"]) )
+		self.ui.pbarTotal.setRange( 0, stats["filesTotal"] )
+		self.ui.pbarTotal.setValue( stats["filesDone"])
+		self.ui.pbarFile.setRange( 0, stats["bytesTotal"] )
+		self.ui.pbarFile.setValue( stats["bytesDone"] )
 		
 	def askOverwriteFile(self, title, text ):
 		res = QtGui.QMessageBox.question( self, title, text,  buttons=QtGui.QMessageBox.Yes|QtGui.QMessageBox.No|QtGui.QMessageBox.Cancel )
@@ -126,7 +128,7 @@ class DownloadStatusWidget( QtGui.QWidget ):
 		self.downloader = downloader
 		self.downloader.downloadProgress.connect( self.onDownloadProgress )
 		self.downloader.finished.connect( self.onFinished )
-		#self.ui.btnCancel.released.connect( self.onBtnCancelReleased )
+		#self.ui.btnCancel.released.connect( downloader.cancel )
 	
 	def onDownloadProgress(self, bytesDone, bytesTotal ):
 		self.ui.pbarTotal.setRange( 0, bytesTotal )
@@ -139,7 +141,7 @@ class FileListView( TreeListView ):
 	
 	treeItem = FileItem
 	
-	def doUpload(self, files, rootNode, path ):
+	def doUpload(self, files, node ):
 		"""
 			Uploads a list of files to the Server and adds them to the given path on the server.
 			@param files: List of local filenames including their full, absolute path
@@ -152,7 +154,7 @@ class FileListView( TreeListView ):
 		if not files:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select( self.getModul() )
-		uploader = protoWrap.upload( files, rootNode, path )
+		uploader = protoWrap.upload( files, node )
 		self.parent().layout().addWidget( UploadStatusWidget( uploader ) )
 		#uploader = RecursiveUploader( files, rootNode, path, self.getModul() )
 		#self.ui.boxUpload.addWidget( uploader )
@@ -186,7 +188,7 @@ class FileListView( TreeListView ):
 		"""
 		if ( all( [ str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or ( len(str(file.toLocalFile()))>0 and str(file.toLocalFile())[1]==":")  for file in event.mimeData().urls() ] ) ) and len(event.mimeData().urls())>0:
 			#Its an upload (files/dirs draged from the local filesystem into our fileview)
-			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.getRootNode(), "/".join(self.getPath()) or "/" )
+			self.doUpload( [file.toLocalFile() for file in event.mimeData().urls()], self.getNode() )
 		else:
 			super( FileListView, self ).dropEvent( event )
 

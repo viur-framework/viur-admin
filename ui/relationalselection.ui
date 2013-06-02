@@ -93,11 +93,11 @@
          <item>
           <widget class="QPushButton" name="btnSelect">
            <property name="text">
-            <string>Save</string>
+            <string>Apply</string>
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+             <normaloff>icons/actions/accept.png</normaloff>icons/actions/accept.png</iconset>
            </property>
           </widget>
          </item>
