@@ -207,7 +207,7 @@ class FileListView( TreeListView ):
 				urls = []
 				for item in self.selectedItems():
 					if isinstance( item, self.treeItem ):
-						urls.append( "%s/file/view/%s/%s" % (NetworkService.url[ : -len("/admin")] , item.entryData["dlkey"], item.entryData["name"] ) )
+						urls.append( "%s/file/download/%s/%s" % (NetworkService.url[ : -len("/admin")] , item.entryData["dlkey"], item.entryData["name"] ) )
 				event.mimeData().setUrls( urls )
 
 
@@ -221,8 +221,8 @@ class FileWidget( TreeWidget ):
 	def __init__( self, *args, **kwargs ):
 		super( FileWidget, self ).__init__( actions=["dirup", "mkdir", "upload", "download", "edit", "delete"], *args, **kwargs )
 
-	def doUpload(self, files, rootNode, path ):
-		return( self.tree.doUpload( files, rootNode, path ) )
+	def doUpload(self, files, node ):
+		return( self.tree.doUpload( files, node ) )
 
 	def doDownload( self, targetDir, rootNode, path, files, dirs ):
 		return( self.tree.doDownload( targetDir, rootNode, path, files, dirs ) )

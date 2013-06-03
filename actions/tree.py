@@ -62,18 +62,31 @@ actionDelegateSelector.insert( 1, TreeEditAction.isSuitableFor, TreeEditAction )
 class TreeDirUpAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDirUpAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_back_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent )
-		return #FIXME
-		self.parent().pathChanged.connect( self.onPathChanged )
-		if not self.parent().getPath():
+		self.parent().nodeChanged.connect( self.onNodeChanged )
+		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
+		assert reqWrap is not None
+		if self.parent().getNode() in [ x["key"] for x in reqWrap.rootNodes ]:
 			self.setEnabled( False )
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
-	def onPathChanged( self, path ):
-		self.setEnabled( path!=[] )
+	def onNodeChanged( self, node ):
+		print( "0"*10, node)
+		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
+		assert reqWrap is not None
+		node = reqWrap.getNode( self.parent().getNode() )
+		if not node["parentdir"]:
+			self.setEnabled( False )
+		else:
+			self.setEnabled( True )
 	
 	def onTriggered( self, e ):
-		self.parent().setPath( self.parent().getPath()[ : -1 ], isInitialCall=True )
-		self.parent().loadData()
+		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
+		assert reqWrap is not None
+		node = reqWrap.getNode( self.parent().getNode() )
+		if node:
+			print( node )
+			if node["parentdir"]:
+				self.parent().setNode( node["parentdir"], isInitialCall=True )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

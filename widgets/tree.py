@@ -120,14 +120,10 @@ class PathListView( QtGui.QListWidget ):
 		dataDict = json.loads( event.mimeData().data("viur/treeDragData").data().decode("UTF-8") )
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		destIndex = self.itemAt( event.pos() ).i
-		protoWrap.copy(	dataDict["srcRootNode"],
-				dataDict["srcPath"],
-				dataDict["files"],
-				dataDict["dirs"],
-				self.rootNode,
-				self.path[ : destIndex ],
-				True )
+		destItem = self.itemAt( event.pos() )
+		protoWrap.move(	dataDict["nodes"],
+				dataDict["leafs"],
+				destItem.entryData["id"] )
 	
 	@QtCore.Slot( str )
 	def setNode( self, node, isInitialCall=False ):
@@ -229,17 +225,15 @@ class TreeListView( QtGui.QListWidget ):
 		"""
 		if event.source() == self:
 			event.accept()
-			dirs = []
-			files = []
+			nodes = []
+			leafs = []
 			for item in self.selectedItems():
 				if isinstance( item, self.dirItem ):
-					dirs.append( item.dirName )
+					nodes.append( item.entryData["id"] )
 				else:
-					files.append( item.entryData["name"] )
-			event.mimeData().setData( "viur/treeDragData", json.dumps( {	"srcRootNode": self.rootNode,
-											"srcPath": self.getPath(),
-											"dirs": dirs,
-											"files": files } ) )
+					leafs.append( item.entryData["id"] )
+			event.mimeData().setData( "viur/treeDragData", json.dumps( {	"nodes": nodes,
+											"leafs": leafs } ) )
 
 	def dragMoveEvent( self, event ):
 		if isinstance( self.itemAt( event.pos() ), self.treeItem ):
@@ -255,13 +249,10 @@ class TreeListView( QtGui.QListWidget ):
 		if not isinstance( destItem, self.dirItem ):
 			# Entries have no childs, only dirItems can have children
 			return
-		protoWrap.copy(	dataDict["srcRootNode"],
-				dataDict["srcPath"],
-				dataDict["files"],
-				dataDict["dirs"],
-				self.rootNode,
-				self.path+[destItem.dirName],
-				True )
+		protoWrap.move(	dataDict["nodes"],
+				dataDict["leafs"],
+				destItem.entryData["id"]
+				)
 
 	def setRootNode( self, rootNode, repoName="" ):
 		"""
@@ -547,7 +538,7 @@ class TreeWidget( QtGui.QWidget ):
 	def setNode( self, node, isInitialCall=False ):
 		self.node = node
 		if isInitialCall:
-			self.nodeChanged.emit( self.path )
+			self.nodeChanged.emit( self.node )
 	
 	def getRootNode( self ):
 		return( self.rootNode )

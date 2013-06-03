@@ -15,11 +15,12 @@ class BaseBone:
 
 class RelationalViewBoneDelegate(QtGui.QStyledItemDelegate):
 	cantSort = True
-	def __init__(self, structure, boneName):
+	def __init__(self, modul, boneName, structure):
 		super(RelationalViewBoneDelegate, self).__init__()
 		self.format = "$(name)"
 		if "format" in structure[boneName].keys():
 			self.format = structure[boneName]["format"]
+		self.modul = modul
 		self.structure = structure
 		self.boneName = boneName
 
@@ -171,7 +172,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.selection = selection[0]
 		else:
 			self.selection = None
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self.editWidget )
+		event.emit( "popWidget(PyQt_PyObject)", self.editWidget )
 		self.editWidget = None
 		self.updateVisiblePreview()
 	
@@ -179,7 +180,8 @@ class RelationalEditBone( QtGui.QWidget ):
 		#queue = RegisterQueue()
 		#event.emit( QtCore.SIGNAL('requestRelationalBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection )
 		self.editWidget = BaseRelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
-		self.connect( self.editWidget, QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), self.setSelection )
+		self.editWidget.selectionChanged.connect( self.setSelection )
+		#self.connect( self.editWidget, QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), self.setSelection )
 		#self.editWidget = queue.getBest()()
 
 	def on_delBtn_released(self, *args, **kwargs ):
@@ -208,6 +210,8 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 	""" 	
 		FIXME: This claas should derive from hander.List
 	"""
+	selectionChanged = QtCore.Signal( (object, ) )
+
 	GarbargeTypeName = "BaseRelationalBoneSelector"
 	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs ):
 		QtGui.QWidget.__init__( self, *args, **kwargs )
@@ -221,7 +225,7 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
 		self.ui.tableWidget.setLayout( layout )
-		self.list = ListWidget( self.modul )
+		self.list = ListWidget( self.modul, editOnDoubleClick=False )
 		layout.addWidget( self.list )
 		self.list.show()
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
@@ -241,18 +245,22 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		#header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		#header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		event.emit( 'stackWidget(PyQt_PyObject)', self )
-		self.connect( self.list, QtCore.SIGNAL("doubleClicked(const QModelIndex&)"), self.onSourceItemDoubleClicked )
+		self.list.itemDoubleClicked.connect( self.onSourceItemDoubleClicked )
+		self.ui.btnSelect.clicked.connect( self.onBtnSelectReleased )
+		self.ui.btnCancel.clicked.connect( self.onBtnCancelReleased )
+		#self.connect( self.list, QtCore.SIGNAL("doubleClicked(const QModelIndex&)"), self.onSourceItemDoubleClicked )
 
-	def onSourceItemDoubleClicked(self, index):
+	def onSourceItemDoubleClicked(self, item):
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		data = self.list.model().getData()[ index.row() ]
+		data = item
 		if self.multiple:
 			self.selection.extend( [data] )
 		if not self.multiple:
-			self.emit( QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), [data] )
+			self.selectionChanged.emit( [data] )
+			#self.emit( QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), [data] )
 			#self.setSelection( [data] )
 			#event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
@@ -268,9 +276,7 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 		if (modulName==self.modul or emitingEntry==self):
 			self.reload( )
 		
-	def on_tableSelected_doubleClicked (self,index):
-		self.selectedModel.removeItemAtIndex( index )
-		
+	
 	def on_tableSelected_keyPressEvent(self, key):
 		"""Remove the currently selected Items from the selection"""
 		if( key.key()==QtCore.Qt.Key_Delete ):
@@ -280,13 +286,15 @@ class BaseRelationalBoneSelector( QtGui.QWidget ):
 			for index in selIdx:
 				self.selectedModel.removeItemAtIndex( index )
 
-	def on_btnSelect_released(self, *args, **kwargs):
-		self.emit( QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), self.selection.get() )
+	def onBtnSelectReleased(self, *args, **kwargs):
+		print("xxx")
+		self.selectionChanged.emit( self.selection.get() )
+		#self.emit( QtCore.SIGNAL("selectionChanged(PyQt_PyObject)"), self.selection.get() )
 		#self.setSelection( self.selection.get() )
 		#event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
-	def on_btnCancel_released(self, *args,  **kwargs ):
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+	def onBtnCancelReleased(self, *args,  **kwargs ):
+		event.emit( "popWidget(PyQt_PyObject)", self )
 
 	def on_editSearch_returnPressed(self):
 		self.search()

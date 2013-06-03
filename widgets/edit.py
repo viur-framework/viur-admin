@@ -183,14 +183,12 @@ class EditWidget( QtGui.QWidget ):
 		#	raise NotImplementedError() #Should never reach this
 
 	def save(self, data ):
-		print("--SAVING--")
-		print( data )
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		if self.modul=="_tasks":
 			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appList: ## Application: List
-			if self.key and not self.clone:
+			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit( self.key, **data )
 				#request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:

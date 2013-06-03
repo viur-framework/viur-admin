@@ -30,9 +30,7 @@ class TreeWrapper( QtCore.QObject ):
 		self.editStructure = None
 		self.rootNodes = None
 		self.busy = True
-		for stype in ["view","edit","add"]:
-			req = NetworkService.request( "/getStructure/%s/%s" % (self.modul,stype), successHandler=self.onStructureAvaiable )
-			req.structureType = stype
+		req = NetworkService.request( "/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable )
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
 		print("Initializing TreeWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( self.protocolWrapperInstancePriority, self.checkForOurModul, self )
@@ -71,16 +69,18 @@ class TreeWrapper( QtCore.QObject ):
 	def onStructureAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
 		if tmp is None:
+			self.checkBusyStatus()
 			return
-		structure = OrderedDict()
-		for k,v in tmp:
-			structure[ k ] = v
-		if req.structureType=="view":
-			self.viewStructure = structure
-		elif req.structureType=="edit":
-			self.editStructure = structure
-		elif req.structureType=="add":
-			self.addStructure = structure
+		for stype, structlist in tmp.items():
+			structure = OrderedDict()
+			for k,v in structlist:
+				structure[ k ] = v
+			if stype=="viewSkel":
+				self.viewStructure = structure
+			elif stype=="editSkel":
+				self.editStructure = structure
+			elif stype=="addSkel":
+				self.addStructure = structure
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
 		self.checkBusyStatus()
 		
@@ -139,11 +139,9 @@ class TreeWrapper( QtCore.QObject ):
 			targetFunc( key, data, cursor )
 		self.checkBusyStatus()
 	
-	def findParentNode( self, nodeKey ):
-		for key, item in self.dataCache.items():
-			for node in item["nodes"]:
-				if node["id"] == nodeKey:
-					return( key, item )
+	def getNode( self, node ):
+		if node in self.dataCache.keys():
+			return( self.dataCache[ node ] )
 		return( None )
 	
 	def childrenForNode( self, node ):
@@ -235,7 +233,7 @@ class TreeWrapper( QtCore.QObject ):
 		return( str( id( request ) ) )
 
 
-	def copy(self, srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove ):
+	def move(self, nodes, leafs, destNode ):
 		"""
 			Copy or move elements to the given rootNode/path.
 			
@@ -246,25 +244,21 @@ class TreeWrapper( QtCore.QObject ):
 			@param path: Destination path
 			@type path: String
 		"""
-		print( srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove )
-		drequest = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
-		for file in files:
-			request.addQuery( NetworkService.request( "/%s/copy" % self.modul , {"srcrepo": srcRootNode,
-									"srcpath": ("/".join(srcPath) if srcPath else "/"),
-									"name": file,
-									"destrepo": destRootNode,
-									"destpath": ("/".join(destPath) if destPath else "/"),
-									"deleteold": "1" if doMove else "0",
-									"type":"entry"}, parent=self ) )
-		for dir in dirs:
-			request.addQuery( NetworkService.request( "/%s/copy" % self.modul, {"srcrepo": srcRootNode,
-									"srcpath": ("/".join(srcPath) if srcPath else "/"),
-									"name": dir,
-									"destrepo": destRootNode,
-									"destpath": ("/".join(destPath) if destPath else "/"),
-									"deleteold": "1" if doMove else "0",
-									"type":"dir"}, parent=self ) )
-		request.queryType = "move" if doMove else "copy"
+		print( nodes, leafs, destNode )
+		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
+		for node in nodes:
+			request.addQuery( NetworkService.request( "/%s/move" % self.modul , {	"id": node,
+												"skelType": "node",
+												"destNode": destNode
+												}
+											, parent=self ) )
+		for leaf in leafs:
+			request.addQuery( NetworkService.request( "/%s/move" % self.modul , {	"id": leaf,
+												"skelType": "leaf",
+												"destNode": destNode
+												}
+											, parent=self ) )
+		request.queryType = "move"
 		self.checkBusyStatus()
 		return( str( id( request ) ) )
 

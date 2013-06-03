@@ -25,9 +25,7 @@ class ListWrapper( QtCore.QObject ):
 		self.addStructure = None
 		self.editStructure = None
 		self.busy = True
-		for stype in ["view","edit","add"]:
-			req = NetworkService.request( "/getStructure/%s/%s" % (self.modul,stype), successHandler=self.onStructureAvaiable )
-			req.structureType = stype
+		req = NetworkService.request( "/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable )
 		print("Initializing ListWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
@@ -51,15 +49,16 @@ class ListWrapper( QtCore.QObject ):
 		if tmp is None:
 			self.checkBusyStatus()
 			return
-		structure = OrderedDict()
-		for k,v in tmp:
-			structure[ k ] = v
-		if req.structureType=="view":
-			self.viewStructure = structure
-		elif req.structureType=="edit":
-			self.editStructure = structure
-		elif req.structureType=="add":
-			self.addStructure = structure
+		for stype, structlist in tmp.items():
+			structure = OrderedDict()
+			for k,v in structlist:
+				structure[ k ] = v
+			if stype=="viewSkel":
+				self.viewStructure = structure
+			elif stype=="editSkel":
+				self.editStructure = structure
+			elif stype=="addSkel":
+				self.addStructure = structure
 		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
 		self.checkBusyStatus()
 	
@@ -145,13 +144,22 @@ class ListWrapper( QtCore.QObject ):
 		"""
 		QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
 		self.checkBusyStatus()
+		
+	def resetOnError( self, *args, **kwargs ):
+		"""
+			If one or more requests fail, flush our cache and force
+			all listening widgets to reload.
+		"""
+		self.dataCache = {}
+		self.entitiesChanged.emit()
+		self.checkBusyStatus()
 
 	def onSaveResult( self, req ):
-		print("onSaveResult")
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
 			self.updatingFailedError.emit( str( id( req ) ) )
+			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
 			return
 		print( data )
 		if data["action"] in ["addSuccess", "editSuccess","deleteSuccess"]: #Saving succeeded

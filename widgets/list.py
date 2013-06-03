@@ -319,7 +319,12 @@ class ListTableView( QtGui.QTableView ):
 
 	
 class ListWidget( QtGui.QWidget ):
-	def __init__(self, modul, fields=None, filter=None, actions=None, *args, **kwargs ):
+	
+	itemClicked = QtCore.Signal( (object,) )
+	itemDoubleClicked = QtCore.Signal( (object,) )
+	itemActivated = QtCore.Signal( (object,) )
+	
+	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
 		super( ListWidget, self ).__init__( *args, **kwargs )
 		self.modul = modul
 		self.ui = Ui_List()
@@ -335,7 +340,11 @@ class ListWidget( QtGui.QWidget ):
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText( filter["search"] )
 		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
-		self.list.itemDoubleClicked.connect( self.openEditor )
+		if editOnDoubleClick:
+			self.list.itemDoubleClicked.connect( self.openEditor )
+		self.list.itemClicked.connect( self.itemClicked )
+		self.list.itemDoubleClicked.connect( self.itemDoubleClicked )
+		self.list.itemActivated.connect( self.itemActivated )
 		self.overlay = Overlay( self )
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None

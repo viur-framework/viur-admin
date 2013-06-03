@@ -6,11 +6,13 @@ from ui.relationalselectionUI import Ui_relationalSelector
 from widgets.list import ListWidget
 from network import NetworkService
 from config import conf
+from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
 
 class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 	"""
 		The model holding the currently selected entities.
 	"""
+	rebuildDelegates = QtCore.Signal( (object, ) )
 	
 	def __init__(self, parent, modul, selection, *args, **kwargs):
 		"""
@@ -53,10 +55,10 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		"""
 		data = NetworkService.decode( query )
 		item = data["values"]
-		self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), data["structure"] )
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		self.rebuildDelegates.emit( { k:v for k,v in data["structure"] } )
+		self.layoutAboutToBeChanged.emit()
 		self.dataCache.append( item )
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutChanged.emit()
 	
 	def rowCount(self, parent): 
 		if not self.dataCache:
@@ -114,19 +116,19 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 			self.selection = [ self.selection ]
 		self.setModel( SelectedEntitiesTableModel( self, modul, self.selection ) )
 		self.setAcceptDrops( True )
-		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
-		self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
+		self.doubleClicked.connect( self.onItemDoubleClicked )
+		#self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
+		self.model().rebuildDelegates.connect( self.rebuildDelegates )
+		#self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 	
-	def rebuildDelegates( self, data ):
+
+	def rebuildDelegates( self, bones ):
 		"""
 			(Re)Attach the viewdelegates to the table.
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
 		self.delegates = [] # Qt Dosnt take ownership of viewdelegates -> garbarge collected
-		bones = {}
-		for key, bone in data:
-			bones[ key ] = bone
 		self.structureCache = bones
 		self.model().headers = []
 		colum = 0
@@ -134,20 +136,19 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 		for field in fields:
 			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
-			queue = RegisterQueue()
-			event.emit( QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.model().modul, field, self.structureCache)
-			delegate = queue.getBest()()
-			self.setItemDelegateForColumn( colum, delegate  )
+			delegateFactory = viewDelegateSelector.select( self.model().modul, field, self.structureCache )
+			delegate = delegateFactory( self.model().modul, field, self.structureCache )
+			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )
 			self.connect( delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint )
-			colum += 1	
-	
-	def itemDoubleClicked(self, item):
+			colum += 1
+
+	def onItemDoubleClicked(self, index):
 		"""
 			One of our Items has been double-clicked.
 			Remove it from the selection
 		"""
-		self.model().removeItemAtIndex( self.indexFromItem( item ) )
+		self.model().removeItemAtIndex( index )
 
 	def dropEvent(self, event):
 		"""
