@@ -57,7 +57,7 @@ class HierarchyWrapper( QtCore.QObject ):
 		if isinstance( tmp, list ):
 			self.rootNodes = tmp
 			if self.structure is None and len(tmp)>0: #Load the structure
-				NetworkService.request( "/%s/add/%s" % (self.modul, tmp[0]["key"]), successHandler=self.onStructureAvaiable )
+				NetworkService.request( "/%s/add/%s" % (self.modul, tmp[0]["key"]), successHandler=self.onStructureAvaiable,  secure=True )
 		else:
 			self.rootNodes = []
 		if "wrapperCbTargetFuncSelf" in dir( req ):

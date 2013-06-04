@@ -49,7 +49,11 @@ class TreeEditAction( QtGui.QAction ):
 			if not isinstance( item, DirItem ):
 				entries.append( item.entryData )
 		for entry in entries:
-			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], skelType="node" ) #Fixme: type is hardcoded
+			if isinstance( item, DirItem ):
+				skelType="node"
+			else:
+				skelType="leaf"
+			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], skelType=skelType )
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
 			handler.stackHandler()
 

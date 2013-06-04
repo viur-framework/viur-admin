@@ -408,10 +408,9 @@ class NetworkService():
 				sys.exit(1)
 		if secure:
 			key=securityTokenProvider.getKey()
-			if "?" in url:
-				url += "&skey=%s" % key 
-			else:
-				url += "?skey=%s" % key 
+			if not params:
+				params = {}
+			params["skey"] = key
 		if url.lower().startswith("http"):
 			reqURL = QUrl(url)
 		else:

@@ -19,17 +19,17 @@ class DirItem(QtGui.QListWidgetItem):
 		self.entryData = data
 	
 	def __gt__( self, other ):
-		if isinstance( other, TreeItem ):
-			return( True )
-		elif isinstance( other, DirItem ):
+		if isinstance( other, self.listWidget().treeItem ):
+			return( False )
+		elif isinstance( other, self.listWidget().dirItem ):
 			return( self.entryData["name"] > other.entryData["name"] )
 		else:
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		if isinstance( other, TreeItem ):
-			return( False )
-		elif isinstance( other, DirItem ):
+		if isinstance( other, self.listWidget().treeItem ):
+			return( True )
+		elif isinstance( other, self.listWidget().dirItem ):
 			return( self.entryData["name"] < other.entryData["name"] )
 		else:
 			return( str( self ) < str( other ) )
@@ -48,17 +48,17 @@ class TreeItem(QtGui.QListWidgetItem):
 		self.entryData = data
 
 	def __gt__( self, other ):
-		if isinstance( other, DirItem ):
-			return( False )
-		elif isinstance( other, TreeItem ):
+		if isinstance( other, self.listWidget().dirItem ):
+			return( True )
+		elif isinstance( other, self.listWidget().treeItem ):
 			return( self.entryData["name"] > other.entryData["name"] )
 		else:
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		if isinstance( other, DirItem ):
-			return( True )
-		elif isinstance( other, TreeItem ):
+		if isinstance( other, self.listWidget().dirItem ):
+			return( False )
+		elif isinstance( other, self.listWidget().treeItem ):
 			return( self.entryData["name"] < other.entryData["name"] )
 		else:
 			return( str( self ) < str( other ) )
@@ -90,8 +90,6 @@ class PathListView( QtGui.QListWidget ):
 		self.clear()
 		node = self.node
 		revList = []
-		print("u"*50)
-		print( protoWrap.dataCache )
 		while node:
 			if not node in protoWrap.dataCache.keys():
 				protoWrap.queryData( node )
@@ -127,7 +125,6 @@ class PathListView( QtGui.QListWidget ):
 	
 	@QtCore.Slot( str )
 	def setNode( self, node, isInitialCall=False ):
-		print("a: setnode")
 		self.node = node
 		self.rebuild()
 		if isInitialCall:
@@ -135,7 +132,6 @@ class PathListView( QtGui.QListWidget ):
 	
 	@QtCore.Slot( str )
 	def setRootNode( self, rootNode ):
-		print("a: setrootnode")
 		self.rootNode = rootNode
 		self.node = rootNode
 		self.rebuild()
@@ -177,10 +173,11 @@ class TreeListView( QtGui.QListWidget ):
 		self.modul = modul
 		self.rootNode = rootNode
 		self.node = node or rootNode
-		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
+		self.customQueryKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect( self.onTreeChanged )
+		protoWrap.customQueryFinished.connect( self.onCustomQueryFinished )
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onTreeChanged )
 		self.itemDoubleClicked.connect( self.onItemDoubleClicked )
 		self.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
@@ -188,6 +185,7 @@ class TreeListView( QtGui.QListWidget ):
 		self.setDragEnabled( True )
 		self.setAcceptDrops( True )
 		self.setViewMode( self.IconMode )
+		self.setSortingEnabled( True )
 		self.setIconSize( QtCore.QSize( *[x-24 for x in self.gridSizeIcon] ) )
 		self.setGridSize( QtCore.QSize( *self.gridSizeIcon ) )
 		self.setSelectionMode( self.ExtendedSelection )
@@ -207,17 +205,49 @@ class TreeListView( QtGui.QListWidget ):
 	
 	@QtCore.Slot( str )
 	def setNode( self, node, isInitialCall=False ):
+		self.customQueryKey = None
 		self.node = node
 		self.loadData()
 		if isInitialCall:
 			self.nodeChanged.emit( self.node )
 
+	def setRootNode( self, rootNode, isInitialCall=False ):
+		"""
+			Switch to the given RootNode of our modul and start displaying these items.
+			@param rootNode: Key of the new rootNode.
+			@type rootNode: String
+			@param isInitialCall: If this is the initial call, we remit the signal
+			@type repoName: bool
+		"""
+		self.customQueryKey = None
+		if rootNode==self.rootNode:
+			return
+		self.rootNode = rootNode
+		self.node = rootNode
+		self.loadData()
+		if isInitialCall:
+			self.rootNodeChanged.emit( self.rootNode )
+
+	def search( self, searchStr ):
+		"""
+			Starts searching for the given string in the current repository.
+			@param searchStr: Token to search for
+			@type searchStr: string
+		"""
+		self.node = self.rootNode
+		self.nodeChanged.emit( self.node )
+		if searchStr:
+			protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+			assert protoWrap is not None
+			self.customQueryKey = protoWrap.queryData( self.rootNode, search=searchStr )
+		else:
+			self.customQueryKey = None
+			self.loadData()
+		
+
 	def onItemDoubleClicked(self, item ):
 		if( isinstance( item, self.dirItem ) ):
-			self.node = item.entryData["id"]
-			#self.path.append( item.dirName )
-			self.loadData()
-			self.nodeChanged.emit( self.node )
+			self.setNode( item.entryData["id"], isInitialCall=True )
 
 	def dragEnterEvent(self, event ):
 		"""
@@ -254,19 +284,6 @@ class TreeListView( QtGui.QListWidget ):
 				destItem.entryData["id"]
 				)
 
-	def setRootNode( self, rootNode, repoName="" ):
-		"""
-			Switch to the given RootNode of our modul and start displaying these items.
-			@param rootNode: Key of the new rootNode.
-			@type rootNode: String
-			@param repoName: Human-readable description of the given rootNode
-			@type repoName: -Currently ignored-
-		"""
-		if rootNode==self.rootNode:
-			return
-		self.rootNode = rootNode
-		self.node = rootNode
-		self.loadData()
 	
 	def setDefaultRootNode(self):
 		NetworkService.request("/%s/listRootNodes" % ( self.modul ), successHandler=self.onSetDefaultRootNode )
@@ -283,29 +300,43 @@ class TreeListView( QtGui.QListWidget ):
 			self.loadData()
 
 	def loadData( self, queryObj=None ):
-		print("o"*44)
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		print("Querying dataa")
-		self.loadingKey = protoWrap.queryData( self.node )
+		protoWrap.queryData( self.node )
 		
 	def onTreeChanged( self, node ):
-		print("TREE HAS CHANGED")
-		print( node )
 		if not node:
 			self.loadData()
 		if node != self.node: #Not our part of that tree
 			return
-		self.clear()
+		if self.customQueryKey is not None: #We currently display a searchresult:
+			return
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
 		res = protoWrap.childrenForNode( self.node )
-		print( res )
-		for entry in res:
+		self.setDisplayData( res )
+	
+	def onCustomQueryFinished( self, queryKey ):
+		if queryKey != self.customQueryKey:
+			return
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		self.setDisplayData( protoWrap.getNodesForCustomQuery( queryKey ) )
+
+	def setDisplayData( self, nodes ):
+		"""
+			Clear the current view and display the items in nodes
+			@param nodes: List of Nodes which we shall display
+			@type nodes: list of dict
+		"""
+		self.clear()
+		for entry in nodes:
 			if entry["_type"]=="node":
 				self.addItem( self.dirItem( entry ) )
 			elif entry["_type"] == "leaf":
 				self.addItem( self.treeItem( entry ) )
 			else:
 				raise NotImplementedError()
+		self.sortItems()
 
 	def onCustomContextMenuRequested(self, point ):
 		menu = QtGui.QMenu( self )
@@ -445,6 +476,8 @@ class TreeWidget( QtGui.QWidget ):
 		self.ui.boxActions.addWidget( self.toolBar )
 		self.setActions( actions if actions is not None else ["dirup","mkdir","add","edit","clone","preview","delete"] )
 
+		self.ui.btnSearch.released.connect( self.onBtnSearchReleased )
+
 		protoWrap = protocolWrapperInstanceSelector.select( modul )
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
@@ -470,8 +503,8 @@ class TreeWidget( QtGui.QWidget ):
 		else:
 			self.overlay.clear()
 
-	def on_btnSearch_released(self, *args, **kwargs):
-		self.search( self.ui.editSearch.text() )
+	def onBtnSearchReleased(self, *args, **kwargs):
+		self.tree.search( self.ui.editSearch.text() )
 
 	def on_editSearch_returnPressed(self):
 		self.search( self.ui.editSearch.text() )

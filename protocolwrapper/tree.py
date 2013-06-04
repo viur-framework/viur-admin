@@ -13,7 +13,9 @@ class TreeWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	protocolWrapperInstancePriority = 1
+
 	entitiesChanged = QtCore.Signal( (str,) ) # Node,
+	customQueryFinished = QtCore.Signal( (str,) ) # RequestID,
 	rootNodesAvaiable = QtCore.Signal()
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
@@ -88,24 +90,29 @@ class TreeWrapper( QtCore.QObject ):
 		tmp = NetworkService.decode( req )
 		if isinstance( tmp, list ):
 			self.rootNodes = tmp
-		#for node in tmp:
-		#	self.dataCache[ node["key"] ] = None #Rootnodes dont have a parent
-		print( "nodes avaiable")
-		print( tmp )
 		self.clearCache()
-		print( self.dataCache )
 		self.rootNodesAvaiable.emit()
 		self.checkBusyStatus()
 
+	def childrenForNode( self, node ):
+		assert isinstance( node, str )
+		res = []
+		for item in self.dataCache.values():
+			if isinstance( item, dict ): #Its a "normal" item, not a customQuery result
+				if item["parentdir"] == node:
+					res.append( item )
+		return( res )
+
 	
 	def cacheKeyFromFilter( self, node, filters ):
-		tmp = { k:v for k,v in filters.keys()}
+		tmp = { k:v for k,v in filters.items()}
 		tmp["node"] = node
 		tmpList = list( tmp.items() )
 		tmpList.sort( key=lambda x: x[0] )
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
 	def queryData( self, node, **kwargs ):
+		print("got query data", kwargs )
 		key = self.cacheKeyFromFilter( node, kwargs )
 		if 0 and key in self.dataCache.keys():
 			ctime, data, cursor = self.dataCache[ key ]
@@ -115,7 +122,7 @@ class TreeWrapper( QtCore.QObject ):
 				#callback( None, data, cursor )
 				return( key )
 		#Its a cache-miss or cache too old
-		tmp = { k:v for k,v in kwargs.keys()}
+		tmp = { k:v for k,v in kwargs.items()}
 		tmp["node"] = node
 		for skelType in ["node","leaf"]:
 			tmp["skelType"] = skelType
@@ -123,12 +130,21 @@ class TreeWrapper( QtCore.QObject ):
 			r.wrapperCacheKey = key
 			r.skelType =skelType
 			r.node = node
+			r.queryArgs = kwargs
 		if not node in [ x["key"] for x in self.rootNodes ]: #Dont query rootNodes again..
 			r = NetworkService.request( "/%s/view/%s/node" % (self.modul, node), successHandler=self.addCacheData )
 			r.skelType = "node"
 			r.node = node
+			r.queryArgs = kwargs
 		self.checkBusyStatus()
 		return( key )
+	
+	def searchRepo( self, rootNode, searchStr ):
+		assert rootNode in [ x["key"] for x in self.rootNodes ]
+		tmp = {}
+		tmp["node"] = node
+		tmp["searchstr"] = searchStr
+		r = NetworkService.request( "/%s/list" % self.modul, tmp, successHandler=self.addCacheData )
 	
 	def execDefered( self, *args, **kwargs ):
 		weakSelf, callName, key = self.deferedTaskQueue.pop(0)
@@ -144,16 +160,24 @@ class TreeWrapper( QtCore.QObject ):
 			return( self.dataCache[ node ] )
 		return( None )
 	
-	def childrenForNode( self, node ):
-		assert isinstance( node, str )
-		res = []
-		for item in self.dataCache.values():
-			if item["parentdir"] == node:
-				res.append( item )
-		return( res )
+	
+	def getNodesForCustomQuery( self, key ):
+		if not key in self.dataCache:
+			return( [] )
+		else:
+			return( self.dataCache[ key ] )
 	
 	def addCacheData( self, req ):
 		data = NetworkService.decode( req )
+		if req.queryArgs: #This was a custom request
+			key = self.cacheKeyFromFilter( req.node, req.queryArgs )
+			if not key in self.dataCache.keys():
+				self.dataCache[ key ] = []
+			assert data["action"] == "list"
+			for skel in data["skellist"]:
+				if not skel["id"] in [ x["id"] for x in self.dataCache[ key ] ]:
+					self.dataCache[ key ].append( skel )
+			self.customQueryFinished.emit( key )
 		cursor = None
 		if "cursor" in data.keys():
 			cursor=data["cursor"]
