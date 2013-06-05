@@ -12,6 +12,7 @@ class ListWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	entitiesChanged = QtCore.Signal()
+	entityAvailable = QtCore.Signal( (object,) )
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
@@ -71,6 +72,9 @@ class ListWrapper( QtCore.QObject ):
 		print( "Querying data")
 		key = self.cacheKeyFromFilter( kwargs )
 		if key in self.dataCache.keys():
+			if self.dataCache[ key ] is None:
+				#We already started querying that key
+				return( key )
 			ctime, data, cursor = self.dataCache[ key ]
 			if ctime+self.maxCacheTime>time(): #This cache-entry is still valid
 				self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, key ) )
@@ -78,12 +82,21 @@ class ListWrapper( QtCore.QObject ):
 				#callback( None, data, cursor )
 				return( key )
 		#Its a cache-miss or cache too old
+		self.dataCache[ key ] = None
 		r = NetworkService.request( "/%s/list" % self.modul, kwargs, successHandler=self.addCacheData )
 		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
 		r.wrapperCbTargetFuncName = callback.__name__
 		r.wrapperCbCacheKey = key
 		self.checkBusyStatus()
 		return( key )
+	
+	def queryEntry( self, key ):
+		if key in self.dataCache.keys():
+			QtCore.QTimer.singleShot( 25, lambda *args, **kwargs: self.entityAvailable.emit( self.dataCache[key] ) )
+			return( key )
+		r = NetworkService.request( "/%s/view/%s" % (self.modul, key), successHandler=self.addCacheData )
+		return( key )
+		
 	
 	def execDefered( self, *args, **kwargs ):
 		weakSelf, callName, key = self.deferedTaskQueue.pop(0)
@@ -99,11 +112,15 @@ class ListWrapper( QtCore.QObject ):
 		cursor = None
 		if "cursor" in data.keys():
 			cursor=data["cursor"]
-		self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
-		targetSelf = req.wrapperCbTargetFuncSelf()
-		if targetSelf is not None:
-			targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
-			targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
+		if data["action"]=="list":
+			self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
+			targetSelf = req.wrapperCbTargetFuncSelf()
+			if targetSelf is not None:
+				targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
+				targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
+		elif data["action"]=="view":
+			self.dataCache[ data["values"]["id"] ] = data[ "values" ]
+			self.entityAvailable.emit( data["values"] )
 		self.checkBusyStatus()
 			
 	def add( self, **kwargs ):
@@ -117,7 +134,7 @@ class ListWrapper( QtCore.QObject ):
 		return( str( id( req ) ) )
 
 	def edit( self, key, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=(len(kwargs.keys())>0), finishedHandler=self.onSaveResult )
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True

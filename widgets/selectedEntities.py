@@ -12,7 +12,6 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 	"""
 		The model holding the currently selected entities.
 	"""
-	rebuildDelegates = QtCore.Signal( (object, ) )
 	
 	def __init__(self, parent, modul, selection, *args, **kwargs):
 		"""
@@ -28,6 +27,10 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		self.dataCache = []
 		self.fields = ["name"]
 		self.headers = []
+		self.entryFetches = [] #List of fetch-Tasks we issued
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.entityAvailable.connect( self.onItemDataAvaiable )
 		for item in (selection or []):
 			self.addItem( item )
 	
@@ -38,24 +41,34 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 			@param item: The new item 
 			@type item: Dict or String
 		"""
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
 		if not item:
 			return
 		if isinstance( item, dict ):
 			id = item["id"]
+			if "_type" in item.keys():
+				self.entryFetches.append( protoWrap.queryEntry( id, item["_type"] ) )
+			else:
+				self.entryFetches.append( protoWrap.queryEntry( id ) )
 		elif isinstance( item, str ):
-			id = item
+			#FIXME: Pray that this is not the tree module...
+			self.entryFetches.append( protoWrap.queryEntry( item ) )
 		else:
 			raise NotImplementedError()
-		NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
+		#self.entryFetches.append( protoWrap.queryEntry( id ) )
+		#NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
 	
-	def onItemDataAvaiable(self, query ):
+	def onItemDataAvaiable(self, item ):
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.
 		"""
-		data = NetworkService.decode( query )
-		item = data["values"]
-		self.rebuildDelegates.emit( { k:v for k,v in data["structure"] } )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		if item is None or not item["id"] in self.entryFetches:
+			return
+		self.entryFetches.remove( item["id"] )
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache.append( item )
 		self.layoutChanged.emit()
@@ -74,7 +87,7 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		elif role != QtCore.Qt.DisplayRole: 
 			return None
 		if( index.row() >= 0 and index.row()<len(self.dataCache)  ):
-			return str( self.dataCache[index.row()][ self.fields[index.column()] ] )
+			return( self.dataCache[index.row()][ self.fields[index.column()] ] )
 
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -100,8 +113,9 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 	"""
 		Displayes the currently selected entities of one relationalBone.
 	"""
+	skelType = None
 	
-	def __init__(self, parent, modul, selection=None, *args, **kwargs ):
+	def __init__(self, modul, selection=None, skelType=None, *args, **kwargs ):
 		"""
 			@param parent: Parent-Widget
 			@type parent: QWidget
@@ -110,34 +124,43 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 			@param selection: Currently selected Items.
 			@type selection: List-of-Dict, Dict or None
 		"""
+		assert skelType in [None,"node","leaf"]
 		super( SelectedEntitiesWidget, self ).__init__( *args, **kwargs )
 		self.selection = selection or []
-		if isinstance( self.selection, dict ): #This was a singleSelection before
+		if selection and not isinstance( self.selection, list ): #This was a singleSelection before
 			self.selection = [ self.selection ]
 		self.setModel( SelectedEntitiesTableModel( self, modul, self.selection ) )
 		self.setAcceptDrops( True )
 		self.doubleClicked.connect( self.onItemDoubleClicked )
+		self.rebuildDelegates()
+		
 		#self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
-		self.model().rebuildDelegates.connect( self.rebuildDelegates )
 		#self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 	
 
-	def rebuildDelegates( self, bones ):
+	def rebuildDelegates( self ):
 		"""
 			(Re)Attach the viewdelegates to the table.
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
+		protoWrap = protocolWrapperInstanceSelector.select( self.model().modul )
+		assert protoWrap is not None
 		self.delegates = [] # Qt Dosnt take ownership of viewdelegates -> garbarge collected
-		self.structureCache = bones
+		if self.skelType is None:
+			structureCache = protoWrap.viewStructure
+		elif self.skelType=="node":
+			structureCache = protoWrap.viewNodeStructure
+		elif self.skelType=="leaf":
+			structureCache = protoWrap.viewLeafStructure
 		self.model().headers = []
 		colum = 0
-		fields = [ x for x in self.model().fields if x in bones.keys()]
+		fields = [ x for x in self.model().fields if x in structureCache.keys()]
 		for field in fields:
-			self.model().headers.append( bones[field]["descr"] )
+			self.model().headers.append( structureCache[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
-			delegateFactory = viewDelegateSelector.select( self.model().modul, field, self.structureCache )
-			delegate = delegateFactory( self.model().modul, field, self.structureCache )
+			delegateFactory = viewDelegateSelector.select( self.model().modul, field, structureCache )
+			delegate = delegateFactory( self.model().modul, field, structureCache )
 			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )
 			self.connect( delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint )

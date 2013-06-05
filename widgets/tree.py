@@ -400,10 +400,10 @@ class TreeListView( QtGui.QListWidget ):
 				protoWrap.copy( data["srcRootNode"], data["srcPath"], data["files"], data["dirs"], self.rootNode, self.getPath(), data["domove"] )
 				#self.copy( self.clipboard, self.rootNode, self.getPath() )
 	
-	def getTreeItemClass( self ):
+	def getLeafItemClass( self ):
 		return( self.treeItem )
 		
-	def getDirItemClass( self ):
+	def getNodeItemClass( self ):
 		return( self.dirItem )
 
 class TreeWidget( QtGui.QWidget ):
@@ -420,8 +420,9 @@ class TreeWidget( QtGui.QWidget ):
 	rootNodeChanged = QtCore.Signal( (str,) )
 	nodeChanged = QtCore.Signal( (str,) )
 	currentItemChanged = QtCore.Signal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
+	itemDoubleClicked = QtCore.Signal( (QtGui.QListWidgetItem) )
 
-	def __init__(self, modul, rootNode=None, node=None, actions=None, *args, **kwargs ):
+	def __init__(self, modul, rootNode=None, node=None, actions=None, editOnDoubleClick=False, *args, **kwargs ):
 		"""
 			@param parent: Parent widget.
 			@type parent: QWidget
@@ -442,6 +443,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.modul = modul
 		self.rootNode = rootNode
 		self.node = node
+		self.editOnDoubleClick = editOnDoubleClick
 		self.tree = self.treeWidget( modul, rootNode, node )
 		self.ui.listWidgetBox.layout().addWidget( self.tree )
 		self.pathList = PathListView( modul, rootNode, [] )
@@ -477,6 +479,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.setActions( actions if actions is not None else ["dirup","mkdir","add","edit","clone","preview","delete"] )
 
 		self.ui.btnSearch.released.connect( self.onBtnSearchReleased )
+		self.tree.itemDoubleClicked.connect( self.itemDoubleClicked )
 
 		protoWrap = protocolWrapperInstanceSelector.select( modul )
 		assert protoWrap is not None
@@ -578,6 +581,12 @@ class TreeWidget( QtGui.QWidget ):
 	
 	def getModul( self ):
 		return( self.modul )
+	
+	def getNodeItemClass( self ):
+		return( self.tree.getNodeItemClass() )
+	
+	def getLeafItemClass( self ):
+		return( self.tree.getLeafItemClass() )
 
 	def search( self, searchStr ):
 		"""
@@ -734,8 +743,3 @@ class TreeWidget( QtGui.QWidget ):
 		else:
 			super( TreeWidget, self ).keyPressEvent( e )
 
-	def getTreeItemClass( self ):
-		return( self.tree.getTreeItemClass() )
-		
-	def getDirItemClass( self ):
-		return( self.tree.getDirItemClass() )

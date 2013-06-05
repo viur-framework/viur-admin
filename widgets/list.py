@@ -167,6 +167,21 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			filter["orderdir"] = "0"
 		self.setFilter( filter )
 
+	def search( self, searchStr ):
+		"""
+			Start a search for the given string.
+			If searchStr is None, it ends any currently active search.
+			@param searchStr: Token to search for
+			@type searchStr: String or None
+		"""
+		if searchStr:
+			self.filter["search"] = searchStr
+			self.reload()
+		else:
+			if "search" in self.filter.keys():
+				del self.filter[ "search" ]
+			self.reload()
+
 class ListTableView( QtGui.QTableView ):
 	"""
 		Provides an interface for Data structured as a simple list.
@@ -349,6 +364,8 @@ class ListWidget( QtGui.QWidget ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
+		self.ui.searchBTN.released.connect( self.search )
+		self.ui.editSearch.returnPressed.connect( self.search )
 		#self.overlay.inform( self.overlay.BUSY )
 		
 	def onBusyStateChanged( self, busy ):
@@ -376,20 +393,14 @@ class ListWidget( QtGui.QWidget ):
 				else:
 					self.toolBar.addWidget( actionWdg )
 
-	def on_editSearch_returnPressed(self):
-		self.search()
-
-	def on_searchBTN_released(self):
-		self.search()
-		
-	def search(self):
-		filter = self.list.model().getFilter()
-		searchstr=self.ui.editSearch.text()
-		if searchstr=="" and "search" in filter.keys():
-			del filter["search"]
-		elif searchstr!="":
-			filter["search"]=searchstr
-		self.list.model().setFilter( filter )
+	def search( self, *args, **kwargs ):
+		"""
+			Start a search for the given string.
+			If searchStr is None, it ends any currently active search.
+			@param searchStr: Token to search for
+			@type searchStr: String or None
+		"""
+		self.list.model().search( self.ui.editSearch.text() )
 	
 	def openEditor( self, item, clone=False ):
 		"""

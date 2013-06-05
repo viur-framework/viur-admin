@@ -5,7 +5,7 @@ import sys
 from event import event
 from utils import RegisterQueue
 from ui.texteditUI import Ui_textEditWindow
-#from ui.rawtexteditUI import Ui_rawTextEditWindow
+from ui.rawtexteditUI import Ui_rawTextEditWindow
 import html.parser
 from ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
@@ -47,33 +47,25 @@ class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 		
 
 
-class RawTextEdit(QtGui.QMainWindow):
+class RawTextEdit(QtGui.QWidget):
+	onDataChanged = QtCore.Signal( (object, ) )
+	
 	def __init__(self, text, contentType=None, parent=None):
 		super(RawTextEdit, self).__init__(parent)
 		self.ui = Ui_rawTextEditWindow()
 		self.ui.setupUi( self )
 		self.contentType = contentType
-		self.ui.textEdit.setUtf8( True )
-		if contentType=="text/html":
-			self.ui.textEdit.setLexer(QsciLexerHTML())
-		self.ui.textEdit.setFolding(QsciScintilla.BoxedTreeFoldStyle, 2)
 		self.ui.textEdit.setText( text )
-		self.ui.textEdit.setAutoCompletionSource( QsciScintilla.AcsAll )
-		self.ui.textEdit.setAutoCompletionThreshold( 5 )
-		#self.ui.textEdit.setWrapMode(QsciScintilla.WrapWord )
 		self.ui.textEdit.setFocus()
-		self.saveCallback = saveCallback
+		self.ui.btnSave.released.connect( self.save )
 
 	def save(self, *args, **kwargs ):
-		self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), self.ui.textEdit.text() )
-		#self.saveCallback( self.ui.textEdit.text() )
-		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
+		self.onDataChanged.emit( self.ui.textEdit.toPlainText() )
+		event.emit( 'popWidget(PyQt_PyObject)', self )
 	
 	def sizeHint( self, *args, **kwargs ):
 		return( QtCore.QSize( 400, 300 ) )
 		
-	def on_btnSave_released( self ):
-		self.save()
 
 
 
