@@ -77,7 +77,7 @@ class Tag( QtGui.QWidget ):
 	
 	def onEditingFinished( self, *args, **kwargs ):
 		self.tag = self.editField.text()
-		self.lblDisplay.setText( self.tag )
+		self.lblDisplay.setText( str( self.tag ) )
 		self.lblDisplay.show()
 		self.editField.hide()
 
@@ -191,7 +191,7 @@ class StringEditBone( QtGui.QWidget ):
 			else:
 				self.genTag( data )
 		elif not self.languages and not self.multiple:
-			self.lineEdit.setText( data )
+			self.lineEdit.setText( str( data ) )
 		else: 
 			pass
 

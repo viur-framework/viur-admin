@@ -17,6 +17,7 @@ class ListWrapper( QtCore.QObject ):
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
 	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
+	modulStructureAvaiable = QtCore.Signal() #We fetched the structure for this modul and that data is now avaiable
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( ListWrapper, self ).__init__()
@@ -60,7 +61,7 @@ class ListWrapper( QtCore.QObject ):
 				self.editStructure = structure
 			elif stype=="addSkel":
 				self.addStructure = structure
-		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
+		self.modulStructureAvaiable.emit()
 		self.checkBusyStatus()
 	
 	def cacheKeyFromFilter( self, filters ):
@@ -178,7 +179,6 @@ class ListWrapper( QtCore.QObject ):
 			self.updatingFailedError.emit( str( id( req ) ) )
 			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
 			return
-		print( data )
 		if data["action"] in ["addSuccess", "editSuccess","deleteSuccess"]: #Saving succeeded
 			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
 			self.updatingSucceeded.emit( str( id( req ) ) )

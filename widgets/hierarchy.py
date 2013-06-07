@@ -8,6 +8,7 @@ from config import conf
 from widgets.edit import EditWidget
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from ui.hierarchyUI import Ui_Hierarchy
+import json
 
 class HierarchyItem(QtGui.QTreeWidgetItem):
 	"""
@@ -22,7 +23,7 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 			format = "$(name)"
 		protoWrap = protocolWrapperInstanceSelector.select( modul )
 		assert protoWrap is not None
-		itemName = utils.formatString( format, protoWrap.structure, data )
+		itemName = utils.formatString( format, protoWrap.viewStructure, data )
 		super( HierarchyItem, self ).__init__( [str( itemName )] )
 		self.loaded = False
 		self.entryData = data
@@ -71,7 +72,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		self.expandList = []
 		self.setHeaderHidden( True )
 		self.setAcceptDrops( True )
-		self.setDragDropMode( self.InternalMove )
+		self.setDragDropMode( self.DragDrop )
 		self.rootNodes = None
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
@@ -164,11 +165,9 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.queryData( self.setData, (parent or self.currentRootNode) )
-		#NetworkService.request( "/%s/list/%s" % (self.modul, (parent or self.currentRootNode) ), successHandler=self.setData, failureHandler=self.onLoadError )
 
 	def setData(self, queryKey, data, cursor ):
-		#if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
-		#	return
+
 		if len( data ):
 			if data[0]["parententry"] == self.currentRootNode:
 				self.clear()
@@ -221,6 +220,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			for item in self.selectedItems():
 				urls.append( utils.urlForItem( self.modul, item.entryData) )
 			mimeData.setUrls( urls )
+			event.mimeData().setData( "viur/hierarchyDragData", json.dumps( { "entities": [ x.entryData for x in self.selectedItems()] } ) )
 		super( HierarchyTreeWidget, self ).dragEnterEvent( event )
 
 	def dropEvent( self, event ):
@@ -233,6 +233,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		except:
 			return
 		targetItem = self.itemAt( event.pos() )
+		event.setDropAction( QtCore.Qt.MoveAction )
 		QtGui.QTreeWidget.dropEvent( self, event )
 		if not targetItem: #Moved to the end of the list
 			self.reparent( dragedItem.entryData["id"], self.currentRootNode )
@@ -246,7 +247,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 					childIndex = 0
 					while( childIndex < targetItem.childCount() ):
 						currChild = targetItem.child( childIndex )
-						if currChild == dragedItem:
+						if id(currChild) == id(dragedItem):
 							self.reparent( dragedItem.entryData["id"], targetItem.entryData["id"] )
 							if childIndex==0 and targetItem.childCount()>1: # is now 1st item
 								self.updateSortIndex( dragedItem.entryData["id"], targetItem.child( 1 ).entryData["sortindex"]-1 )
@@ -263,7 +264,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 				childIndex = 0
 				currChild = self.topLevelItem( childIndex )
 				while( currChild ):
-					if currChild == dragedItem:
+					if id(currChild) == id(dragedItem):
 						self.reparent( dragedItem.entryData["id"], self.currentRootNode )
 						if childIndex==0 and self.topLevelItemCount()>1: # is now 1st item
 							self.updateSortIndex( dragedItem.entryData["id"], self.topLevelItem( 1 ).entryData["sortindex"]-1 )
@@ -290,18 +291,21 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		protoWrap.updateSortIndex( itemKey, newIndex )
 		self.overlay.inform( self.overlay.BUSY )
 
-	def delete( self, id ):
+	def requestDelete( self, id ):
 		"""
 			Delete the entity with the given id
 		"""
+		if QtGui.QMessageBox.question(	self,
+						QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
+						QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Delete %s entries and everything below?") % 1,
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+						QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+			return
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.delete( id )
 		self.overlay.inform( self.overlay.BUSY )
 		
-
-
-
 
 
 class HierarchyWidget( QtGui.QWidget ):

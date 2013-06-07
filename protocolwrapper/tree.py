@@ -46,7 +46,7 @@ class TreeWrapper( QtCore.QObject ):
 	def checkBusyStatus( self ):
 		busy = False
 		for child in self.children():
-			if isinstance( child, RequestWrapper ):
+			if isinstance( child, RequestWrapper ) or isinstance( child, RequestGroup ):
 				if not child.hasFinished:
 					busy = True
 					break
@@ -233,22 +233,8 @@ class TreeWrapper( QtCore.QObject ):
 		self.checkBusyStatus()
 		return( str( id( req ) ) )
 
-	def mkdir(self, node, dirName):
-		"""
-			Creates a new directory on the server.
-			
-			@param rootNode: rootNode to create the directory under.
-			@type rootNode: String
-			@param path: Path to create the directory in
-			@type path: String
-			@param dirName: Name of the new directory
-			@type dirName: String
-		"""
-		req = NetworkService.request("/%s/add"% self.modul, {"node":node, "skelType":"node", "name":dirName}, secure=True, successHandler=self.delayEmitEntriesChanged )
-		self.checkBusyStatus()
-		return( str( id( req ) ) )
 
-	def delete( self, entries, dirs ):
+	def deleteEntities( self, nodes, leafs ):
 		"""
 			Delete files and/or directories from the server.
 			Directories dont need to be empty, the server handles that case internally.
@@ -263,11 +249,11 @@ class TreeWrapper( QtCore.QObject ):
 			@type dirs: List
 		"""
 		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
-		for entry in entries:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id": entry["id"], 
+		for leaf in leafs:
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id": leaf, 
 												"skelType": "leaf" }, parent=self ) )
-		for dir in dirs:
-			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id":dir["id"], 
+		for node in nodes:
+			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id":node, 
 												"skelType": "node" }, parent=self ) )
 		#request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
@@ -304,33 +290,7 @@ class TreeWrapper( QtCore.QObject ):
 		self.checkBusyStatus()
 		return( str( id( request ) ) )
 
-	def rename(self, rootNode, path, oldName, newName ):
-		"""
-			Rename an entity or directory.
-			
-			@param rootNode: rootNode the element is in
-			@type rootNode: String
-			@param path: Path to that element.
-			@type path: String
-			@param oldName: Old name of the element
-			@type oldName: String
-			@param newName: The new name for that element
-			@type newName: String
-		"""
-		request = NetworkService.request( "/%s/rename" % self.modul , {"rootNode":rootNode, "path": ("/".join(path) if path else "/"), "src": oldName, "dest":newName }, finishedHandler=self.delayEmitEntriesChanged )
-		self.checkBusyStatus()
-		return( str( id( request ) ) )
-	
-	def onProgessUpdate(self, request, done, maximum ):
-		if request.queryType == "move":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
-		elif request.queryType == "copy":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Copying: %s of %s finished.")
-		elif request.queryType == "delete":
-			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Deleting: %s of %s removed.")
-		else:
-			raise NotImplementedError()
-		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
+
 	
 	def delayEmitEntriesChanged( self, req=None, *args, **kwargs ):
 		"""
@@ -344,13 +304,15 @@ class TreeWrapper( QtCore.QObject ):
 				print("error decoding response")
 		QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
 
+
 	def onSaveResult( self, req ):
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
 			self.updatingFailedError.emit( str( id( req ) ) )
+			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
 			return
-		if data=="OKAY": #Saving succeeded
+		if data["action"] in ["addSuccess", "editSuccess","deleteSuccess"]: #Saving succeeded
 			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
 			self.updatingSucceeded.emit( str( id( req ) ) )
 		else: #There were missing fields
@@ -361,12 +323,6 @@ class TreeWrapper( QtCore.QObject ):
 		self.clearCache()
 		self.entitiesChanged.emit( None )
 		self.checkBusyStatus()
-		#for k,v in self.dataCache.items():
-		#	# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
-		#	ctime, data, cursor = v
-		#	self.dataCache[ k ] = (1, data, cursor )
-		#self.entitiesChanged.emit( None )
-		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 		
 def CheckForTreeModul( modulName, modulList ):

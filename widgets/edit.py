@@ -65,16 +65,34 @@ class EditWidget( QtGui.QWidget ):
 			@type clone: Bool
 		"""
 		super( EditWidget, self ).__init__( *args, **kwargs )
-		if not "ui" in dir( self ):
-			self.ui = Ui_Edit()
-			self.ui.setupUi( self )
+		self.ui = Ui_Edit()
+		self.ui.setupUi( self )
+		protoWrap = protocolWrapperInstanceSelector.select( modul )
+		assert protoWrap is not None
 		self.modul = modul
 		# A Bunch of santy-checks, as there is a great chance to mess around with this widget
 		assert applicationType in [ EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree, EditWidget.appSingleton ] #Invalid Application-Type?
 		if applicationType==EditWidget.appHierarchy or applicationType==EditWidget.appTree:
 			assert id or node #Need either an id or an node
 		if applicationType==EditWidget.appTree:
-			assert skelType #Need either an id or an path
+			assert skelType in ["leaf","node"] #Need an skelType
+			if skelType=="leaf":
+				if not key:
+					self.structure = protoWrap.addLeafStructure
+				else:
+					self.structure = protoWrap.editLeafStructure
+			elif skelType=="node":
+				if not key:
+					self.structure = protoWrap.addNodeStructure
+				else:
+					self.structure = protoWrap.editNodeStructure
+			else:
+				raise( ValueError( "skelType must be node or leaf" ) )
+		else: #Singleton, Hierarchy or List:
+			if not key:
+				self.structure = protoWrap.addStructure
+			else:
+				self.structure = protoWrap.editStructure
 		if clone:
 			assert id #Need an id if we should clone an entry
 			assert not applicationType==EditWidget.appSingleton # We cant clone a singleton
@@ -109,8 +127,6 @@ class EditWidget( QtGui.QWidget ):
 		self.ui.btnSaveContinue.released.connect( self.on_btnSaveContinue_released )
 		self.ui.btnSaveClose.released.connect( self.on_btnSaveClose_released )
 		self.ui.btnPreview.released.connect( self.on_btnPreview_released )
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		protoWrap.updatingSucceeded.connect( self.onSaveSuccess )
 		protoWrap.updatingFailedError.connect(self.onSaveError )

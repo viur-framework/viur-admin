@@ -238,9 +238,9 @@ def urlForItem( modul, item ):
 	"""
 	if "dlkey" in item.keys(): #Its a file, fill in its dlkey, sothat drag&drop to the outside works
 		if "name" in item.keys():
-			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"], item["name"] ) ) )
+			return( QtCore.QUrl( "%s/%s/download/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"], item["name"] ) ) )
 		else: #Return a URL without a name appended
-			return( QtCore.QUrl( "%s/%s/view/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"] ) ) )
+			return( QtCore.QUrl( "%s/%s/download/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"] ) ) )
 	else:
 		if "name" in item.keys():
 			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["id"], item["name"] ) ) )

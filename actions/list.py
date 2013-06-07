@@ -80,8 +80,7 @@ class ListDeleteAction( QtGui.QAction ):
 				rows.append( row )
 		deleteData = [ self.parentWidget().list.model().getData()[ row ] for row in rows ]
 		reqWrap = protocolWrapperInstanceSelector.select( self.parent().list.modul )
-		assert reqWrap is not None
-		reqWrap.deleteEntities( [x["id"] for x in deleteData] )
+		self.parent().requestDelete( [x["id"] for x in deleteData] )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

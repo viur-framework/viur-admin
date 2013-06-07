@@ -7,10 +7,9 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os
-from handler.tree import TreeItem, DirItem
 from widgets.edit import EditWidget
-from widgets.file import FileWidget, FileItem
 from handler.list import ListCoreHandler
+from widgets.file import FileWidget
 from mainwindow import WidgetHandler
 from utils import RegisterQueue, loadIcon
 

@@ -17,15 +17,20 @@ class HierarchyWrapper( QtCore.QObject ):
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
 	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
+	modulStructureAvaiable = QtCore.Signal() #We fetched the structure for this modul and that data is now avaiable
+	rootNodesAvaiable = QtCore.Signal() #We fetched the list of rootNodes for this modul and that data is now avaiable
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( HierarchyWrapper, self ).__init__()
 		self.modul = modul
 		self.dataCache = {}
 		self.rootNodes = None
-		self.structure = None
+		self.viewStructure = None
+		self.addStructure = None
+		self.editStructure = None
 		self.busy = True
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
+		req = NetworkService.request( "/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable )
 		print("Initializing HierarchyWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
@@ -46,26 +51,29 @@ class HierarchyWrapper( QtCore.QObject ):
 	
 	def onStructureAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
-		self.structure = OrderedDict()
-		for k,v in tmp["structure"]:
-			self.structure[ k ] = v
-		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
+		if tmp is None:
+			self.checkBusyStatus()
+			return
+		for stype, structlist in tmp.items():
+			structure = OrderedDict()
+			for k,v in structlist:
+				structure[ k ] = v
+			if stype=="viewSkel":
+				self.viewStructure = structure
+			elif stype=="editSkel":
+				self.editStructure = structure
+			elif stype=="addSkel":
+				self.addStructure = structure
+		self.modulStructureAvaiable.emit()
 		self.checkBusyStatus()
 
 	def onRootNodesAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
 		if isinstance( tmp, list ):
 			self.rootNodes = tmp
-			if self.structure is None and len(tmp)>0: #Load the structure
-				NetworkService.request( "/%s/add/%s" % (self.modul, tmp[0]["key"]), successHandler=self.onStructureAvaiable,  secure=True )
 		else:
 			self.rootNodes = []
-		if "wrapperCbTargetFuncSelf" in dir( req ):
-			targetSelf = req.wrapperCbTargetFuncSelf()
-			if targetSelf is not None:
-				targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
-				targetFunc( self.rootNodes )
-		self.emit( QtCore.SIGNAL("onRootNodesAvaiable()") )
+		self.rootNodesAvaiable.emit()
 		self.checkBusyStatus()
 		
 	def getRootNodes( self, callback ):
@@ -138,7 +146,7 @@ class HierarchyWrapper( QtCore.QObject ):
 		return( str( id( req ) ) )
 
 	def edit( self, key, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		req = NetworkService.request("/%s/edit/%s" % ( self.modul, key ), kwargs, secure=(len(kwargs.keys())>0), finishedHandler=self.onSaveResult )
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
@@ -154,7 +162,7 @@ class HierarchyWrapper( QtCore.QObject ):
 				r = NetworkService.request( "/%s/delete/%s" % ( self.modul, id ), secure=True )
 				req.addQuery( r )
 		else: #We just delete one
-			NetworkService.request( "/%s/delete/%s" % ( self.modul, id ), secure=True, finishedHandler=self.delayEmitEntriesChanged )
+			NetworkService.request( "/%s/delete/%s" % ( self.modul, ids ), secure=True, finishedHandler=self.delayEmitEntriesChanged )
 		self.checkBusyStatus()
 
 	def updateSortIndex(self, itemKey, newIndex):

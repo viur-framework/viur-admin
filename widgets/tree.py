@@ -10,31 +10,31 @@ from mainwindow import WidgetHandler
 from widgets.edit import EditWidget
 import json
 
-class DirItem(QtGui.QListWidgetItem):
+class NodeItem(QtGui.QListWidgetItem):
 	"""
 		Displayes one subfolder inside a QListWidget
 	"""
 	def __init__( self, data ):
-		super( DirItem, self ).__init__( QtGui.QIcon("icons/filetypes/folder.png"), str( data["name"] ) )
+		super( NodeItem, self ).__init__( QtGui.QIcon("icons/filetypes/folder.png"), str( data["name"] ) )
 		self.entryData = data
 	
 	def __gt__( self, other ):
-		if isinstance( other, self.listWidget().treeItem ):
+		if isinstance( other, self.listWidget().leafItem ):
 			return( False )
-		elif isinstance( other, self.listWidget().dirItem ):
+		elif isinstance( other, self.listWidget().nodeItem ):
 			return( self.entryData["name"] > other.entryData["name"] )
 		else:
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		if isinstance( other, self.listWidget().treeItem ):
+		if isinstance( other, self.listWidget().leafItem ):
 			return( True )
-		elif isinstance( other, self.listWidget().dirItem ):
+		elif isinstance( other, self.listWidget().nodeItem ):
 			return( self.entryData["name"] < other.entryData["name"] )
 		else:
 			return( str( self ) < str( other ) )
 
-class TreeItem(QtGui.QListWidgetItem):
+class LeafItem(QtGui.QListWidgetItem):
 	"""
 		Displayes one generic entry inside a QListWidget.
 		Can be overriden for a more accurate representation of the element.
@@ -44,21 +44,21 @@ class TreeItem(QtGui.QListWidgetItem):
 			name = str( data["name"] )
 		else:
 			name = " - "
-		super( TreeItem, self ).__init__( QtGui.QIcon("icons/filetypes/unknown.png"), str( name ) )
+		super( LeafItem, self ).__init__( QtGui.QIcon("icons/filetypes/unknown.png"), str( name ) )
 		self.entryData = data
 
 	def __gt__( self, other ):
-		if isinstance( other, self.listWidget().dirItem ):
+		if isinstance( other, self.listWidget().nodeItem ):
 			return( True )
-		elif isinstance( other, self.listWidget().treeItem ):
+		elif isinstance( other, self.listWidget().leafItem ):
 			return( self.entryData["name"] > other.entryData["name"] )
 		else:
 			return( str( self ) > str( other ) )
 
 	def __lt__( self, other ):
-		if isinstance( other, self.listWidget().dirItem ):
+		if isinstance( other, self.listWidget().nodeItem ):
 			return( False )
-		elif isinstance( other, self.listWidget().treeItem ):
+		elif isinstance( other, self.listWidget().leafItem ):
 			return( self.entryData["name"] < other.entryData["name"] )
 		else:
 			return( str( self ) < str( other ) )
@@ -98,7 +98,7 @@ class PathListView( QtGui.QListWidget ):
 			revList.append( node )
 			node = node["parentdir"]
 		for node in revList[ : : -1]:
-			aitem= DirItem( node )
+			aitem= NodeItem( node )
 			self.addItem(aitem)
 
 	
@@ -147,8 +147,8 @@ class TreeListView( QtGui.QListWidget ):
 	gridSizeIcon = (128,128)
 	gridSizeList = (64,64)
 	
-	treeItem = TreeItem
-	dirItem = DirItem
+	leafItem = LeafItem
+	nodeItem = NodeItem
 
 	pathChanged = QtCore.Signal( (list,) ) #FIXME: DELETE ME
 	rootNodeChanged = QtCore.Signal( (str,) )
@@ -164,10 +164,6 @@ class TreeListView( QtGui.QListWidget ):
 			@type rootNode: String or None
 			@param path: If given, displaying starts in this path
 			@type path: String or None
-			@param treeItem: If set, use this class for displaying Entries inside the QListWidget.
-			@param treeItem: QListWidgetItem
-			@param treeItem: If set, use this class for displaying Directories inside the QListWidget.
-			@param treeItem: QListWidgetItem
 		"""
 		super( TreeListView, self ).__init__( *args, **kwargs )
 		self.modul = modul
@@ -246,7 +242,7 @@ class TreeListView( QtGui.QListWidget ):
 		
 
 	def onItemDoubleClicked(self, item ):
-		if( isinstance( item, self.dirItem ) ):
+		if( isinstance( item, self.nodeItem ) ):
 			self.setNode( item.entryData["id"], isInitialCall=True )
 
 	def dragEnterEvent(self, event ):
@@ -258,15 +254,16 @@ class TreeListView( QtGui.QListWidget ):
 			nodes = []
 			leafs = []
 			for item in self.selectedItems():
-				if isinstance( item, self.dirItem ):
-					nodes.append( item.entryData["id"] )
+				if isinstance( item, self.nodeItem ):
+					nodes.append( item.entryData )
 				else:
-					leafs.append( item.entryData["id"] )
-			event.mimeData().setData( "viur/treeDragData", json.dumps( {	"nodes": nodes,
-											"leafs": leafs } ) )
+					leafs.append( item.entryData )
+			event.mimeData().setData( "viur/treeDragData", json.dumps( {	"nodes": [x["id"] for x in nodes],
+											"leafs": [x["id"] for x in leafs] } ) )
+			event.mimeData().setUrls( [utils.urlForItem(self.getModul(), x) for x in nodes]+[utils.urlForItem(self.getModul(), x) for x in leafs] )
 
 	def dragMoveEvent( self, event ):
-		if isinstance( self.itemAt( event.pos() ), self.treeItem ):
+		if isinstance( self.itemAt( event.pos() ), self.leafItem ):
 			event.ignore()
 		else:
 			event.accept()
@@ -276,8 +273,8 @@ class TreeListView( QtGui.QListWidget ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		destItem = self.itemAt( event.pos() )
-		if not isinstance( destItem, self.dirItem ):
-			# Entries have no childs, only dirItems can have children
+		if not isinstance( destItem, self.nodeItem ):
+			# Entries have no childs, only nodeItems can have children
 			return
 		protoWrap.move(	dataDict["nodes"],
 				dataDict["leafs"],
@@ -331,9 +328,9 @@ class TreeListView( QtGui.QListWidget ):
 		self.clear()
 		for entry in nodes:
 			if entry["_type"]=="node":
-				self.addItem( self.dirItem( entry ) )
+				self.addItem( self.nodeItem( entry ) )
 			elif entry["_type"] == "leaf":
-				self.addItem( self.treeItem( entry ) )
+				self.addItem( self.leafItem( entry ) )
 			else:
 				raise NotImplementedError()
 		self.sortItems()
@@ -341,11 +338,6 @@ class TreeListView( QtGui.QListWidget ):
 	def onCustomContextMenuRequested(self, point ):
 		menu = QtGui.QMenu( self )
 		if self.itemAt(point):
-			actionRename = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Rename") )
-			actionRename.task = "rename"
-			menu.addSeparator ()
-			actionCopy = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Copy") )
-			actionCopy.task = "copy"
 			actionMove = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Cut") )
 			actionMove.task = "move"
 			actionDelete = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Delete") )
@@ -359,52 +351,71 @@ class TreeListView( QtGui.QListWidget ):
 	def onContextMenuTriggered( self, action ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		if( action.task=="rename" and self.currentItem() ):
-			item = self.currentItem()
-			if isinstance( item, DirItem ):
-				oldName = item.dirName
-			else:
-				oldName = item.entryData["name"]
-			newName, okay = QtGui.QInputDialog.getText( self, QtCore.QCoreApplication.translate("TreeWidget", "Rename"), QtCore.QCoreApplication.translate("TreeWidget", "New name"), text=oldName )
-			if okay:
-				protoWrap.rename( self.rootNode, self.getPath(), oldName, newName )
-		elif action.task=="copy" or action.task=="move":
-			dirs = []
-			files = []
+		if action.task=="move":
+			nodes = []
+			leafs = []
 			for item in self.selectedItems():
-				if isinstance( item, DirItem ):
-					dirs.append( item.dirName )
+				if isinstance( item, self.nodeItem ):
+					nodes.append( item.entryData["id"] )
 				else:
-					files.append( item.entryData["name"] )
+					leafs.append( item.entryData["id"] )
 			doMove = (action.task=="move")
 			mimeData = QtCore.QMimeData()
-			mimeData.setData( "viur/treeDragData", json.dumps( {	"srcRootNode": self.rootNode,
-										"srcPath": self.getPath(),
-										"dirs": dirs,
-										"files": files,
+			mimeData.setData( "viur/treeDragData", json.dumps( {	"nodes": nodes,
+										"leafs": leafs,
 										"domove": doMove } ) )
 			QtGui.QApplication.clipboard().setMimeData( mimeData )
 		elif action.task=="delete":
-			dirs = []
-			files = []
+			nodes = []
+			leafs = []
 			for item in self.selectedItems():
-				if isinstance( item, DirItem ):
-					dirs.append( item.dirName )
+				if isinstance( item, self.nodeItem ):
+					nodes.append( item.entryData["id"] )
 				else:
-					files.append( item.data["name"] )
-			protoWrap.delete( self.rootNode, self.getPath(), files, dirs )
+					leafs.append( item.entryData["id"] )
+			self.requestDelete( nodes, leafs )
 		elif action.task=="paste":
 				# self.currentItem() ):
 				data = json.loads( QtGui.QApplication.clipboard().mimeData().data("viur/treeDragData").data().decode("UTF-8") )
 				#srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove ):
-				protoWrap.copy( data["srcRootNode"], data["srcPath"], data["files"], data["dirs"], self.rootNode, self.getPath(), data["domove"] )
+				protoWrap.move( data["nodes"], data["leafs"], self.getNode() )
 				#self.copy( self.clipboard, self.rootNode, self.getPath() )
-	
+
+	def requestDelete( self, nodes, leafs ):
+		if QtGui.QMessageBox.question(	self,
+						QtCore.QCoreApplication.translate("TreeListView", "Confirm delete"),
+						QtCore.QCoreApplication.translate("TreeListView", "Delete %s nodes and %s leafs?") % ( len( nodes ), len( leafs ) ),
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+						QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+			return( False )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.deleteEntities( nodes, leafs )
+		return( True )
+
+	def keyPressEvent( self, e ):
+		"""
+			Catch and handle QKeySequence.Delete.
+		"""
+		if e.matches( QtGui.QKeySequence.Delete ):
+			nodes = []
+			leafs = []
+			for item in self.ui.listWidget.selectedItems():
+				if isinstance( item, NodeItem ):
+					nodes.append( item.entryData["id"] )
+				else:
+					leafs.append( item.entryData["id"] )
+			self.requestDelete( nodes, leafs )		
+		else:
+			super( TreeWidget, self ).keyPressEvent( e )
+
+
+
 	def getLeafItemClass( self ):
-		return( self.treeItem )
+		return( self.leafItem )
 		
 	def getNodeItemClass( self ):
-		return( self.dirItem )
+		return( self.nodeItem )
 
 class TreeWidget( QtGui.QWidget ):
 	"""
@@ -432,10 +443,10 @@ class TreeWidget( QtGui.QWidget ):
 			@type rootNode: String or None
 			@param path: If given, displaying starts in this path
 			@type path: String or None
-			@param treeItem: If set, use this class for displaying Entries inside the QListWidget.
-			@param treeItem: QListWidgetItem
-			@param treeItem: If set, use this class for displaying Directories inside the QListWidget.
-			@param treeItem: QListWidgetItem
+			@param leafItem: If set, use this class for displaying Entries inside the QListWidget.
+			@param leafItem: QListWidgetItem
+			@param leafItem: If set, use this class for displaying Directories inside the QListWidget.
+			@param leafItem: QListWidgetItem
 		"""
 		super( TreeWidget, self ).__init__( *args, **kwargs )
 		self.ui = Ui_Tree( )
@@ -513,11 +524,11 @@ class TreeWidget( QtGui.QWidget ):
 		self.search( self.ui.editSearch.text() )
 		
 	def listWidgetItemDoubleClicked(self, item ):
-		if( isinstance( item, self.treeItem ) ) and self.editOnDoubleClick:
+		if( isinstance( item, self.leafItem ) ) and self.editOnDoubleClick:
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
 			handler = WidgetHandler( lambda: EditWidget(self.modul, EditWidget.appTree, item.entryData["id"]), descr )
 			handler.stackHandler()
-		elif( isinstance( item, DirItem ) ):
+		elif( isinstance( item, NodeItem ) ):
 			self.path.append( item.dirName )
 			self.loadData()
 
@@ -604,54 +615,20 @@ class TreeWidget( QtGui.QWidget ):
 			self.searchStr = None
 			self.loadData( )
 
-	def mkdir(self, rootNode, path, dirName):
-		"""
-			Creates a new directory on the server.
-			
-			@param rootNode: rootNode to create the directory under.
-			@type rootNode: String
-			@param path: Path to create the directory in
-			@type path: String
-			@param dirName: Name of the new directory
-			@type dirName: String
-		"""
-		request = NetworkService.request("/%s/mkDir"% self.modul, {"node":rootNode, "path":path, "skelType":"node", "dirname":dirName}, successHandler=self.onRequestSucceeded, failureHandler=self.showError )
-		#request.flushList = [ lambda*args, **kwargs: self.flushCache(rootNode, path) ]
 
-	def delete( self, rootNode, path, files, dirs ):
+	def requestDelete( self, nodes, leafs ):
 		"""
 			Delete files and/or directories from the server.
 			Directories dont need to be empty, the server handles that case internally.
 			
-			@param rootNode: rootNode to delete from
-			@type rootNode: String
-			@param path: Path (relative to the rootNode) which contains the elements which should be deleted.
-			@type path: String
-			@param files: List of filenames in that directory.
-			@type files: List
-			@param dirs: List of directories in that directory.
-			@type dirs: List
+			@param nodes: List of node-ids.
+			@type nodes: List
+			@param leafs: List of leaf-ids.
+			@type leafs: List
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		protoWrap.delete( rootNode, path, files, dirs )
-		self.overlay.inform( self.overlay.BUSY )
+		self.tree.requestDelete( nodes, leafs )
 
-	def copy(self, clipboard, rootNode, path ):
-		"""
-			Copy or move elements to the given rootNode/path.
-			
-			@param clipboard: Tuple holding all informations about the elements which get moved/copied
-			@type clipboard: (srcRepo, srcPath, doMove, entities, dirs)
-			@param rootNode: Destination rootNode
-			@type rootNode: String
-			@param path: Destination path
-			@type path: String
-		"""
-		srcRepo, srcPath, doMove, files, dirs = clipboard
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		protoWrap.copy( srcRepo, srcPath, files, dirs, rootNode, path, doMove )
-		self.overlay.inform( self.overlay.BUSY )
-	
+
 	def onProgessUpdate(self, request, done, maximum ):
 		if request.queryType == "move":
 			descr =  QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
@@ -663,83 +640,8 @@ class TreeWidget( QtGui.QWidget ):
 			raise NotImplementedError()
 		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
 	
-	def rename(self, rootNode, path, oldName, newName ):
-		"""
-			Rename an entity or directory.
-			
-			@param rootNode: rootNode the element is in
-			@type rootNode: String
-			@param path: Path to that element.
-			@type path: String
-			@param oldName: Old name of the element
-			@type oldName: String
-			@param newName: The new name for that element
-			@type newName: String
-		"""
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		protoWrap.rename( rootNode, path, oldName, newName )
-		self.overlay.inform( self.overlay.BUSY )
 
 	def showError(self, reqWrapper, error):
 		self.overlay.inform( self.overlay.ERROR, str(error) )
 		
-	def on_listWidget_customContextMenuRequested(self, point ):
-		menu = QtGui.QMenu( self )
-		if self.ui.listWidget.itemAt(point):
-			actionRename = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Rename") )
-			menu.addSeparator ()
-			actionCopy = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Copy") )
-			actionMove = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Cut") )
-			actionDelete = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Delete") )
-			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
-			if( selection==actionRename and self.ui.listWidget.currentItem() ):
-				item = self.ui.listWidget.currentItem()
-				if isinstance( item, DirItem ):
-					oldName = item.dirName
-				else:
-					oldName = item.data["name"]
-				newName, okay = QtGui.QInputDialog.getText( self, QtCore.QCoreApplication.translate("TreeWidget", "Rename"), QtCore.QCoreApplication.translate("TreeWidget", "New name"), text=oldName )
-				if okay:
-					self.rename( self.rootNode, self.getPath(), oldName, newName )
-			elif selection == actionCopy or selection == actionMove:
-				dirs = []
-				files = []
-				for item in self.ui.listWidget.selectedItems():
-					if isinstance( item, DirItem ):
-						dirs.append( item.dirName )
-					else:
-						files.append( item.data["name"] )
-				doMove = (selection==actionMove)
-				self.clipboard = ( self.rootNode, self.getPath(), doMove, files, dirs )
-			elif selection == actionDelete:
-				dirs = []
-				files = []
-				for item in self.ui.listWidget.selectedItems():
-					if isinstance( item, DirItem ):
-						dirs.append( item.dirName )
-					else:
-						files.append( item.data["name"] )
-				self.delete( self.rootNode, self.getPath(), files, dirs )				
-		else:
-			actionPaste = menu.addAction( QtCore.QCoreApplication.translate("TreeWidget", "Insert") )
-			selection = menu.exec_( self.ui.listWidget.mapToGlobal( point ) )
-			if( selection==actionPaste and self.clipboard ):
-				# self.ui.listWidget.currentItem() ):
-				self.copy( self.clipboard, self.rootNode, self.getPath() )
-
-	def keyPressEvent( self, e ):
-		"""
-			Catch and handle QKeySequence.Delete.
-		"""
-		if e.matches( QtGui.QKeySequence.Delete ):
-			dirs = []
-			files = []
-			for item in self.ui.listWidget.selectedItems():
-				if isinstance( item, DirItem ):
-					dirs.append( item.dirName )
-				else:
-					files.append( item.data["name"] )
-			self.delete( self.rootNode, self.getPath(), files, dirs )		
-		else:
-			super( TreeWidget, self ).keyPressEvent( e )
 

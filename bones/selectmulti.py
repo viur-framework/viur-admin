@@ -6,8 +6,8 @@ from event import event
 from priorityqueue import editBoneSelector, viewDelegateSelector
 
 class SelectMultiViewBoneDelegate(QtGui.QStyledItemDelegate):
-	def __init__(self,registerObject, modulName, boneName, skelStructure, *args, **kwargs ):
-		super( QtGui.QStyledItemDelegate,self ).__init__()
+	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+		super( SelectMultiViewBoneDelegate, self ).__init__()
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName=modulName

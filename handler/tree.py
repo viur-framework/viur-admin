@@ -9,8 +9,8 @@ from time import sleep, time
 import sys, os, os.path
 from utils import RegisterQueue, Overlay, loadIcon
 from handler.list import ListCoreHandler
+from widgets.tree import TreeWidget
 from mainwindow import WidgetHandler
-from widgets.tree import TreeWidget, TreeItem, DirItem
 from widgets.edit import EditWidget
 
 
@@ -54,7 +54,7 @@ class TreeHandler( QtCore.QObject ):
 		config = conf.serverConfig["modules"][ modul ]
 		if( config["handler"]=="tree" or config["handler"].startswith("tree.") ):
 			f = lambda: TreeBaseHandler( modul )
-			queue.registerHandler( 5, f )
+			queue.registerHandler( 3, f )
 	
 	
 	def openList(self, modulName, config ):

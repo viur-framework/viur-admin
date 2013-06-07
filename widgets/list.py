@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui
-from utils import Overlay, RegisterQueue, formatString
+from utils import Overlay, RegisterQueue, formatString, urlForItem
 from network import NetworkService, RequestGroup
 from event import event
 from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
@@ -8,6 +8,7 @@ from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
 from ui.listUI import Ui_List
 from config import conf
+import json
 
 class ListTableModel( QtCore.QAbstractTableModel ):
 	"""Model for displaying data within a listView"""
@@ -30,7 +31,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.cursor = None
 		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		print( self.modul )
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect( self.reload )
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
@@ -181,6 +181,12 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			if "search" in self.filter.keys():
 				del self.filter[ "search" ]
 			self.reload()
+	
+	def flags( self, index ):
+		if not index.isValid():
+			return( QtCore.Qt.NoItemFlags )
+		return( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled )
+		
 
 class ListTableView( QtGui.QTableView ):
 	"""
@@ -205,6 +211,10 @@ class ListTableView( QtGui.QTableView ):
 		self.structureCache = None
 		model = ListTableModel( self.modul, fields or ["name"], filter  )
 		self.setModel( model )
+		self.setDragDropMode( self.DragDrop )
+		self.setDragEnabled( True )
+		self.setAcceptDrops( True ) #Needed to recive dragEnterEvent, not actually wanted
+		self.setSelectionBehavior( self.SelectRows )
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
@@ -258,6 +268,7 @@ class ListTableView( QtGui.QTableView ):
 			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select( self.modul, field, self.structureCache )
+			print( delegateFactory )
 			delegate = delegateFactory( self.modul, field, self.structureCache )
 			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )
@@ -275,10 +286,10 @@ class ListTableView( QtGui.QTableView ):
 			for row in rows:
 				data = self.model().getData()[ row ]
 				idList.append( data["id"] )
-			self.delete( idList, ask=True )
+			self.requestDelete( idList )
 		elif e.key() == QtCore.Qt.Key_Return:
 			for index in self.selectedIndexes():
-				self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
+				self.itemActivated.emit(  self.model().getData()[index.row()] )
 		else:
 			super( ListTableView, self ).keyPressEvent( e )
 
@@ -304,20 +315,16 @@ class ListTableView( QtGui.QTableView ):
 		if selection:
 			self.model().setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
 
-	def delete(self, ids, ask=False ):
-		if ask:
-			if QtGui.QMessageBox.question(	self,
-							QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
-							QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len( ids ),
-							QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-							QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
-				return
-		self.overlay.inform( self.overlay.BUSY )
-		reqGroup = RequestGroup( finishedHandler=self.onQuerySuccess )
-		for id in ids:
-			reqGroup.addQuery( NetworkService.request("/%s/delete/%s" % ( self.modul, id ), secure=True ) )
-		reqGroup.queryType = "delete"
-		self.connect( reqGroup, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
+	def requestDelete(self, ids):
+		if QtGui.QMessageBox.question(	self,
+						QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+						QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len( ids ),
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+						QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+			return
+		protoWrap = protocolWrapperInstanceSelector.select( self.model().modul )
+		assert protoWrap is not None
+		protoWrap.deleteEntities( ids )
 	
 	def onProgessUpdate(self, request, done, maximum ):
 		if request.queryType == "delete":
@@ -331,6 +338,25 @@ class ListTableView( QtGui.QTableView ):
 		event.emit( QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.modul, None )
 		self.overlay.inform( self.overlay.SUCCESS )
 
+	def dragEnterEvent(self, event ):
+		"""
+			Allow Drag&Drop to the outside (ie relationalBone)
+		"""
+		if event.source() == self:
+			event.accept()
+			tmpList = []
+			for itemIndex in self.selectionModel().selection().indexes():
+				tmpList.append( self.model().getData()[ itemIndex.row() ] )
+			event.mimeData().setData( "viur/listDragData", json.dumps( { "entities": tmpList } ) )
+			event.mimeData().setUrls( [ urlForItem( self.model().modul, x) for x in tmpList] )
+		return( super( ListTableView, self ).dragEnterEvent( event ) )
+	
+	def dragMoveEvent( self, event ):
+		"""
+			We need to have drops enabled to recive dragEnterEvents, so we can add our mimeData;
+			but we won't ever recive an actual drop.
+		"""
+		event.ignore()
 
 	
 class ListWidget( QtGui.QWidget ):
@@ -426,3 +452,5 @@ class ListWidget( QtGui.QWidget ):
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
+	def requestDelete( self, ids ):
+		return( self.list.requestDelete( ids ) )

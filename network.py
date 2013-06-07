@@ -224,6 +224,7 @@ class RequestGroup( QtCore.QObject ):
 		self.queryCount = 0 # Total amount of subqueries remaining
 		self.maxQueryCount = 0 # Total amount of all queries
 		self.hadErrors = False
+		self.hasFinished = False
 
 	def addQuery( self, query ):
 		"""
@@ -250,6 +251,7 @@ class RequestGroup( QtCore.QObject ):
 	def onFinished(self, queryWrapper ):
 		self.queryCount -= 1
 		if self.queryCount == 0:
+			self.hasFinished = True
 			self.finished.emit( self )
 			self.deleteLater()
 	
@@ -327,7 +329,7 @@ class RemoteFile( QtCore.QObject ):
 	def loadFile(self ):
 		dlKey = self.dlKey
 		if not dlKey.lower().startswith("http://") and not dlKey.lower().startswith("https://"):
-			dlKey = "/file/view/%s/file.dat" % dlKey
+			dlKey = "/file/download/%s" % dlKey
 		req = NetworkService.request( dlKey, successHandler=self.onFileAvaiable  )
 
 	def onFileAvaiable( self, request ):

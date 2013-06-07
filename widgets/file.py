@@ -5,7 +5,7 @@ from PySide import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService, RemoteFile, RequestGroup
 from event import event
-from widgets.tree import TreeWidget, TreeItem, TreeListView
+from widgets.tree import TreeWidget, LeafItem, TreeListView
 from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
 import os, sys
@@ -13,12 +13,13 @@ from config import conf
 from priorityqueue import protocolWrapperInstanceSelector
 
 
-class FileItem( TreeItem ):
+class FileItem( LeafItem ):
 	"""
 		Displayes a file (including its preview if possible) inside a QListWidget.
 	"""
 	def __init__( self, data ):
 		super( FileItem, self ).__init__( data )
+		print("IM A FILE ITEM")
 		self.entryData = data
 		extension=self.entryData["name"].split(".")[-1].lower()
 		if os.path.isfile("icons/filetypes/%s.png"%(extension)):
@@ -42,10 +43,6 @@ class FileItem( TreeItem ):
 		self.setIcon( icon )
 		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( remoteFile.getFileName(), str( self.entryData["name"] ) ) )
 
-	
-	def toURL( self ):
-		return( "/file/view/%s/%s" % (self.entryData["dlkey"],self.entryData["name"]))
-		
 
 class UploadStatusWidget( QtGui.QWidget ): 
 	"""
@@ -139,7 +136,7 @@ class DownloadStatusWidget( QtGui.QWidget ):
 
 class FileListView( TreeListView ):
 	
-	treeItem = FileItem
+	leafItem = FileItem
 	
 	def doUpload(self, files, node ):
 		"""
@@ -178,9 +175,6 @@ class FileListView( TreeListView ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.getModul() )
 		downloader = protoWrap.download( targetDir, rootNode, path, files, dirs )
 		self.parent().layout().addWidget( DownloadStatusWidget( downloader ) )
-		#downloader = RecursiveDownloader( targetDir, self.getRootNode(), path, files, dirs, self.getModul() )
-		#self.ui.boxUpload.addWidget( downloader )
-		#self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 
 	def dropEvent(self, event):
 		"""
@@ -201,14 +195,7 @@ class FileListView( TreeListView ):
 			event.accept()
 		else:
 			super( FileListView, self ).dragEnterEvent( event )
-			print( event.source() )
-			if event.source() == self:
-				# Its an internal drag&drop - add urls so it works outside, too
-				urls = []
-				for item in self.selectedItems():
-					if isinstance( item, self.treeItem ):
-						urls.append( "%s/file/download/%s/%s" % (NetworkService.url[ : -len("/admin")] , item.entryData["dlkey"], item.entryData["name"] ) )
-				event.mimeData().setUrls( urls )
+
 
 
 class FileWidget( TreeWidget ):

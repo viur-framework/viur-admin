@@ -7,8 +7,7 @@ from config import conf
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from time import sleep, time
 import sys, os
-from handler.tree import TreeItem, DirItem
-from widgets.file import FileWidget, FileItem
+from widgets.file import FileWidget
 from handler.list import ListCoreHandler
 from utils import RegisterQueue, loadIcon
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
@@ -40,7 +39,7 @@ class FileDownloadAction( QtGui.QAction ):
 		dirs = []
 		files = []
 		for item in self.parent().selectedItems():
-			if isinstance( item, DirItem ):
+			if isinstance( item, self.parent().getNodeItemClass() ):
 				dirs.append( item.dirName )
 			else:
 				files.append( item.entryData )

@@ -58,18 +58,7 @@ class HierarchyDeleteAction( QtGui.QAction ):
 	def onTriggered( self ):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
-			#config = conf.serverConfig["modules"][ self.parentWidget().modul ]
-			#if "formatstring" in config.keys():
-			#	question = QtCore.QCoreApplication.translate("HierarchyHandler", "Delete entry %s and everything beneath?") % formatString( config["formatstring"],  item.data )
-			#else: # FIXME: TDB (new signature for formatString
-			question = QtCore.QCoreApplication.translate("HierarchyHandler", "Delete this entry and everything beneath?")
-			res = QtGui.QMessageBox.question(	self.parentWidget(),
-											QtCore.QCoreApplication.translate("HierarchyHandler", "Confirm delete"),
-											question,
-											QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No
-										)
-			if res == QtGui.QMessageBox.Yes:
-				parent.hierarchy.delete( item.data["id"] )
+			self.parent().hierarchy.requestDelete( item.entryData["id"] )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

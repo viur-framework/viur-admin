@@ -8,7 +8,7 @@ import sys, os, os.path
 from utils import RegisterQueue, Overlay, loadIcon
 from handler.list import ListCoreHandler
 from mainwindow import WidgetHandler
-from widgets.tree import TreeWidget, TreeItem, DirItem
+from widgets.tree import TreeWidget
 from widgets.edit import EditWidget
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
@@ -37,7 +37,7 @@ class TreeEditAction( QtGui.QAction ):
 		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 
 	def onCurrentItemChanged( self, current, previous ):
-		if not isinstance( current, self.parent().getTreeItemClass() ): #Its a directory, we cant edit that
+		if isinstance( current, self.parent().getLeafItemClass() ): #Its a directory, we cant edit that
 			self.setEnabled( False )
 		else:
 			self.setEnabled( True )
@@ -46,13 +46,13 @@ class TreeEditAction( QtGui.QAction ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
 		entries = []
 		for item in self.parent().selectedItems():
-			if not isinstance( item, DirItem ):
+			if isinstance( item, self.parent().getLeafItemClass() ):
 				entries.append( item.entryData )
 		for entry in entries:
-			if isinstance( item, DirItem ):
-				skelType="node"
-			else:
+			if isinstance( item, self.parent().getLeafItemClass() ):
 				skelType="leaf"
+			else:
+				skelType="node"
 			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], skelType=skelType )
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
 			handler.stackHandler()
@@ -126,18 +126,14 @@ class TreeDeleteAction( QtGui.QAction ):
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e ):
-		dirs = []
-		files = []
+		nodes = []
+		leafs = []
 		for item in self.parent().selectedItems():
-			if isinstance( item, DirItem ):
-				dirs.append( item.entryData )
+			if isinstance( item, self.parent().getNodeItemClass() ):
+				nodes.append( item.entryData["id"] )
 			else:
-				files.append( item.entryData )
-		if not files and not dirs:
-			return
-		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
-		assert reqWrap is not None
-		reqWrap.delete( files, dirs )
+				leafs.append( item.entryData["id"] )
+		self.parent().requestDelete( nodes, leafs )
 		#self.parent().delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )
 
 	@staticmethod

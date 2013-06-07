@@ -6,7 +6,7 @@ from ui.relationalselectionUI import Ui_relationalSelector
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
-from widgets.tree import TreeWidget, TreeItem, DirItem
+from widgets.tree import TreeWidget
 from widgets.selectedEntities import SelectedEntitiesWidget
 from priorityqueue import editBoneSelector, viewDelegateSelector
 
@@ -27,7 +27,6 @@ class TreeBoneSelector( RelationalBoneSelector ):
 	displaySourceWidget = TreeWidget
 	displaySelectionWidget = TreeSelectedEntities
 	
-
 	def onSourceItemDoubleClicked(self, item):
 		"""
 			An item has been doubleClicked in our listWidget.
@@ -42,12 +41,9 @@ class TreeBoneSelector( RelationalBoneSelector ):
 			self.selectionChanged.emit( [data] )
 
 
-	
-	
-
 def CheckForTreeItemBone(  modulName, boneName, skelStucture ):
 	return( skelStucture[boneName]["type"].startswith("treeitem.") )
 	
 	
-editBoneSelector.insert( 2, CheckForTreeItemBone, TreeItemBone)
+editBoneSelector.insert( 1, CheckForTreeItemBone, TreeItemBone)
 

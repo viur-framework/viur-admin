@@ -31,26 +31,26 @@ class SelectOneEditBone( QtGui.QWidget ):
 			tmpList.sort( key=lambda x: x[1] ) #Values
 		self.comboBox.addItems( [x[1] for x in tmpList ] )
 
-	@staticmethod
-	def fromSkelStructure( modulName, boneName, skelStructure ):
+	@classmethod
+	def fromSkelStructure( cls, modulName, boneName, skelStructure ):
 		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
 		if "sortBy" in skelStructure[ boneName ].keys():
 			sortBy = skelStructure[ boneName ][ "sortBy" ]
 		else:
 			sortBy = "keys"
 		values = list( skelStructure[ boneName ]["values"].items() )
-		return( SelectOneEditBone( modulName, boneName, readOnly, values=values, sortBy=sortBy ) )
+		return( cls( modulName, boneName, readOnly, values=values, sortBy=sortBy ) )
 
 	def unserialize( self, data ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modulName )
 		assert protoWrap is not None
-		try: #There might be junk comming from the server
-			items = dict( [(str(k), str(v)) for k, v in protoWrap.structure[ self.boneName ]["values"].items() ] )
+		if 1: #There might be junk comming from the server
+			items = dict( [(str(k), str(v)) for k, v in self.values ] )
 			if str(data[ self.boneName]) in items.keys():
 				self.comboBox.setCurrentIndex( self.comboBox.findText( items[ str(data[ self.boneName]) ] ) )
 			else:
 				self.comboBox.setCurrentIndex(-1)
-		except:
+		else: #except:
 			self.comboBox.setCurrentIndex(-1)
 
 	def serializeForPost(self):
