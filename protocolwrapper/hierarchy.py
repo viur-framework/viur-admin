@@ -4,7 +4,6 @@
 from PySide import QtCore
 from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
-import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from collections import OrderedDict
 
@@ -12,7 +11,9 @@ from collections import OrderedDict
 class HierarchyWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
-	entitiesChanged = QtCore.Signal()
+	
+	entitiesChanged = QtCore.Signal( )
+	childrenAvailable = QtCore.Signal( (object,) ) # A recently queried entity was fetched and is now avaiable
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
@@ -29,11 +30,12 @@ class HierarchyWrapper( QtCore.QObject ):
 		self.addStructure = None
 		self.editStructure = None
 		self.busy = True
+		self.deferedTaskQueue = []
 		NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
 		req = NetworkService.request( "/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable )
 		print("Initializing HierarchyWrapper for modul %s" % self.modul )
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
-		self.deferedTaskQueue = []
+
 
 	def checkBusyStatus( self ):
 		busy = False
@@ -43,7 +45,6 @@ class HierarchyWrapper( QtCore.QObject ):
 				break
 		if busy != self.busy:
 			self.busy = busy
-			print("EMIGING ", busy )
 			self.busyStateChanged.emit( busy )
 
 	def checkForOurModul( self, modulName ):
@@ -75,43 +76,30 @@ class HierarchyWrapper( QtCore.QObject ):
 			self.rootNodes = []
 		self.rootNodesAvaiable.emit()
 		self.checkBusyStatus()
-		
-	def getRootNodes( self, callback ):
-		if self.rootNodes is not None:
-			self.callDefered( callback, self.rootNodes )
-		else:
-			r = NetworkService.request( "/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable )
-			r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
-			r.wrapperCbTargetFuncName = callback.__name__
-		self.checkBusyStatus()
-	
-	def cacheKeyFromFilter( self, filters, node ):
+
+	def cacheKeyFromFilter( self, node, filters ):
 		tmpList = list( filters.items() )
 		tmpList.append( ("node", node) )
 		tmpList.sort( key=lambda x: x[0] )
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
-	def queryData( self, callback, node, **kwargs ):
-		key = self.cacheKeyFromFilter( kwargs, node )
+	def queryData( self, node, **kwargs ):
+		key = self.cacheKeyFromFilter( node, kwargs )
 		if key in self.dataCache.keys():
-			ctime, data, cursor = self.dataCache[ key ]
-			if ctime+self.maxCacheTime>time(): #This cache-entry is still valid
-				self.callDefered( callback, key, data, None )
-				#self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, key ) )
-				#QtCore.QTimer.singleShot( 25, self.execDefered )
-				#callback( None, data, cursor )
-				return( key )
+			self.deferedTaskQueue.append( ( "childrenAvailable", key ) )
+			QtCore.QTimer.singleShot( 25, self.execDefered )
+			return( key )
 		#Its a cache-miss or cache too old
 		r = NetworkService.request( "/%s/list/%s" % (self.modul, node), kwargs, successHandler=self.addCacheData )
-		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
-		r.wrapperCbTargetFuncName = callback.__name__
 		r.wrapperCbCacheKey = key
+		r.node = node
 		self.checkBusyStatus()
 		return( key )
 	
-	def callDefered( self, callback, *args, **kwargs ):
-		self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, args, kwargs ) )
-		QtCore.QTimer.singleShot( 25, self.doCallDefered )
+	def execDefered( self, *args, **kwargs ):
+		action, node = self.deferedTaskQueue.pop(0)
+		if action == "childrenAvailable":
+			self.childrenAvailable.emit( node )
 	
 	def doCallDefered( self, *args, **kwargs ):
 		weakSelf, callName, fargs, fkwargs = self.deferedTaskQueue.pop(0)
@@ -127,12 +115,20 @@ class HierarchyWrapper( QtCore.QObject ):
 		if "cursor" in data.keys():
 			cursor=data["cursor"]
 		self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
-		targetSelf = req.wrapperCbTargetFuncSelf()
-		if targetSelf is not None:
-			targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
-			targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
+		for skel in data["skellist"]:
+			self.dataCache[ skel["id"] ] = skel
+		self.childrenAvailable.emit( req.node )
 		self.checkBusyStatus()
-			
+
+	def childrenForNode( self, node ):
+		assert isinstance( node, str )
+		res = []
+		for item in self.dataCache.values():
+			if isinstance( item, dict ): #Its a "normal" item, not a customQuery result
+				if item["parententry"] == node:
+					res.append( item )
+		return( res )
+
 	def add( self, parent, **kwargs ):
 		tmp = {k:v for (k,v) in kwargs.items() }
 		tmp["parent"] = parent
@@ -195,12 +191,13 @@ class HierarchyWrapper( QtCore.QObject ):
 		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):
-		for k,v in self.dataCache.items():
-			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
-			ctime, data, cursor = v
-			self.dataCache[ k ] = (1, data, cursor )
+		self.dataCache = {}
+		#for k,v in self.dataCache.items():
+		#	# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
+		#	ctime, data, cursor = v
+		#	self.dataCache[ k ] = (1, data, cursor )
 		#self.emit( QtCore.SIGNAL("entitiesChanged()") )
-		self.entitiesChanged.emit()
+		self.entitiesChanged.emit( )
 		self.checkBusyStatus()
 
 		

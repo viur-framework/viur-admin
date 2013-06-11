@@ -12,6 +12,7 @@ from handler.list import ListCoreHandler
 from widgets.file import FileWidget
 from mainwindow import WidgetHandler
 from utils import RegisterQueue, loadIcon
+from priorityqueue import protocolWrapperInstanceSelector
 
 class FileRepoHandler( WidgetHandler ):
 	def __init__( self, modul, repo, *args, **kwargs ):
@@ -27,18 +28,22 @@ class FileBaseHandler( WidgetHandler ):
 		if config["icon"]:
 			self.setIcon( 0, loadIcon( config["icon"] ) )
 		self.setText( 0, config["name"] )
-		self.repos = []
-		self.tmpObj = QtGui.QWidget()
-		fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
-		self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos) 
+		event.connectWithPriority( "preloadingFinished", self.setRepos, event.lowPriority )
+		#self.tmpObj = QtGui.QWidget()
+		#fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
+		#self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos) 
 	
-	def setRepos( self, fetchTask ):
-		data = NetworkService.decode( fetchTask )
-		self.tmpObj.deleteLater()
-		self.tmpObj = None
-		self.repos = data
-		if len( self.repos ) > 1:
-			for repo in self.repos:
+	def setRepos( self ):
+		"""
+			Called if preloading has finished.
+			Check if there is more than one repository avaiable
+			for us.
+		"""
+		print("kkkk")
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		if len( protoWrap.rootNodes ) > 1:
+			for repo in protoWrap.rootNodes:
 				d = FileRepoHandler( self.modul, repo )
 				self.addChild( d )
 

@@ -13,6 +13,7 @@ class ListWrapper( QtCore.QObject ):
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	entitiesChanged = QtCore.Signal()
 	entityAvailable = QtCore.Signal( (object,) )
+	queryResultAvaiable = QtCore.Signal( (str, ) )
 	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
 	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
@@ -69,7 +70,7 @@ class ListWrapper( QtCore.QObject ):
 		tmpList.sort( key=lambda x: x[0] )
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
-	def queryData( self, callback, **kwargs ):
+	def queryData( self, **kwargs ):
 		print( "Querying data")
 		key = self.cacheKeyFromFilter( kwargs )
 		if key in self.dataCache.keys():
@@ -78,15 +79,13 @@ class ListWrapper( QtCore.QObject ):
 				return( key )
 			ctime, data, cursor = self.dataCache[ key ]
 			if ctime+self.maxCacheTime>time(): #This cache-entry is still valid
-				self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, key ) )
+				self.deferedTaskQueue.append( ("queryResultAvaiable",key) )
 				QtCore.QTimer.singleShot( 25, self.execDefered )
 				#callback( None, data, cursor )
 				return( key )
 		#Its a cache-miss or cache too old
 		self.dataCache[ key ] = None
 		r = NetworkService.request( "/%s/list" % self.modul, kwargs, successHandler=self.addCacheData )
-		r.wrapperCbTargetFuncSelf = weakref.ref( callback.__self__)
-		r.wrapperCbTargetFuncName = callback.__name__
 		r.wrapperCbCacheKey = key
 		self.checkBusyStatus()
 		return( key )
@@ -100,12 +99,9 @@ class ListWrapper( QtCore.QObject ):
 		
 	
 	def execDefered( self, *args, **kwargs ):
-		weakSelf, callName, key = self.deferedTaskQueue.pop(0)
-		callFunc = weakSelf()
-		if callFunc is not None:
-			targetFunc = getattr( callFunc, callName )
-			ctime, data, cursor = self.dataCache[ key ]
-			targetFunc( key, data, cursor )
+		action, key = self.deferedTaskQueue.pop(0)
+		if action=="queryResultAvaiable":
+			self.queryResultAvaiable.emit( key )
 		self.checkBusyStatus()
 	
 	def addCacheData( self, req ):
@@ -115,13 +111,12 @@ class ListWrapper( QtCore.QObject ):
 			cursor=data["cursor"]
 		if data["action"]=="list":
 			self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
-			targetSelf = req.wrapperCbTargetFuncSelf()
-			if targetSelf is not None:
-				targetFunc = getattr( targetSelf, req.wrapperCbTargetFuncName )
-				targetFunc( req.wrapperCbCacheKey, data["skellist"], cursor )
+			for skel in data["skellist"]:
+				self.dataCache[ skel["id"] ] = skel
 		elif data["action"]=="view":
 			self.dataCache[ data["values"]["id"] ] = data[ "values" ]
 			self.entityAvailable.emit( data["values"] )
+		self.queryResultAvaiable.emit( req.wrapperCbCacheKey )
 		self.checkBusyStatus()
 			
 	def add( self, **kwargs ):
@@ -187,10 +182,7 @@ class ListWrapper( QtCore.QObject ):
 		self.checkBusyStatus()
 	
 	def emitEntriesChanged( self, *args, **kwargs ):
-		for k,v in self.dataCache.items():
-			# Invalidate the cache. We dont clear that dict sothat execDefered calls dont fail
-			ctime, data, cursor = v
-			self.dataCache[ k ] = (1, data, cursor )
+		self.dataCache = {}
 		self.entitiesChanged.emit()
 		self.checkBusyStatus()
 		#self.emit( QtCore.SIGNAL("entitiesChanged()") )

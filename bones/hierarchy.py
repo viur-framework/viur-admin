@@ -29,7 +29,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
+		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )
 		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
@@ -40,7 +40,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.on_delBtn_released )
+			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.onDelBtnReleased )
 			self.selection = None
 		else:
 			self.selection = []
@@ -64,12 +64,12 @@ class HierarchyEditBone( QtGui.QWidget ):
 		else:
 			self.selection = None
 	
-	def on_addBtn_released(self, *args, **kwargs ):
+	def onAddBtnReleased(self, *args, **kwargs ):
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestHierarchyBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection )
 		self.widget = queue.getBest()()
 
-	def on_delBtn_released(self, *args, **kwargs ):
+	def onDelBtnReleased(self, *args, **kwargs ):
 		if self.skelStructure[ self.boneName ]["multiple"]:
 			self.selection = []
 		else:

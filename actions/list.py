@@ -107,7 +107,7 @@ class Preview( QtGui.QWidget ):
 			self.setWindowTitle( QtCore.QCoreApplication.translate("ListHandler", "Preview") )
 		self.show()
 	
-	def on_cbUrls_currentIndexChanged( self, idx ):
+	def onCbUrlsCurrentIndexChanged( self, idx ):
 		if not isinstance( idx, int ):
 			return
 		url = self.urls[ idx ][1]
@@ -131,8 +131,8 @@ class Preview( QtGui.QWidget ):
 			html = bytes(self.request.readAll()).decode("UTF8")
 		self.ui.webView.setHtml( html, QtCore.QUrl( NetworkService.url.replace("/admin","")+self.currentURL ) )
 		
-	def on_btnReload_released(self, *args, **kwargs):
-		self.on_cbUrls_currentIndexChanged( self.ui.cbUrls.currentIndex () )
+	def onBtnReloadReleased(self, *args, **kwargs):
+		self.onCbUrlsCurrentIndexChanged( self.ui.cbUrls.currentIndex () )
 
 
 class ListPreviewAction( QtGui.QAction ):

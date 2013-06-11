@@ -30,9 +30,9 @@ class WeakFuncWrapper( ):
 			
 	def isDead( self ):
 		if self.targetFuncName is not None: #Bound function
-			return( self.targetFuncSelf()==None )
+			return( self.targetFuncSelf() is None )
 		else:
-			return( self.targetFunc()==None )
+			return( self.targetFunc() is None )
 
 
 class EventWrapper( QtCore.QObject ): ### REPLACED BY WEAK FUNC WRAPPER
@@ -59,7 +59,7 @@ class EventWrapper( QtCore.QObject ): ### REPLACED BY WEAK FUNC WRAPPER
 			getattr( s, self.targetFuncName )( *args )
 	
 	def isDead( self ):
-		return( self.targetFuncSelf()==None )
+		return( self.targetFuncSelf() is None )
 
 class EventDispatcher(  QtCore.QObject ):
 	"""

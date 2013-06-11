@@ -22,7 +22,6 @@ class FileBoneSelector( TreeBoneSelector ):
 	
 
 def CheckForFileBone(  modulName, boneName, skelStucture ):
-	print(" i am ", modulName, boneName, skelStucture[boneName]["type"].startswith("treeitem.file") )
 	return( skelStucture[boneName]["type"].startswith("treeitem.file") )
 	
 	

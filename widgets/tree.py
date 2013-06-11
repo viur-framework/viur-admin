@@ -186,6 +186,7 @@ class TreeListView( QtGui.QListWidget ):
 		self.setGridSize( QtCore.QSize( *self.gridSizeIcon ) )
 		self.setSelectionMode( self.ExtendedSelection )
 		if self.rootNode is not None:
+			print("hAVING ROOTNODE", self.rootNode )
 			self.loadData()
 	
 	## Getters & Setters
@@ -201,6 +202,7 @@ class TreeListView( QtGui.QListWidget ):
 	
 	@QtCore.Slot( str )
 	def setNode( self, node, isInitialCall=False ):
+		print("Setting node", node )
 		self.customQueryKey = None
 		self.node = node
 		self.loadData()
@@ -215,6 +217,7 @@ class TreeListView( QtGui.QListWidget ):
 			@param isInitialCall: If this is the initial call, we remit the signal
 			@type repoName: bool
 		"""
+		print("Setting ROOTnode", rootNode )
 		self.customQueryKey = None
 		if rootNode==self.rootNode:
 			return
@@ -407,7 +410,7 @@ class TreeListView( QtGui.QListWidget ):
 					leafs.append( item.entryData["id"] )
 			self.requestDelete( nodes, leafs )		
 		else:
-			super( TreeWidget, self ).keyPressEvent( e )
+			super( TreeListView, self ).keyPressEvent( e )
 
 
 
@@ -495,10 +498,8 @@ class TreeWidget( QtGui.QWidget ):
 		protoWrap = protocolWrapperInstanceSelector.select( modul )
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
-		if protoWrap.rootNodes:
+		if not self.rootNode and protoWrap.rootNodes:
 			self.onRootNodesAvaiable()
-		else:
-			protoWrap.rootNodesAvaiable.connect( self.onRootNodesAvaiable )
 
 	def onRootNodesAvaiable( self ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
@@ -520,7 +521,7 @@ class TreeWidget( QtGui.QWidget ):
 	def onBtnSearchReleased(self, *args, **kwargs):
 		self.tree.search( self.ui.editSearch.text() )
 
-	def on_editSearch_returnPressed(self):
+	def onEditSearchReturnPressed(self):
 		self.search( self.ui.editSearch.text() )
 		
 	def listWidgetItemDoubleClicked(self, item ):
@@ -559,8 +560,6 @@ class TreeWidget( QtGui.QWidget ):
 			@returns: List
 		"""
 		return( self.tree.selectedItems() )
-
-
 
 
 	def setRootNode( self, rootNode, isInitialCall=False ):

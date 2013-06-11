@@ -7,13 +7,14 @@ from widgets.list import ListWidget
 from network import NetworkService
 from config import conf
 from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+import json
 
 class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 	"""
 		The model holding the currently selected entities.
 	"""
 	
-	def __init__(self, parent, modul, selection, *args, **kwargs):
+	def __init__(self, parent, modul, selection, skelType=None, *args, **kwargs):
 		"""
 			@param parent: Our parent widget.
 			@type parent: QWidget.
@@ -27,6 +28,7 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		self.dataCache = []
 		self.fields = ["name"]
 		self.headers = []
+		self.skelType = skelType
 		self.entryFetches = [] #List of fetch-Tasks we issued
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
@@ -50,10 +52,15 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 			if "_type" in item.keys():
 				self.entryFetches.append( protoWrap.queryEntry( id, item["_type"] ) )
 			else:
-				self.entryFetches.append( protoWrap.queryEntry( id ) )
+				if self.skelType:
+					self.entryFetches.append( protoWrap.queryEntry( id, self.skelType ) )
+				else:
+					self.entryFetches.append( protoWrap.queryEntry( id ) )
 		elif isinstance( item, str ):
-			#FIXME: Pray that this is not the tree module...
-			self.entryFetches.append( protoWrap.queryEntry( item ) )
+			if self.skelType is not None:
+				self.entryFetches.append( protoWrap.queryEntry( item, self.skelType ) )
+			else:
+				self.entryFetches.append( protoWrap.queryEntry( item ) )
 		else:
 			raise NotImplementedError()
 		#self.entryFetches.append( protoWrap.queryEntry( id ) )
@@ -127,9 +134,10 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 		assert skelType in [None,"node","leaf"]
 		super( SelectedEntitiesWidget, self ).__init__( *args, **kwargs )
 		self.selection = selection or []
+		#self.skelType = skelType
 		if selection and not isinstance( self.selection, list ): #This was a singleSelection before
 			self.selection = [ self.selection ]
-		self.setModel( SelectedEntitiesTableModel( self, modul, self.selection ) )
+		self.setModel( SelectedEntitiesTableModel( self, modul, self.selection, self.skelType ) )
 		self.setAcceptDrops( True )
 		self.doubleClicked.connect( self.onItemDoubleClicked )
 		self.rebuildDelegates()
@@ -173,22 +181,6 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 		"""
 		self.model().removeItemAtIndex( index )
 
-	def dropEvent(self, event):
-		"""
-			We got a Drop! Add them to the selection if possible.
-			All relevant informations are read from the URLs attached to this drop.
-		"""
-		mime = event.mimeData()
-		if not mime.hasUrls():
-			return
-		for url in mime.urls():
-			res = itemFromUrl( url )
-			if not res:
-				continue
-			modul, id, name = res
-			if modul!=self.model().modul:
-				continue
-			self.extend( [ {"id": id, "name": name} ] )
 
 	def set(self, selection):
 		"""
@@ -216,16 +208,33 @@ class SelectedEntitiesWidget( QtGui.QTableView ):
 		"""
 		return( self.model().getData() )
 
+	def dropEvent(self, event):
+		"""
+			We got a Drop! Add them to the selection if possible.
+			All relevant informations are read from the URLs attached to this drop.
+		"""
+		mime = event.mimeData()
+		if self.skelType is not None and mime.hasFormat("viur/treeDragData"):
+			data = json.loads( mime.data("viur/treeDragData").data().decode("UTF-8") )
+			self.extend( data[ self.skelType+"s" ] )
+		elif self.skelType is None and (mime.hasFormat("viur/listDragData") or mime.hasFormat("viur/hierarchyDragData")):
+			if mime.hasFormat("viur/listDragData"):
+				data = json.loads( mime.data("viur/listDragData").data().decode("UTF-8") )
+			else:
+				data = json.loads( mime.data("viur/hierarchyDragData").data().decode("UTF-8") )
+			self.extend( data[ "entities" ] )
+
 	def dragMoveEvent(self, event):
 		event.accept()
 
 	def dragEnterEvent(self, event):
 		mime = event.mimeData()
-		if not mime.hasUrls():
+		if self.skelType is not None and mime.hasFormat("viur/treeDragData"):
+			event.accept()
+		elif self.skelType is None and (mime.hasFormat("viur/listDragData") or mime.hasFormat("viur/hierarchyDragData")):
+			event.accept()
+		else:
 			event.ignore()
-		if not any( [ itemFromUrl( x ) for x in mime.urls() ] ):
-			event.ignore()
-		event.accept()
 	
 	def keyPressEvent( self, e ):
 		"""

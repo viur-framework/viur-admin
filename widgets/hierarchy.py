@@ -66,7 +66,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		"""
 		super( HierarchyTreeWidget, self ).__init__( parent, *args, **kwargs )
 		self.modul = modul
-		self.currentRootNode = rootNode
+		self.rootNode = rootNode
 		self.loadingKey = None
 		self.overlay = Overlay( self )
 		self.expandList = []
@@ -76,10 +76,11 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		self.rootNodes = None
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		if not self.currentRootNode:
-			protoWrap.getRootNodes( self.onRootNodesAvaiable )
-		#	#self.loadRootNodes( self.)
+		if not self.rootNode:
+			if protoWrap.rootNodes:
+				self.rootNode = protoWrap.rootNodes[0]["key"]
 		protoWrap.entitiesChanged.connect( self.onHierarchyChanged )
+		protoWrap.childrenAvailable.connect( self.setData )
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onHierarchyChanged )
 		#self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
 		self.itemExpanded.connect( self.onItemExpanded )
@@ -88,6 +89,9 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		self.itemClicked.connect( self.onItemClicked )
 		#self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QTreeWidgetItem *,int)"), self.onItemDoubleClicked )
 		self.itemDoubleClicked.connect( self.onItemDoubleClicked )
+		if self.rootNode:
+			self.loadData()
+
 
 
 	def onItemClicked( self, item ):
@@ -102,7 +106,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		"""
 		self.itemDoubleClicked.emit( item.entryData )
 		
-	def onHierarchyChanged(self ):
+	def onHierarchyChanged( self ):
 		"""
 			Respond to changed Data - refresh our view
 		"""
@@ -127,7 +131,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			@param repoName: Displayed name of the rootNode (currently unused)
 			@param repoName: String or None
 		"""
-		self.currentRootNode = rootNode
+		self.rootNode = rootNode
 		self.clear()
 		self.loadData()
 
@@ -141,39 +145,24 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 				pass
 			self.loadData( item.entryData["id"] )
 
-	def onRootNodesAvaiable(self, rootNodes ):
-		self.rootNodes = rootNodes
-		if not self.currentRootNode:
-			try:
-				self.currentRootNode = list( self.rootNodes )[0]["key"]
-			except:
-				return
-			self.loadData()
 	
-	def onLoadError(self, request, error ):
-		self.overlay.inform( self.overlay.ERROR, str(error) )
-	
-	def onRequestSucceeded(self, request):
-		"""
-			We modified something on the server, and that request succeded
-		"""
-		event.emit( QtCore.SIGNAL('hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self, self.modul, self.currentRootNode, None )
-		self.loadData()
-		
 	def loadData(self, parent=None):
 		self.overlay.inform( self.overlay.BUSY )
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
-		protoWrap.queryData( self.setData, (parent or self.currentRootNode) )
+		protoWrap.queryData( (parent or self.rootNode) )
 
-	def setData(self, queryKey, data, cursor ):
-
-		if len( data ):
-			if data[0]["parententry"] == self.currentRootNode:
-				self.clear()
-		for itemData in data:
+	def setData(self, node ):
+		"""
+			Information about a node we recently queried got avaiable
+		"""
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		if node == self.rootNode:
+			self.clear()
+		for itemData in protoWrap.childrenForNode( node ):
 			tvItem = HierarchyItem( self.modul, itemData )
-			if( itemData["parententry"] == self.currentRootNode ):
+			if( itemData["parententry"] == self.rootNode ):
 				self.addTopLevelItem( tvItem )
 			else:
 				self.insertItem( tvItem )
@@ -236,7 +225,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		event.setDropAction( QtCore.Qt.MoveAction )
 		QtGui.QTreeWidget.dropEvent( self, event )
 		if not targetItem: #Moved to the end of the list
-			self.reparent( dragedItem.entryData["id"], self.currentRootNode )
+			self.reparent( dragedItem.entryData["id"], self.rootNode )
 			if self.topLevelItemCount()>1:
 				self.updateSortIndex( dragedItem.entryData["id"], self.topLevelItem( self.topLevelItemCount()-2 ).entryData["sortindex"]+1 )
 		else:
@@ -265,7 +254,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 				currChild = self.topLevelItem( childIndex )
 				while( currChild ):
 					if id(currChild) == id(dragedItem):
-						self.reparent( dragedItem.entryData["id"], self.currentRootNode )
+						self.reparent( dragedItem.entryData["id"], self.rootNode )
 						if childIndex==0 and self.topLevelItemCount()>1: # is now 1st item
 							self.updateSortIndex( dragedItem.entryData["id"], self.topLevelItem( 1 ).entryData["sortindex"]-1 )
 						elif childIndex==(self.topLevelItemCount()-1) and childIndex>0: #is now lastitem
@@ -327,7 +316,7 @@ class HierarchyWidget( QtGui.QWidget ):
 		self.page = 0
 		self.rootNodes = {}
 		config = conf.serverConfig["modules"][ modul ]
-		self.currentRootNode = None
+		self.rootNode = None
 		self.isSorting=False
 		self.path = []
 		self.request = None

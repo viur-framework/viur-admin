@@ -33,6 +33,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect( self.reload )
+		protoWrap.queryResultAvaiable.connect( self.addData )
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
 		self.reload()
 
@@ -118,14 +119,15 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		filter["amount"] = self._chunkSize 
-		self.loadingKey = protoWrap.queryData( self.addData, **filter )
+		self.loadingKey = protoWrap.queryData( **filter )
 
-	def addData( self, queryKey, data, cursor ):
+	def addData( self, queryKey ):
 		self.isLoading -= 1
 		if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
 			return
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
+		cacheTime, skellist, cursor = protoWrap.dataCache[ queryKey ]
 		self.layoutAboutToBeChanged.emit()
 		self.rebuildDelegates.emit( protoWrap.viewStructure )
 		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
@@ -135,9 +137,9 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		for key, bone in protoWrap.viewStructure.items():
 			bones[ key ] = bone
 		self._validFields = [ x for x in self.fields if x in bones.keys() ]
-		for item in data: #Insert the new Data at the coresponding Position
+		for item in skellist: #Insert the new Data at the coresponding Position
 			self.dataCache.append( item )
-		if len(data) < self._chunkSize:
+		if len(skellist) < self._chunkSize:
 			self.completeList = True
 		self.cursor = cursor
 		self.layoutChanged.emit()

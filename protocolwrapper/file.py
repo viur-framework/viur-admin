@@ -4,7 +4,6 @@
 from PySide import QtCore
 from network import NetworkService, RequestGroup
 from time import time
-import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from protocolwrapper.tree import TreeWrapper
 import os, sys

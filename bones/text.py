@@ -107,12 +107,12 @@ class TextEdit(QtGui.QMainWindow):
 		self.ui.textEdit.setHtml( text )
 		#self.saveCallback = saveCallback
 		self.linkEditor = None
-		self.ui.btnSave.released.connect( self.on_btnSave_released )
+		self.ui.btnSave.released.connect( self.onBtnSaveReleased )
 		#self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent  # FIXME: !!!
 		#self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData # FIXME: !!!
 		
 
-	def on_textEdit_insertFromMimeData(self, source):
+	def onTextEditInsertFromMimeData(self, source):
 		QtGui.QTextEdit.insertFromMimeData( self.ui.textEdit, source )
 		html = self.ui.textEdit.toHtml()
 		start = html.find(">", html.find("<body") )+1
@@ -171,7 +171,7 @@ class TextEdit(QtGui.QMainWindow):
 				linkTxt = "<a href=\"%s\">%s</a>"
 			cursor.insertHtml(  linkTxt % (self.linkEditor.ui.editHref.text(),  cursor.selectedText() ) )
 
-	def on_textEdit_mousePressEvent(self, event):
+	def onTextEditMousePressEvent(self, event):
 		if self.linkEditor:
 			self.saveLinkEditor()
 		QtGui.QTextEdit.mousePressEvent(self.ui.textEdit, event)
@@ -474,7 +474,7 @@ class TextEdit(QtGui.QMainWindow):
 			if "actionAlignJustify" in dir( self ):
 				self.actionAlignJustify.setChecked(True)
 	
-	def on_btnSave_released( self ):
+	def onBtnSaveReleased( self ):
 		self.save()
 
 ### Copy&Paste from server/bones/textBone.py

@@ -77,7 +77,8 @@ class LoginTask( QtCore.QObject ):
 			self.onError( msg = "Unable to decode response!" )
 			return
 		if str(res).lower()=="okay":
-			self.loadConfig()
+			print( res )
+			self.onLoginSucceeded( request )
 		else:
 			self.onError( msg = "Recived response!=\"okay\"!" )
 
@@ -148,8 +149,8 @@ class Login( QtGui.QMainWindow ):
 		self.helpBrowser = None
 		event.connectWithPriority( 'resetLoginWindow', self.enableForm,  event.lowPriority )
 		#self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
-		#self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
-		self.ui.cbPortal.currentIndexChanged.connect( self.on_cbPortal_currentIndexChanged )
+		event.connectWithPriority( 'accountListChanged', self.loadAccounts,  event.lowPriority )
+		self.ui.cbPortal.currentIndexChanged.connect( self.onCbPortalCurrentIndexChanged )
 		#event.connectWithPriority( "loginSucceeded()", self.onLoginSucceeded, event.highPriority )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
@@ -158,7 +159,7 @@ class Login( QtGui.QMainWindow ):
 		self.overlay = Overlay( self )
 		shortCut = QtGui.QShortcut( self )
 		shortCut.setKey("Return")
-		self.connect( shortCut, QtCore.SIGNAL("activated()"), self.on_btnLogin_released )
+		self.connect( shortCut, QtCore.SIGNAL("activated()"), self.onBtnLoginReleased )
 		#Populate the language-selector
 		self.langKeys = list( conf.availableLanguages.keys() )
 		self.ui.cbLanguages.blockSignals( True )
@@ -170,7 +171,8 @@ class Login( QtGui.QMainWindow ):
 		if currentLang in self.langKeys:
 			self.ui.cbLanguages.setCurrentIndex( self.langKeys.index( currentLang ) )
 		self.ui.cbLanguages.blockSignals( False )
-		self.ui.btnLogin.clicked.connect( self.on_btnLogin_released )
+		self.ui.btnLogin.clicked.connect( self.onBtnLoginReleased )
+		self.ui.startAccManagerBTN.released.connect( self.onStartAccManagerBTNReleased )
 		
 	def changeEvent(self, *args, **kwargs):
 		super( Login, self ).changeEvent( *args, **kwargs )
@@ -183,12 +185,12 @@ class Login( QtGui.QMainWindow ):
 			cb.addItem(account["name"])
 		if len( conf.accounts ) > 0:
 			cb.setCurrentIndex( 0 )
-			self.on_cbPortal_currentIndexChanged( 0 )
+			self.onCbPortalCurrentIndexChanged( 0 )
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
 
-	def on_cbPortal_currentIndexChanged (self, index):
+	def onCbPortalCurrentIndexChanged (self, index):
 		if isinstance(index, str):
 			return
 		if ( self.ui.cbPortal.currentIndex() == -1 ):
@@ -208,10 +210,10 @@ class Login( QtGui.QMainWindow ):
 	def statusMessageUpdate(self, type, message ):
 		self.ui.statusbar.showMessage( message, 5000 )
 		
-	def on_editPassword_returnPressed (self):
-		self.on_btnLogin_released()
+	def onEditPasswordReturnPressed (self):
+		self.onBtnLoginReleased()
 
-	def on_btnLogin_released( self ):
+	def onBtnLoginReleased( self ):
 		url = self.ui.editUrl.displayText()
 		username =self.ui.editUsername.text()
 		password = self.ui.editPassword.text()
@@ -249,21 +251,21 @@ class Login( QtGui.QMainWindow ):
 			self.helpBrowser = None
 		self.login( username, password, captcha )
 
-	def on_startAccManagerBTN_released(self):
+	def onStartAccManagerBTNReleased(self):
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
 		self.accman = Accountmanager()
 		self.accman.show()
 		
-	def on_actionAccountmanager_triggered(self):
-		self.on_startAccManagerBTN_released()
+	def onActionAccountmanagerTriggered(self):
+		self.onStartAccManagerBTNReleased()
 	
-	def on_actionAbout_triggered(self, checked=None):
+	def onActionAboutTriggered(self, checked=None):
 		if checked is None: return
 		showAbout( self )
 		
-	def on_actionHelp_triggered(self):
+	def onActionHelpTriggered(self):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 		self.helpBrowser = QtWebKit.QWebView( )
@@ -316,7 +318,7 @@ class Login( QtGui.QMainWindow ):
 			self.overlay.clear()
 		self.show()
 
-	def on_cbLanguages_currentIndexChanged(self, index):
+	def onCbLanguagesCurrentIndexChanged(self, index):
 		if not isinstance( index, int):
 			return
 		for v in conf.availableLanguages.values(): #Fixme: Removes all (even unloaded) translations
@@ -325,7 +327,7 @@ class Login( QtGui.QMainWindow ):
 		QtCore.QCoreApplication.installTranslator( conf.availableLanguages[ newLanguage ] )
 		conf.adminConfig["language"] = newLanguage
 	
-	def on_editUsername_textChanged( self, txt ):
+	def onEditUsernameTextChanged( self, txt ):
 		"""
 			Check if the Username given is a valid email-address, and warn
 			the user if it isnt

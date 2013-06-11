@@ -203,7 +203,6 @@ class TreeWrapper( QtCore.QObject ):
 			skel = data["values"]
 			skel["_type"] = req.skelType
 			self.dataCache[ skel["id"] ] = skel
-			print("lll 2", self.dataCache[skel["id"]])
 			self.entityAvailable.emit( skel )
 		if req.wrapperCacheKey in self.dataCache.keys() and self.dataCache[ req.wrapperCacheKey ] is None:
 			del self.dataCache[ req.wrapperCacheKey ]

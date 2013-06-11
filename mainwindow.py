@@ -129,7 +129,6 @@ class Preloader( QtGui.QWidget ):
 		self.timerID = None
 		self.itemMap = {} # Modul -> TreeWidgetItem
 		event.connectWithPriority( "configDownloaded", self.configDownloaded, event.lowPriority )
-		event.connectWithPriority( "modulHandlerInitialized", self.modulHandlerInitialized, event.lowPriority )
 
 
 	def configDownloaded( self ):
@@ -150,11 +149,8 @@ class Preloader( QtGui.QWidget ):
 			#self.ui.listWidget.setItemWidget( item, utils.
 		self.timerID = self.startTimer(100)
 
-	def modulHandlerInitialized( self, modul ):
-		print( modul )
-		print( protocolWrapperInstanceSelector.select( modul ) )
 	
-	def timerEvent(self, event):
+	def timerEvent(self, e):
 		hasMissing = False
 		for modul in conf.serverConfig["modules"].keys():
 			protoWrap = protocolWrapperInstanceSelector.select( modul )
@@ -167,6 +163,7 @@ class Preloader( QtGui.QWidget ):
 			else:
 				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("white") ) )
 		if not hasMissing:
+			event.emit("preloadingFinished")
 			self.finished.emit()
 			self.killTimer(self.timerID)
 			self.timerID = None
@@ -197,7 +194,7 @@ class MainWindow( QtGui.QMainWindow ):
 		#event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
 		event.connectWithPriority( 'rebuildBreadCrumbs()', self.rebuildBreadCrumbs, event.lowPriority )
 		WidgetHandler.mainWindow = self
-		self.ui.treeWidget.itemClicked.connect( self.on_treeWidget_itemClicked )
+		self.ui.treeWidget.itemClicked.connect( self.onTreeWidgetItemClicked )
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
@@ -380,7 +377,7 @@ class MainWindow( QtGui.QMainWindow ):
 			self.focusHandler( currentHandler )
 		self.rebuildBreadCrumbs()
 
-	def on_treeWidget_itemClicked (self, item, colum):
+	def onTreeWidgetItemClicked (self, item, colum):
 		if colum==0:
 			item.clicked()
 		elif colum==1: #Close
@@ -490,11 +487,11 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 		self.ui.statusbar.showMessage( "%s: %s" % (time.strftime("%H:%M"), message), 5000 )
 	
-	def on_actionAbout_triggered(self, checked=None):
+	def onActionAboutTriggered(self, checked=None):
 		if checked is None: return
 		showAbout( self )
 	
-	def on_actionHelp_triggered(self):
+	def onActionHelpTriggered(self):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 		self.helpBrowser = QtWebKit.QWebView( )
@@ -503,7 +500,7 @@ class MainWindow( QtGui.QMainWindow ):
 		self.helpBrowser.setWindowIcon( QtGui.QIcon( QtGui.QPixmap( "icons/menu/help.png" ) ) )
 		self.helpBrowser.show()
 	
-	def on_actionTasks_triggered(self, checked=None):
+	def onActionTasksTriggered(self, checked=None):
 		if checked is None: return
 		self.tasks = TaskViewer()
 	

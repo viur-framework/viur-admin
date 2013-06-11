@@ -258,7 +258,6 @@ class RelationalBoneSelector( QtGui.QWidget ):
 
 
 def CheckForRelationalicBone(  modulName, boneName, skelStucture ):
-	print(" starts with rel ", skelStucture[boneName]["type"].startswith("relational.") )
 	return( skelStucture[boneName]["type"].startswith("relational.") )
 
 #Register this Bone in the global queue

@@ -36,7 +36,7 @@ class Preview( QtGui.QWidget ):
 	def setHTML( self, html ):
 		self.ui.webView.setHtml( html, QtCore.QUrl( "%s/%s/preview" % (NetworkService.url.replace("/admin",""), self.modul ) ) )
 		
-	def on_btnReload_released(self, *args, **kwargs):
+	def onBtnReloadReleased(self, *args, **kwargs):
 		self.loadURL()
 
 
@@ -123,10 +123,10 @@ class EditWidget( QtGui.QWidget ):
 			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditHandler", "Execute") )
 			self.ui.btnSaveContinue.hide()
 			self.ui.btnReset.hide()
-		self.ui.btnReset.released.connect( self.on_btnReset_released )
-		self.ui.btnSaveContinue.released.connect( self.on_btnSaveContinue_released )
-		self.ui.btnSaveClose.released.connect( self.on_btnSaveClose_released )
-		self.ui.btnPreview.released.connect( self.on_btnPreview_released )
+		self.ui.btnReset.released.connect( self.onBtnResetReleased )
+		self.ui.btnSaveContinue.released.connect( self.onBtnSaveContinueReleased )
+		self.ui.btnSaveClose.released.connect( self.onBtnSaveCloseReleased )
+		self.ui.btnPreview.released.connect( self.onBtnPreviewReleased )
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		protoWrap.updatingSucceeded.connect( self.onSaveSuccess )
 		protoWrap.updatingFailedError.connect(self.onSaveError )
@@ -169,7 +169,7 @@ class EditWidget( QtGui.QWidget ):
 		return( descr, icon )
 		
 	
-	def on_btnClose_released(self, *args, **kwargs):
+	def onBtnCloseReleased(self, *args, **kwargs):
 		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
 
 	def reloadData(self):
@@ -240,7 +240,7 @@ class EditWidget( QtGui.QWidget ):
 		else:
 			raise NotImplementedError() #Should never reach this
 
-	def on_btnReset_released( self, *args, **kwargs ):
+	def onBtnResetReleased( self, *args, **kwargs ):
 		res = QtGui.QMessageBox.question(	self,
 						QtCore.QCoreApplication.translate("EditHandler", "Confirm reset"),
 						QtCore.QCoreApplication.translate("EditHandler", "Discard all unsaved changes?"),
@@ -362,7 +362,7 @@ class EditWidget( QtGui.QWidget ):
 		for bone in self.bones.values():
 			bone.unserialize( data )
 
-	def on_btnSaveContinue_released(self, *args, **kwargs ):
+	def onBtnSaveContinueReleased(self, *args, **kwargs ):
 		self.closeOnSuccess = False
 		#self.overlay.inform( self.overlay.BUSY )
 		res = {}
@@ -370,7 +370,7 @@ class EditWidget( QtGui.QWidget ):
 			res.update( bone.serializeForPost( ) )
 		self.save( res )
 		
-	def on_btnSaveClose_released( self, *args, **kwargs ):
+	def onBtnSaveCloseReleased( self, *args, **kwargs ):
 		self.closeOnSuccess = True
 		#self.overlay.inform( self.overlay.BUSY )
 		res = {}
@@ -378,7 +378,7 @@ class EditWidget( QtGui.QWidget ):
 			res.update( bone.serializeForPost( ) )
 		self.save( res )
 
-	def on_btnPreview_released( self, *args, **kwargs ):
+	def onBtnPreviewReleased( self, *args, **kwargs ):
 		res = {}
 		for key, bone in self.bones.items():
 			value = bone.serialize()

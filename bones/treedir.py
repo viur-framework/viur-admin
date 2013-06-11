@@ -29,7 +29,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
+		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )
 		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
@@ -40,7 +40,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.on_delBtn_released )
+			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.onDelBtnReleased )
 			self.selection = None
 		else:
 			self.selection = []
@@ -66,12 +66,12 @@ class TreeDirEditBone( QtGui.QWidget ):
 		else:
 			self.selection = None
 	
-	def on_addBtn_released(self, *args, **kwargs ):
+	def onAddBtnReleased(self, *args, **kwargs ):
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestTreeDirBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection )
 		self.widget = queue.getBest()()
 
-	def on_delBtn_released(self, *args, **kwargs ):
+	def onDelBtnReleased(self, *args, **kwargs ):
 		if self.multiple:
 			self.selection = []
 		else:
@@ -122,11 +122,11 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 			if selection:
 				for sel in selection:
 					self.ui.listSelected.addItem( self.dirItem(sel.split("/",1)[1] ) )
-		self.ui.listSelected.keyPressEvent = self.on_listSelection_event
+		#self.ui.listSelected.keyPressEvent = self.onListSelectionEvent
 		self.show()
 		
 
-	def on_btnSelect_released(self, *args, **kwargs):
+	def onBtnSelectReleased(self, *args, **kwargs):
 		if not self.multiple:
 			for item in self.ui.listWidget.selectedItems():
 				if isinstance( item, self.dirItem ):
@@ -140,7 +140,7 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 			self.setSelection( self.selection )
 		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 	
-	def on_listSelection_event(self, event ):
+	def onListSelectionEvent(self, event ):
 		if event.key()==QtCore.Qt.Key_Delete:
 			items = self.ui.listSelected.selectedItems()
 			for item in items:
@@ -148,11 +148,11 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 				self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
 				self.selection.remove( path )
 	
-	def on_listWidget_itemDoubleClicked(self, item):
+	def onListWidgetItemDoubleClicked(self, item):
 		if isinstance( item, self.treeItem ):
 			return
 		else:
-			super( BaseTreeDirBoneSelector, self ).on_listWidget_itemDoubleClicked( item )
+			super( BaseTreeDirBoneSelector, self ).onListWidgetItemDoubleClicked( item )
 
 	def dropEvent(self, event):
 		if event.source()==self.ui.listWidget and self.ui.listSelected.childrenRect().contains( self.ui.listSelected.mapFromGlobal( self.mapToGlobal(event.pos()) ) ):
