@@ -127,42 +127,29 @@ class Preloader( QtGui.QWidget ):
 		self.ui = Ui_Preloader()
 		self.ui.setupUi( self )
 		self.timerID = None
-		self.itemMap = {} # Modul -> TreeWidgetItem
+		self.ui.progressBar.setMinimum( 0 )
+		self.ui.progressBar.setMaximum( 110 )
+		self.ui.progressBar.setValue( 0 )
 		event.connectWithPriority( "configDownloaded", self.configDownloaded, event.lowPriority )
 
 
 	def configDownloaded( self ):
-		self.ui.listWidget.clear()
-		self.itemMap = {}
-		for modul, cfg in conf.serverConfig["modules"].items():
-			if modul in self.itemMap.keys():
-				#We have this allready
-				continue
-			if "icon" in cfg.keys():
-				icon = QtGui.QIcon(cfg["icon"])
-			else:
-				icon = QtGui.QIcon()
-			item = QtGui.QListWidgetItem( icon, cfg["name"] )
-			item.setBackground( QtGui.QBrush( QtGui.QColor("red") ) )
-			self.itemMap[ modul ] = item
-			self.ui.listWidget.addItem( item )
-			#self.ui.listWidget.setItemWidget( item, utils.
+		self.ui.progressBar.setValue( 10 )
 		self.timerID = self.startTimer(100)
 
 	
 	def timerEvent(self, e):
-		hasMissing = False
+		total = 0
+		missing = 0
 		for modul in conf.serverConfig["modules"].keys():
+			total += 1
 			protoWrap = protocolWrapperInstanceSelector.select( modul )
 			if protoWrap is None:
-				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("white") ) )
 				continue
 			if protoWrap.busy:
-				hasMissing = True
-				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("red") ) )
-			else:
-				self.itemMap[ modul ].setBackground( QtGui.QBrush( QtGui.QColor("white") ) )
-		if not hasMissing:
+				missing += 1
+		self.ui.progressBar.setValue( 10+int( 100.0*((total-missing)/total) ) )
+		if not missing:
 			event.emit("preloadingFinished")
 			self.finished.emit()
 			self.killTimer(self.timerID)

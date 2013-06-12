@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preloader.ui'
 #
-# Created: Tue Jun 11 11:38:44 2013
+# Created: Wed Jun 12 17:05:02 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,21 +35,14 @@ class Ui_Preloader(object):
         self.label.setScaledContents(True)
         self.label.setObjectName(_fromUtf8("label"))
         self.verticalLayout.addWidget(self.label)
-        self.listWidget = QtGui.QListWidget(Preloader)
-        self.listWidget.setMinimumSize(QtCore.QSize(0, 300))
-        self.listWidget.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
-        self.listWidget.setIconSize(QtCore.QSize(64, 64))
-        self.listWidget.setFlow(QtGui.QListView.LeftToRight)
-        self.listWidget.setProperty("isWrapping", True)
-        self.listWidget.setGridSize(QtCore.QSize(94, 94))
-        self.listWidget.setViewMode(QtGui.QListView.IconMode)
-        self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        self.verticalLayout.addWidget(self.listWidget)
+        self.progressBar = QtGui.QProgressBar(Preloader)
+        self.progressBar.setProperty("value", 24)
+        self.progressBar.setObjectName(_fromUtf8("progressBar"))
+        self.verticalLayout.addWidget(self.progressBar)
 
         self.retranslateUi(Preloader)
         QtCore.QMetaObject.connectSlotsByName(Preloader)
 
     def retranslateUi(self, Preloader):
         Preloader.setWindowTitle(_translate("Preloader", "Form", None))
-        self.listWidget.setSortingEnabled(True)
 
