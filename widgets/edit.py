@@ -127,6 +127,7 @@ class EditWidget( QtGui.QWidget ):
 		self.ui.btnSaveContinue.released.connect( self.onBtnSaveContinueReleased )
 		self.ui.btnSaveClose.released.connect( self.onBtnSaveCloseReleased )
 		self.ui.btnPreview.released.connect( self.onBtnPreviewReleased )
+		self.ui.btnClose.released.connect( self.onBtnCloseReleased )
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		protoWrap.updatingSucceeded.connect( self.onSaveSuccess )
 		protoWrap.updatingFailedError.connect(self.onSaveError )
@@ -134,14 +135,12 @@ class EditWidget( QtGui.QWidget ):
 		self.overlay.inform( self.overlay.BUSY )
 
 	def onBusyStateChanged( self, busy ):
-		print("GOT BUSY STATE CHANGE: ", busy )
 		if busy:
 			self.overlay.inform( self.overlay.BUSY )
 		else:
 			self.overlay.clear()
 
 	def getBreadCrumb( self ):
-		print("GETTING BREADCRUMB")
 		if self._lastData:
 			config = conf.serverConfig["modules"][ self.modul ]
 			if "format" in config.keys():
@@ -170,7 +169,7 @@ class EditWidget( QtGui.QWidget ):
 		
 	
 	def onBtnCloseReleased(self, *args, **kwargs):
-		event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
+		event.emit( "popWidget(PyQt_PyObject)", self )
 
 	def reloadData(self):
 		print("--RELOADING--")

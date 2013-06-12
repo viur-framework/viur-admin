@@ -143,6 +143,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			self.completeList = True
 		self.cursor = cursor
 		self.layoutChanged.emit()
+		self.loadingKey = None
 		#self.emit(QtCore.SIGNAL("layoutChanged()"))
 		#self.emit(QtCore.SIGNAL("dataRecived()"))
 
