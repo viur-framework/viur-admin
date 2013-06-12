@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui, QtWebKit
 #from PySide.Qsci import QsciScintilla, QsciLexerHTML
 import sys
 from event import event
@@ -48,7 +48,7 @@ class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 
 
 class RawTextEdit(QtGui.QWidget):
-	onDataChanged = QtCore.Signal( (object, ) )
+	onDataChanged = QtCore.pyqtSignal( (object, ) )
 	
 	def __init__(self, text, contentType=None, parent=None):
 		super(RawTextEdit, self).__init__(parent)
@@ -71,7 +71,7 @@ class RawTextEdit(QtGui.QWidget):
 
 class TextEdit(QtGui.QMainWindow):
 	
-	onDataChanged = QtCore.Signal( (object, ) )
+	onDataChanged = QtCore.pyqtSignal( (object, ) )
 	
 	def __init__(self, text, validHtml, parent=None):
 		super(TextEdit, self).__init__(parent)
@@ -570,10 +570,11 @@ class HtmlSerializer( html.parser.HTMLParser ): #html.parser.HTMLParser
 ### Copy&Paste: End
 
 class ClickableWebView( QtWebKit.QWebView ):
+	clicked = QtCore.pyqtSignal( ) 
 	
 	def mousePressEvent(self, ev):
 		super( ClickableWebView, self ).mousePressEvent( ev ) 
-		self.emit( QtCore.SIGNAL("clicked()") )
+		self.clicked.emit()
 
 class TextEditBone( QtGui.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, *args, **kwargs ):
@@ -590,8 +591,8 @@ class TextEditBone( QtGui.QWidget ):
 			self.html = {}
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
-			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.tabWidget.currentChanged.connect( self.onTabCurrentChanged )
+			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			for lang in self.languages:
 				self.html[ lang ] = ""
@@ -602,10 +603,10 @@ class TextEditBone( QtGui.QWidget ):
 				iconbtn = QtGui.QIcon()
 				iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 				btn.setIcon(iconbtn)
-				self.connect( btn, QtCore.SIGNAL("released()"), self.openEditor )
+				btn.released.connect( self.openEditor )
 				btn.lang = lang
 				webView = ClickableWebView(self)
-				self.connect( webView, QtCore.SIGNAL("clicked()"), self.openEditor )
+				webView.clicked.connect( self.openEditor )
 				container.webView = webView
 				container.layout().addWidget( webView )
 				container.layout().addWidget( btn )
@@ -618,9 +619,9 @@ class TextEditBone( QtGui.QWidget ):
 			iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			btn.setIcon(iconbtn)
 			btn.lang = None
-			self.connect( btn, QtCore.SIGNAL("released()"), self.openEditor )
+			btn.released.connect( self.openEditor )
 			self.webView = ClickableWebView(self)
-			self.connect( self.webView, QtCore.SIGNAL("clicked()"), self.openEditor )
+			self.webView.clicked.connect( self.openEditor )
 			self.layout().addWidget( self.webView )
 			self.layout().addWidget( btn )
 			self.html = ""
@@ -654,7 +655,7 @@ class TextEditBone( QtGui.QWidget ):
 		wdg = self.tabWidget.widget( idx )
 		for k, v in self.languageContainer.items():
 			if v == wdg:
-				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				event.emit( "tabLanguageChanged", k )
 				wdg.setFocus()
 				return
 

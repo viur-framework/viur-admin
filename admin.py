@@ -20,7 +20,7 @@ if sys.version_info<min_version:
 	print("You need python3.2 or newer!")
 	sys.exit(1)
 if 1:
-	from PySide import QtGui, QtCore, QtOpenGL, QtWebKit
+	from PyQt4 import QtGui, QtCore, QtOpenGL, QtWebKit
 else: # ImportError:
 	print( "QT Bindings are missing or incomplete! Ensure PyQT is build with Qt, QtGui, QtCore, QtOpenGL and QtWebKit" )
 	sys.exit(1)

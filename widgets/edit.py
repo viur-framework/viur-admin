@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from collections import OrderedDict

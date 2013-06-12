@@ -1,5 +1,5 @@
 
-from PySide import QtCore, QtGui,  QtWebKit
+from PyQt4 import QtCore, QtGui,  QtWebKit
 import sys
 from event import event
 from utils import RegisterQueue

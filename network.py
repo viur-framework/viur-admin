@@ -15,9 +15,9 @@ import http.cookiejar
 import base64
 from queue import Queue, Empty as QEmpty, Full as QFull
 from hashlib import sha1
-from PySide import QtCore, QtGui
-from PySide.QtCore import QUrl, QObject
-from PySide.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
+from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import QUrl, QObject
+from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 import traceback
 import logging
 import weakref
@@ -41,7 +41,7 @@ else:
 		def onSSLError(self, networkReply,  sslErros ):
 			networkReply.ignoreSslErrors()
 	_SSLFIX = SSLFIX()
-	_SSLFIX.connect( nam, QtCore.SIGNAL("sslErrors(QNetworkReply *,const QList<QSslError>&)" ), _SSLFIX.onSSLError )
+	nam.sslErrors.connect( _SSLFIX.onSSLError )
 	_isSecureSSL = False
 
 mimetypes.init()
@@ -70,7 +70,7 @@ class SecurityTokenProvider( QObject ):
 		while not self.queue.empty():
 			self.queue.get( False )
 		self.isRequesting = False
-		self.fetchNext()
+		#self.fetchNext()
 		#req = NetworkService.request("/skey", finishedHandler=self.onSkeyAvailable )
 		#self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
 	
@@ -130,11 +130,11 @@ securityTokenProvider = SecurityTokenProvider()
 
 class RequestWrapper( QtCore.QObject ):
 	GarbargeTypeName = "RequestWrapper"
-	requestSucceeded = QtCore.Signal( (QtCore.QObject,) )
-	requestFailed = QtCore.Signal( (QtCore.QObject, QNetworkReply.NetworkError) )
-	finished = QtCore.Signal( (QtCore.QObject,) )
-	uploadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
-	downloadProgress = QtCore.Signal( (QtCore.QObject,int,int) )
+	requestSucceeded = QtCore.pyqtSignal( (QtCore.QObject,) )
+	requestFailed = QtCore.pyqtSignal( (QtCore.QObject, QNetworkReply.NetworkError) )
+	finished = QtCore.pyqtSignal( (QtCore.QObject,) )
+	uploadProgress = QtCore.pyqtSignal( (QtCore.QObject,int,int) )
+	downloadProgress = QtCore.pyqtSignal( (QtCore.QObject,int,int) )
 
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None ):
 		super( RequestWrapper, self ).__init__()
@@ -202,11 +202,11 @@ class RequestGroup( QtCore.QObject ):
 		easy checking if there are more queries pending.
 	"""
 	GarbargeTypeName = "RequestGroup"
-	requestsSucceeded = QtCore.Signal( (QtCore.QObject,) )
-	requestFailed = QtCore.Signal( (QtCore.QObject,) ) #FIXME.....What makes sense here?
-	finished = QtCore.Signal( (QtCore.QObject,) )
-	progessUpdate = QtCore.Signal( (QtCore.QObject,int,int) )
-	cancel = QtCore.Signal()
+	requestsSucceeded = QtCore.pyqtSignal( (QtCore.QObject,) )
+	requestFailed = QtCore.pyqtSignal( (QtCore.QObject,) ) #FIXME.....What makes sense here?
+	finished = QtCore.pyqtSignal( (QtCore.QObject,) )
+	progessUpdate = QtCore.pyqtSignal( (QtCore.QObject,int,int) )
+	cancel = QtCore.pyqtSignal()
 	
 	def __init__(self, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, *args, **kwargs ):
 		super( RequestGroup, self ).__init__(*args, **kwargs)

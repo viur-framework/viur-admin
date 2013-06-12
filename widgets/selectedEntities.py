@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue,  formatString, itemFromUrl
 from ui.relationalselectionUI import Ui_relationalSelector

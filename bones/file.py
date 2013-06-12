@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from widgets.file import FileWidget
 from bones.treeitem import TreeItemBone, TreeBoneSelector
 

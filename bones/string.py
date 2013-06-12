@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseViewBoneDelegate
 from config import conf
@@ -66,8 +66,8 @@ class Tag( QtGui.QWidget ):
 		else:
 			self.lblDisplay.show()
 			self.editField.hide()
-		self.connect( self.editField, QtCore.SIGNAL("editingFinished()"), self.onEditingFinished )
-		self.connect( self.btnDelete, QtCore.SIGNAL("released()"), lambda *args, **kwargs: self.deleteLater() )
+		self.editField.editingFinished.connect( self.onEditingFinished )
+		self.btnDeletereleased.released.connect( self.deleteLater )
 		self.lblDisplay.mousePressEvent = self.onEdit
 	
 	def onEdit( self, *args, **kwargs ):
@@ -94,8 +94,8 @@ class StringEditBone( QtGui.QWidget ):
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
-			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.tabWidgetcurrentChanged.connect( self.onTabCurrentChanged )
+			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
@@ -107,15 +107,15 @@ class StringEditBone( QtGui.QWidget ):
 				container.layout().addWidget( btnAdd )
 				def genLambda( lang ):
 					return lambda *args, **kwargs: self.genTag("",True,lang)
-				self.connect( btnAdd, QtCore.SIGNAL("released()"), genLambda( lang ) )
+				btnAdd.released.connect( genLambda( lang ) ) #FIXME: Lambda..
 			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
 		elif self.languages and not self.multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
-			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.tabWidget.currentChanged.connect( self.onTabCurrentChanged )
+			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
@@ -127,7 +127,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.btnAdd = QtGui.QPushButton( "Hinzufügen", self )
 			self.layout().addWidget( self.btnAdd )
-			self.connect( self.btnAdd, QtCore.SIGNAL("released()"), lambda *args, **kwargs: self.genTag("",True) )
+			self.btnAdd.released.connect( lambda *args, **kwargs: self.genTag("",True) ) #FIXME: Lambda
 			self.btnAdd.show()
 		else: #not languages and not multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
@@ -159,7 +159,7 @@ class StringEditBone( QtGui.QWidget ):
 		wdg = self.tabWidget.widget( idx )
 		for k, v in self.langEdits.items():
 			if v == wdg:
-				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				event.emit( "tabLanguageChanged", k )
 				wdg.setFocus()
 				return
 

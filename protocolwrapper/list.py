@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore
+from PyQt4 import QtCore
 from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 import weakref
@@ -11,14 +11,14 @@ from collections import OrderedDict
 class ListWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
-	entitiesChanged = QtCore.Signal()
-	entityAvailable = QtCore.Signal( (object,) )
-	queryResultAvaiable = QtCore.Signal( (str, ) )
-	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
-	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
-	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
-	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
-	modulStructureAvaiable = QtCore.Signal() #We fetched the structure for this modul and that data is now avaiable
+	entitiesChanged = QtCore.pyqtSignal()
+	entityAvailable = QtCore.pyqtSignal( (object,) )
+	queryResultAvaiable = QtCore.pyqtSignal( (str, ) )
+	busyStateChanged = QtCore.pyqtSignal( (bool,) ) #If true, im busy right now
+	updatingSucceeded = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.pyqtSignal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
+	modulStructureAvaiable = QtCore.pyqtSignal() #We fetched the structure for this modul and that data is now avaiable
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( ListWrapper, self ).__init__()

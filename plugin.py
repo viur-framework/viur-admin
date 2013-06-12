@@ -3,7 +3,7 @@ from zipimport import zipimporter
 import imp
 import traceback
 #Assert that some modules are avaiable to plugins
-from PySide import QtCore, QtGui, QtOpenGL
+from PyQt4 import QtCore, QtGui, QtOpenGL
 import base64, sys, os, os.path, hashlib, datetime, heapq, queue, weakref, types, copy, pprint, math
 import random, tempfile, shutil, json, zlib, gzip, bz2, zipfile, tarfile, csv, io, time, threading, mmap
 import socket, ssl, signal, asyncore, asynchat, email, mimetypes, binhex, binascii, uu

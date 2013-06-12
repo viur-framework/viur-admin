@@ -1,18 +1,27 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\docEdit.ui'
+# Form implementation generated from reading ui file 'docEdit.ui'
 #
-# Created: Mon Nov 26 19:34:50 2012
-#      by: PySide UI code generator 4.9.5
+# Created: Tue Jun 11 11:37:24 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_DocEdit(object):
     def setupUi(self, DocEdit):
@@ -103,24 +112,14 @@ class Ui_DocEdit(object):
         QtCore.QMetaObject.connectSlotsByName(DocEdit)
 
     def retranslateUi(self, DocEdit):
-        DocEdit.setWindowTitle(QtGui.QApplication.translate("DocEdit", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnImport.setText(QtGui.QApplication.translate("DocEdit", "Import/Export", None, QtGui.QApplication.UnicodeUTF8))
+        DocEdit.setWindowTitle(_translate("DocEdit", "Form", None))
+        self.btnImport.setText(_translate("DocEdit", "Import/Export", None))
         self.treeWidget.setSortingEnabled(False)
-        self.btnNewHeading.setText(QtGui.QApplication.translate("DocEdit", "New caption", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnNewImage.setText(QtGui.QApplication.translate("DocEdit", "New Image", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnNewText.setText(QtGui.QApplication.translate("DocEdit", "New Text", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSave.setText(QtGui.QApplication.translate("DocEdit", "Apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnNewTable.setText(QtGui.QApplication.translate("DocEdit", "New Table", None, QtGui.QApplication.UnicodeUTF8))
-        self.boxExtensions.setTitle(QtGui.QApplication.translate("DocEdit", "Extensions", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnAddExtension.setText(QtGui.QApplication.translate("DocEdit", "Add", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    DocEdit = QtGui.QWidget()
-    ui = Ui_DocEdit()
-    ui.setupUi(DocEdit)
-    DocEdit.show()
-    sys.exit(app.exec_())
+        self.btnNewHeading.setText(_translate("DocEdit", "New caption", None))
+        self.btnNewImage.setText(_translate("DocEdit", "New Image", None))
+        self.btnNewText.setText(_translate("DocEdit", "New Text", None))
+        self.btnSave.setText(_translate("DocEdit", "Apply", None))
+        self.btnNewTable.setText(_translate("DocEdit", "New Table", None))
+        self.boxExtensions.setTitle(_translate("DocEdit", "Extensions", None))
+        self.btnAddExtension.setText(_translate("DocEdit", "Add", None))
 

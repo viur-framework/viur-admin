@@ -1,6 +1,6 @@
 from ui.accountmanagerUI import Ui_MainWindow
 import sys
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from config import conf
 import json
@@ -24,7 +24,6 @@ class Accountmanager( QtGui.QMainWindow ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )
-		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
 		self.loadAccountList()
 		self.ui.addAccBTN.released.connect( self.onAddAccBTNReleased )
 		self.ui.acclistWidget.itemClicked.connect( self.onAcclistWidgetItemClicked )
@@ -52,12 +51,9 @@ class Accountmanager( QtGui.QMainWindow ):
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count() ):
 			conf.accounts.append( self.ui.acclistWidget.item( itemIndex ).account )
-		event.emit( QtCore.SIGNAL( "accountListChanged()" ) )
+		event.emit( "accountListChanged()" )
 		conf.saveConfig()
 		self.close()
-
-	def statusMessageUpdate(self, type, message ):
-		self.ui.statusbar.showMessage( message, 5000 )
 
 	def onAddAccBTNReleased (self):
 		guiList = self.ui.acclistWidget

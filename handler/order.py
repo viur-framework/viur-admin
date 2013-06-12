@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService, RequestGroup
 from event import event
 from config import conf

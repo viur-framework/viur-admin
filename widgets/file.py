@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ui.fileUploadProgressUI import Ui_FileUploadProgress
 from ui.fileDownloadProgressUI import Ui_FileDownloadProgress
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService, RemoteFile, RequestGroup
 from event import event

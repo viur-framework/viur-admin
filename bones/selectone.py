@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector

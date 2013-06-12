@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
@@ -15,7 +15,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
 	def onTriggered( self, e ):
@@ -34,7 +34,7 @@ class TreeEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.parent().currentItemChanged.connect( self.onCurrentItemChanged )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 
 	def onCurrentItemChanged( self, current, previous ):
 		if isinstance( current, self.parent().getLeafItemClass() ): #Its a directory, we cant edit that
@@ -71,7 +71,7 @@ class TreeDirUpAction( QtGui.QAction ):
 		assert reqWrap is not None
 		if self.parent().getNode() in [ x["key"] for x in reqWrap.rootNodes ]:
 			self.setEnabled( False )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 	
 	def onNodeChanged( self, node ):
 		print( "0"*10, node)
@@ -101,7 +101,7 @@ actionDelegateSelector.insert( 1, TreeDirUpAction.isSuitableFor, TreeDirUpAction
 class TreeMkDirAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( "SHIFT+Ctrl+N" )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
@@ -121,7 +121,7 @@ actionDelegateSelector.insert( 1, TreeMkDirAction.isSuitableFor, TreeMkDirAction
 class TreeDeleteAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	

@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import math
 from ui.taskUI import Ui_Task
 import os, os.path

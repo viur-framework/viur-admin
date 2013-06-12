@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from ui.calenderlistUI import Ui_List
@@ -88,7 +88,7 @@ class CalenderCoreHandler( ListCoreHandler ):
 class CalenderHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
 
 	def requestModulHandler(self, queue, modulName ):
 		config = conf.serverConfig["modules"][ modulName ]

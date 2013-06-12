@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore
+from PyQt4 import QtCore
 from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 import weakref
@@ -14,14 +14,14 @@ class TreeWrapper( QtCore.QObject ):
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	protocolWrapperInstancePriority = 1
 
-	entitiesChanged = QtCore.Signal( (str,) ) # Node,
-	entityAvailable = QtCore.Signal( (object,) ) # A recently queried entity was fetched and is now avaiable
-	customQueryFinished = QtCore.Signal( (str,) ) # RequestID,
-	rootNodesAvaiable = QtCore.Signal()
-	busyStateChanged = QtCore.Signal( (bool,) ) #If true, im busy right now
-	updatingSucceeded = QtCore.Signal( (str,) ) #Adding/Editing an entry succeeded
-	updatingFailedError = QtCore.Signal( (str,) ) #Adding/Editing an entry failed due to network/server error
-	updatingDataAvaiable = QtCore.Signal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
+	entitiesChanged = QtCore.pyqtSignal( (str,) ) # Node,
+	entityAvailable = QtCore.pyqtSignal( (object,) ) # A recently queried entity was fetched and is now avaiable
+	customQueryFinished = QtCore.pyqtSignal( (str,) ) # RequestID,
+	rootNodesAvaiable = QtCore.pyqtSignal()
+	busyStateChanged = QtCore.pyqtSignal( (bool,) ) #If true, im busy right now
+	updatingSucceeded = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.pyqtSignal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
 	
 	def __init__( self, modul, *args, **kwargs ):
 		super( TreeWrapper, self ).__init__()

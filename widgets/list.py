@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString, urlForItem
 from network import NetworkService, RequestGroup
 from event import event
@@ -15,7 +15,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 	GarbargeTypeName = "ListTableModel"
 	_chunkSize = 25
 	
-	rebuildDelegates = QtCore.Signal( (object, ) )
+	rebuildDelegates = QtCore.pyqtSignal( (object, ) )
 	
 	def __init__(self, modul, fields=None, filter=None, parent=None, *args): 
 		QtCore.QAbstractTableModel.__init__(self, parent, *args) 
@@ -202,9 +202,9 @@ class ListTableView( QtGui.QTableView ):
 	"""
 	GarbargeTypeName = "ListTableView"
 	
-	itemClicked = QtCore.Signal( (object,) )
-	itemDoubleClicked = QtCore.Signal( (object,) )
-	itemActivated = QtCore.Signal( (object,) )
+	itemClicked = QtCore.pyqtSignal( (object,) )
+	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
+	itemActivated = QtCore.pyqtSignal( (object,) )
 
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
 		super( ListTableView, self ).__init__( parent,  *args, **kwargs )
@@ -221,11 +221,11 @@ class ListTableView( QtGui.QTableView ):
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		self.verticalHeader().hide()
-		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
+		#self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
 		model.rebuildDelegates.connect( self.rebuildDelegates )
 		model.layoutChanged.connect( self.realignHeaders )
-		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
-		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
+		#self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
+		#self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
 
 
 	def onItemClicked(self, index ):
@@ -363,9 +363,9 @@ class ListTableView( QtGui.QTableView ):
 	
 class ListWidget( QtGui.QWidget ):
 	
-	itemClicked = QtCore.Signal( (object,) )
-	itemDoubleClicked = QtCore.Signal( (object,) )
-	itemActivated = QtCore.Signal( (object,) )
+	itemClicked = QtCore.pyqtSignal( (object,) )
+	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
+	itemActivated = QtCore.pyqtSignal( (object,) )
 	
 	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
 		super( ListWidget, self ).__init__( *args, **kwargs )

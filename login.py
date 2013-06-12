@@ -1,22 +1,21 @@
 from ui.loginformUI import Ui_LoginWindow
 from accountmanager import Accountmanager
-from PySide import QtCore, QtGui, QtWebKit
-from network import NetworkService
+from PyQt4 import QtCore, QtGui, QtWebKit
+from network import NetworkService, securityTokenProvider
 from event import event
 from config import conf
 from utils import Overlay, showAbout
 import urllib.parse
 from urllib.error import HTTPError
-from PySide import QtCore
 import json
 from locales import ISO639CODES
 import logging
 import re
 
 class LoginTask( QtCore.QObject ):
-	loginFailed = QtCore.Signal( (str,) )
-	loginSucceeded = QtCore.Signal()
-	captchaRequired = QtCore.Signal( (str,str) )
+	loginFailed = QtCore.pyqtSignal( (str,) )
+	loginSucceeded = QtCore.pyqtSignal()
+	captchaRequired = QtCore.pyqtSignal( (str,str) )
 	
 	def __init__(self, username, password, captchaToken=None, captcha=None, *args, **kwargs ):
 		super( LoginTask, self ).__init__( *args, **kwargs )
@@ -43,9 +42,9 @@ class LoginTask( QtCore.QObject ):
 	def onWarmup(self, request=None): #Warmup request has finished
 		self.logger.debug("Checkpoint: onWarmup")
 		if self.isLocalServer:
-			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), finishedHandler=self.onAuthMethodKnown )
+			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), secure=True, finishedHandler=self.onAuthMethodKnown )
 		else:
-			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ), finishedHandler=self.onAuthMethodKnown )
+			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ), secure=True, finishedHandler=self.onAuthMethodKnown )
 	
 	def onAuthMethodKnown(self, request ):
 		self.logger.debug("Checkpoint: onAuthMethodKnown")
@@ -77,7 +76,7 @@ class LoginTask( QtCore.QObject ):
 			self.onError( msg = "Unable to decode response!" )
 			return
 		if str(res).lower()=="okay":
-			print( res )
+			securityTokenProvider.reset() #User-login flushes the session, invalidate all skeys
 			self.onLoginSucceeded( request )
 		else:
 			self.onError( msg = "Recived response!=\"okay\"!" )
@@ -159,7 +158,7 @@ class Login( QtGui.QMainWindow ):
 		self.overlay = Overlay( self )
 		shortCut = QtGui.QShortcut( self )
 		shortCut.setKey("Return")
-		self.connect( shortCut, QtCore.SIGNAL("activated()"), self.onBtnLoginReleased )
+		shortCut.activated.connect( self.onBtnLoginReleased )
 		#Populate the language-selector
 		self.langKeys = list( conf.availableLanguages.keys() )
 		self.ui.cbLanguages.blockSignals( True )
@@ -276,8 +275,7 @@ class Login( QtGui.QMainWindow ):
 	
 	def setCaptcha( self, token, url ):
 		self.captchaToken = token
-		self.captchaReq = NetworkService.request("https://www.google.com/accounts/"+url)
-		self.connect( self.captchaReq, QtCore.SIGNAL("finished()"), self.onCaptchaAvaiable )
+		self.captchaReq = NetworkService.request("https://www.google.com/accounts/"+url, finishedHandler=self.onCaptchaAvaiable)
 
 	def onCaptchaAvaiable(self):
 		pixmap = QtGui.QPixmap()

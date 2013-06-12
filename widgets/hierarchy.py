@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService
 from event import event
@@ -52,8 +52,8 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		
 	"""
 	
-	itemClicked = QtCore.Signal( (object,) )
-	itemDoubleClicked = QtCore.Signal( (object,) )
+	itemClicked = QtCore.pyqtSignal( (object,) )
+	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
 	
 	def __init__(self, parent, modul, rootNode=None, *args, **kwargs ):
 		"""

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from utils import Overlay
 from network import NetworkService, RequestGroup
 from event import event
@@ -64,9 +64,9 @@ class LeafItem(QtGui.QListWidgetItem):
 			return( str( self ) < str( other ) )
 
 class PathListView( QtGui.QListWidget ):
-	pathChanged = QtCore.Signal( (list,) ) #FIXME: DELETE ME
-	rootNodeChanged = QtCore.Signal( (str,) )
-	nodeChanged = QtCore.Signal( (str,) )
+	pathChanged = QtCore.pyqtSignal( (list,) ) #FIXME: DELETE ME
+	rootNodeChanged = QtCore.pyqtSignal( (str,) )
+	nodeChanged = QtCore.pyqtSignal( (str,) )
 	
 	def __init__( self, modul, rootNode, node=None, *args, **kwargs ):
 		super( PathListView, self ).__init__( *args, **kwargs )
@@ -123,14 +123,14 @@ class PathListView( QtGui.QListWidget ):
 				dataDict["leafs"],
 				destItem.entryData["id"] )
 	
-	@QtCore.Slot( str )
+	@QtCore.pyqtSlot( str )
 	def setNode( self, node, isInitialCall=False ):
 		self.node = node
 		self.rebuild()
 		if isInitialCall:
 			self.nodeChanged.emit( self.node )
 	
-	@QtCore.Slot( str )
+	@QtCore.pyqtSlot( str )
 	def setRootNode( self, rootNode ):
 		self.rootNode = rootNode
 		self.node = rootNode
@@ -150,9 +150,9 @@ class TreeListView( QtGui.QListWidget ):
 	leafItem = LeafItem
 	nodeItem = NodeItem
 
-	pathChanged = QtCore.Signal( (list,) ) #FIXME: DELETE ME
-	rootNodeChanged = QtCore.Signal( (str,) )
-	nodeChanged = QtCore.Signal( (str,) )
+	pathChanged = QtCore.pyqtSignal( (list,) ) #FIXME: DELETE ME
+	rootNodeChanged = QtCore.pyqtSignal( (str,) )
+	nodeChanged = QtCore.pyqtSignal( (str,) )
 	
 	def __init__(self, modul, rootNode=None, node=None, *args, **kwargs ):
 		"""
@@ -200,7 +200,7 @@ class TreeListView( QtGui.QListWidget ):
 	def getModul( self ):
 		return( self.modul )
 	
-	@QtCore.Slot( str )
+	@QtCore.pyqtSlot( str )
 	def setNode( self, node, isInitialCall=False ):
 		print("Setting node", node )
 		self.customQueryKey = None
@@ -430,11 +430,11 @@ class TreeWidget( QtGui.QWidget ):
 	"""
 	treeWidget = TreeListView
 	
-	pathChanged = QtCore.Signal( (list,) )
-	rootNodeChanged = QtCore.Signal( (str,) )
-	nodeChanged = QtCore.Signal( (str,) )
-	currentItemChanged = QtCore.Signal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
-	itemDoubleClicked = QtCore.Signal( (QtGui.QListWidgetItem) )
+	pathChanged = QtCore.pyqtSignal( (list,) )
+	rootNodeChanged = QtCore.pyqtSignal( (str,) )
+	nodeChanged = QtCore.pyqtSignal( (str,) )
+	currentItemChanged = QtCore.pyqtSignal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
+	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QListWidgetItem) )
 
 	def __init__(self, modul, rootNode=None, node=None, actions=None, editOnDoubleClick=False, *args, **kwargs ):
 		"""

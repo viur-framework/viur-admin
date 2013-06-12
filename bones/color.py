@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseEditBone
 from priorityqueue import editBoneSelector
@@ -16,8 +16,8 @@ class ColorEditBone( BaseEditBone ):
 		self.button = QtGui.QPushButton('Auswählen', self)
 		self.colordisplay=QtGui.QLineEdit( self );
 		self.colordisplay.setReadOnly(True)
-		aWidget.connect(self.lineEdit1, QtCore.SIGNAL('editingFinished ()'), self.refreshColor)
-		aWidget.connect(self.button, QtCore.SIGNAL('clicked()'), self.showDialog)
+		self.lineEdit1.editingFinished.connect( self.refreshColor )
+		self.button.clicked.connect( self.showDialog )
 		aWidget.layout.addWidget(self.lineEdit1)
 		aWidget.layout.addWidget(self.colordisplay)
 		aWidget.layout.addWidget(self.button)

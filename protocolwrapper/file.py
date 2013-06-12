@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore
+from PyQt4 import QtCore
 from network import NetworkService, RequestGroup
 from time import time
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -17,10 +17,10 @@ ignorePatterns = [	#List of patterns of filenames/directories, which wont get up
 
 
 class FileUploader( QtCore.QObject ):
-	uploadProgress = QtCore.Signal( (int,int) )
-	succeeded = QtCore.Signal( dict )
-	failed = QtCore.Signal( )
-	cancel = QtCore.Signal( )
+	uploadProgress = QtCore.pyqtSignal( (int,int) )
+	succeeded = QtCore.pyqtSignal( dict )
+	failed = QtCore.pyqtSignal( )
+	cancel = QtCore.pyqtSignal( )
 	
 	def __init__(self, fileName, node=None, *args, **kwargs ):
 		"""
@@ -95,10 +95,10 @@ class RecursiveUploader( QtCore.QObject ):
 	"""
 	
 	directorySize = 15 #Letz count an directory as 15 Bytes
-	finished = QtCore.Signal( QtCore.QObject )
-	failed = QtCore.Signal( QtCore.QObject )
-	uploadProgress = QtCore.Signal( (int,int) )
-	cancel = QtCore.Signal(  )
+	finished = QtCore.pyqtSignal( QtCore.QObject )
+	failed = QtCore.pyqtSignal( QtCore.QObject )
+	uploadProgress = QtCore.pyqtSignal( (int,int) )
+	cancel = QtCore.pyqtSignal(  )
 	
 	def getDirName( self, name ):
 		return( name.rstrip("/").split("/")[-1] )
@@ -329,9 +329,9 @@ class RecursiveDownloader( QtCore.QObject ):
 	"""
 	
 	directorySize = 15 #Letz count an directory as 15 Bytes
-	finished = QtCore.Signal( QtCore.QObject )
-	failed = QtCore.Signal( QtCore.QObject )
-	downloadProgress = QtCore.Signal( (int,int) )
+	finished = QtCore.pyqtSignal( QtCore.QObject )
+	failed = QtCore.pyqtSignal( QtCore.QObject )
+	downloadProgress = QtCore.pyqtSignal( (int,int) )
 
 	def __init__(self, localTargetDir, rootNode, path, files, dirs, modul, *args, **kwargs ):
 		"""

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from PySide import QtGui, QtCore, QtWebKit
+from PyQt4 import QtGui, QtCore, QtWebKit
 from network import NetworkService
 from config import conf
 

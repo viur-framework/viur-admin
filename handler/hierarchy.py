@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.hierarchyUI import Ui_Hierarchy
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
@@ -53,16 +53,8 @@ class HierarchyCoreHandler( WidgetHandler ): #FIXME
 class HierarchyHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestHierarchyListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestHierarchyListActions )
 		#self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
 		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
-
-	def requestHierarchyListActions(self, queue, modul, parent ):
-		config = conf.serverConfig["modules"][ modul ]
-		if config and config["handler"]=="hierarchy":
-			queue.registerHandler( 2, HierarchyAddAction )
-			queue.registerHandler( 3, HierarchyEditAction )
-			queue.registerHandler( 4, HierarchyDeleteAction )
 
 	def requestModulHandler(self, queue, modul ):
 		config = conf.serverConfig["modules"][ modul ]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.treeUI import Ui_Tree
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from network import NetworkService, RemoteFile
 from event import event
 from config import conf
@@ -16,7 +16,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 class FileUploadAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
 		super( FileUploadAction, self ).__init__(  QtGui.QIcon("icons/actions/upload_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Upload files"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 	
 	def onTriggered( self, e ):
@@ -32,7 +32,7 @@ actionDelegateSelector.insert( 3, FileUploadAction.isSuitableFor, FileUploadActi
 class FileDownloadAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
 		super( FileDownloadAction, self ).__init__(  QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Download files"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Save )
 	
 	def onTriggered( self, e ):

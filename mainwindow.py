@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
 from ui.preloaderUI import Ui_Preloader
-from PySide import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
 import time, os, logging
@@ -120,7 +120,7 @@ class GroupHandler( QtGui.QTreeWidgetItem ):
 
 class Preloader( QtGui.QWidget ):
 	
-	finished = QtCore.Signal( ) 
+	finished = QtCore.pyqtSignal( ) 
 	
 	def __init__( self, *args, **kwargs ):
 		super( Preloader, self ).__init__( *args, **kwargs )

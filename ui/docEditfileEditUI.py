@@ -1,18 +1,27 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\docEditfileEdit.ui'
+# Form implementation generated from reading ui file 'docEditfileEdit.ui'
 #
-# Created: Mon Nov 26 19:34:50 2012
-#      by: PySide UI code generator 4.9.5
+# Created: Tue Jun 11 11:37:00 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -112,34 +121,24 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("Form", "x", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxUnits.setItemText(0, QtGui.QApplication.translate("Form", "%", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxUnits.setItemText(1, QtGui.QApplication.translate("Form", "px", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxUnits.setItemText(2, QtGui.QApplication.translate("Form", "em", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("Form", "Größe", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSelectFile.setText(QtGui.QApplication.translate("Form", "Auswählen", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("Form", "Datei", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxAlign.setItemText(0, QtGui.QApplication.translate("Form", "Links", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxAlign.setItemText(1, QtGui.QApplication.translate("Form", "Mitte", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxAlign.setItemText(2, QtGui.QApplication.translate("Form", "Rechts", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBoxFloat.setText(QtGui.QApplication.translate("Form", "FolgendenText umfließen lassen", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("Form", "Ausrichtung", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("Form", "Titel", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("Form", "Alternativ-Text", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_7.setText(QtGui.QApplication.translate("Form", "Verknüpfen mit", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxHRef.setItemText(0, QtGui.QApplication.translate("Form", "-Keine Verlinkung-", None, QtGui.QApplication.UnicodeUTF8))
-        self.comboBoxHRef.setItemText(1, QtGui.QApplication.translate("Form", "Vergrößern", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkboxHrefNewWindow.setText(QtGui.QApplication.translate("Form", "In neuem Fenster öffnen", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(_translate("Form", "Form", None))
+        self.label_3.setText(_translate("Form", "x", None))
+        self.comboBoxUnits.setItemText(0, _translate("Form", "%", None))
+        self.comboBoxUnits.setItemText(1, _translate("Form", "px", None))
+        self.comboBoxUnits.setItemText(2, _translate("Form", "em", None))
+        self.label_2.setText(_translate("Form", "Größe", None))
+        self.btnSelectFile.setText(_translate("Form", "Auswählen", None))
+        self.label.setText(_translate("Form", "Datei", None))
+        self.comboBoxAlign.setItemText(0, _translate("Form", "Links", None))
+        self.comboBoxAlign.setItemText(1, _translate("Form", "Mitte", None))
+        self.comboBoxAlign.setItemText(2, _translate("Form", "Rechts", None))
+        self.checkBoxFloat.setText(_translate("Form", "FolgendenText umfließen lassen", None))
+        self.label_4.setText(_translate("Form", "Ausrichtung", None))
+        self.label_5.setText(_translate("Form", "Titel", None))
+        self.label_6.setText(_translate("Form", "Alternativ-Text", None))
+        self.label_7.setText(_translate("Form", "Verknüpfen mit", None))
+        self.comboBoxHRef.setItemText(0, _translate("Form", "-Keine Verlinkung-", None))
+        self.comboBoxHRef.setItemText(1, _translate("Form", "Vergrößern", None))
+        self.checkboxHrefNewWindow.setText(_translate("Form", "In neuem Fenster öffnen", None))
 
-from PySide import QtWebKit
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    Form = QtGui.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())
-
+from PyQt4 import QtWebKit

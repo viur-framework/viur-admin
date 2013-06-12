@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, formatString, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -55,11 +55,11 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 			data = NetworkService.decode( req )
 		except ValueError: #Query was canceled
 			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		self.layoutAboutToBeChanged.emit()
 		self.dataCache = []
 		for skel in data["skellist"]:
 			self.dataCache.append( skel )
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutChanged.emit()
 	
 	def getItem(self, label):
 		res = [ x for x in self.dataCache if formatString( self.format, self.structure, x)==label ]
@@ -100,9 +100,9 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.autoCompleter.setModel( self.autoCompletionModel )
 			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
 			self.entry.setCompleter( self.autoCompleter )
-			self.entry.connect( self.entry, QtCore.SIGNAL('textChanged(QString)'), self.reloadAutocompletion )
-			self.autoCompleter.connect( self.autoCompleter, QtCore.SIGNAL('activated(QString)'), self.setAutoCompletion )  #Broken...
-			self.autoCompleter.connect( self.autoCompleter, QtCore.SIGNAL('highlighted(QString)'), self.setAutoCompletion ) 
+			self.entry.textChanged.connect( self.reloadAutocompletion )
+			self.autoCompleter.activated.connect( self.setAutoCompletion )  #Broken...
+			self.autoCompleter.highlighted.connect( self.setAutoCompletion ) 
 			self.layout.addWidget( self.entry )
 			icon6 = QtGui.QIcon()
 			icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -205,7 +205,7 @@ class RelationalEditBone( QtGui.QWidget ):
 
 class RelationalBoneSelector( QtGui.QWidget ):
 	
-	selectionChanged = QtCore.Signal( (object, ) )
+	selectionChanged = QtCore.pyqtSignal( (object, ) )
 	displaySourceWidget = ListWidget
 	displaySelectionWidget = SelectedEntitiesWidget
 	GarbargeTypeName = "RelationalBoneSelector"

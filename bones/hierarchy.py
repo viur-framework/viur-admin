@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -29,7 +29,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.onAddBtnReleased )
+		self.addBtn.released.connect( self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )
 		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
@@ -40,7 +40,7 @@ class HierarchyEditBone( QtGui.QWidget ):
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.onDelBtnReleased )
+			self.delBtn.released.connect( self.onDelBtnReleased )
 			self.selection = None
 		else:
 			self.selection = []

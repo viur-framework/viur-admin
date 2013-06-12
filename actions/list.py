@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event
@@ -34,7 +34,7 @@ actionDelegateSelector.insert( 1, ListAddAction.isSuitableFor, ListAddAction )
 class ListEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 	
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
@@ -51,7 +51,7 @@ actionDelegateSelector.insert( 1, ListEditAction.isSuitableFor, ListEditAction )
 class ListCloneAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 	
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
@@ -147,7 +147,7 @@ class ListPreviewAction( QtGui.QAction ):
 				self.previewURLs = modulConfig["previewurls"]
 			else: 
 				self.setEnabled( False )
-		self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Open )
 
 	def onTriggered( self, e ):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from event import event
 from utils import RegisterQueue, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -29,7 +29,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.onAddBtnReleased )
+		self.addBtn.released.connect( self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )
 		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
@@ -40,7 +40,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.onDelBtnReleased )
+			self.delBtn.released.connect( self.onDelBtnReleased )
 			self.selection = None
 		else:
 			self.selection = []
@@ -112,7 +112,6 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 		self.ui = Ui_TreeSelector()
 		self.ui.setupUi( self )		
 		super( BaseTreeDirBoneSelector, self ).__init__( self.modul, {"name":self.boneName,"handler":"treeItem"}, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('reloadlist(PyQt_PyObject)'),self.doReloadData )
 		self.loadRepositorys()
 		self.setAcceptDrops( True )
 		if not self.multiple:
@@ -132,13 +131,13 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 				if isinstance( item, self.dirItem ):
 					path = self.currentRepository+"/"+"/".join( self.path+[ item.dirName ] )
 					self.setSelection( [path] )
-					event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+					event.emit( "popWidget", self )
 					return
 			path = self.currentRepository+"/"+"/".join( self.path )
 			self.setSelection( [path] )
 		else:
 			self.setSelection( self.selection )
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+		event.emit( "popWidget", self )
 	
 	def onListSelectionEvent(self, event ):
 		if event.key()==QtCore.Qt.Key_Delete:
