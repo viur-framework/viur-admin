@@ -8,6 +8,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 from ui.treeUI import Ui_Tree
 from mainwindow import WidgetHandler
 from widgets.edit import EditWidget
+from config import conf
 import json
 
 class NodeItem(QtGui.QListWidgetItem):
@@ -150,9 +151,9 @@ class TreeListView( QtGui.QListWidget ):
 	leafItem = LeafItem
 	nodeItem = NodeItem
 
-	pathChanged = QtCore.pyqtSignal( (list,) ) #FIXME: DELETE ME
 	rootNodeChanged = QtCore.pyqtSignal( (str,) )
 	nodeChanged = QtCore.pyqtSignal( (str,) )
+	
 	
 	def __init__(self, modul, rootNode=None, node=None, *args, **kwargs ):
 		"""
@@ -434,6 +435,7 @@ class TreeWidget( QtGui.QWidget ):
 	rootNodeChanged = QtCore.pyqtSignal( (str,) )
 	nodeChanged = QtCore.pyqtSignal( (str,) )
 	currentItemChanged = QtCore.pyqtSignal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
+	itemSelectionChanged = QtCore.pyqtSignal( )
 	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QListWidgetItem) )
 
 	def __init__(self, modul, rootNode=None, node=None, actions=None, editOnDoubleClick=False, *args, **kwargs ):
@@ -469,6 +471,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.tree.nodeChanged.connect( self.nodeChanged )
 		self.pathList.rootNodeChanged.connect( self.rootNodeChanged )
 		self.tree.rootNodeChanged.connect( self.rootNodeChanged )
+		self.tree.itemSelectionChanged.connect( self.itemSelectionChanged )
 		
 		# Outbound Signals
 		self.nodeChanged.connect( self.tree.setNode )
@@ -544,7 +547,8 @@ class TreeWidget( QtGui.QWidget ):
 		if not actions:
 			return
 		for action in actions:
-			actionWdg = actionDelegateSelector.select( "tree.%s" % self.getModul(), action )
+			modulCfg = conf.serverConfig["modules"][ self.modul ]
+			actionWdg = actionDelegateSelector.select( "%s.%s" % ( modulCfg["handler"], self.getModul() ), action )
 			if actionWdg is not None:
 				actionWdg = actionWdg( self )
 				if isinstance( actionWdg, QtGui.QAction ):

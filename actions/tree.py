@@ -33,14 +33,7 @@ actionDelegateSelector.insert( 1, TreeAddAction.isSuitableFor, TreeAddAction )
 class TreeEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
-		self.parent().currentItemChanged.connect( self.onCurrentItemChanged )
 		self.triggered.connect( self.onTriggered )
-
-	def onCurrentItemChanged( self, current, previous ):
-		if isinstance( current, self.parent().getLeafItemClass() ): #Its a directory, we cant edit that
-			self.setEnabled( False )
-		else:
-			self.setEnabled( True )
 
 	def onTriggered( self, e ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
@@ -74,7 +67,6 @@ class TreeDirUpAction( QtGui.QAction ):
 		self.triggered.connect( self.onTriggered )
 	
 	def onNodeChanged( self, node ):
-		print( "0"*10, node)
 		reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
 		assert reqWrap is not None
 		node = reqWrap.getNode( self.parent().getNode() )
@@ -121,9 +113,18 @@ actionDelegateSelector.insert( 1, TreeMkDirAction.isSuitableFor, TreeMkDirAction
 class TreeDeleteAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent )
+		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
+		self.setEnabled( False )
+
+	def onItemSelectionChanged( self ):
+		entries = self.parent().selectedItems()
+		if len( entries )==0:
+			self.setEnabled( False )
+			return
+		self.setEnabled( True )
 	
 	def onTriggered( self, e ):
 		nodes = []

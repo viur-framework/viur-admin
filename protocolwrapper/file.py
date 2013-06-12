@@ -43,10 +43,8 @@ class FileUploader( QtCore.QObject ):
 		NetworkService.request("/file/getUploadURL", successHandler=self.startUpload )
 	
 	def startUpload(self, req):
-		print("xxx")
 		self.uploadProgress.emit(0,1)
 		url = req.readAll().data().decode("UTF-8")
-		print(url)
 		params = {"Filedata": open( self.fileName.encode(sys.getfilesystemencoding()),  "rb" ) }
 		if self.node:
 			params["node"] = self.node
@@ -454,8 +452,7 @@ class FileWrapper( TreeWrapper ):
 	
 def CheckForFileModul( modulName, modulList ):
 	modulData = modulList[ modulName ]
-	if "handler" in modulData.keys() and modulData["handler"].startswith("tree.file"):
-		print( modulData["handler"] )
+	if "handler" in modulData.keys() and modulData["handler"].startswith("tree.simple.file"):
 		return( True )
 	return( False )
 	

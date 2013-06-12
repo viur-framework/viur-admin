@@ -39,7 +39,6 @@ class FileBaseHandler( WidgetHandler ):
 			Check if there is more than one repository avaiable
 			for us.
 		"""
-		print("kkkk")
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		if len( protoWrap.rootNodes ) > 1:
@@ -55,7 +54,7 @@ class FileHandler( QtCore.QObject ):
 			
 	def requestModulHandler(self, queue, modul ):
 		config = conf.serverConfig["modules"][ modul ]
-		if( config["handler"]=="tree.file" ):
+		if( config["handler"]=="tree.simple.file" ):
 			f = lambda: FileBaseHandler( modul )
 			queue.registerHandler( 5, f )
 

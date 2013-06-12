@@ -25,7 +25,7 @@ class FileUploadAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree.file" or modul.startswith("tree.file.")) and actionName=="upload")
+		return( (modul == "tree.simple.file" or modul.startswith("tree.simple.file.")) and actionName=="upload")
 
 actionDelegateSelector.insert( 3, FileUploadAction.isSuitableFor, FileUploadAction )
 
@@ -52,6 +52,6 @@ class FileDownloadAction( QtGui.QAction ):
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree.file" or modul.startswith("tree.file.")) and actionName=="download")
+		return( (modul == "tree.simple.file" or modul.startswith("tree.simple.file.")) and actionName=="download")
 
 actionDelegateSelector.insert( 3, FileDownloadAction.isSuitableFor, FileDownloadAction )
