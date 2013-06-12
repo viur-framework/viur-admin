@@ -19,14 +19,11 @@ class TaskViewer( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		self.overlay = Overlay( self )
 		self.overlay.inform( self.overlay.BUSY )
-		self.request = NetworkService.request( "/_tasks/list" )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onTaskList )
-		self.setWindowTitle( QtCore.QCoreApplication.translate("Tasks", "Tasks") )
-		self.setWindowIcon( QtGui.QIcon( QtGui.QPixmap( "icons/menu/tasks.png" ) ) )
+		NetworkService.request( "/_tasks/list", secure=True, successHandler=self.onTaskList )
 		self.show()
 		
-	def onTaskList(self):
-		self.tasks = NetworkService.decode( self.request )
+	def onTaskList(self, req):
+		self.tasks = NetworkService.decode( req )
 		for task in self.tasks["skellist"]:
 			item = TaskItem( task )
 			self.ui.listWidget.addItem( item )
