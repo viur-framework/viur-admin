@@ -34,7 +34,7 @@ class HtmlStripper( html.parser.HTMLParser ):
 
 class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 	cantSort=True
-	def __init__(self, registerObject, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( QtGui.QStyledItemDelegate,self ).__init__()
 		self.skelStructure = skelStructure
 		self.boneName = boneName
