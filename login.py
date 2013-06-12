@@ -128,16 +128,28 @@ class LoginTask( QtCore.QObject ):
 	
 	def onGAEAuth( self, request=None ):
 		self.logger.debug("Checkpoint: onGAEAuth")
-		self.req = NetworkService.request( "/user/login", successHandler=self.onLoginSucceeded, failureHandler=self.onError )
+		NetworkService.request( "/user/login", successHandler=self.onLoginSucceeded, failureHandler=self.onError )
 	
 	def onError( self, request=None, error=None, msg=None ):
 		self.loginFailed.emit( QtCore.QCoreApplication.translate("Login", msg or str( error ) ) )
 		self.deleteLater()
 
 	def onLoginSucceeded( self, req ):
+		"""
+			Try to convince the server to send us its content in our language
+		"""
+		if "language" in conf.adminConfig.keys():
+			lang = conf.adminConfig["language"]
+		else:
+			lang = "en"
+		NetworkService.request( "/setLanguage/%s" % lang, secure=True, successHandler=self.onLanguageSet, failureHandler=self.onError )
+	
+	def onLanguageSet( self, req ):
+		"""
+			The language has been set, we are done with this task
+		"""
 		self.loginSucceeded.emit()
 		self.deleteLater()
-	
 	
 class Login( QtGui.QMainWindow ):
 	def __init__( self, *args, **kwargs ):
@@ -172,6 +184,7 @@ class Login( QtGui.QMainWindow ):
 		self.ui.cbLanguages.blockSignals( False )
 		self.ui.btnLogin.clicked.connect( self.onBtnLoginReleased )
 		self.ui.startAccManagerBTN.released.connect( self.onStartAccManagerBTNReleased )
+		self.ui.cbLanguages.currentIndexChanged.connect( self.onCbLanguagesCurrentIndexChanged )
 		
 	def changeEvent(self, *args, **kwargs):
 		super( Login, self ).changeEvent( *args, **kwargs )
