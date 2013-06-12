@@ -195,6 +195,7 @@ class MainWindow( QtGui.QMainWindow ):
 		event.connectWithPriority( 'rebuildBreadCrumbs()', self.rebuildBreadCrumbs, event.lowPriority )
 		WidgetHandler.mainWindow = self
 		self.ui.treeWidget.itemClicked.connect( self.onTreeWidgetItemClicked )
+		self.ui.actionTasks.triggered.connect( self.onActionTasksTriggered )
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
@@ -280,8 +281,6 @@ class MainWindow( QtGui.QMainWindow ):
 		currentHandler = self.handlerForWidget()
 		if currentHandler:
 			self.ui.treeWidget.setItemSelected( currentHandler, False )
-		print( type( handler ) )
-		print( type( self.ui.stackedWidget ) )
 		if handler.parent():
 			self.ui.treeWidget.expandItem( handler.parent() )
 		self.ui.treeWidget.setItemSelected( handler, True )
@@ -501,6 +500,10 @@ class MainWindow( QtGui.QMainWindow ):
 		self.helpBrowser.show()
 	
 	def onActionTasksTriggered(self, checked=None):
-		if checked is None: return
-		self.tasks = TaskViewer()
+		"""
+			Creates a WidgetHandler for the TaskView and displayed the taskHandler
+		"""
+		taskHandler = WidgetHandler( lambda *args, **kwargs: TaskViewer(), "Tasks" )
+		self.addHandler( taskHandler )
+		taskHandler.focus()
 	
