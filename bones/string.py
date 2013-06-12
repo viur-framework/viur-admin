@@ -4,6 +4,13 @@ from event import event
 from bones.base import BaseViewBoneDelegate
 from config import conf
 from priorityqueue import editBoneSelector, viewDelegateSelector
+from html.parser import HTMLParser
+
+def unescapeHtml( html ):
+	if 1:
+		return( HTMLParser.unescape(HTMLParser, html) )
+	else: #except:
+		return( html )
 
 def chooseLang( value, prefs ):
 	"""
@@ -175,23 +182,23 @@ class StringEditBone( QtGui.QWidget ):
 				if lang in data.keys():
 					val = data[ lang ]
 					if isinstance( val, str ):
-						self.genTag( val, lang=lang )
+						self.genTag( unescapeHtml(val), lang=lang )
 					elif isinstance( val, list ):
 						for v in val:
-							self.genTag( v, lang=lang )
+							self.genTag( unescapeHtml(v), lang=lang )
 		elif self.languages and not self.multiple:
 			assert isinstance(data,dict)
 			for lang in self.languages:
 				if lang in data.keys():
-					self.langEdits[ lang ].setText( str(data[ lang ]) )
+					self.langEdits[ lang ].setText( unescapeHtml(str(data[ lang ])) )
 		elif not self.languages and self.multiple:
 			if isinstance( data,list ):
 				for tagStr in data:
-					self.genTag( tagStr )
+					self.genTag( unescapeHtml(tagStr) )
 			else:
-				self.genTag( data )
+				self.genTag( unescapeHtml(data) )
 		elif not self.languages and not self.multiple:
-			self.lineEdit.setText( str( data ) )
+			self.lineEdit.setText( unescapeHtml(str( data )) )
 		else: 
 			pass
 
