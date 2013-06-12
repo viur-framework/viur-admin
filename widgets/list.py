@@ -224,9 +224,8 @@ class ListTableView( QtGui.QTableView ):
 		#self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
 		model.rebuildDelegates.connect( self.rebuildDelegates )
 		model.layoutChanged.connect( self.realignHeaders )
-		#self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
-		#self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
-
+		self.clicked.connect( self.onItemClicked )
+		self.doubleClicked.connect( self.onItemDoubleClicked )
 
 	def onItemClicked(self, index ):
 		self.itemClicked.emit( self.model().getData()[index.row()] )
