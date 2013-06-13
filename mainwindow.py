@@ -251,13 +251,17 @@ class MainWindow( QtGui.QMainWindow ):
 					parent.removeChild( handler )
 					return
 				removeRecursive( handler, child )
+		parent = handler.parent()
 		removeRecursive( handler, self.ui.treeWidget.invisibleRootItem() )
 		for widget in handler.widgets:
 			if self.ui.stackedWidget.indexOf( widget ) != -1:
 				self.ui.stackedWidget.removeWidget( widget )
-		currentHandler = self.handlerForWidget()
-		if currentHandler:
-			self.focusHandler( currentHandler )
+		if parent and parent != self.ui.treeWidget.invisibleRootItem():
+			parent.focus()
+		else:
+			currentHandler = self.handlerForWidget()
+			if currentHandler:
+				self.focusHandler( currentHandler )
 		self.rebuildBreadCrumbs()
 
 	def onTreeWidgetItemClicked (self, item, colum):
