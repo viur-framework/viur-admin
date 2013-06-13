@@ -6,6 +6,7 @@ from event import event
 from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
 from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
+from ui.editpreviewUI import Ui_EditPreview
 from config import conf
 
 class ListAddAction( QtGui.QAction ):
@@ -106,6 +107,10 @@ class Preview( QtGui.QWidget ):
 			self.setWindowTitle( QtCore.QCoreApplication.translate("ListHandler", "Preview: %s") % data["name"])
 		else:
 			self.setWindowTitle( QtCore.QCoreApplication.translate("ListHandler", "Preview") )
+		self.ui.cbUrls.currentIndexChanged.connect( self.onCbUrlsCurrentIndexChanged )
+		self.ui.btnReload.released.connect( self.onBtnReloadReleased )
+		if len( self.urls ) > 0:
+			self.onCbUrlsCurrentIndexChanged(0)
 		self.show()
 	
 	def onCbUrlsCurrentIndexChanged( self, idx ):
@@ -121,15 +126,13 @@ class Preview( QtGui.QWidget ):
 			if self.request:
 				#self.request.deleteLater()
 				self.request=None
-			self.request = NetworkService.request( NetworkService.url.replace("/admin","")+url )
-			self.connect( self.request, QtCore.SIGNAL("finished()"), self.setHTML )
-			self.connect( self.request, QtCore.SIGNAL("error(QNetworkReply::NetworkError)"), lambda: self.setHTML(error=True) )
+			request = NetworkService.request( NetworkService.url.replace("/admin","")+url, finishedHandler=self.setHTML )
 	
-	def setHTML( self, error=False ):
-		if error:
+	def setHTML( self, req ):
+		if 1:#try:
+			html = bytes( req.readAll().data() ).decode("UTF8")
+		else: #except:
 			html = QtCore.QCoreApplication.translate("ListHandler", "Preview not possible")
-		else:
-			html = bytes(self.request.readAll()).decode("UTF8")
 		self.ui.webView.setHtml( html, QtCore.QUrl( NetworkService.url.replace("/admin","")+self.currentURL ) )
 		
 	def onBtnReloadReleased(self, *args, **kwargs):
