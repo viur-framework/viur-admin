@@ -74,25 +74,6 @@ class EditWidget( QtGui.QWidget ):
 		assert applicationType in [ EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree, EditWidget.appSingleton ] #Invalid Application-Type?
 		if applicationType==EditWidget.appHierarchy or applicationType==EditWidget.appTree:
 			assert id or node #Need either an id or an node
-		if applicationType==EditWidget.appTree:
-			assert skelType in ["leaf","node"] #Need an skelType
-			if skelType=="leaf":
-				if not key:
-					self.structure = protoWrap.addLeafStructure
-				else:
-					self.structure = protoWrap.editLeafStructure
-			elif skelType=="node":
-				if not key:
-					self.structure = protoWrap.addNodeStructure
-				else:
-					self.structure = protoWrap.editNodeStructure
-			else:
-				raise( ValueError( "skelType must be node or leaf" ) )
-		else: #Singleton, Hierarchy or List:
-			if not key:
-				self.structure = protoWrap.addStructure
-			else:
-				self.structure = protoWrap.editStructure
 		if clone:
 			assert id #Need an id if we should clone an entry
 			assert not applicationType==EditWidget.appSingleton # We cant clone a singleton
@@ -175,67 +156,30 @@ class EditWidget( QtGui.QWidget ):
 		print("--RELOADING--")
 		self.save( {} )
 		return
-		#if self.modul == "_tasks":
-		#	request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), successHandler=self.setData )
-		#elif self.applicationType == EditWidget.appList: ## Application: List
-		#	if self.id: #We are in Edit-Mode
-		#		request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), successHandler=self.setData )
-		#	else:
-		#		request = NetworkService.request("/%s/add/" % ( self.modul ), successHandler=self.setData )
-		#elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
-		#	if self.id: #We are in Edit-Mode
-		#		self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode }, successHandler=self.setData )
-		#	else:
-		#		self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"parent": self.rootNode }, successHandler=self.setData )
-		#elif self.applicationType == EditWidget.appTree: ## Application: Tree
-		#	if self.id: #We are in Edit-Mode
-		#		self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-		#	else:
-		#		self.request = NetworkService.request("/%s/add/" % ( self.modul ), {"rootNode": self.rootNode, "path": self.path }, successHandler=self.setData )
-		#elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
-		#	request = NetworkService.request("/%s/edit" % ( self.modul ), successHandler=self.setData )
-		#else:
-		#	raise NotImplementedError() #Should never reach this
 
 	def save(self, data ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
 		assert protoWrap is not None
 		if self.modul=="_tasks":
-			request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
+			self.editTaskID = protoWrap.edit( self.key, **data )
+			#request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appList: ## Application: List
 			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit( self.key, **data )
-				#request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				self.editTaskID = protoWrap.add( **data )
-				#request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appHierarchy: ## Application: Hierarchy
-			#self.overlay.inform( self.overlay.BUSY )
-			#data.update( {"parent": self.rootNode } )
-			print("x1")
 			if self.key and not self.clone:
-				print("y1")
 				self.editTaskID = protoWrap.edit( self.key, **data )
-				print( self.editTaskID )
-				print( type( self.editTaskID ) )
-				print( "im ", self )
-				#self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
-				print("y2")
 				self.editTaskID = protoWrap.add( self.node, **data )
-				print( self.editTaskID )
-				#self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appTree: ## Application: Tree
-			#data.update( {"rootNode": self.rootNode, "path": self.path } )
 			if self.key and not self.clone:
 				self.editTaskID = protoWrap.edit( self.key, self.skelType, **data )
-				#self.request = NetworkService.request("/%s/edit/%s" % ( self.modul, self.id ), data, secure=True, successHandler=self.onSaveResult )
 			else:
 				self.editTaskID = protoWrap.add( self.node, self.skelType, **data )
-				#self.request = NetworkService.request("/%s/add/" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appSingleton: ## Application: Singleton
 			self.editTaskID = protoWrap.edit( **data )
-			#self.request = NetworkService.request("/%s/edit" % ( self.modul ), data, secure=True, successHandler=self.onSaveResult )
 		else:
 			raise NotImplementedError() #Should never reach this
 
@@ -421,12 +365,7 @@ class EditWidget( QtGui.QWidget ):
 		"""
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
-		print("p1")
-		print( editTaskID )
-		print( self.editTaskID )
-		print( "im ", self )
 		if editTaskID!=self.editTaskID: #Not our task
-			print("p2")
 			return
 		self.setData( data=data, ignoreMissing=wasInitial )
 		if not wasInitial:

@@ -450,7 +450,9 @@ class ListWidget( QtGui.QWidget ):
 				descr=QtCore.QCoreApplication.translate("List", "Edit: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
 			else:
 				descr=QtCore.QCoreApplication.translate("List", "Edit entry")
-		handler = WidgetHandler( lambda: EditWidget( self.list.modul, EditWidget.appList, item["id"], clone=clone ), descr, icon )
+		modul = self.list.modul
+		key = item["id"]
+		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, key, clone=clone ), descr, icon )
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 

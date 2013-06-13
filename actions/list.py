@@ -21,7 +21,8 @@ class ListAddAction( QtGui.QAction ):
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
-		handler = WidgetHandler( lambda: EditWidget( self.parentWidget().list.modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add_small.png") )
+		modul = self.parentWidget().list.modul
+		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add_small.png") )
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	

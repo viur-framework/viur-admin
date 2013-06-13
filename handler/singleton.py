@@ -7,7 +7,7 @@ from widgets.edit import EditWidget
 from utils import loadIcon
 import os
 
-class SingletonEntryHandler( WidgetHandler ): #FIXME
+class SingletonEntryHandler( WidgetHandler ): 
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
@@ -25,6 +25,12 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 			name = config["name"]
 		super( SingletonEntryHandler, self ).__init__( widgetFactory, icon=icon, vanishOnClose=False , *args, **kwargs )
 		self.setText(0,name)
+
+	def getBreadCrumb(self):
+		"""
+			Dont use the description of our edit widget here
+		"""
+		return( self.text(0), self.icon(0) )
 
 class SingletonHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):

@@ -20,7 +20,9 @@ class TreeAddAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
-		widget = lambda: EditWidget(self.parent().tree.modul, EditWidget.appTree, 0, rootNode=self.parent().tree.rootNode, path=self.parent().tree.getPath())
+		modul = self.parent().tree.modul
+		node = self.parent().getNode()
+		widget = lambda: EditWidget( modul, EditWidget.appTree, 0, node=node)
 		handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/add_small.png") )
 		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
@@ -46,7 +48,9 @@ class TreeEditAction( QtGui.QAction ):
 				skelType="leaf"
 			else:
 				skelType="node"
-			widget = lambda: EditWidget( self.parent().modul, EditWidget.appTree, entry["id"], skelType=skelType )
+			modul = self.parent().modul
+			key = entry["id"]
+			widget = lambda: EditWidget( modul, EditWidget.appTree, key, skelType=skelType )
 			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
 			handler.stackHandler()
 
