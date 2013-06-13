@@ -5,118 +5,12 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 from event import event
 from config import conf
 import time, os, logging
-from utils import RegisterQueue, showAbout, Overlay
-from tasks import TaskViewer
+from utils import RegisterQueue, showAbout, Overlay, WidgetHandler, GroupHandler
+from tasks import TaskViewer, TaskEntryHandler
 import startpages
 from network import NetworkService, RemoteFile
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 
-
-class WidgetHandler( QtGui.QTreeWidgetItem ):
-	""" 
-	Holds the items displayed top-left within the admin.
-	Each of these provides access to one modul and holds the references
-	to the widgets shown inside L{MainWindow.ui.stackedWidget}
-	"""
-	mainWindow = None
-	
-	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, *args, **kwargs ):
-		"""
-		@type modul: string
-		@param modul: Name of the modul handled
-		"""
-		super( WidgetHandler, self ).__init__( *args, **kwargs )
-		if mainWindow:
-			self.mainWindow = mainWindow
-		if self.mainWindow is None:
-			raise UnboundLocalError("You either have to create the mainwindow before using this class or specifiy an replacement.")
-		self.widgets = []
-		self.widgetGenerator = widgetGenerator
-		self.setText(0, descr)
-		if icon is not None:
-			if isinstance( icon, QtGui.QIcon):
-				self.setIcon(0, icon )
-			elif isinstance( icon, str ):
-				RemoteFile( icon, successHandler=self.loadIconFromRequest )
-		self.vanishOnClose = vanishOnClose
-		#self.largeIcon = None
-		#if modul in conf.serverConfig["modules"].keys():
-		#	config = conf.serverConfig["modules"][ modul ]
-		#	if config["icon"]:
-		#		self.largeIcon = QtGui.QIcon( config["icon"] )
-
-	def loadIconFromRequest( self, request ):
-		icon = QtGui.QIcon( request.getFileName() )
-		self.setIcon(0, icon)
-
-	def focus( self ):
-		"""
-		If this handler holds at least one widget, the last widget
-		on the stack gains focus
-		"""
-		if not self.widgets:
-			self.widgets.append( self.widgetGenerator() )
-			self.mainWindow.addWidget( self.widgets[ -1 ] )
-			#event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
-			self.setIcon( 1, QtGui.QIcon( "icons/actions/exit_small.png") )
-		self.mainWindow.focusHandler( self )
-		#event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
-	
-	def close( self ):
-		"""
-		Closes *all* widgets of this handler
-		"""
-		if self.widgets:
-			self.mainWindow.removeWidget( self.widgets[ -1 ] )
-			#event.emit( QtCore.SIGNAL("removeWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
-		if len( self.widgets ) > 1:
-			self.widgets = self.widgets[ : -1]
-			self.focus()
-		elif len( self.widgets )==1:
-			self.widgets = []
-			if self.vanishOnClose:
-				self.mainWindow.removeHandler( self )
-				#event.emit( QtCore.SIGNAL("removeHandler(PyQt_PyObject)"), self )
-			else:
-				self.mainWindow.unfocusHandler( self )
-				#event.emit( QtCore.SIGNAL("unfocusHandler(PyQt_PyObject)"), self )
-				self.setIcon( 1, QtGui.QIcon() )
-	
-	def getBreadCrumb(self):
-		for widget in self.widgets[ : : -1 ]:
-			try:
-				txt, icon = widget.getBreadCrumb()
-				if not icon:
-					icon = QtGui.QIcon()
-				elif not isinstance( icon, QtGui.QIcon ):
-					icon = QtGui.QIcon( icon )
-				self.setIcon( 0, icon )
-				self.setText( 0, txt )
-				return( txt, icon )
-			except:
-				continue
-		return( self.text(0), self.icon(0) )
-
-	def clicked( self ):
-		"""
-		Called whenever the user selects the handler from the treeWidget.
-		"""
-		self.focus()
-		
-	def contextMenu( self ):
-		"""
-		Currently unused
-		"""
-		pass
-	
-	def stackHandler( self ):
-		self.mainWindow.stackHandler( self )
-	
-class GroupHandler( QtGui.QTreeWidgetItem ):
-	"""
-		Toplevel widget for one modul-group
-	"""
-	pass
 
 class Preloader( QtGui.QWidget ):
 	
@@ -296,7 +190,6 @@ class MainWindow( QtGui.QMainWindow ):
 			@param widget: Widget to stack on the current handler
 			@type widget: QWidget
 		"""
-		print("ssss")
 		currentHandler = self.handlerForWidget()
 		assert currentHandler
 		currentHandler.widgets.append( widget )
@@ -316,7 +209,7 @@ class MainWindow( QtGui.QMainWindow ):
 			pass
 		#widget.setParent( None )
 		widget.deleteLater()
-		widget = None
+		del widget
 	
 	def popWidget( self, widget ):
 		"""
@@ -328,6 +221,10 @@ class MainWindow( QtGui.QMainWindow ):
 			@param widget: Widget to remove. Must be on the current handler's stack.
 		"""
 		currentHandler = self.handlerForWidget(widget)
+		if currentHandler is None:
+			logging.error( "Stale widget: "+str( widget ) )
+			assert False
+			return
 		currentHandler.close()
 		self.rebuildBreadCrumbs()
 
@@ -371,9 +268,9 @@ class MainWindow( QtGui.QMainWindow ):
 
 	def rebuildBreadCrumbs( self ):
 		"""
-		Rebuilds the breadcrump-path.
-		Currently, it displayes the current modul, its icon and
-		stacks the path as children to its handler
+			Rebuilds the breadcrump-path.
+			Currently, it displayes the current modul, its icon and
+			stacks the path as children to its handler
 		"""
 		self.ui.modulLbl.setText( QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!")  )
 		self.ui.iconLbl.setPixmap( QtGui.QPixmap("icons/viur_logo.png").scaled(64,64,QtCore.Qt.IgnoreAspectRatio) )
@@ -402,9 +299,10 @@ class MainWindow( QtGui.QMainWindow ):
 		Initializes everything based on the config recived from the server.
 		It
 			- Resets the ui to sane defaults.
-			- Emits QtCore.SIGNAL('downloadedConfig(PyQt_PyObject)') with the dict recived
+			- Selects a startPage for the application
+			- Selects Protocollwrapper and Module-Handler for each modul
 			- Requests a toplevel handler for each modul
-			- Finnaly emits QtCore.SIGNAL('mainWindowInitialized()')
+			- Finnaly emits modulHandlerInitialized and mainWindowInitialized
 		"""
 		if not self.startPage:
 			if "configuration" in conf.serverConfig.keys():
@@ -415,7 +313,6 @@ class MainWindow( QtGui.QMainWindow ):
 			if not self.startPage: #Still not
 				self.startPage = startpages.DefaultWidget()
 			self.ui.stackedWidget.addWidget( self.startPage )
-			
 		self.ui.treeWidget.clear()
 		data = conf.serverConfig
 		handlers = []
@@ -461,18 +358,6 @@ class MainWindow( QtGui.QMainWindow ):
 		QtGui.QApplication.restoreOverrideCursor()
 
 
-	def statusMessage(self, type, message):
-		"""
-		Display a Message on our Statusbar
-		
-		@type type: string
-		@param type: Type of the message
-		@type message: string
-		@param message: Text to display
-		
-		"""
-		self.ui.statusbar.showMessage( "%s: %s" % (time.strftime("%H:%M"), message), 5000 )
-	
 	def onActionAboutTriggered(self, checked=None):
 		if checked is None: return
 		showAbout( self )
@@ -490,7 +375,7 @@ class MainWindow( QtGui.QMainWindow ):
 		"""
 			Creates a WidgetHandler for the TaskView and displayed the taskHandler
 		"""
-		taskHandler = WidgetHandler( lambda *args, **kwargs: TaskViewer(), "Tasks" )
+		taskHandler = TaskEntryHandler( lambda *args, **kwargs: TaskViewer() )
 		self.addHandler( taskHandler )
 		taskHandler.focus()
 	

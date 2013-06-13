@@ -5,7 +5,7 @@ import math
 import os, os.path
 import os
 from config import conf
-from network import NetworkService
+from network import NetworkService, RemoteFile
 
 
 class RegisterQueue():
@@ -225,6 +225,119 @@ class Overlay(QtGui.QWidget):
 			self.clear(True)
 			return
 		self.update()
+
+
+
+class WidgetHandler( QtGui.QTreeWidgetItem ):
+	""" 
+	Holds the items displayed top-left within the admin.
+	Each of these provides access to one modul and holds the references
+	to the widgets shown inside L{MainWindow.ui.stackedWidget}
+	"""
+	mainWindow = None
+	
+	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, *args, **kwargs ):
+		"""
+		@type modul: string
+		@param modul: Name of the modul handled
+		"""
+		super( WidgetHandler, self ).__init__( *args, **kwargs )
+		if mainWindow:
+			self.mainWindow = mainWindow
+		if self.mainWindow is None:
+			raise UnboundLocalError("You either have to create the mainwindow before using this class or specifiy an replacement.")
+		self.widgets = []
+		self.widgetGenerator = widgetGenerator
+		self.setText(0, descr)
+		if icon is not None:
+			if isinstance( icon, QtGui.QIcon):
+				self.setIcon(0, icon )
+			elif isinstance( icon, str ):
+				RemoteFile( icon, successHandler=self.loadIconFromRequest )
+		self.vanishOnClose = vanishOnClose
+
+	def loadIconFromRequest( self, request ):
+		icon = QtGui.QIcon( request.getFileName() )
+		self.setIcon(0, icon)
+
+	def focus( self ):
+		"""
+		If this handler holds at least one widget, the last widget
+		on the stack gains focus
+		"""
+		if not self.widgets:
+			self.widgets.append( self.widgetGenerator() )
+			self.mainWindow.addWidget( self.widgets[ -1 ] )
+			#event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
+			self.setIcon( 1, QtGui.QIcon( "icons/actions/exit_small.png") )
+		self.mainWindow.focusHandler( self )
+		#event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
+	
+	def close( self ):
+		"""
+		Closes *one* widgets of this handler
+		"""
+		if self.widgets:
+			self.mainWindow.removeWidget( self.widgets.pop() )
+		if len( self.widgets ) > 0:
+			self.focus()
+		else:
+			if self.vanishOnClose:
+				#parent = self.parent()
+				self.mainWindow.removeHandler( self )
+				#if parent:
+				#	parent.focus()
+				#event.emit( QtCore.SIGNAL("removeHandler(PyQt_PyObject)"), self )
+			else:
+				self.mainWindow.unfocusHandler( self )
+				self.setIcon( 1, QtGui.QIcon() )
+	
+	def getBreadCrumb(self):
+		for widget in self.widgets[ : : -1 ]:
+			try:
+				txt, icon = widget.getBreadCrumb()
+				if not icon:
+					icon = QtGui.QIcon()
+				elif not isinstance( icon, QtGui.QIcon ):
+					icon = QtGui.QIcon( icon )
+				self.setIcon( 0, icon )
+				self.setText( 0, txt )
+				return( txt, icon )
+			except:
+				continue
+		return( self.text(0), self.icon(0) )
+
+	def clicked( self ):
+		"""
+		Called whenever the user selects the handler from the treeWidget.
+		"""
+		self.focus()
+		
+	def contextMenu( self ):
+		"""
+		Currently unused
+		"""
+		pass
+	
+	def stackHandler( self ):
+		self.mainWindow.stackHandler( self )
+	
+class GroupHandler( QtGui.QTreeWidgetItem ):
+	"""
+		Toplevel widget for one modul-group
+	"""
+	
+	def clicked( self ):
+		"""
+		Called whenever the user selects the handler from the treeWidget.
+		"""
+		self.focus()
+		
+	def contextMenu( self ):
+		"""
+		Currently unused
+		"""
+		pass
 
 def urlForItem( modul, item ):
 	"""
