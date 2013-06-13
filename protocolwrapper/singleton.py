@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore
-from network import NetworkService, RequestGroup
+from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -12,76 +12,78 @@ class SingletonWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
 	
+	updatingSucceeded = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry succeeded
+	updatingFailedError = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry failed due to network/server error
+	updatingDataAvaiable = QtCore.pyqtSignal( (str, dict, bool) ) #Adding/Editing an entry failed due to missing fields
+	modulStructureAvaiable = QtCore.pyqtSignal() #We fetched the structure for this modul and that data is now avaiable
+	busyStateChanged = QtCore.pyqtSignal( (bool,) ) #If true, im busy right now
+	
 	def __init__( self, modul, *args, **kwargs ):
 		super( SingletonWrapper, self ).__init__()
 		self.modul = modul
-		self.structure = None
-		NetworkService.request( "/%s/edit" % self.modul, successHandler=self.onStructureAvaiable )
-		print("Initializing SingletonWrapper for modul %s" % self.modul )
+		self.busy = True
+		self.editStructure = None
+		self.viewStructure = None
 		protocolWrapperInstanceSelector.insert( 1, self.checkForOurModul, self )
 		self.deferedTaskQueue = []
+		req = NetworkService.request( "/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable )
 
 	def checkForOurModul( self, modulName ):
 		return( self.modul==modulName )
 	
 	def onStructureAvaiable( self, req ):
 		tmp = NetworkService.decode( req )
-		self.structure = OrderedDict()
-		for k,v in tmp["structure"]:
-			self.structure[ k ] = v
-		self.emit( QtCore.SIGNAL("onModulStructureAvaiable()") )
-	
-	def callDefered( self, callback, *args, **kwargs ):
-		self.deferedTaskQueue.append( ( weakref.ref( callback.__self__), callback.__name__, args, kwargs ) )
-		QtCore.QTimer.singleShot( 25, self.doCallDefered )
-	
-	def doCallDefered( self, *args, **kwargs ):
-		weakSelf, callName, fargs, fkwargs = self.deferedTaskQueue.pop(0)
-		callFunc = weakSelf()
-		if callFunc is not None:
-			targetFunc = getattr( callFunc, callName )
-			targetFunc( *fargs, **fkwargs )
+		if tmp is None:
+			self.checkBusyStatus()
+			return
+		for stype, structlist in tmp.items():
+			structure = OrderedDict()
+			for k,v in structlist:
+				structure[ k ] = v
+			if stype=="viewSkel":
+				self.viewStructure = structure
+			elif stype=="editSkel":
+				self.editStructure = structure
+		self.modulStructureAvaiable.emit()
+		self.checkBusyStatus()
 
-	def edit( self, cbSuccess, cbMissing, cbError, **kwargs ):
-		req = NetworkService.request("/%s/edit/" % ( self.modul ), kwargs, secure=True, finishedHandler=self.onSaveResult )
-		req.wrapperCbSuccessFuncSelf = weakref.ref( cbSuccess.__self__)
-		req.wrapperCbSuccessFuncName = cbSuccess.__name__
-		req.wrapperCbMissingFuncSelf = weakref.ref( cbMissing.__self__)
-		req.wrapperCbMissingFuncName = cbMissing.__name__
-		req.wrapperCbErrorFuncSelf = weakref.ref( cbError.__self__)
-		req.wrapperCbErrorFuncName = cbError.__name__
 
-	def delayEmitEntriesChanged( self, *args, **kwargs ):
-		"""
-			Give the GAE a chance to apply recent changes and then
-			force all open views of that modul to reload its data
-		"""
-		QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
+	def edit( self, **kwargs ):
+		req = NetworkService.request("/%s/edit" % ( self.modul ), kwargs, secure=(len(kwargs.keys())>0), finishedHandler=self.onSaveResult )
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
+		self.checkBusyStatus()
+		return( str( id( req ) ) )
+
 
 	def onSaveResult( self, req ):
 		try:
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
-			errorFuncSelf = req.wrapperCbErrorFuncSelf()
-			if errorFuncSelf:
-				errorFunc = getattr( errorFuncSelf, req.wrapperCbErrorFuncName )
-				errorFunc( QtCore.QCoreApplication.translate("ListWrapper", "There was an error saving your changes") )
-		if data=="OKAY": #Saving succeeded
-			QtCore.QTimer.singleShot( self.updateDelay, self.emitEntriesChanged )
-			successFuncSelf = req.wrapperCbSuccessFuncSelf()
-			if successFuncSelf:
-				successFunc = getattr( successFuncSelf, req.wrapperCbSuccessFuncName )
-				successFunc()
+			self.updatingFailedError.emit( str( id( req ) ) )
+			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
+			return
+		if data["action"] in ["editSuccess", "deleteSuccess"]: #Saving succeeded
+			self.updatingSucceeded.emit( str( id( req ) ) )
+			self.checkBusyStatus()
 		else: #There were missing fields
-			missingFuncSelf = req.wrapperCbMissingFuncSelf()
-			if missingFuncSelf:
-				missingFunc = getattr( missingFuncSelf, req.wrapperCbMissingFuncName )
-				missingFunc( data )
-	
-	def emitEntriesChanged( self, *args, **kwargs ):
-		self.emit( QtCore.SIGNAL("entitiesChanged()") )
+			self.updatingDataAvaiable.emit( str( id( req ) ), data, req.wasInitial )
+		self.checkBusyStatus()
 
-		
+	def checkBusyStatus( self ):
+		busy = False
+		for child in self.children():
+			if isinstance( child, RequestWrapper ) or isinstance( child, RequestGroup ):
+				if not child.hasFinished:
+					busy = True
+					break
+		if busy != self.busy:
+			self.busy = busy
+			self.busyStateChanged.emit( busy )
+
 def CheckForSingletonModul( modulName, modulList ):
 	modulData = modulList[ modulName ]
 	if "handler" in modulData.keys() and (modulData["handler"]=="singleton" or modulData["handler"].startswith("singleton.")):
