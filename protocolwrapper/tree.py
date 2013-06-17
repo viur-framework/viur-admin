@@ -144,7 +144,7 @@ class TreeWrapper( QtCore.QObject ):
 			r.node = node
 			r.queryArgs = kwargs
 		if not node in [ x["key"] for x in self.rootNodes ]: #Dont query rootNodes again..
-			r = NetworkService.request( "/%s/view/%s/node" % (self.modul, node), successHandler=self.addCacheData )
+			r = NetworkService.request( "/%s/view/node/%s" % (self.modul, node), successHandler=self.addCacheData )
 			r.wrapperCacheKey = node
 			r.skelType = "node"
 			r.node = node
@@ -157,7 +157,7 @@ class TreeWrapper( QtCore.QObject ):
 			self.deferedTaskQueue.append( ("entityAvailable",key) )
 			QtCore.QTimer.singleShot( 25, self.execDefered )
 			return( key )
-		r = NetworkService.request( "/%s/view/%s/%s" % (self.modul, key, skelType), successHandler=self.addCacheData )
+		r = NetworkService.request( "/%s/view/%s/%s" % (self.modul, skelType, key ), successHandler=self.addCacheData )
 		r.wrapperCacheKey = key
 	
 	def execDefered( self, *args, **kwargs ):
@@ -271,7 +271,6 @@ class TreeWrapper( QtCore.QObject ):
 			@param path: Destination path
 			@type path: String
 		"""
-		print( nodes, leafs, destNode )
 		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
 		for node in nodes:
 			request.addQuery( NetworkService.request( "/%s/move" % self.modul , {	"id": node,

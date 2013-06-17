@@ -135,7 +135,6 @@ class RecursiveUploader( QtCore.QObject ):
 				self.stats["dirsTotal"] += 1
 				self.remainingRequests += 1
 			else:
-				print("UPLOADING FILE")
 				r = FileUploader( fileName, self.node, parent=self )
 				r.uploadProgress.connect( self.uploadProgress )
 				r.succeeded.connect( self.onRequestFinished )
@@ -179,14 +178,12 @@ class RecursiveUploader( QtCore.QObject ):
 		for skel in data["skellist"]:
 			if skel["name"].lower() == self.getDirName( req.uploadDirName ).lower() :
 				#This directory allready exists
-				print("NEW REK UPLOADER 1")
 				self.stats["dirsDone"] += 1
 				r = RecursiveUploader( [ os.path.join( req.uploadDirName, x) for x in os.listdir( req.uploadDirName ) ], skel["id"], self.modul, parent=self )
 				r.uploadProgress.connect( self.uploadProgress )
 				r.finished.connect( self.onRequestFinished )
 				self.cancel.connect( r.cancel )
 				return
-		print("creating dir")
 		r = NetworkService.request( "/%s/add/" % self.modul, {"node": self.node, "name": self.getDirName( req.uploadDirName ), "skelType":"node"}, secure=True, finishedHandler=self.onMkDir )
 		r.uploadDirName = req.uploadDirName
 		self.uploadProgress.emit( 0,1 )
@@ -196,7 +193,6 @@ class RecursiveUploader( QtCore.QObject ):
 			return
 		data = NetworkService.decode( req )
 		assert data["action"] == "addSuccess"
-		print("NEW REK UPLOADER 2")
 		r = RecursiveUploader( [ os.path.join( req.uploadDirName, x) for x in os.listdir( req.uploadDirName ) ], data["values"]["id"], self.modul, parent=self )		
 		r.uploadProgress.connect( self.uploadProgress )
 		r.finished.connect( self.onRequestFinished )
