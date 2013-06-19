@@ -223,7 +223,7 @@ class TreeWrapper( QtCore.QObject ):
 		return( str( id( req ) ) )
 
 	def edit( self, key, skelType, **kwargs ):
-		req = NetworkService.request("/%s/edit/%s/%s" % ( self.modul, key, skelType ), kwargs, secure=True, finishedHandler=self.onSaveResult )
+		req = NetworkService.request("/%s/edit/%s/%s" % ( self.modul, skelType, key ), kwargs, secure=True, finishedHandler=self.onSaveResult )
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True

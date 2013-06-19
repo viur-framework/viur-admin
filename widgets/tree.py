@@ -502,11 +502,11 @@ class TreeWidget( QtGui.QWidget ):
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		if not self.rootNode and protoWrap.rootNodes:
-			self.onRootNodesAvaiable()
-
-	def onRootNodesAvaiable( self ):
-		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		self.setRootNode( protoWrap.rootNodes[0]["key"], isInitialCall=True )
+			self.setRootNode( protoWrap.rootNodes[0]["key"], isInitialCall=True )
+		elif rootNode:
+			self.setRootNode( rootNode, isInitialCall=True )
+		if node:
+			self.setNode( node, isInitialCall=True )
 
 	def onPathChanged( self, path ):
 		self.path = path

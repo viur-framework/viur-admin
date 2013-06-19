@@ -94,25 +94,6 @@ class TreeDirUpAction( QtGui.QAction ):
 		
 actionDelegateSelector.insert( 1, TreeDirUpAction.isSuitableFor, TreeDirUpAction )
 
-class TreeMkDirAction( QtGui.QAction ):
-	def __init__(self, parent, *args, **kwargs ):
-		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
-		self.triggered.connect( self.onTriggered )
-		self.setShortcut( "SHIFT+Ctrl+N" )
-		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
-	
-	def onTriggered( self, e ):
-		(dirName, okay) = QtGui.QInputDialog.getText( self.parent(), QtCore.QCoreApplication.translate("TreeHandler", "Create directory"), QtCore.QCoreApplication.translate("TreeHandler", "Directory name") )
-		if dirName and okay:
-			reqWrap = protocolWrapperInstanceSelector.select( self.parent().modul )
-			assert reqWrap is not None
-			reqWrap.mkdir( self.parent().tree.node, dirName )
-
-	@staticmethod
-	def isSuitableFor( modul, actionName ):
-		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="mkdir")
-		
-actionDelegateSelector.insert( 1, TreeMkDirAction.isSuitableFor, TreeMkDirAction )
 
 class TreeDeleteAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
