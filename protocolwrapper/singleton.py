@@ -64,7 +64,6 @@ class SingletonWrapper( QtCore.QObject ):
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
 			self.updatingFailedError.emit( str( id( req ) ) )
-			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
 			return
 		if data["action"] in ["editSuccess", "deleteSuccess"]: #Saving succeeded
 			self.updatingSucceeded.emit( str( id( req ) ) )
@@ -83,6 +82,7 @@ class SingletonWrapper( QtCore.QObject ):
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit( busy )
+
 
 def CheckForSingletonModul( modulName, modulList ):
 	modulData = modulList[ modulName ]

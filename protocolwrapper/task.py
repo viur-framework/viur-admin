@@ -45,7 +45,6 @@ class TaskWrapper( QtCore.QObject ):
 			data = NetworkService.decode( req )
 		except: #Something went wrong, call ErrorHandler
 			self.updatingFailedError.emit( str( id( req ) ) )
-			QtCore.QTimer.singleShot( self.updateDelay, self.resetOnError )
 			return
 		if data["action"] in ["addSuccess"]: #Saving succeeded
 			self.updatingSucceeded.emit( str( id( req ) ) )

@@ -321,6 +321,13 @@ class TreeWrapper( QtCore.QObject ):
 		self.clearCache()
 		self.entitiesChanged.emit( None )
 		self.checkBusyStatus()
+	
+	def resetOnError( self, *args, **kwargs ):
+		"""
+			If one or more requests fail, flush our cache and force
+			all listening widgets to reload.
+		"""
+		self.emitEntriesChanged()
 
 		
 def CheckForTreeModul( modulName, modulList ):
