@@ -74,7 +74,7 @@ class Tag( QtGui.QWidget ):
 			self.lblDisplay.show()
 			self.editField.hide()
 		self.editField.editingFinished.connect( self.onEditingFinished )
-		self.btnDeletereleased.released.connect( self.deleteLater )
+		self.btnDelete.released.connect( self.deleteLater )
 		self.lblDisplay.mousePressEvent = self.onEdit
 	
 	def onEdit( self, *args, **kwargs ):
