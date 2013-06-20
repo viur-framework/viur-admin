@@ -60,6 +60,9 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 	def getFields( self ):
 		return( self.fields )
 	
+	def getModul( self ):
+		return( self.modul )
+	
 	def reload( self ):
 		self.emit(QtCore.SIGNAL("modelAboutToBeReset()"))
 		self.dataCache = []
@@ -360,6 +363,21 @@ class ListTableView( QtGui.QTableView ):
 		"""
 		event.ignore()
 
+	def getFilter( self ):
+		return( self.model().getFilter() )
+	
+	def setFilter( self, filter ):
+		self.model().setFilter( filter )
+	
+	def getModul( self ):
+		return( self.model().getModul() )
+	
+	def getSelection( self ):
+		"""
+			Returns a list of items currently selected.
+		"""
+		return( [self.model().getData()[ x ] for x in set( [x.row() for x in self.selectionModel().selection().indexes()] ) ] )
+
 	
 class ListWidget( QtGui.QWidget ):
 	
@@ -409,17 +427,27 @@ class ListWidget( QtGui.QWidget ):
 			@param actions: List of actionnames
 			@type actions: List or None
 		"""
+		self.actions = actions
 		self.toolBar.clear()
 		if not actions:
 			return
 		for action in actions:
-			actionWdg = actionDelegateSelector.select( "list.%s" % self.modul, action )
-			if actionWdg is not None:
-				actionWdg = actionWdg( self )
-				if isinstance( actionWdg, QtGui.QAction ):
-					self.toolBar.addAction( actionWdg )
-				else:
-					self.toolBar.addWidget( actionWdg )
+			if action=="|":
+				self.toolBar.addSeparator()
+			else:
+				actionWdg = actionDelegateSelector.select( "list.%s" % self.modul, action )
+				if actionWdg is not None:
+					actionWdg = actionWdg( self )
+					if isinstance( actionWdg, QtGui.QAction ):
+						self.toolBar.addAction( actionWdg )
+					else:
+						self.toolBar.addWidget( actionWdg )
+	
+	def getActions( self ):
+		"""
+			Returns a list of the currently activated actions on this list.
+		"""
+		return( self.actions )
 
 	def search( self, *args, **kwargs ):
 		"""
@@ -429,6 +457,15 @@ class ListWidget( QtGui.QWidget ):
 			@type searchStr: String or None
 		"""
 		self.list.model().search( self.ui.editSearch.text() )
+	
+	def getFilter( self ):
+		return( self.list.getFilter() )
+	
+	def setFilter( self, filter ):
+		self.list.setFilter( filter )
+		
+	def getModul( self ):
+		return( self.list.getModul() )
 	
 	def openEditor( self, item, clone=False ):
 		"""
@@ -458,3 +495,6 @@ class ListWidget( QtGui.QWidget ):
 
 	def requestDelete( self, ids ):
 		return( self.list.requestDelete( ids ) )
+		
+	def getSelection( self ):
+		return( self.list.getSelection() )
