@@ -25,6 +25,7 @@ for plugin in plugins:
 		try:
 			imp.load_module(plugin, file, pathname, descr)
 		except Exception as e:
+			QtGui.QMessageBox.warning( None, "Plugin %s failed to load" % plugin, "Plugin %s failed to start with: %s\nThis plugin has been disabled and won't be avaiable!" % (plugin, str(e)))
 			print("Error loading Plugin: plugin")
 			print( e )
 			traceback.print_tb( e.__traceback__)

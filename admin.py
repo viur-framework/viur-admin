@@ -98,10 +98,9 @@ if (options.report == "auto" and not os.path.exists( ".git" )) or options.report
 
 conf.cmdLineOpts = options #Store the command-line options
 
-import plugin
-
-
 app = QtGui.QApplication(sys.argv)
+
+import plugin
 
 #Load translations
 transFiles = os.listdir("./locales/")
@@ -118,8 +117,7 @@ mw = MainWindow()
 l = Login()
 l.show()
 app.exec_()
-print("don1e")
-sys.stdout.flush()
+
 conf.savePortalConfig()
 conf.saveConfig()
 
