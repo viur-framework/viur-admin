@@ -173,7 +173,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.selection = selection[0]
 		else:
 			self.selection = None
-		event.emit( "popWidget(PyQt_PyObject)", self.editWidget )
+		event.emit( "popWidget", self.editWidget )
 		self.editWidget = None
 		self.updateVisiblePreview()
 	
@@ -236,7 +236,7 @@ class RelationalBoneSelector( QtGui.QWidget ):
 		self.list.itemDoubleClicked.connect( self.onSourceItemDoubleClicked )
 		self.ui.btnSelect.clicked.connect( self.onBtnSelectReleased )
 		self.ui.btnCancel.clicked.connect( self.onBtnCancelReleased )
-		event.emit( 'stackWidget(PyQt_PyObject)', self )
+		event.emit( 'stackWidget', self )
 
 	def onSourceItemDoubleClicked(self, item):
 		"""
@@ -253,8 +253,13 @@ class RelationalBoneSelector( QtGui.QWidget ):
 		self.selectionChanged.emit( self.selection.get() )
 
 	def onBtnCancelReleased(self, *args,  **kwargs ):
-		event.emit( "popWidget(PyQt_PyObject)", self )
+		event.emit( "popWidget", self )
 
+	def getFilter( self ):
+		return( self.list.getFilter() )
+	
+	def setFilter( self, filter ):
+		return( self.list.setFilter( filter ) )
 
 
 def CheckForRelationalicBone(  modulName, boneName, skelStucture ):

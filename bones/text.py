@@ -61,7 +61,7 @@ class RawTextEdit(QtGui.QWidget):
 
 	def save(self, *args, **kwargs ):
 		self.onDataChanged.emit( self.ui.textEdit.toPlainText() )
-		event.emit( 'popWidget(PyQt_PyObject)', self )
+		event.emit( 'popWidget', self )
 	
 	def sizeHint( self, *args, **kwargs ):
 		return( QtCore.QSize( 400, 300 ) )
@@ -329,7 +329,7 @@ class TextEdit(QtGui.QMainWindow):
 		#self.saveCallback( html )
 		self.onDataChanged.emit( html )
 		#self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), html )
-		event.emit( "popWidget(PyQt_PyObject)", self )
+		event.emit( "popWidget", self )
 
 
 	def textBold(self):
@@ -681,7 +681,7 @@ class TextEditBone( QtGui.QWidget ):
 				else:
 					editor = RawTextEdit( self.html )
 		editor.onDataChanged.connect( self.onSave )
-		event.emit( "stackWidget(PyQt_PyObject)", editor )
+		event.emit( "stackWidget", editor )
 
 	def onSave(self, text ):
 		if self.languages:

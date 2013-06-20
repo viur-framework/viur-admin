@@ -87,5 +87,5 @@ class TaskViewer( QtGui.QWidget ):
 		self.ui.verticalLayout.addWidget( descrLbl )
 		"""
 		from widgets.edit import EditWidget
-		event.emit("stackWidget(PyQt_PyObject)", EditWidget( "_tasks", EditWidget.appSingleton,  taskID ) )
+		event.emit("stackWidget", EditWidget( "_tasks", EditWidget.appSingleton,  taskID ) )
 

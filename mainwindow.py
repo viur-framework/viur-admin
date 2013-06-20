@@ -69,11 +69,11 @@ class MainWindow( QtGui.QMainWindow ):
 		#event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler, event.lowPriority )
-		event.connectWithPriority( 'stackWidget(PyQt_PyObject)', self.stackWidget, event.lowPriority )
-		event.connectWithPriority( 'popWidget(PyQt_PyObject)', self.popWidget, event.lowPriority )
+		event.connectWithPriority( 'stackWidget', self.stackWidget, event.lowPriority )
+		event.connectWithPriority( 'popWidget', self.popWidget, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
-		event.connectWithPriority( 'rebuildBreadCrumbs()', self.rebuildBreadCrumbs, event.lowPriority )
+		event.connectWithPriority( 'rebuildBreadCrumbs', self.rebuildBreadCrumbs, event.lowPriority )
 		WidgetHandler.mainWindow = self
 		self.ui.treeWidget.itemClicked.connect( self.onTreeWidgetItemClicked )
 		self.ui.actionTasks.triggered.connect( self.onActionTasksTriggered )
@@ -193,11 +193,12 @@ class MainWindow( QtGui.QMainWindow ):
 		currentHandler = self.handlerForWidget()
 		assert currentHandler
 		currentHandler.widgets.append( widget )
-		self.ui.stackedWidget.addWidget( widget )
+		self.addWidget( widget )
 		currentHandler.focus()
 		
 	def addWidget( self, widget ):
 		assert self.ui.stackedWidget.indexOf( widget ) == -1
+		event.emit("addWidget", widget )
 		self.ui.stackedWidget.addWidget( widget )
 
 	def removeWidget( self, widget ):
@@ -358,7 +359,7 @@ class MainWindow( QtGui.QMainWindow ):
 				wrapperClass( modul )
 			event.emit( 'modulHandlerInitialized', modul )
 		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
-		event.emit( 'mainWindowInitialized()' )
+		event.emit( 'mainWindowInitialized' )
 		QtGui.QApplication.restoreOverrideCursor()
 
 

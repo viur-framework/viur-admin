@@ -150,7 +150,7 @@ class EditWidget( QtGui.QWidget ):
 		
 	
 	def onBtnCloseReleased(self, *args, **kwargs):
-		event.emit( "popWidget(PyQt_PyObject)", self )
+		event.emit( "popWidget", self )
 
 	def reloadData(self):
 		print("--RELOADING--")
@@ -328,26 +328,6 @@ class EditWidget( QtGui.QWidget ):
 			if value!=None:
 				res[ key ] = value
 		self.preview = Preview( self.modul, res )
-	
-	def onSaveResult(self, request):
-		try:
-			data = NetworkService.decode( request )
-		except:
-			self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditHandler", "There was an error saving your changes") )
-			return
-		if data=="OKAY":
-			if self.modul=="_tasks":
-				self.taskAdded()
-				return
-			else:
-				self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditHandler", "Entry saved")  )
-				if self.closeOnSuccess:
-					event.emit( QtCore.SIGNAL('popWidget(PyQt_PyObject)'), self )
-				else:
-					self.reloadData()
-		else:
-			self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditHandler", "Missing data") )
-			self.setData( data=data )
 	
 	def onSaveSuccess( self, editTaskID ):
 		"""
