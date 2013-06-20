@@ -251,9 +251,22 @@ class RequestGroup( QtCore.QObject ):
 	def onFinished(self, queryWrapper ):
 		self.queryCount -= 1
 		if self.queryCount == 0:
+			print("DONE 1")
+			QtCore.QTimer.singleShot( 25, self.recheckFinished )
+
+	def recheckFinished( self ):
+		"""
+			Delay the emiting of our onFinished signal, as on the local
+			server the requests could finish even before all requests have
+			been queued.
+		"""
+		print("RECHECK")
+		if self.queryCount == 0:
+			print("DONE 2")
 			self.hasFinished = True
 			self.finished.emit( self )
 			self.deleteLater()
+
 	
 	def isIdle(self):
 		"""
