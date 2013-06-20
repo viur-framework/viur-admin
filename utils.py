@@ -320,7 +320,17 @@ class WidgetHandler( QtGui.QTreeWidgetItem ):
 		pass
 	
 	def stackHandler( self ):
+		"""
+			Stacks this handler onto the currently active one.
+		"""
 		self.mainWindow.stackHandler( self )
+	
+	def register( self ):
+		"""
+			Adds this handler as a top-level one
+		"""
+		self.mainWindow.addHandler( self )
+		
 	
 class GroupHandler( QtGui.QTreeWidgetItem ):
 	"""
