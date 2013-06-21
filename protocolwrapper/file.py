@@ -128,7 +128,7 @@ class RecursiveUploader( QtCore.QObject ):
 				"bytesDone": 0 }
 		for fileName in files:
 			if os.path.isdir( fileName.encode(sys.getfilesystemencoding() ) ):
-				r = NetworkService.request( "/%s/list/%s/node" % (self.modul, self.node), successHandler=self.onDirListAvaiable )
+				r = NetworkService.request( "/%s/list/node/%s" % (self.modul, self.node), successHandler=self.onDirListAvaiable )
 				r.uploadDirName = fileName
 				#r.uploadProgress.connect( self.uploadProgress )
 				dirName = fileName.rstrip("/").split("/")[-1]
@@ -260,7 +260,7 @@ class RecursiveUploader( QtCore.QObject ):
 				msg = QtCore.QCoreApplication.translate("FileHandler", "Creating dir %s in %s") % ( dirname, path )
 				self.statsDone["dirs"] += 1
 				self.currentFileSize = self.directorySize
-				request = NetworkService.request("/%s/mkDir"% self.modul, {"rootNode": self.rootNode, "path":path, "dirname":dirname}, finishedHandler=self.doUploadRecursive )
+				request = NetworkService.request("/%s/add/node"% self.modul, {"rootNode": self.rootNode, "path":path, "dirname":dirname}, finishedHandler=self.doUploadRecursive )
 				del cache[ path ]
 				return
 			else:
