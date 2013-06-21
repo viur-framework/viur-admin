@@ -97,7 +97,7 @@ class StringEditBone( QtGui.QWidget ):
 		self.multiple = multiple
 		self.languages = languages
 		self.boneName = boneName
-		if self.languages and self.multiple:
+		if self.languages and self.multiple: #FIXME: Multiple and readOnly...
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
@@ -127,6 +127,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.langEdits = {}
 			for lang in self.languages:
 				edit = QtGui.QLineEdit()
+				edit.setReadOnly( self.readOnly )
 				self.langEdits[ lang ] = edit
 				self.tabWidget.addTab( edit, lang )
 			self.tabWidget.blockSignals(False)
@@ -141,6 +142,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.lineEdit = QtGui.QLineEdit( self )
 			self.layout().addWidget( self.lineEdit )
 			self.lineEdit.show()
+			self.lineEdit.setReadOnly( self.readOnly )
 
 	@staticmethod
 	def fromSkelStructure( modulName, boneName, skelStructure ):
