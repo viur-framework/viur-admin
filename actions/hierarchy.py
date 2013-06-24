@@ -18,7 +18,7 @@ class HierarchyAddAction( QtGui.QAction ):
 	
 	def onTriggered( self ):
 		#config = conf.serverConfig["modules"][ self.parent().modul ]
-		modul = parent.modul
+		modul = self.parent().getModul()
 		node = self.parent().hierarchy.rootNode
 		widget = lambda: EditWidget(modul, EditWidget.appHierarchy, 0, node=node)
 		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add_small.png") )
@@ -40,7 +40,7 @@ class HierarchyEditAction( QtGui.QAction ):
 	def onTriggered( self ):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
-			modul = parent.modul
+			modul = self.parent().getModul()
 			key = item.entryData["id"]
 			widget = lambda: EditWidget( modul, EditWidget.appHierarchy, key )
 			handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png")  )

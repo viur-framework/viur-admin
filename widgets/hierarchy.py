@@ -134,6 +134,9 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		self.rootNode = rootNode
 		self.clear()
 		self.loadData()
+	
+	def getRootNode( self ):
+		return( self.rootNode )
 
 	def onItemExpanded(self, item, *args, **kwargs):
 		"""
@@ -378,3 +381,9 @@ class HierarchyWidget( QtGui.QWidget ):
 		self.request= None
 		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
 		self.ui.webView.show()
+	
+	def getModul( self ):
+		return( self.modul )
+	
+	def getRootNode( self ):
+		return( self.hierarchy.getRootNode() )
