@@ -302,6 +302,7 @@ class TreeListView( QtGui.QListWidget ):
 
 	def loadData( self, queryObj=None ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		print( self.node )
 		protoWrap.queryData( self.node )
 		
 	def onTreeChanged( self, node ):
@@ -457,8 +458,6 @@ class TreeWidget( QtGui.QWidget ):
 		self.ui = Ui_Tree( )
 		self.ui.setupUi( self )
 		self.modul = modul
-		self.rootNode = rootNode
-		self.node = node
 		self.editOnDoubleClick = editOnDoubleClick
 		self.tree = self.treeWidget( modul, rootNode, node )
 		self.ui.listWidgetBox.layout().addWidget( self.tree )
@@ -501,7 +500,7 @@ class TreeWidget( QtGui.QWidget ):
 		protoWrap = protocolWrapperInstanceSelector.select( modul )
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
-		if not self.rootNode and protoWrap.rootNodes:
+		if not rootNode and protoWrap.rootNodes:
 			self.setRootNode( protoWrap.rootNodes[0]["key"], isInitialCall=True )
 		elif rootNode:
 			self.setRootNode( rootNode, isInitialCall=True )
@@ -510,9 +509,6 @@ class TreeWidget( QtGui.QWidget ):
 
 	def onPathChanged( self, path ):
 		self.path = path
-	
-	def onRootNodeChanged( self, rootNode ):
-		self.rootNode = rootNode
 	
 	def onBusyStateChanged( self, busy ):
 		print("Im now: ",busy)
@@ -574,24 +570,19 @@ class TreeWidget( QtGui.QWidget ):
 			@param repoName: Human-readable description of the given rootNode
 			@type repoName: -Currently ignored-
 		"""
-		if rootNode==self.rootNode:
-			return
-		self.rootNode = rootNode
-		self.node = rootNode
 		if isInitialCall:
-			self.rootNodeChanged.emit( self.rootNode )
+			self.rootNodeChanged.emit( rootNode )
 		#self.pathChanged.emit( self.path )
 	
 	def getNode(self):
-		return( self.node )
+		return( self.tree.getNode() )
 	
 	def setNode( self, node, isInitialCall=False ):
-		self.node = node
 		if isInitialCall:
-			self.nodeChanged.emit( self.node )
+			self.nodeChanged.emit( node )
 	
 	def getRootNode( self ):
-		return( self.rootNode )
+		return( self.tree.getRootNode() )
 	
 	def getModul( self ):
 		return( self.modul )
