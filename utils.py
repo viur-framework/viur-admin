@@ -341,7 +341,7 @@ class GroupHandler( QtGui.QTreeWidgetItem ):
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
-		self.focus()
+		pass
 		
 	def contextMenu( self ):
 		"""
