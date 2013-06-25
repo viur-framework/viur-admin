@@ -260,6 +260,9 @@ class RelationalBoneSelector( QtGui.QWidget ):
 	
 	def setFilter( self, filter ):
 		return( self.list.setFilter( filter ) )
+	
+	def getModul( self ):
+		return( self.list.getModul() )
 
 
 def CheckForRelationalicBone(  modulName, boneName, skelStucture ):
