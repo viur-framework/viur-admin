@@ -95,14 +95,7 @@ class RelationalEditBone( QtGui.QWidget ):
 		self.addBtn.released.connect( self.onAddBtnReleased )
 		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
-			self.autoCompletionModel = AutocompletionModel( self.toModul, format, {} ) #FIXME: {} was self.skelStructure
-			self.autoCompleter = QtGui.QCompleter( self.autoCompletionModel )
-			self.autoCompleter.setModel( self.autoCompletionModel )
-			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
-			self.entry.setCompleter( self.autoCompleter )
-			self.entry.textChanged.connect( self.reloadAutocompletion )
-			self.autoCompleter.activated.connect( self.setAutoCompletion )  #Broken...
-			self.autoCompleter.highlighted.connect( self.setAutoCompletion ) 
+			self.installAutoCompletion()
 			self.layout.addWidget( self.entry )
 			icon6 = QtGui.QIcon()
 			icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -127,6 +120,19 @@ class RelationalEditBone( QtGui.QWidget ):
 			format = skelStructure[ boneName ]["format"]
 		return( cls( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
 
+	def installAutoCompletion( self ):
+		"""
+			Installs our autoCompleter on self.entry if possible
+		"""
+		if not self.multiple:
+			self.autoCompletionModel = AutocompletionModel( self.toModul, format, {} ) #FIXME: {} was self.skelStructure
+			self.autoCompleter = QtGui.QCompleter( self.autoCompletionModel )
+			self.autoCompleter.setModel( self.autoCompletionModel )
+			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
+			self.entry.setCompleter( self.autoCompleter )
+			self.entry.textChanged.connect( self.reloadAutocompletion )
+			self.autoCompleter.activated.connect( self.setAutoCompletion )  #Broken...
+			self.autoCompleter.highlighted.connect( self.setAutoCompletion ) 
 
 	def updateVisiblePreview(self):
 		protoWrap = protocolWrapperInstanceSelector.select( self.toModul )

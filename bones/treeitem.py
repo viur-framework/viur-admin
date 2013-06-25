@@ -16,9 +16,18 @@ class TreeItemViewBoneDelegate( RelationalViewBoneDelegate ):
 
 class TreeItemBone( RelationalEditBone ):
 	skelType = "leaf"
+	
 	def onAddBtnReleased(self, *args, **kwargs ):
 		self.editWidget = TreeBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
 		self.editWidget.selectionChanged.connect( self.setSelection )
+	
+	def installAutoCompletion( self ):
+		"""
+			Prevent installing an autoCompletion for this modul (not implementet yet)
+		"""
+		if not self.multiple:
+			self.entry.setReadOnly( True )
+			
 
 class TreeSelectedEntities( SelectedEntitiesWidget ):
 	skelType = "leaf"
