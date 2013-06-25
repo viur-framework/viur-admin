@@ -12,6 +12,7 @@ from collections import OrderedDict
 class TreeWrapper( QtCore.QObject ):
 	maxCacheTime = 60 #Cache results for max. 60 Seconds
 	updateDelay = 1500 #1,5 Seconds gracetime before reloading
+	batchSize = 30 #Fetch 30 entries at once
 	protocolWrapperInstancePriority = 1
 
 	entitiesChanged = QtCore.pyqtSignal( (str,) ) # Node,
@@ -138,6 +139,7 @@ class TreeWrapper( QtCore.QObject ):
 		tmp["node"] = node
 		for skelType in ["node","leaf"]:
 			tmp["skelType"] = skelType
+			tmp["amount"] = self.batchSize
 			r = NetworkService.request( "/%s/list" % self.modul, tmp, successHandler=self.addCacheData )
 			r.wrapperCacheKey = key
 			r.skelType =skelType
@@ -199,6 +201,19 @@ class TreeWrapper( QtCore.QObject ):
 			for skel in data["skellist"]:
 				skel["_type"] = req.skelType
 				self.dataCache[ skel["id"] ] = skel
+			if len(data["skellist"])==self.batchSize: #There might be more results
+				if "cursor" in data.keys() and data["cursor"]: #We have a cursor (we can continue this query)
+					# Fetch the next batch
+					tmp = { k:v for k,v in req.queryArgs.items()}
+					tmp["node"] = req.node
+					tmp["cursor"] = data["cursor"]
+					tmp["skelType"] = req.skelType
+					tmp["amount"] = self.batchSize
+					r = NetworkService.request( "/%s/list" % self.modul, tmp, successHandler=self.addCacheData )
+					r.wrapperCacheKey = req.wrapperCacheKey
+					r.skelType = req.skelType
+					r.node = req.node
+					r.queryArgs = req.queryArgs
 		elif data["action"] == "view":
 			skel = data["values"]
 			skel["_type"] = req.skelType
