@@ -86,7 +86,7 @@ class HierarchyWrapper( QtCore.QObject ):
 	def queryData( self, node, **kwargs ):
 		key = self.cacheKeyFromFilter( node, kwargs )
 		if key in self.dataCache.keys():
-			self.deferedTaskQueue.append( ( "childrenAvailable", key ) )
+			self.deferedTaskQueue.append( ( "childrenAvailable", node ) )
 			QtCore.QTimer.singleShot( 25, self.execDefered )
 			return( key )
 		#Its a cache-miss or cache too old
