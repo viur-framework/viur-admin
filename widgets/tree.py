@@ -398,24 +398,6 @@ class TreeListView( QtGui.QListWidget ):
 		protoWrap.deleteEntities( nodes, leafs )
 		return( True )
 
-	def keyPressEvent( self, e ):
-		"""
-			Catch and handle QKeySequence.Delete.
-		"""
-		if e.matches( QtGui.QKeySequence.Delete ):
-			nodes = []
-			leafs = []
-			for item in self.ui.listWidget.selectedItems():
-				if isinstance( item, NodeItem ):
-					nodes.append( item.entryData["id"] )
-				else:
-					leafs.append( item.entryData["id"] )
-			self.requestDelete( nodes, leafs )		
-		else:
-			super( TreeListView, self ).keyPressEvent( e )
-
-
-
 	def getLeafItemClass( self ):
 		return( self.leafItem )
 		

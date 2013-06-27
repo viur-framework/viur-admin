@@ -21,6 +21,8 @@ class TreeSimpleEditAction( QtGui.QAction ):
 		super( TreeSimpleEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
+		self.setShortcut( QtCore.Qt.Key_Return )
+		self.setShortcutContext( QtCore.Qt.WindowShortcut )
 		self.setEnabled( False )
 
 	def onItemSelectionChanged( self ):
@@ -62,7 +64,7 @@ class TreeMkDirAction( QtGui.QAction ):
 		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( "SHIFT+Ctrl+N" )
-		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
+		self.setShortcutContext( QtCore.Qt.WindowShortcut )
 	
 	def onTriggered( self, e ):
 		(dirName, okay) = QtGui.QInputDialog.getText( self.parent(), QtCore.QCoreApplication.translate("TreeHandler", "Create directory"), QtCore.QCoreApplication.translate("TreeHandler", "Directory name") )
@@ -86,6 +88,8 @@ class TreeSimpleRenameAction( QtGui.QAction ):
 		super( TreeSimpleRenameAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
+		self.setShortcut( "Ctrl+R" )
+		self.setShortcutContext( QtCore.Qt.WindowShortcut )
 		self.setEnabled( False )
 
 	def onItemSelectionChanged( self ):
