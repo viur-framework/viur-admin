@@ -327,7 +327,7 @@ class RecursiveDownloader( QtCore.QObject ):
 	failed = QtCore.pyqtSignal( QtCore.QObject )
 	downloadProgress = QtCore.pyqtSignal( (int,int) )
 
-	def __init__(self, localTargetDir, rootNode, path, files, dirs, modul, *args, **kwargs ):
+	def __init__(self, localTargetDir, files, dirs, modul, *args, **kwargs ):
 		"""
 			@param localTargetDir: Local, existing and absolute destination-path
 			@type localTargetDir: String
@@ -344,53 +344,99 @@ class RecursiveDownloader( QtCore.QObject ):
 		"""
 		super( RecursiveDownloader, self ).__init__( *args, **kwargs )
 		self.localTargetDir = localTargetDir
-		self.rootNode = rootNode
 		self.modul = modul
-		self.recursionInfo = [ (files, dirs, path, localTargetDir) ]
 		self.cancel = False
-		self.doDownloadRecursive()
-	
-	
-	def doDownloadRecursive( self ):
-		if self.cancel or len( self.recursionInfo ) == 0:
-			self.finished.emit( self )
-			return
-		files, dirs,  path, localTargetDir = self.recursionInfo[ -1 ]
-		if not os.path.exists( localTargetDir ):
-			os.mkdir( localTargetDir )
-		if len( files ) > 0:
-			file = files.pop()
-			dlkey = "/file/view/%s/file.dat" % file["dlkey"]
-			self.lastFileInfo = file["name"],localTargetDir
-			request = NetworkService.request( dlkey, parent=self )
+		self.stats = {	"dirsTotal": 0,
+				"dirsDone": 0,
+				"filesTotal": 0,
+				"filesDone": 0,
+				"bytesTotal": 0,
+				"bytesDone": 0 }
+		self.remainingRequests = 0
+		for file in files:
+			self.remainingRequests += 1
+			dlkey = "/%s/download/%s/file.dat" % (self.modul,file["dlkey"])
+			request = NetworkService.request( dlkey, successHandler=self.saveFile, finishedHandler=self.onRequestFinished )
+			request.fname = file["name"]
+			request.fsize = file["size"]
 			request.downloadProgress.connect( self.onDownloadProgress )
-			request.finished.connect( self.saveFile )
-		elif len( dirs ) > 0:
-			dir = dirs.pop()
-			self.lastDirInfo = path, localTargetDir, dir
-			request = NetworkService.request("/%s/list" % self.modul, {"rootNode":self.rootNode, "path":"%s/%s" % (path, dir)}, parent=self )
-			request.finished.connect( self.onDirList )
-		else: # Were done with this recursion
-			self.recursionInfo.pop()
-			self.doDownloadRecursive()
+			self.stats["filesTotal"] += 1
+			self.stats["bytesTotal"] += file["size"]
+		for dir in dirs:
+			assert not "~" in dir["name"] and not ".." in dir["name"]
+			for t in ["node","leaf"]:
+				self.remainingRequests += 1
+				if not os.path.exists( os.path.join( self.localTargetDir, dir["name"] ) ):
+					os.mkdir( os.path.join( self.localTargetDir, dir["name"] ) )
+				request = NetworkService.request( "/%s/list/%s/%s" % (self.modul, t, dir["id"]), successHandler=self.onListDir, finishedHandler=self.onRequestFinished )
+				request.dname = dir["name"]
+				request.ntype = t
+			self.stats["dirsTotal"] += 1
+			self.stats["bytesTotal"] += self.directorySize
+	
+	def onRequestFinished( self, req ):
+		self.remainingRequests -= 1 #Decrease our request counter
+		if self.remainingRequests==0:
+			QtCore.QTimer.singleShot( 100, self.onFinished )
 
-	
-	def onDirList( self, req ):
-		oldPath, oldTargetDir, dirName = self.lastDirInfo
-		data = NetworkService.decode( req )
-		self.recursionInfo.append( (data["entrys"], data["subdirs"], "%s/%s" % (oldPath, dirName), os.path.join(oldTargetDir, dirName) ) )
-		self.doDownloadRecursive()
-	
+	def onFinished( self ):
+		# Delay emiting the finished signal
+		self.finished.emit( self )
+
 	def saveFile( self, req ):
-		name, targetDir = self.lastFileInfo
-		fh = open( os.path.join( targetDir, name), "wb+" )
+		fh = open( os.path.join( self.localTargetDir, req.fname), "wb+" )
 		fh.write( req.readAll().data() )
-		self.doDownloadRecursive()
+		self.stats["filesDone"] += 1
+		self.stats["bytesDone"] += req.fsize
+		self.downloadProgress.emit(0,0)
 
 	def onDownloadProgress(self, bytesDone, bytesTotal ):
 		self.downloadProgress.emit( bytesDone, bytesTotal )
 		#self.ui.pbarTotal.setRange( 0, bytesTotal )
 		#self.ui.pbarTotal.setValue( bytesDone )
+
+	def onListDir( self, req ):
+		data = NetworkService.decode( req )
+		if len( data["skellist"])==0: #Nothing to do here
+			return
+		if req.ntype=="node":
+			self.remainingRequests += 1
+			r = RecursiveDownloader(	os.path.join( self.localTargetDir, req.dname ),
+							[],
+							data["skellist"],
+							self.modul,
+							parent=self )
+			r.downloadProgress.connect( self.downloadProgress )
+			r.finished.connect( self.onRequestFinished )
+		else:
+			self.remainingRequests += 1
+			self.stats["dirsDone"] += 1
+			self.stats["bytesDone"] += self.directorySize
+			r = RecursiveDownloader(	os.path.join( self.localTargetDir, req.dname ),
+							data["skellist"],
+							[],
+							self.modul,
+							parent=self )
+			r.downloadProgress.connect( self.downloadProgress )
+			r.finished.connect( self.onRequestFinished )
+		
+
+	def getStats( self ):
+		stats = {	"dirsTotal": 0,
+				"dirsDone": 0,
+				"filesTotal": 0,
+				"filesDone": 0,
+				"bytesTotal": 0,
+				"bytesDone": 0 }
+		# Merge my stats in
+		for k in stats.keys():
+			stats[ k ] += self.stats[ k ]
+		for child in self.children():
+			if "getStats" in dir( child ):
+				tmp = child.getStats( )
+				for k in stats.keys():
+					stats[ k ] += tmp[ k ]
+		return( stats )
 
 
 class FileWrapper( TreeWrapper ):
@@ -422,7 +468,7 @@ class FileWrapper( TreeWrapper ):
 		#self.connect( uploader, QtCore.SIGNAL("failed(PyQt_PyObject)"), self.onTransferFailed )
 		return( uploader )
 
-	def download( self, targetDir, rootNode, path, files, dirs ):
+	def download( self, targetDir, files, dirs ):
 		"""
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
@@ -436,11 +482,11 @@ class FileWrapper( TreeWrapper ):
 			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
 			@type dirs: List
 		"""
-		downloader = RecursiveDownloader( targetDir, rootNode, path, files, dirs, self.modul )
-		self.transferQueues.append( downloader )
+		downloader = RecursiveDownloader( targetDir, files, dirs, self.modul )
+		#self.transferQueues.append( downloader )
 		#self.ui.boxUpload.addWidget( downloader )
 		self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.delayEmitEntriesChanged )
-		self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
+		#self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
 		return( downloader )
 	
 	#def removeFromTransferQueue( self, obj ):

@@ -127,8 +127,10 @@ class DownloadStatusWidget( QtGui.QWidget ):
 		#self.ui.btnCancel.released.connect( downloader.cancel )
 	
 	def onDownloadProgress(self, bytesDone, bytesTotal ):
-		self.ui.pbarTotal.setRange( 0, bytesTotal )
-		self.ui.pbarTotal.setValue( bytesDone )
+		stats = self.downloader.getStats()
+		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( stats["filesDone"], stats["filesTotal"], stats["dirsDone"], stats["dirsTotal"], stats["bytesDone"], stats["bytesTotal"]) )
+		self.ui.pbarTotal.setRange( 0, stats["filesTotal"] )
+		self.ui.pbarTotal.setValue( stats["filesDone"])
 
 	def onFinished( self, req ):
 		self.deleteLater()
@@ -157,7 +159,7 @@ class FileListView( TreeListView ):
 		#self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
 		#self.connect( uploader, QtCore.SIGNAL("failed(PyQt_PyObject)"), self.onTransferFailed )
 
-	def doDownload( self, targetDir, rootNode, path, files, dirs ):
+	def doDownload( self, targetDir, files, dirs ):
 		"""
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
@@ -172,7 +174,7 @@ class FileListView( TreeListView ):
 			@type dirs: List
 		"""
 		protoWrap = protocolWrapperInstanceSelector.select( self.getModul() )
-		downloader = protoWrap.download( targetDir, rootNode, path, files, dirs )
+		downloader = protoWrap.download( targetDir, files, dirs )
 		self.parent().layout().addWidget( DownloadStatusWidget( downloader ) )
 
 	def dropEvent(self, event):
@@ -210,8 +212,8 @@ class FileWidget( TreeWidget ):
 	def doUpload(self, files, node ):
 		return( self.tree.doUpload( files, node ) )
 
-	def doDownload( self, targetDir, rootNode, path, files, dirs ):
-		return( self.tree.doDownload( targetDir, rootNode, path, files, dirs ) )
+	def doDownload( self, targetDir, files, dirs ):
+		return( self.tree.doDownload( targetDir, files, dirs ) )
 
 
 
