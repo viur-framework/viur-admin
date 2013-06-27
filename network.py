@@ -385,8 +385,8 @@ class NetworkService():
 	def genReqStr( params ):
 		boundary_str = "---"+''.join( [ random.choice(string.ascii_lowercase+string.ascii_uppercase + string.digits) for x in range(13) ] ) 
 		boundary = boundary_str.encode("UTF-8")
-		res = b'Content-Type: multipart/mixed; boundary="'+boundary+b'"\nMIME-Version: 1.0\n'
-		res += b'\n--'+boundary
+		res = b'Content-Type: multipart/mixed; boundary="'+boundary+b'"\r\nMIME-Version: 1.0\r\n'
+		res += b'\r\n--'+boundary
 		for(key, value) in list(params.items()):
 			if all( [x in dir( value ) for x in ["name", "read"] ] ): #File
 				try:
@@ -394,19 +394,19 @@ class NetworkService():
 					type = type or "application/octet-stream"
 				except:
 					type = "application/octet-stream"
-				res += b'\nContent-Type: '+type.encode("UTF-8")+b'\nMIME-Version: 1.0\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"; filename="'+os.path.basename(value.name).decode(sys.getfilesystemencoding()).encode("UTF-8")+b'"\n\n'
+				res += b'\r\nContent-Type: '+type.encode("UTF-8")+b'\r\nMIME-Version: 1.0\r\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"; filename="'+os.path.basename(value.name).decode(sys.getfilesystemencoding()).encode("UTF-8")+b'"\r\n\r\n'
 				res += value.read()
-				res += b'\n--'+boundary
+				res += b'\r\n--'+boundary
 			elif isinstance( value, list ):
 				for val in value:
-					res += b'\nContent-Type: application/octet-stream\nMIME-Version: 1.0\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"\n\n'
+					res += b'\r\nContent-Type: application/octet-stream\r\nMIME-Version: 1.0\r\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"\r\n\r\n'
 					res += str( val ).encode("UTF-8")
-					res += b'\n--'+boundary
+					res += b'\r\n--'+boundary
 			else:
-				res += b'\nContent-Type: application/octet-stream\nMIME-Version: 1.0\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"\n\n'
+				res += b'\r\nContent-Type: application/octet-stream\r\nMIME-Version: 1.0\r\nContent-Disposition: form-data; name="'+key.encode("UTF-8")+b'"\r\n\r\n'
 				res += str( value ).encode("UTF-8")
-				res += b'\n--'+boundary
-		res += b'--\n'
+				res += b'\r\n--'+boundary
+		res += b'--\r\n'
 		return( res, boundary )
 
 	@staticmethod
