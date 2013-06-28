@@ -337,7 +337,7 @@ class EditWidget( QtGui.QWidget ):
 			return
 		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditHandler", "Entry saved")  )
 		if self.closeOnSuccess:
-			event.emit( 'popWidget(PyQt_PyObject)', self )
+			event.emit( 'popWidget', self )
 		else:
 			self.reloadData()
 	
