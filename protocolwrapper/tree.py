@@ -161,6 +161,9 @@ class TreeWrapper( QtCore.QObject ):
 			return( key )
 		r = NetworkService.request( "/%s/view/%s/%s" % (self.modul, skelType, key ), successHandler=self.addCacheData )
 		r.wrapperCacheKey = key
+		r.queryArgs = None
+		r.skelType = skelType
+		r.node = key
 	
 	def execDefered( self, *args, **kwargs ):
 		m, key = self.deferedTaskQueue.pop(0)
