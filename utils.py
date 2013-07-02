@@ -100,7 +100,7 @@ class Overlay(QtGui.QWidget):
 		painter.begin(self)
 		painter.setRenderHint(QtGui.QPainter.Antialiasing)
 		if self.status == self.BUSY:
-			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(255, 255, 255, 128) ) )
 			animIdx= int( (self.counter)%7 )
 			painter.pen().setWidth( 4 )
 			coords = [	(self.width()/2-30,self.height()/2-30), #Top left
