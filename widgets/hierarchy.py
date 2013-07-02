@@ -338,6 +338,8 @@ class HierarchyWidget( QtGui.QWidget ):
 			@type actions: List or None
 		"""
 		self.toolBar.clear()
+		for a in self.actions():
+			self.removeAction( a )
 		if not actions:
 			return
 		for action in actions:
@@ -346,8 +348,15 @@ class HierarchyWidget( QtGui.QWidget ):
 				actionWdg = actionWdg( self )
 				if isinstance( actionWdg, QtGui.QAction ):
 					self.toolBar.addAction( actionWdg )
+					self.addAction( actionWdg )
 				else:
 					self.toolBar.addWidget( actionWdg )
+
+	def getActions( self ):
+		"""
+			Returns a list of the currently activated actions on this widget.
+		"""
+		return( self.actions() )
 
 	def onItemClicked( self, item ):
 		"""

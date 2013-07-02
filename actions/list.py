@@ -15,7 +15,7 @@ class ListAddAction( QtGui.QAction ):
 		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e=None ):
 		if self.parentWidget().list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.parentWidget().list.modul ].keys() :
@@ -38,8 +38,8 @@ class ListEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
-		self.setShortcut( QtCore.Qt.Key_Return )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcut( QtGui.QKeySequence.Open )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
@@ -58,7 +58,7 @@ class ListCloneAction( QtGui.QAction ):
 		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.SaveAs )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e ):
 		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
@@ -77,7 +77,7 @@ class ListDeleteAction( QtGui.QAction ):
 		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 	
 	def onTriggered( self, e=None ):
@@ -159,7 +159,8 @@ class ListPreviewAction( QtGui.QAction ):
 			else: 
 				self.setEnabled( False )
 		self.triggered.connect( self.onTriggered )
-		self.setShortcut( QtGui.QKeySequence.Open )
+		self.setShortcut( QtGui.QKeySequence.Print )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 
 	def onTriggered( self, e ):
 		indexes = self.parentWidget().list.selectionModel().selection().indexes()

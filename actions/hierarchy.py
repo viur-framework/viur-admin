@@ -15,7 +15,7 @@ class HierarchyAddAction( QtGui.QAction ):
 		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self ):
 		#config = conf.serverConfig["modules"][ self.parent().modul ]
@@ -36,8 +36,8 @@ class HierarchyEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
-		self.setShortcut( QtCore.Qt.Key_Return )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcut( QtGui.QKeySequence.Open )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self ):
 		parent = self.parent()
@@ -60,7 +60,7 @@ class HierarchyDeleteAction( QtGui.QAction ):
 		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
-		self.setShortcutContext( QtCore.Qt.WindowShortcut )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 
 	
 	def onTriggered( self ):

@@ -427,8 +427,9 @@ class ListWidget( QtGui.QWidget ):
 			@param actions: List of actionnames
 			@type actions: List or None
 		"""
-		self.actions = actions
 		self.toolBar.clear()
+		for a in self.actions():
+			self.removeAction( a )
 		if not actions:
 			return
 		for action in actions:
@@ -440,6 +441,7 @@ class ListWidget( QtGui.QWidget ):
 					actionWdg = actionWdg( self )
 					if isinstance( actionWdg, QtGui.QAction ):
 						self.toolBar.addAction( actionWdg )
+						self.addAction( actionWdg )
 					else:
 						self.toolBar.addWidget( actionWdg )
 	
@@ -447,7 +449,7 @@ class ListWidget( QtGui.QWidget ):
 		"""
 			Returns a list of the currently activated actions on this list.
 		"""
-		return( self.actions )
+		return( self.actions() )
 
 	def search( self, *args, **kwargs ):
 		"""
