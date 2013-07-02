@@ -42,10 +42,18 @@ class ListEditAction( QtGui.QAction ):
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e ):
-		if len( self.parentWidget().list.selectionModel().selection().indexes() )==0:
+		numAccounts = len( set( [x.row() for x in self.parentWidget().list.selectionModel().selection().indexes() ] ) )
+		if numAccounts==0:
 			return
-		data = self.parentWidget().list.model().getData()[ self.parentWidget().list.selectionModel().selection().indexes()[0].row() ]
-		self.parentWidget().openEditor( data, clone=False )
+		if numAccounts>1:
+			reply = QtGui.QMessageBox.question(	self.parent(),
+								QtCore.QCoreApplication.translate("ListHandler", "Edit multiple Entries"),
+								QtCore.QCoreApplication.translate("ListHandler", "Edit all %s accounts?") % numAccounts,
+								QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No )
+			if reply!=QtGui.QMessageBox.Yes:
+				return
+		for data in self.parent().getSelection():
+			self.parentWidget().openEditor( data, clone=False )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):

@@ -477,6 +477,8 @@ class ListWidget( QtGui.QWidget ):
 			@param clone: Clone the given entry?
 			@type clone: Bool
 		"""
+		myHandler = WidgetHandler.mainWindow.handlerForWidget( self ) #Always stack them as my child
+		assert myHandler is not None
 		if clone:
 			icon = QtGui.QIcon("icons/actions/clone.png")
 			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
@@ -492,8 +494,7 @@ class ListWidget( QtGui.QWidget ):
 		modul = self.list.modul
 		key = item["id"]
 		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, key, clone=clone ), descr, icon )
-		handler.stackHandler()
-		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+		handler.mainWindow.addHandler( handler, myHandler )
 
 	def requestDelete( self, ids ):
 		return( self.list.requestDelete( ids ) )
