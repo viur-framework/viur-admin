@@ -85,10 +85,10 @@ class TreeSimpleRenameAction( QtGui.QAction ):
 		Allow renaming directories
 	"""
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeSimpleRenameAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"), parent )
+		super( TreeSimpleRenameAction, self ).__init__(  QtGui.QIcon("icons/actions/rename_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
-		self.setShortcut( "Ctrl+R" )
+		self.setShortcut( "F2" )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 		self.setEnabled( False )
 
