@@ -495,6 +495,7 @@ class ListWidget( QtGui.QWidget ):
 		key = item["id"]
 		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, key, clone=clone ), descr, icon )
 		handler.mainWindow.addHandler( handler, myHandler )
+		handler.focus()
 
 	def requestDelete( self, ids ):
 		return( self.list.requestDelete( ids ) )
