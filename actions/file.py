@@ -21,7 +21,7 @@ class FileUploadAction( QtGui.QAction ):
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 	
 	def onTriggered( self, e ):
-		files = QtGui.QFileDialog.getOpenFileNames()[0] #PySIDE FIX!!!
+		files = QtGui.QFileDialog.getOpenFileNames()
 		self.parent().doUpload( files, self.parent().getNode() )
 
 	@staticmethod
