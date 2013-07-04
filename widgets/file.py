@@ -76,7 +76,6 @@ class UploadStatusWidget( QtGui.QWidget ):
 		self.uploader.cancelUpload()
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
-		print( "upload progress" )
 		stats = self.uploader.getStats()
 		self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( stats["filesDone"], stats["filesTotal"], stats["dirsDone"], stats["dirsTotal"], stats["bytesDone"], stats["bytesTotal"]) )
 		self.ui.pbarTotal.setRange( 0, stats["filesTotal"] )

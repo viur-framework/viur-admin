@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore
-from network import NetworkService, RequestGroup
+from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from protocolwrapper.tree import TreeWrapper
@@ -37,6 +37,7 @@ class FileUploader( QtCore.QObject ):
 		self.fileName = fileName
 		self.node = node
 		self.isCanceled = False
+		self.hasFinished = False
 		self.cancel.connect( self.onCanceled )
 		self.bytesTotal = len(open( self.fileName.encode(sys.getfilesystemencoding()),  "rb" ).read())
 		self.bytesDone = 0
@@ -57,10 +58,12 @@ class FileUploader( QtCore.QObject ):
 		try:
 			data = NetworkService.decode( req )
 		except:
+			self.hasFinished = True
 			self.failed.emit()
 			#self.emit( QtCore.SIGNAL("failed()") )
 			return
 		self.bytesDone = self.bytesTotal
+		self.hasFinished = True
 		self.succeeded.emit( data )
 		#self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), data )
 	
@@ -99,7 +102,14 @@ class RecursiveUploader( QtCore.QObject ):
 	cancel = QtCore.pyqtSignal(  )
 	
 	def getDirName( self, name ):
-		return( name.rstrip("/").split("/")[-1] )
+		name, head = os.path.split( name )
+		if head:
+			return( head )
+		name, head = os.path.split( name )
+		if head:
+			return( head )
+		else:
+			return( name )
 	
 	def __init__(self, files, node, modul, *args, **kwargs ):
 		"""
@@ -115,44 +125,51 @@ class RecursiveUploader( QtCore.QObject ):
 		super( RecursiveUploader, self ).__init__( *args, **kwargs )
 		self.node = node
 		self.modul = modul
+		self.hasFinished = False
 		filteredFiles = [x for x in files if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ]
 		#self.recursionInfo = [ (  ) ] , [node], {}) ]
 		self.cancel.connect( self.onCanceled )
 		self.isCanceled = False
-		self.remainingRequests = 0
 		self.stats = {	"dirsTotal": 0,
 				"dirsDone": 0,
 				"filesTotal": 0,
 				"filesDone": 0,
 				"bytesTotal": 0,
 				"bytesDone": 0 }
-		for fileName in files:
+		for fileName in filteredFiles:
+			name, fname = os.path.split(fileName)
+			if not fname:
+				name, fname = os.path.split(name)
+			if not conf.cmdLineOpts.noignore and any( [pattern(fname) for pattern in ignorePatterns] ):
+				# We can ignore that file
+				continue
 			if os.path.isdir( fileName.encode(sys.getfilesystemencoding() ) ):
 				r = NetworkService.request( "/%s/list/node/%s" % (self.modul, self.node), successHandler=self.onDirListAvaiable )
 				r.uploadDirName = fileName
-				#r.uploadProgress.connect( self.uploadProgress )
 				dirName = fileName.rstrip("/").split("/")[-1]
 				self.stats["dirsTotal"] += 1
-				self.remainingRequests += 1
 			else:
 				r = FileUploader( fileName, self.node, parent=self )
 				r.uploadProgress.connect( self.uploadProgress )
-				r.succeeded.connect( self.onRequestFinished )
 				self.cancel.connect( r.cancel )
-				self.remainingRequests += 1
-		#for file in files:
-		#	self.addTotalStat( file )
-		
-		#self.ui.pbarTotal.setRange(0, self.statsTotal["bytes"])
-		#self.doUploadRecursive()
+		self.tid = self.startTimer( 150 )
 	
-	def onRequestFinished( self, *args, **kwargs ):
+	def timerEvent( self, e ):
 		"""
-			One of our sub-requests finished, decrease counter
+			Check if we have bussy tasks left
 		"""
-		self.remainingRequests -= 1
-		if self.remainingRequests==0:
+		super( RecursiveUploader, self ).timerEvent( e )
+		busy = False
+		for child in self.children():
+			if isinstance( child, RequestWrapper ) or isinstance( child, RequestGroup ) or isinstance( child, FileUploader ) or isinstance( child, RecursiveUploader ):
+				if not child.hasFinished:
+					busy = True
+					break
+		if not busy:
+			self.hasFinished = True
 			self.finished.emit( self )
+			self.killTimer( self.tid )
+	
 	
 	def getStats( self ):
 		stats = {	"dirsTotal": 0,
@@ -166,7 +183,7 @@ class RecursiveUploader( QtCore.QObject ):
 			stats[ k ] += self.stats[ k ]
 		for child in self.children():
 			if "getStats" in dir( child ):
-				tmp = child.getStats()
+				tmp = child.getStats( )
 				for k in stats.keys():
 					stats[ k ] += tmp[ k ]
 		return( stats )
@@ -181,7 +198,6 @@ class RecursiveUploader( QtCore.QObject ):
 				self.stats["dirsDone"] += 1
 				r = RecursiveUploader( [ os.path.join( req.uploadDirName, x) for x in os.listdir( req.uploadDirName ) ], skel["id"], self.modul, parent=self )
 				r.uploadProgress.connect( self.uploadProgress )
-				r.finished.connect( self.onRequestFinished )
 				self.cancel.connect( r.cancel )
 				return
 		r = NetworkService.request( "/%s/add/" % self.modul, {"node": self.node, "name": self.getDirName( req.uploadDirName ), "skelType":"node"}, secure=True, finishedHandler=self.onMkDir )
@@ -193,127 +209,24 @@ class RecursiveUploader( QtCore.QObject ):
 			return
 		data = NetworkService.decode( req )
 		assert data["action"] == "addSuccess"
+		self.stats["dirsDone"] += 1
 		r = RecursiveUploader( [ os.path.join( req.uploadDirName, x) for x in os.listdir( req.uploadDirName ) ], data["values"]["id"], self.modul, parent=self )		
 		r.uploadProgress.connect( self.uploadProgress )
-		r.finished.connect( self.onRequestFinished )
 		self.cancel.connect( r.cancel )
-		self.stats["dirsDone"] += 1
 		self.uploadProgress.emit( 0,1 )
 	
 	
 	def onCanceled(self, *args, **kwargs ):
 		self.isCanceled = True
 	
-	def addTotalStat( self, file ):
-		if os.path.isdir( file.encode(sys.getfilesystemencoding() ) ):
-			self.statsTotal["dirs"] += 1
-			self.statsTotal["bytes"] += self.directorySize
-			for file in [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/")]:
-				self.addTotalStat( file )
-		else:
-			self.statsTotal["bytes"] += os.stat( file.encode(sys.getfilesystemencoding() ) ).st_size
-			self.statsTotal["files"] += 1
-		
-
-	def addCacheInformation( self, req ):
-		if not self.cancel:
-			files, path, cache = self.recursionInfo[ -1 ]
-			if not path.endswith( "/" ):
-				path += "/"
-			cache[ path ] = NetworkService.decode( req )
-		self.doUploadRecursive()
-	
-	def doUploadRecursive( self, data=None ):
-		"""
-			Uploads a list of Files/Dirs to the Server
-			Should only be called by doUpload to prevent raceconditions in which an
-			Subdirectory may be uploaded before its parent Direcotry has been created.
-		"""
-		self.statsDone["bytes"] += self.currentFileSize
-		self.currentFileSize = 0
-		self.updateStats()
-		if self.cancel or len( self.recursionInfo ) == 0:
-			print("REK UP FINISHED")
-			self.finished.emit( self )
-			#self.emit( QtCore.SIGNAL("finished(PyQt_PyObject)"), self )
-			return
-		files, path, cache = self.recursionInfo[ -1 ]
-		if not path.endswith( "/" ):
-			path += "/"
-		#Upload the next file / create&process the next subdir
-		if len(files)>0:
-			file = files[0]
-		else: #Were done with this level
-			self.recursionInfo.pop() #Remove the last level
-			self.doUploadRecursive()
-			return
-		#Fetch the corresponding directoryentry
-		if not path in cache.keys():
-			NetworkService.request("/file/list", {"rootNode":self.rootNode, "path":path }, finishedHandler=self.addCacheInformation )
-			#self.connect( self.request, QtCore.SIGNAL("finished()"), self.addCacheInformation )
-			return
-		data = cache[ path ]
-		if os.path.isdir( file.encode(sys.getfilesystemencoding() ) ):
-			#Check if the Directory exists on the server
-			dirname = file.rstrip("/").split("/")[-1]
-			if not dirname in data["subdirs"]:
-				msg = QtCore.QCoreApplication.translate("FileHandler", "Creating dir %s in %s") % ( dirname, path )
-				self.statsDone["dirs"] += 1
-				self.currentFileSize = self.directorySize
-				request = NetworkService.request("/%s/add/node"% self.modul, {"rootNode": self.rootNode, "path":path, "dirname":dirname}, finishedHandler=self.doUploadRecursive )
-				del cache[ path ]
-				return
-			else:
-				files.pop(0) #Were done with this element
-				self.recursionInfo.append( ( [(file+"/"+x).replace("//","/") for x in os.listdir(file+"/") if conf.cmdLineOpts.noignore or not any( [pattern(x) for pattern in ignorePatterns] ) ], path+dirname, {}  ) )
-				self.doUploadRecursive()
-				return
-		else: #Looks like a file
-			if file[ file.rfind("/")+1: ] in [ x["name"] for x in data["entrys"]]: #Filename already exists
-				tmp = self.askOverwriteFile(	QtCore.QCoreApplication.translate("FileHandler", "Please confirm"), 
-								QtCore.QCoreApplication.translate("FileHandler", "File %s exists in %s. Overwrite?") % (file[ file.rfind("/")+1: ], path) )
-				if tmp is None: #Dont overwrite
-					files.pop(0) #Were done with this element
-					self.doUploadRecursive()
-					return
-				elif tmp is False: #Abort
-					self.cancel = True
-					self.doUploadRecursive()
-					return
-			self.currentFileSize = os.stat( file.encode(sys.getfilesystemencoding() ) ).st_size
-			self.statsDone["files"] += 1
-			request = FileUploader( file, path, self.rootNode, parent=self )
-			request.uploadProgress.connect( self.onUploadProgress )
-			request.finished.connect( self.doUploadRecursive )
-			request.failed.connect( self.onFailed )
-			files.pop(0) #Were done with this element
 
 	def onFailed( self, *args, **kwargs ):
 		self.failed.emit( self )
-		#self.emit( QtCore.SIGNAL("failed(PyQt_PyObject)"), self )
-		return
 
-	def updateStats(self):
-		return
-		#self.ui.lblProgress.setText( QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % ( self.statsDone["files"], self.statsTotal["files"], self.statsDone["dirs"], self.statsTotal["dirs"], self.statsDone["bytes"], self.statsTotal["bytes"]) )
-		#self.ui.pbarTotal.setValue(self.statsDone["bytes"])
-		#self.ui.pbarFile.setValue( 0 )
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
 		self.uploadProgress.emit( bytesSend, bytesTotal )
-		#self.ui.pbarFile.setRange( 0, bytesTotal )
-		#self.ui.pbarFile.setValue( bytesSend )
 		
-	def askOverwriteFile(self, title, text ):
-		print( title )
-		print( text )
-		return( None )
-		#res = QtGui.QMessageBox.question( self, title, text,  buttons=QtGui.QMessageBox.Yes|QtGui.QMessageBox.No|QtGui.QMessageBox.Cancel )
-		#if res == QtGui.QMessageBox.Yes:
-		#	return(True)
-		#elif res == QtGui.QMessageBox.Cancel:
-		#	return( False )
-		#return( None )
 
 class RecursiveDownloader( QtCore.QObject ):
 	"""
