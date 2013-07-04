@@ -14,6 +14,7 @@ class HierarchyWrapper( QtCore.QObject ):
 	
 	entitiesChanged = QtCore.pyqtSignal( )
 	childrenAvailable = QtCore.pyqtSignal( (object,) ) # A recently queried entity was fetched and is now avaiable
+	entityAvailable = QtCore.pyqtSignal( (object,) ) # We recieved informations about that entry
 	busyStateChanged = QtCore.pyqtSignal( (bool,) ) #If true, im busy right now
 	updatingSucceeded = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal( (str,) ) #Adding/Editing an entry failed due to network/server error
@@ -84,6 +85,9 @@ class HierarchyWrapper( QtCore.QObject ):
 		return( "&".join( [ "%s=%s" % (k,v) for (k,v) in tmpList] ) )
 	
 	def queryData( self, node, **kwargs ):
+		"""
+			Fetches the *children* of that node
+		"""
 		key = self.cacheKeyFromFilter( node, kwargs )
 		if key in self.dataCache.keys():
 			self.deferedTaskQueue.append( ( "childrenAvailable", node ) )
@@ -95,7 +99,17 @@ class HierarchyWrapper( QtCore.QObject ):
 		r.node = node
 		self.checkBusyStatus()
 		return( key )
-	
+		
+	def queryEntry( self, key ):
+		"""
+			Fetches *that* specific entry, not its children
+		"""
+		if key in self.dataCache.keys():
+			QtCore.QTimer.singleShot( 25, lambda *args, **kwargs: self.entityAvailable.emit( self.dataCache[key] ) )
+			return( key )
+		r = NetworkService.request( "/%s/view/%s" % (self.modul, key), successHandler=self.addCacheData )
+		return( key )
+
 	def execDefered( self, *args, **kwargs ):
 		action, node = self.deferedTaskQueue.pop(0)
 		if action == "childrenAvailable":
@@ -114,10 +128,14 @@ class HierarchyWrapper( QtCore.QObject ):
 		cursor = None
 		if "cursor" in data.keys():
 			cursor=data["cursor"]
-		self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
-		for skel in data["skellist"]:
-			self.dataCache[ skel["id"] ] = skel
-		self.childrenAvailable.emit( req.node )
+		if data["action"]=="list":
+			self.dataCache[ req.wrapperCbCacheKey ] = (time(), data["skellist"], cursor)
+			for skel in data["skellist"]:
+				self.dataCache[ skel["id"] ] = skel
+			self.childrenAvailable.emit( req.node )
+		elif data["action"]=="view":
+			self.dataCache[ data["values"]["id"] ] = data[ "values" ]
+			self.entityAvailable.emit( data["values"] )
 		self.checkBusyStatus()
 
 	def childrenForNode( self, node ):

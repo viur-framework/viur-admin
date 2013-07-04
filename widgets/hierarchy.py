@@ -52,9 +52,6 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		
 	"""
 	
-	itemClicked = QtCore.pyqtSignal( (object,) )
-	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
-	
 	def __init__(self, parent, modul, rootNode=None, *args, **kwargs ):
 		"""
 			@param parent: Parent widget.
@@ -84,28 +81,9 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onHierarchyChanged )
 		#self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
 		self.itemExpanded.connect( self.onItemExpanded )
-		#self.connect( event, QtCore.SIGNAL("hierarchyChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onHierarchyChanged )
-		#self.connect( self,  QtCore.SIGNAL("itemClicked(QTreeWidgetItem *,int)"), self.onItemClicked )
-		self.itemClicked.connect( self.onItemClicked )
-		#self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QTreeWidgetItem *,int)"), self.onItemDoubleClicked )
-		self.itemDoubleClicked.connect( self.onItemDoubleClicked )
 		if self.rootNode:
 			self.loadData()
 
-
-
-	def onItemClicked( self, item ):
-		"""
-			A item has been selected. Emit onItemClicked.
-		"""
-		self.itemClicked.emit( item.entryData )
-
-	def onItemDoubleClicked(self, item ):
-		"""
-			A item has been doubleClicked. Emit onItemDoubleClicked.
-		"""
-		self.itemDoubleClicked.emit( item.entryData )
-		
 	def onHierarchyChanged( self ):
 		"""
 			Respond to changed Data - refresh our view
@@ -301,8 +279,11 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 
 
 class HierarchyWidget( QtGui.QWidget ):
-	
-	def __init__(self, modul, repoID=None, actions=None, *args, **kwargs ):
+
+	itemClicked = QtCore.pyqtSignal( (QtGui.QTreeWidgetItem, int) )
+	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QTreeWidgetItem, int) )
+
+	def __init__(self, modul, repoID=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
 		super( HierarchyWidget, self ).__init__( *args, **kwargs )
 		self.ui = Ui_Hierarchy()
 		self.ui.setupUi( self )
@@ -327,8 +308,11 @@ class HierarchyWidget( QtGui.QWidget ):
 		self.setAcceptDrops( True )
 		self.ui.webView.hide()
 		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
-		self.connect( self.hierarchy, QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.onItemClicked )
-		self.connect( self.hierarchy, QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.onItemDoubleClicked )
+		self.hierarchy.itemClicked.connect( self.onItemClicked )
+		self.hierarchy.itemClicked.connect( self.itemClicked )
+		self.hierarchy.itemDoubleClicked.connect( self.itemDoubleClicked )
+		if editOnDoubleClick:
+			self.hierarchy.itemDoubleClicked.connect( self.onItemDoubleClicked )
 
 	def setActions( self, actions ):
 		"""
@@ -358,36 +342,33 @@ class HierarchyWidget( QtGui.QWidget ):
 		"""
 		return( self.actions() )
 
-	def onItemClicked( self, item ):
+	def onItemClicked( self, item, col ):
 		"""
 			A item has been selected. If we have a previewURL -> show it
 		"""
 		config = conf.serverConfig["modules"][ self.modul ]
 		if "previewURL" in config.keys():
-			previewURL = config["previewURL"].replace("{{id}}",item["id"])
+			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])
 			if not previewURL.lower().startswith("http"):
 				previewURL = NetworkService.url.replace("/admin","")+previewURL
 			self.loadPreview( previewURL )
 
-	def onItemDoubleClicked(self, item ):
+	def onItemDoubleClicked(self, item, col ):
 		"""
 			Open a editor for this entry.
 		"""
-		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item["id"] )
-		handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
-		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
+		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"] )
+		handler = utils.WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
+		handler.stackHandler()
 
 	def loadPreview( self, url ):
-		self.request = NetworkService.request( url )
-		self.connect(self.request, QtCore.SIGNAL("finished()"), self.setHTML )
+		NetworkService.request( url, successHandler=self.setHTML )
 	
-	def setHTML( self ):
+	def setHTML( self, req=None ):
 		try: #This request might got canceled meanwhile..
-			html = bytes( self.request.readAll() )
+			html = bytes( req.readAll() )
 		except:
 			return
-		self.request.deleteLater()
-		self.request= None
 		self.ui.webView.setHtml( html.decode("UTF-8"), QtCore.QUrl( NetworkService.url.replace("/admin","") ) )
 		self.ui.webView.show()
 	

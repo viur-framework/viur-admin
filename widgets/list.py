@@ -273,7 +273,6 @@ class ListTableView( QtGui.QTableView ):
 			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select( self.modul, field, self.structureCache )
-			print( delegateFactory )
 			delegate = delegateFactory( self.modul, field, self.structureCache )
 			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )

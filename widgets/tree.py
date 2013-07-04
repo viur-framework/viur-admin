@@ -203,7 +203,6 @@ class TreeListView( QtGui.QListWidget ):
 	
 	@QtCore.pyqtSlot( str )
 	def setNode( self, node, isInitialCall=False ):
-		print("Setting node", node )
 		self.customQueryKey = None
 		self.node = node
 		self.loadData()
