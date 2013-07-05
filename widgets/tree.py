@@ -301,7 +301,6 @@ class TreeListView( QtGui.QListWidget ):
 
 	def loadData( self, queryObj=None ):
 		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
-		print( self.node )
 		protoWrap.queryData( self.node )
 		
 	def onTreeChanged( self, node ):
@@ -419,6 +418,8 @@ class TreeWidget( QtGui.QWidget ):
 	currentItemChanged = QtCore.pyqtSignal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
 	itemSelectionChanged = QtCore.pyqtSignal( )
 	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QListWidgetItem) )
+	
+	lastSeenNode = {} # allow opening the last viewed node again
 
 	def __init__(self, modul, rootNode=None, node=None, actions=None, editOnDoubleClick=False, *args, **kwargs ):
 		"""
@@ -482,17 +483,21 @@ class TreeWidget( QtGui.QWidget ):
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		if not rootNode and protoWrap.rootNodes:
-			self.setRootNode( protoWrap.rootNodes[0]["key"], isInitialCall=True )
-		elif rootNode:
-			self.setRootNode( rootNode, isInitialCall=True )
+			rootNode = protoWrap.rootNodes[0]["key"]
+		if rootNode in self.lastSeenNode.keys():
+			lastSeenNode = self.lastSeenNode[ rootNode ]
+		else:
+			lastSeenNode = None
+		self.setRootNode( rootNode, isInitialCall=True )
 		if node:
 			self.setNode( node, isInitialCall=True )
+		elif lastSeenNode:
+			self.setNode( lastSeenNode, isInitialCall=True )
 
 	def onPathChanged( self, path ):
 		self.path = path
 	
 	def onBusyStateChanged( self, busy ):
-		print("Im now: ",busy)
 		if busy:
 			self.overlay.inform( self.overlay.BUSY )
 		else:
@@ -567,6 +572,7 @@ class TreeWidget( QtGui.QWidget ):
 		return( self.tree.getNode() )
 	
 	def setNode( self, node, isInitialCall=False ):
+		self.lastSeenNode[ self.getRootNode() ] = node
 		if isInitialCall:
 			self.nodeChanged.emit( node )
 	
