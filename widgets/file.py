@@ -206,7 +206,7 @@ class FileWidget( TreeWidget ):
 	treeWidget = FileListView
 	
 	def __init__( self, *args, **kwargs ):
-		super( FileWidget, self ).__init__( actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete"], *args, **kwargs )
+		super( FileWidget, self ).__init__( actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete", "switchview"], *args, **kwargs )
 
 	def doUpload(self, files, node ):
 		return( self.tree.doUpload( files, node ) )

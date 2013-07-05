@@ -146,7 +146,7 @@ class PathListView( QtGui.QListWidget ):
 class TreeListView( QtGui.QListWidget ):
 	
 	gridSizeIcon = (128,128)
-	gridSizeList = (64,64)
+	gridSizeList = (32,32)
 	
 	leafItem = LeafItem
 	nodeItem = NodeItem
@@ -402,6 +402,19 @@ class TreeListView( QtGui.QListWidget ):
 	def getNodeItemClass( self ):
 		return( self.nodeItem )
 
+	def isIconMode( self ):
+		return( self.viewMode()==self.IconMode )
+	
+	def setIconMode( self, iconMode ):
+		if iconMode:
+			self.setViewMode( self.IconMode )
+			self.setGridSize( QtCore.QSize( *self.gridSizeIcon ) )
+			self.setIconSize( QtCore.QSize( *[x-24 for x in self.gridSizeIcon] ) )
+		else:
+			self.setViewMode( self.ListMode )
+			self.setGridSize( QtCore.QSize( *self.gridSizeList ) )
+			self.setIconSize( QtCore.QSize( *[x-8 for x in self.gridSizeList] ) )
+
 class TreeWidget( QtGui.QWidget ):
 	"""
 		Provides an interface for Data structured as a tree on the server.
@@ -474,7 +487,7 @@ class TreeWidget( QtGui.QWidget ):
 		self.toolBar = QtGui.QToolBar( self )
 		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
 		self.ui.boxActions.addWidget( self.toolBar )
-		self.setActions( actions if actions is not None else ["dirup","mkdir","add","edit","clone","preview","delete"] )
+		self.setActions( actions if actions is not None else ["dirup","mkdir","add","edit","clone","preview","delete", "switchview"] )
 
 		self.ui.btnSearch.released.connect( self.onBtnSearchReleased )
 		self.tree.itemDoubleClicked.connect( self.itemDoubleClicked )
@@ -633,4 +646,8 @@ class TreeWidget( QtGui.QWidget ):
 	def showError(self, reqWrapper, error):
 		self.overlay.inform( self.overlay.ERROR, str(error) )
 		
-
+	def isIconMode( self ):
+		return( self.tree.isIconMode() )
+	
+	def setIconMode( self, iconMode ):
+		return( self.tree.setIconMode( iconMode ) )

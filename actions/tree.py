@@ -130,3 +130,22 @@ class TreeDeleteAction( QtGui.QAction ):
 		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="delete")
 		
 actionDelegateSelector.insert( 1, TreeDeleteAction.isSuitableFor, TreeDeleteAction )
+
+class TreeSwitchViewAction( QtGui.QAction ):
+	def __init__(self, parent, *args, **kwargs ):
+		super( TreeSwitchViewAction, self ).__init__(  QtGui.QIcon("icons/actions/switch_list.png"), QtCore.QCoreApplication.translate("TreeHandler", "Switch View"), parent )
+		self.triggered.connect( self.onTriggered )
+		self.setShortcut( "F8" )
+		if not self.parent().isIconMode():
+			self.setIcon( QtGui.QIcon("icons/actions/switch_icon.png") )
+		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
+	
+	def onTriggered( self, e ):
+		self.parent().setIconMode( not self.parent().isIconMode() )
+
+	@staticmethod
+	def isSuitableFor( modul, actionName ):
+		return( (modul == "tree" or modul.startswith("tree.")) and actionName=="switchview")
+		
+actionDelegateSelector.insert( 1, TreeSwitchViewAction.isSuitableFor, TreeSwitchViewAction )
+
