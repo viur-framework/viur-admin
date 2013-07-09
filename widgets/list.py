@@ -384,6 +384,11 @@ class ListWidget( QtGui.QWidget ):
 	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
 	itemActivated = QtCore.pyqtSignal( (object,) )
 	
+	defaultActions = { 	"list": ["add","edit","clone","preview","delete"],
+				"list.order": ["add", "edit", "delete", "markpayed", "marksend", "markcanceled", "downloadbill", "downloaddeliverynote"]
+			
+				}
+	
 	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
 		super( ListWidget, self ).__init__( *args, **kwargs )
 		self.modul = modul
@@ -399,7 +404,14 @@ class ListWidget( QtGui.QWidget ):
 		self.ui.boxActions.addWidget( self.toolBar )
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText( filter["search"] )
-		self.setActions( actions if actions is not None else ["add","edit","clone","preview","delete"] )
+		config = conf.serverConfig["modules"][ modul ]
+		if not actions:
+			handler = config["handler"]
+			if handler in self.defaultActions.keys():
+				actions = self.defaultActions[ handler ]
+		if actions is None: #Still None
+			actions = self.defaultActions[ "list" ]
+		self.setActions( actions )
 		if editOnDoubleClick:
 			self.list.itemDoubleClicked.connect( self.openEditor )
 		self.list.itemClicked.connect( self.itemClicked )
