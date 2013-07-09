@@ -43,6 +43,18 @@ class ListWrapper( QtCore.QObject ):
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit( busy )
+	
+	def execNetworkAction( self, *args, **kwargs ):
+		"""
+			Starts a QNetworkRequest in this context.
+			All arguments are passed directly to NetworkService.request.
+			This function ensures that all childs show the correct bussy-status
+			and refresh their data if this request finishes.
+		"""
+		req = NetworkService.request( *args, parent=self, **kwargs  )
+		req.finished.connect( self.emitEntriesChanged )
+		self.checkBusyStatus()
+		return( req )
 
 	def checkForOurModul( self, modulName ):
 		return( self.modul==modulName )
