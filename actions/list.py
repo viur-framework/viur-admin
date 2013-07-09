@@ -156,7 +156,7 @@ class Preview( QtGui.QWidget ):
 
 class ListPreviewAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListPreviewAction, self ).__init__(  QtGui.QIcon("icons/actions/preview_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
+		super( ListPreviewAction, self ).__init__( QtGui.QIcon("icons/actions/preview_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
 		self.modul = self.parentWidget().list.modul
 		self.widget = None
 		if self.modul in conf.serverConfig["modules"].keys():
