@@ -52,8 +52,8 @@ class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 class FileItemBone( TreeItemBone ):
 	skelType = "leaf"
 	def onAddBtnReleased(self, *args, **kwargs ):
-		self.editWidget = FileBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
-		self.editWidget.selectionChanged.connect( self.setSelection )
+		editWidget = FileBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection, parent=self )
+		editWidget.selectionChanged.connect( self.setSelection )
 
 
 class FileBoneSelector( TreeBoneSelector ):

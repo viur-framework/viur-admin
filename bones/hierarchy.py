@@ -15,8 +15,8 @@ class HierarchyItemViewBoneDelegate( RelationalViewBoneDelegate ):
 class HierarchyItemBone( RelationalEditBone ):
 	
 	def onAddBtnReleased(self, *args, **kwargs ):
-		self.editWidget = HierarchyBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
-		self.editWidget.selectionChanged.connect( self.setSelection )
+		editWidget = HierarchyBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
+		editWidget.selectionChanged.connect( self.setSelection )
 	
 	def installAutoCompletion( self ):
 		"""
@@ -39,6 +39,7 @@ class HierarchyBoneSelector( RelationalBoneSelector ):
 			self.selection.extend( [data] )
 		else:
 			self.selectionChanged.emit( [data] )
+			event.emit( "popWidget", self )
 
 def CheckForHierarchyItemBone(  modulName, boneName, skelStucture ):
 	return( skelStucture[boneName]["type"].startswith("hierarchy.") )

@@ -179,13 +179,11 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.selection = selection[0]
 		else:
 			self.selection = None
-		event.emit( "popWidget", self.editWidget )
-		self.editWidget = None
 		self.updateVisiblePreview()
 	
 	def onAddBtnReleased(self, *args, **kwargs ):
-		self.editWidget = RelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
-		self.editWidget.selectionChanged.connect( self.setSelection )
+		editWidget = RelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
+		editWidget.selectionChanged.connect( self.setSelection )
 
 	def onDelBtnReleased(self, *args, **kwargs ):
 		if self.multiple:
@@ -217,7 +215,7 @@ class RelationalBoneSelector( QtGui.QWidget ):
 	GarbargeTypeName = "RelationalBoneSelector"
 	
 	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs ):
-		QtGui.QWidget.__init__( self, *args, **kwargs )
+		super( RelationalBoneSelector, self ).__init__( *args, **kwargs )
 		self.modulName = modulName
 		self.boneName = boneName
 		self.multiple = multiple
@@ -227,7 +225,7 @@ class RelationalBoneSelector( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
 		self.ui.tableWidget.setLayout( layout )
-		self.list = self.displaySourceWidget( self.modul, editOnDoubleClick=False )
+		self.list = self.displaySourceWidget( self.modul, editOnDoubleClick=False, parent=self )
 		layout.addWidget( self.list )
 		self.list.show()
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
@@ -254,9 +252,11 @@ class RelationalBoneSelector( QtGui.QWidget ):
 			self.selection.extend( [data] )
 		else:
 			self.selectionChanged.emit( [data] )
-		
+			event.emit( "popWidget", self )
+
 	def onBtnSelectReleased(self, *args, **kwargs):
 		self.selectionChanged.emit( self.selection.get() )
+		event.emit( "popWidget", self )
 
 	def onBtnCancelReleased(self, *args,  **kwargs ):
 		event.emit( "popWidget", self )
