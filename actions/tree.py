@@ -142,6 +142,10 @@ class TreeSwitchViewAction( QtGui.QAction ):
 	
 	def onTriggered( self, e ):
 		self.parent().setIconMode( not self.parent().isIconMode() )
+		if not self.parent().isIconMode():
+			self.setIcon( QtGui.QIcon("icons/actions/switch_icon.png") )
+		else:
+			 self.setIcon(  QtGui.QIcon("icons/actions/switch_list.png") )
 
 	@staticmethod
 	def isSuitableFor( modul, actionName ):
