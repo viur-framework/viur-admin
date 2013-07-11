@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Tue Jun 11 11:39:01 2013
+# Created: Thu Jul 11 11:23:56 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -29,23 +29,11 @@ class Ui_relationalSelector(object):
         relationalSelector.resize(857, 612)
         self.verticalLayout = QtGui.QVBoxLayout(relationalSelector)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.editSearch = QtGui.QLineEdit(relationalSelector)
-        self.editSearch.setObjectName(_fromUtf8("editSearch"))
-        self.horizontalLayout.addWidget(self.editSearch)
-        self.btnSearch = QtGui.QPushButton(relationalSelector)
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnSearch.setIcon(icon)
-        self.btnSearch.setObjectName(_fromUtf8("btnSearch"))
-        self.horizontalLayout.addWidget(self.btnSearch)
-        self.verticalLayout.addLayout(self.horizontalLayout)
         self.scrollArea = QtGui.QScrollArea(relationalSelector)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 843, 567))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 843, 598))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -61,17 +49,17 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.btnCancel = QtGui.QPushButton(self.scrollAreaWidgetContents)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnCancel.setIcon(icon1)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnCancel.setIcon(icon)
         self.btnCancel.setObjectName(_fromUtf8("btnCancel"))
         self.horizontalLayout_2.addWidget(self.btnCancel)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
         self.btnSelect = QtGui.QPushButton(self.scrollAreaWidgetContents)
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnSelect.setIcon(icon2)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnSelect.setIcon(icon1)
         self.btnSelect.setObjectName(_fromUtf8("btnSelect"))
         self.horizontalLayout_2.addWidget(self.btnSelect)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
@@ -83,8 +71,6 @@ class Ui_relationalSelector(object):
 
     def retranslateUi(self, relationalSelector):
         relationalSelector.setWindowTitle(_translate("relationalSelector", "Form", None))
-        self.editSearch.setText(_translate("relationalSelector", "Search", None))
-        self.btnSearch.setText(_translate("relationalSelector", "Search", None))
         self.lblSelected.setText(_translate("relationalSelector", "Selected:", None))
         self.btnCancel.setText(_translate("relationalSelector", "Abort", None))
         self.btnSelect.setText(_translate("relationalSelector", "Apply", None))
