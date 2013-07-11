@@ -12,6 +12,7 @@ import bones.string
 import bones.text
 import bones.treedir
 import bones.treeitem
+import bones.boolean
 
 
 
