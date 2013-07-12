@@ -252,6 +252,9 @@ class WidgetHandler( QtGui.QTreeWidgetItem ):
 		if icon is not None:
 			if isinstance( icon, QtGui.QIcon):
 				self.setIcon(0, icon )
+			elif isinstance( icon, str ) and not icon.startswith("/") and not ("..") in icon and not icon.startswith("https://") and not icon.startswith("http://"):
+				if os.path.isfile( os.path.join( os.getcwd(), icon ) ):
+					self.setIcon(0, QtGui.QIcon( os.path.join( os.getcwd(), icon ) ) )
 			elif isinstance( icon, str ):
 				RemoteFile( icon, successHandler=self.loadIconFromRequest )
 		self.vanishOnClose = vanishOnClose
@@ -332,7 +335,7 @@ class WidgetHandler( QtGui.QTreeWidgetItem ):
 		self.mainWindow.addHandler( self )
 		
 	
-class GroupHandler( QtGui.QTreeWidgetItem ):
+class GroupHandler( WidgetHandler ):
 	"""
 		Toplevel widget for one modul-group
 	"""

@@ -342,7 +342,10 @@ class RemoteFile( QtCore.QObject ):
 	def loadFile(self ):
 		dlKey = self.dlKey
 		if not dlKey.lower().startswith("http://") and not dlKey.lower().startswith("https://"):
-			dlKey = "/file/download/%s" % dlKey
+			if dlKey.startswith("/"):
+				dlKey = "%s%s" % (NetworkService.url.replace("/admin",""), dlKey)
+			else:
+				dlKey = "/file/download/%s" % dlKey
 		req = NetworkService.request( dlKey, successHandler=self.onFileAvaiable  )
 
 	def onFileAvaiable( self, request ):

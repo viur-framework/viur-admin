@@ -326,15 +326,7 @@ class MainWindow( QtGui.QMainWindow ):
 			for group in data["configuration"]["modulGroups"]:
 				if not all( [x in group.keys() for x in ["name", "prefix", "icon"] ] ): #Assert that all required properties are there
 					continue
-				groupHandlers[ group["prefix"] ] = GroupHandler( "tl-handler-%s" % group["prefix"] )
-				groupHandlers[ group["prefix"] ].setText(0, group["name"] )
-				groupHandlers[ group["prefix"] ].setText(0, group["name"] )
-				lastDot = group["icon"].rfind(".")
-				smallIcon = group["icon"][ : lastDot ]+"_small"+group["icon"][ lastDot: ]
-				if os.path.isfile( os.path.join( os.getcwd(), smallIcon ) ):
-					groupHandlers[ group["prefix"] ].setIcon( 0, QtGui.QIcon( smallIcon ) )
-				else:
-					groupHandlers[ group["prefix"] ].setIcon( 0, QtGui.QIcon( group["icon"] ) )
+				groupHandlers[ group["prefix"] ] = GroupHandler( None, group["name"], group["icon"] )
 				self.ui.treeWidget.addTopLevelItem( groupHandlers[ group["prefix"] ] )
 		if not "modules" in conf.portal.keys():
 			conf.portal["modules"] = {}
