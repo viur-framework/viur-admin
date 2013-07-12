@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
-from utils import RegisterQueue, formatString, Overlay
+from utils import RegisterQueue, formatString, Overlay, WidgetHandler
 from ui.relationalselectionUI import Ui_relationalSelector
 from widgets.list import ListWidget
+from widgets.edit import EditWidget
 from widgets.selectedEntities import SelectedEntitiesWidget
 from network import NetworkService
 from config import conf
@@ -241,6 +242,31 @@ class RelationalBoneSelector( QtGui.QWidget ):
 		self.ui.btnSelect.clicked.connect( self.onBtnSelectReleased )
 		self.ui.btnCancel.clicked.connect( self.onBtnCancelReleased )
 		event.emit( 'stackWidget', self )
+
+	def getBreadCrumb( self ):
+		protoWrap = protocolWrapperInstanceSelector.select( self.modulName )
+		assert protoWrap is not None
+		#FIXME: Bad hack to get the editWidget we belong to
+		for widget in WidgetHandler.mainWindow.handlerForWidget( self ).widgets:
+			if isinstance( widget, EditWidget ):
+				if (not widget.key) or widget.clone: #We're adding a new entry
+					if widget.skelType=="leaf":
+						skel = protoWrap.addLeafStructure
+					elif widget.skelType=="node":
+						skel = protoWrap.addNodeStructure
+					else:
+						skel = protoWrap.addStructure
+				else:
+					if widget.skelType=="leaf":
+						skel = protoWrap.editLeafStructure
+					elif widget.skelType=="node":
+						skel = protoWrap.editNodeStructure
+					else:
+						skel = protoWrap.editStructure
+		assert skel is not None
+		assert self.boneName in skel.keys()
+		return( QtCore.QCoreApplication.translate("RelationalBoneSelector", "Select %s") % skel[ self.boneName ]["descr"], QtGui.QIcon( "icons/actions/relationalselect.png" ) )
+
 
 	def onSourceItemDoubleClicked(self, item):
 		"""
