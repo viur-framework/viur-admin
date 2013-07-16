@@ -286,11 +286,7 @@ class WidgetHandler( QtGui.QTreeWidgetItem ):
 			self.focus()
 		else:
 			if self.vanishOnClose:
-				#parent = self.parent()
 				self.mainWindow.removeHandler( self )
-				#if parent:
-				#	parent.focus()
-				#event.emit( QtCore.SIGNAL("removeHandler(PyQt_PyObject)"), self )
 			else:
 				self.mainWindow.unfocusHandler( self )
 				self.setIcon( 1, QtGui.QIcon() )

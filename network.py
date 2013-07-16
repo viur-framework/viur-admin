@@ -193,16 +193,12 @@ class RequestWrapper( QtCore.QObject ):
 		if bytesReceived == bytesTotal:
 			self.requestStatus = True
 		self.downloadProgress.emit( self, bytesReceived, bytesTotal )
-		#self.emit( QtCore.SIGNAL("downloadProgress(qint64,qint64)"),  bytesReceived, bytesTotal )
-		#self.emit( QtCore.SIGNAL("downloadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesReceived, bytesTotal )
 	
 	
 	def onUploadProgress(self, bytesSend, bytesTotal ):
 		if bytesSend == bytesTotal:
 			self.requestStatus = True
 		self.uploadProgress.emit( self, bytesSend, bytesTotal )
-		#self.emit( QtCore.SIGNAL("uploadProgress(qint64,qint64)"),  bytesSend, bytesTotal )
-		#self.emit( QtCore.SIGNAL("uploadProgress(PyQt_PyObject,qint64,qint64)"), self, bytesSend, bytesTotal )
 
 	def onFinished(self ):
 		self.hasFinished = True
@@ -219,7 +215,6 @@ class RequestWrapper( QtCore.QObject ):
 		self.finished.emit( self )
 		self.logger.debug("Request finished: %s", str(self) )
 		self.logger.debug("Remaining requests: %s",  len(NetworkService.currentRequests) )
-		#self.request.deleteLater()
 		self.request = None
 		self.successHandler = None
 		self.failureHandler = None
@@ -357,7 +352,6 @@ class RemoteFile( QtCore.QObject ):
 		NetworkService.currentRequests.remove( self )
 		self.successHandler = None
 		self.failureHandler = None
-		#self.deleteLater()
 		
 	
 	def onTimerEvent( self ):
@@ -368,7 +362,6 @@ class RemoteFile( QtCore.QObject ):
 				getattr( s, self.successHandlerName )( self )
 			except e:
 				self.logger.exception( e )
-		#self._delayTimer.deleteLater()
 		self._delayTimer = QtCore.QTimer( self )
 		self._delayTimer.singleShot( 250, self.remove )
 
@@ -454,9 +447,9 @@ class NetworkService():
 		global nam, _isSecureSSL
 		if _isSecureSSL==False: #Warn the user of a potential security risk
 			msgRes = QtGui.QMessageBox.warning(	None, QtCore.QCoreApplication.translate("NetworkService", "Insecure connection"),
-											QtCore.QCoreApplication.translate("Updater", "The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose \"abort\"!"), 
-											QtCore.QCoreApplication.translate("NetworkService", "Continue in unsecure mode"),
-											QtCore.QCoreApplication.translate("NetworkService", "Abort") )
+								QtCore.QCoreApplication.translate("Updater", "The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose \"abort\"!"), 
+								QtCore.QCoreApplication.translate("NetworkService", "Continue in unsecure mode"),
+								QtCore.QCoreApplication.translate("NetworkService", "Abort") )
 			if msgRes==0:
 				_isSecureSSL=None
 			else:

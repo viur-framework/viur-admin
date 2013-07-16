@@ -159,10 +159,8 @@ class Login( QtGui.QMainWindow ):
 		self.accman = None #Reference to our Account-MGR
 		self.helpBrowser = None
 		event.connectWithPriority( 'resetLoginWindow', self.enableForm,  event.lowPriority )
-		#self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
 		event.connectWithPriority( 'accountListChanged', self.loadAccounts,  event.lowPriority )
 		self.ui.cbPortal.currentIndexChanged.connect( self.onCbPortalCurrentIndexChanged )
-		#event.connectWithPriority( "loginSucceeded()", self.onLoginSucceeded, event.highPriority )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
 		self.captchaToken = None
