@@ -48,6 +48,37 @@ mimetypes.init()
 if os.path.exists("mime.types"):
 	mimetypes.types_map.update( mimetypes.read_mime_types("mime.types") )
 
+#Source: http://srinikom.github.io/pyside-docs/PySide/QtNetwork/QNetworkReply.html
+NetworkErrorDescrs = {
+	"ConnectionRefusedError": "The remote server refused the connection (the server is not accepting requests)",
+	"RemoteHostClosedError": "The remote server closed the connection prematurely, before the entire reply was received and processed",
+	"HostNotFoundError": "The remote host name was not found (invalid hostname)",
+	"TimeoutError": "The connection to the remote server timed out",
+	"OperationCanceledError": "The operation was canceled via calls to PySide.QtNetwork.abort() or PySide.QtNetwork.close() before it was finished.",
+	"SslHandshakeFailedError": "The SSL/TLS handshake failed and the encrypted channel could not be established. The PySide.QtNetwork.sslErrors() signal should have been emitted.",
+	"TemporaryNetworkFailureError": "The connection was broken due to disconnection from the network, however the system has initiated roaming to another access point. The request should be resubmitted and will be processed as soon as the connection is re-established.",
+	"ProxyConnectionRefusedError": "The connection to the proxy server was refused (the proxy server is not accepting requests)",
+	"ProxyConnectionClosedError": "The proxy server closed the connection prematurely, before the entire reply was received and processed",
+	"ProxyNotFoundError": "The proxy host name was not found (invalid proxy hostname)",
+	"ProxyTimeoutError": "The connection to the proxy timed out or the proxy did not reply in time to the request sent",
+	"ProxyAuthenticationRequiredError": "The proxy requires authentication in order to honour the request but did not accept any credentials offered (if any)",
+	"ContentAccessDenied": "The access to the remote content was denied (similar to HTTP error 401)",
+	"ContentOperationNotPermittedError": "The operation requested on the remote content is not permitted",
+	"ContentNotFoundError": "The remote content was not found at the server (similar to HTTP error 404)",
+	"AuthenticationRequiredError": "The remote server requires authentication to serve the content but the credentials provided were not accepted (if any)",
+	"ContentReSendError": "The request needed to be sent again, but this failed for example because the upload data could not be read a second time.",
+	"ProtocolUnknownError": "The Network Access API cannot honor the request because the protocol is not known",
+	"ProtocolInvalidOperationError": "The requested operation is invalid for this protocol",
+	"UnknownNetworkError": "An unknown network-related error was detected",
+	"UnknownProxyError": "An unknown proxy-related error was detected",
+	"UnknownContentError": "An unknown error related to the remote content was detected",
+	"ProtocolFailure": "A breakdown in protocol was detected (parsing error, invalid or unexpected responses, etc.)"
+}
+#Match keys of that array with the numeric values suppied by QT
+for k,v in NetworkErrorDescrs.copy().items():
+	NetworkErrorDescrs[ getattr( QNetworkReply, k ) ] = v
+	del NetworkErrorDescrs[ k ]
+
 class SecurityTokenProvider( QObject ):
 	"""
 		Provides an pool of valid securitykeys.
@@ -70,9 +101,6 @@ class SecurityTokenProvider( QObject ):
 		while not self.queue.empty():
 			self.queue.get( False )
 		self.isRequesting = False
-		#self.fetchNext()
-		#req = NetworkService.request("/skey", finishedHandler=self.onSkeyAvailable )
-		#self.connect( self.req, QtCore.SIGNAL("finished()"), self.onSkeyAvailable )
 	
 	def fetchNext( self ):
 		"""
@@ -95,12 +123,14 @@ class SecurityTokenProvider( QObject ):
 			New SKey got avaiable
 		"""
 		self.isRequesting = False
-		if SecurityTokenProvider.errorCount>0:
-			SecurityTokenProvider.errorCount = 0
 		try:
 			skey = NetworkService.decode( request )
 		except:
-			skey = None
+			SecurityTokenProvider.errorCount += 1
+			self.isRequesting = False
+			return
+		if SecurityTokenProvider.errorCount>0:
+			SecurityTokenProvider.errorCount = 0
 		self.isRequesting = False
 		if not skey:
 			return
@@ -136,11 +166,12 @@ class RequestWrapper( QtCore.QObject ):
 	uploadProgress = QtCore.pyqtSignal( (QtCore.QObject,int,int) )
 	downloadProgress = QtCore.pyqtSignal( (QtCore.QObject,int,int) )
 
-	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None ):
+	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None ):
 		super( RequestWrapper, self ).__init__()
 		self.logger = logging.getLogger( "RequestWrapper" )
 		self.logger.debug("New network request: %s", str(self) )
 		self.request = request
+		self.url = url
 		request.setParent( self )
 		self.hasFinished = False
 		if successHandler and "__self__" in dir( successHandler ) and isinstance( successHandler.__self__, QtCore.QObject ):
@@ -178,6 +209,12 @@ class RequestWrapper( QtCore.QObject ):
 		if self.request.error()==self.request.NoError:
 			self.requestSucceeded.emit( self )
 		else:
+			try:
+				errorDescr = NetworkErrorDescrs[ self.request.error() ]
+			except: #Unknown error 
+				errorDescr = None
+			if errorDescr:
+				QtGui.QMessageBox.warning( None, "Networkrequest Failed", "The request to \"%s\" failed with: %s" % (self.url, errorDescr) )
 			self.requestFailed.emit( self, self.request.error() )
 		self.finished.emit( self )
 		self.logger.debug("Request finished: %s", str(self) )
@@ -251,7 +288,6 @@ class RequestGroup( QtCore.QObject ):
 	def onFinished(self, queryWrapper ):
 		self.queryCount -= 1
 		if self.queryCount == 0:
-			print("DONE 1")
 			QtCore.QTimer.singleShot( 25, self.recheckFinished )
 
 	def recheckFinished( self ):
@@ -260,9 +296,7 @@ class RequestGroup( QtCore.QObject ):
 			server the requests could finish even before all requests have
 			been queued.
 		"""
-		print("RECHECK")
 		if self.queryCount == 0:
-			print("DONE 2")
 			self.hasFinished = True
 			self.finished.emit( self )
 			self.deleteLater()
@@ -343,7 +377,10 @@ class RemoteFile( QtCore.QObject ):
 		dlKey = self.dlKey
 		if not dlKey.lower().startswith("http://") and not dlKey.lower().startswith("https://"):
 			if dlKey.startswith("/"):
-				dlKey = "%s%s" % (NetworkService.url.replace("/admin",""), dlKey)
+				url = NetworkService.url
+				if url.endswith("/admin"):
+					url = url[ : -len("/admin") ]
+				dlKey = "%s%s" % (url, dlKey)
 			else:
 				dlKey = "/file/download/%s" % dlKey
 		req = NetworkService.request( dlKey, successHandler=self.onFileAvaiable  )
@@ -447,9 +484,9 @@ class NetworkService():
 			else:
 				print( params )
 				print( type( params ) )
-			return( RequestWrapper( nam.post( req, multipart ), successHandler, failureHandler, finishedHandler, parent ) )
+			return( RequestWrapper( nam.post( req, multipart ), successHandler, failureHandler, finishedHandler, parent, url=url ) )
 		else:
-			return( RequestWrapper( nam.get( req ), successHandler, failureHandler, finishedHandler, parent) )
+			return( RequestWrapper( nam.get( req ), successHandler, failureHandler, finishedHandler, parent, url=url) )
 	
 	@staticmethod
 	def decode( req ):

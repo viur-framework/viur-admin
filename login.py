@@ -42,9 +42,9 @@ class LoginTask( QtCore.QObject ):
 	def onWarmup(self, request=None): #Warmup request has finished
 		self.logger.debug("Checkpoint: onWarmup")
 		if self.isLocalServer:
-			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), secure=True, finishedHandler=self.onAuthMethodKnown )
+			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port, ), finishedHandler=self.onAuthMethodKnown )
 		else:
-			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ), secure=True, finishedHandler=self.onAuthMethodKnown )
+			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ), finishedHandler=self.onAuthMethodKnown )
 	
 	def onAuthMethodKnown(self, request ):
 		self.logger.debug("Checkpoint: onAuthMethodKnown")
