@@ -115,7 +115,10 @@ class RelationalEditBone( QtGui.QWidget ):
 	def fromSkelStructure( cls, modulName, boneName, skelStructure ):
 		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
-		destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		if "modul" in skelStructure[ boneName ].keys():
+			destModul = skelStructure[ boneName ][ "modul" ]
+		else:
+			destModul = skelStructure[ boneName ]["type"].split(".")[1]
 		format= "$(name)"
 		if "format" in skelStructure[ boneName ].keys():
 			format = skelStructure[ boneName ]["format"]
