@@ -76,7 +76,10 @@ NetworkErrorDescrs = {
 }
 #Match keys of that array with the numeric values suppied by QT
 for k,v in NetworkErrorDescrs.copy().items():
-	NetworkErrorDescrs[ getattr( QNetworkReply, k ) ] = v
+	try:
+		NetworkErrorDescrs[ getattr( QNetworkReply, k ) ] = v
+	except:
+		pass #Some errors don't seem to exist on all Platforms (eg. TemporaryNetworkFailureError seems missing on MacOs)
 	del NetworkErrorDescrs[ k ]
 
 class SecurityTokenProvider( QObject ):
