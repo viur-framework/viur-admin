@@ -420,7 +420,7 @@ def formatString( format, skelStructure, data, prefix=None ):
 			prefs the list of languages (in order of preference) for that bone.
 		"""
 		if not isinstance( value, dict ):
-			return( value )
+			return( str(value) )
 		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
 			lang = "%s.%s" % (key,conf.adminConfig["language"]) 
@@ -473,7 +473,7 @@ def formatString( format, skelStructure, data, prefix=None ):
 	if not prefix:
 		for key, bone in skelStructure.items():
 			if "languages" in bone.keys() and bone[ "languages" ]:
-				res = res.replace( "$(%s)" % key, chooseLang( data, bone[ "languages" ], key) )
+				res = res.replace( "$(%s)" % key, str(chooseLang( data, bone[ "languages" ], key) ) )
 	return( res )
 
 def loadIcon( iconFile ):
