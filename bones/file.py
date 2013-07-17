@@ -5,6 +5,7 @@ from widgets.file import FileWidget
 from bones.treeitem import TreeItemBone, TreeBoneSelector
 from priorityqueue import editBoneSelector, viewDelegateSelector
 from network import RemoteFile 
+from utils import formatString
 
 class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 
@@ -37,16 +38,19 @@ class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
 		except:
 			record = None
 		if not record:
-			return
+			return( super( FileViewBoneDelegate, self ).paint( painter, option, index ) )
 		if not record["dlkey"] in self.cache.keys():
 			self.cache[ record["dlkey"] ] = None
 			RemoteFile( record["dlkey"], successHandler=self.setImage )
-			return
+			return( super( FileViewBoneDelegate, self ).paint( painter, option, index ) )
 		elif not self.cache[ record["dlkey"] ]: #Image not loaded yet
-			return
+			return( super( FileViewBoneDelegate, self ).paint( painter, option, index ) )
 		painter.save()
 		painter.drawImage(option.rect, self.cache[ record["dlkey"] ] )
 		painter.restore()
+
+	def displayText(self, value, locale ):
+		return( formatString( self.format, self.structure, value ) )
 
 
 class FileItemBone( TreeItemBone ):
