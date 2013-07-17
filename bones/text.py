@@ -67,6 +67,187 @@ class RawTextEdit(QtGui.QWidget):
 		return( QtCore.QSize( 400, 300 ) )
 		
 
+class DocumentToHtml:
+	"""
+		Helper class which serializes a QDocument to *clean* html.
+		Sadly, the default .toHtml() function produces lots of inline style (ie blue links)
+		which arent appropriate in this case.
+	"""
+
+	def __init__( self ):
+		super( DocumentToHtml, self ).__init__()
+		self.res = ""
+		self.openTags = []
+	
+	def serializeDocument( self, doc ):
+		"""
+			Serializes the given QtDocument to clean html.
+		"""
+		self.res = ""
+		self.openTags = []
+		block = doc.firstBlock()
+		while( block.isValid() ):
+			print( "Processing block %s" % block.blockNumber() )
+			self.processBlock( block, doc )
+			block = block.next()
+		# Close any tag thats still open
+		for t in self.openTags[ : : -1]:
+			self.res += "</%s>" % t[0]
+		return( self.res )
+
+	def processBlock( self, block, document ):
+		"""
+			Processes one Block at a time
+		"""
+		if not self.isTagOpen( "ul" ) and not self.isTagOpen( "ol" ):
+			#Each block<=>paragraph (unless we have a list)
+			alignment = ""
+			if block.blockFormat().alignment() & QtCore.Qt.AlignRight:
+				alignment = "right"
+			elif block.blockFormat().alignment() & QtCore.Qt.AlignHCenter:
+				alignment = "center"
+			if alignment:
+				self.openTag( "p", tagArgs={"align":alignment} )
+			else:
+				self.openTag( "p" )
+		else:
+			self.openTag( "li" )
+		# Check if we need to open a list
+		if block.textList() is not None:
+			# Ensure ul, ol and li made it into the result
+			if block.textList().itemNumber(block)==0:
+				if block.textList().format().style() in [ QtGui.QTextListFormat.ListDisc, QtGui.QTextListFormat.ListCircle, QtGui.QTextListFormat.ListSquare ]:
+					self.openTag( "ul" )
+				else:
+					self.openTag( "ol" )
+				self.openTag( "li" )
+		fragmentIter = block.begin()
+		while( not fragmentIter.atEnd() ):
+			fragment = fragmentIter.fragment()
+			self.processFragment( fragment, block, document )
+			fragmentIter += 1
+		if block.textList() is not None:
+			# Check if we need to close a list
+			if block.textList().itemNumber(block)== block.textList().count()-1: #This was the last one
+				self.closeTag( "li" )
+				self.closeTag( ("ul","ol") )
+		if not self.isTagOpen( "ul" ) and not self.isTagOpen( "ol" ):
+			#Each block<=>paragraph (unless we have a list)
+			self.closeTag( "p" )
+		else:
+			self.closeTag( "li" )
+	
+	
+	def processFragment( self, fragment, block, document ):
+		"""
+			Processes one fragment in block "block" from
+			document "document".
+		"""
+		txtFormat = fragment.charFormat()
+		#Check for hrefs
+		if self.isTagOpen( "a" ) and not txtFormat.anchorHref(): #This a has been closed recently
+			self.closeTag( "a" )
+		elif self.isTagOpen( "a" ) and self.getLastInternalInfo( "a" ) != txtFormat.anchorHref(): #The href has changed
+			self.closeTag( "a" )
+			self.openTag( "a", tagArgs={"href": txtFormat.anchorHref()}, internalInfo=txtFormat.anchorHref() )
+		elif txtFormat.anchorHref():
+			self.openTag( "a", tagArgs={"href": txtFormat.anchorHref()}, internalInfo=txtFormat.anchorHref() )
+		if not self.isTagOpen( "a" ): #Dont apply QTs style to hrefs
+			#Check closing tags
+			#Check for <i>
+			if not txtFormat.fontItalic() and self.isTagOpen( "i" ):
+				self.closeTag("i")
+			#Check for <u>
+			if not txtFormat.fontUnderline() and self.isTagOpen( "u" ):
+				self.closeTag("u")
+			#Check for <strong>
+			if not txtFormat.font().bold() and self.isTagOpen( "strong" ):
+				self.closeTag("strong")
+
+			#Check for opening tags
+			#Check for <i>
+			if txtFormat.fontItalic() and not self.isTagOpen( "i" ):
+				self.openTag( "i" )
+			#Check for <u>
+			if txtFormat.fontUnderline() and not self.isTagOpen( "u" ):
+				self.openTag( "u" )
+			#Check for <strong>
+			if txtFormat.font().bold() and not self.isTagOpen( "strong" ):
+				self.openTag( "strong" )
+			#Check for font color
+			color = txtFormat.foreground().color().toRgb()
+			colorStr = self.colorToHtml( color )
+			if color.red() or color.green() or color.blue(): #It's not black
+				if not self.isTagOpen("font") or self.getLastInternalInfo("font") != colorStr:
+					self.openTag( "font", tagArgs={"color": colorStr}, internalInfo=colorStr )
+			elif self.isTagOpen("font") and self.getLastInternalInfo("font") != colorStr: #Its black and doesn't equal the last open color
+				self.openTag( "font", tagArgs={"color": colorStr}, internalInfo=colorStr )
+		self.res += fragment.text()
+
+	def colorToHtml( self, color ):
+		"""
+			Returns an html-representation of the given QColor
+		"""
+		colorStrRed = hex(color.red())[2:]
+		if len(colorStrRed) == 1:
+			colorStrRed = "0"+colorStrRed
+		colorStrGreen = hex(color.green())[2:]
+		if len(colorStrGreen) == 1:
+			colorStrGreen = "0"+colorStrGreen
+		colorStrBlue = hex(color.blue())[2:]
+		if len(colorStrBlue) == 1:
+			colorStrBlue = "0"+colorStrBlue
+		return( "#%s%s%s" % ( colorStrRed, colorStrGreen, colorStrBlue ) )
+
+	def openTag( self, tag, tagArgs=None, internalInfo=None, hasClosingTag=True ):
+		"""
+			Opens a new tag named tag.
+			args is a string of additional params
+		"""
+		print("open tag %s" % tag )
+		strArgs = ""
+		if tagArgs is not None:
+			strArgs = " ".join( ["%s=\"%s\"" % (k,v) for k,v in tagArgs.items()] )
+		if strArgs:
+			self.res += "<%s %s>" % (tag, strArgs)
+		else:
+			self.res += "<%s>" % tag
+		self.openTags.append( (tag,internalInfo) )
+	
+	def isTagOpen( self, tag ):
+		"""
+			Returns true, if the given html tag is currently opened.
+		"""
+		if isinstance( tag, tuple ):
+			return( any( [ t in [ x[0] for x in self.openTags ] for t in tag ] ) )
+		return( tag in [ x[0] for x in self.openTags ] )
+	
+	def closeTag( self, tag ):
+		"""
+			Recursively closes all tags until we reach tag.
+			"tag" is also closed.
+			If tag is a tuple, it closes the first tag found matching one element in that tuple
+		"""
+		print("Closing %s" % str(tag) )
+		assert self.isTagOpen( tag )
+		deletedTags = 0
+		for t in self.openTags[ : : -1]:
+			deletedTags += 1
+			self.res += "</%s>" % t[0]
+			if (isinstance( tag, str ) and t[0]==tag) or (isinstance( tag, tuple ) and t[0] in tag):
+				break
+		self.openTags = self.openTags[ : -deletedTags ]
+		
+	def getLastInternalInfo( self, tag ):
+		"""
+			Returns the internal information stored with this tag.
+			If this tag is open multiple times, the last one is returned.
+		"""
+		assert self.isTagOpen( tag )
+		for t in self.openTags[ : : -1]:
+			if t[0]==tag:
+				return( t[1] )
+
 
 
 class TextEdit(QtGui.QMainWindow):
@@ -322,13 +503,8 @@ class TextEdit(QtGui.QMainWindow):
 			tb.addAction(self.actionNumberedList)
 
 	def save(self, *args, **kwargs):
-		html = self.ui.textEdit.toHtml()
-		start = html.find(">", html.find("<body") )+1
-		html = html[ start : html.rfind("</body>") ]
-		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
-		#self.saveCallback( html )
+		html = DocumentToHtml().serializeDocument( self.ui.textEdit.document() )
 		self.onDataChanged.emit( html )
-		#self.emit( QtCore.SIGNAL("onDataChanged(PyQt_PyObject)"), html )
 		event.emit( "popWidget", self )
 
 
