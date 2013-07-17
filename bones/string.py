@@ -101,7 +101,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.tabWidgetcurrentChanged.connect( self.onTabCurrentChanged )
+			self.tabWidget.currentChanged.connect( self.onTabCurrentChanged )
 			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
