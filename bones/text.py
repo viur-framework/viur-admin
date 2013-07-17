@@ -260,6 +260,7 @@ class TextEdit(QtGui.QMainWindow):
 		self.serializer = HtmlSerializer( validHtml )
 		self.ui = Ui_textEditWindow()
 		self.ui.setupUi( self )
+		self.linkEditor = None
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
 		self.setupEditActions()
 		self.setupInsertActions()
@@ -287,7 +288,6 @@ class TextEdit(QtGui.QMainWindow):
 		self.actionInsertLink.triggered.connect(self.insertLink)
 		self.ui.textEdit.setHtml( text )
 		#self.saveCallback = saveCallback
-		self.linkEditor = None
 		self.ui.btnSave.released.connect( self.onBtnSaveReleased )
 		#self.ui.textEdit.mousePressEvent = self.on_textEdit_mousePressEvent  # FIXME: !!!
 		#self.ui.textEdit.insertFromMimeData = self.on_textEdit_insertFromMimeData # FIXME: !!!
@@ -304,6 +304,7 @@ class TextEdit(QtGui.QMainWindow):
 	def openLinkEditor(self, fragment):
 		if self.linkEditor:
 			self.linkEditor.deleteLater()
+		
 		self.linkEditor = QtGui.QDockWidget( QtCore.QCoreApplication.translate("DocumentEditBone", "Edit link"), self )
 		self.linkEditor.setAllowedAreas( QtCore.Qt.BottomDockWidgetArea )
 		self.linkEditor.setFeatures( QtGui.QDockWidget.NoDockWidgetFeatures )
@@ -320,6 +321,7 @@ class TextEdit(QtGui.QMainWindow):
 
 
 	def saveLinkEditor(self):
+		self.ui.textEdit.blockSignals( True )
 		href = self.linkEditor.ui.editHref.text()
 		cursor = self.ui.textEdit.textCursor()
 		block = self.ui.textEdit.document().findBlock( self.linkEditor.fragmentPosition )
@@ -351,24 +353,7 @@ class TextEdit(QtGui.QMainWindow):
 			else:
 				linkTxt = "<a href=\"%s\">%s</a>"
 			cursor.insertHtml(  linkTxt % (self.linkEditor.ui.editHref.text(),  cursor.selectedText() ) )
-
-	def onTextEditMousePressEvent(self, event):
-		if self.linkEditor:
-			self.saveLinkEditor()
-		QtGui.QTextEdit.mousePressEvent(self.ui.textEdit, event)
-		if not self.ui.textEdit.anchorAt( event.pos() ):
-			if self.linkEditor:
-				self.linkEditor.deleteLater()
-				self.linkEditor = None
-			return
-		cursor = self.ui.textEdit.textCursor()
-		block = cursor.block()
-		iterator = block.begin()
-		while( not iterator.atEnd() ):
-			fragment = iterator.fragment()
-			if fragment.charFormat().anchorHref():
-				self.openLinkEditor( fragment )
-			iterator += 1
+		self.ui.textEdit.blockSignals( False )
 
 	def getBreadCrumb( self ):
 		return( QtCore.QCoreApplication.translate("TextEditBone", "Text edit"), QtGui.QIcon( QtGui.QPixmap( "icons/actions/text-edit.png" ) ) )
@@ -610,6 +595,25 @@ class TextEdit(QtGui.QMainWindow):
 
 	def cursorPositionChanged(self):
 		self.alignmentChanged(self.ui.textEdit.alignment())
+		cursor = self.ui.textEdit.textCursor()
+		block = cursor.block()
+		iterator = block.begin()
+		while( not iterator.atEnd() ):
+			fragment = iterator.fragment()
+			if fragment.position()+fragment.length() < cursor.position():
+				iterator += 1
+				continue
+			if fragment.charFormat().anchorHref():
+				if self.linkEditor:
+					if self.linkEditor.fragmentPosition == fragment.position(): #The editor for this link is allready open
+						return
+					self.saveLinkEditor()
+				self.openLinkEditor( fragment )
+			elif self.linkEditor:
+				self.saveLinkEditor()
+				self.linkEditor.deleteLater()
+				self.linkEditor = None
+			break
 
 	def clipboardDataChanged(self):
 		if "actionPaste" in dir( self ):
