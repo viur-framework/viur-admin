@@ -3,12 +3,24 @@ QWidget {
 	border:0;
 }
 
+#verticalLayout {
+	layoutLeftMargin:100px;
+}
+
 #centralwidget {
 	background:#f4f4f4;
 }
 
+#widget {
+	border-bottom:1px solid #BE1622;
+}
+
 #logincentralwidget {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #eee);
+}
+
+#stackedWidget {
+	border:1px solid green;
 }
 
 
@@ -120,10 +132,15 @@ QLabel {
 	color:#444;
 }
 
+#iconLbl {
+	font-size:30px;
+	color:#222;
+	height:50px;
+	margin-left:5px;
+}
+
 #modulLbl {
 	font-size:30px;
-    border-left: 1px solid #ddd;
-	border-bottom: 1px solid #ddd;
 	color:#222;
 	height:50px;
 }
@@ -341,12 +358,19 @@ QListWidget:item:selected {
 	Tabellen
 	=======================================	
 	*/
+	
+#tableWidget {
+	border:1px solid orange;
+	left:0;
+}	
 
 QTableView {
 	gridline-color: #ddd;
     background-color: #f7f7f7;
 	alternate-background-color: #eee;
 	selection-background-color: #ccc;	
+	border-left:1px solid red;
+	left:0;
 }
 
 QTableView QAbstractButton {
