@@ -140,7 +140,8 @@ QLabel {
 
 #modulLbl {
 	font-size:30px;
-	color:#222;
+	font-weight:lighter;
+	color:#BE1622;
 	height:50px;
 }
 
