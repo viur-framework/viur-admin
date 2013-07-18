@@ -26,7 +26,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <property name="spacing">
-     <number>20</number>
+     <number>30</number>
     </property>
     <property name="leftMargin">
      <number>15</number>

@@ -21,13 +21,29 @@
     <layout class="QHBoxLayout" name="boxActions"/>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="pathListBox"/>
+    <layout class="QVBoxLayout" name="pathListBox">
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
+      <number>10</number>
+     </property>
+    </layout>
    </item>
    <item>
     <widget class="QWidget" name="verticalLayout_3" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
-      <property name="margin">
+      <property name="leftMargin">
        <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
       </property>
       <item>
        <layout class="QVBoxLayout" name="listWidgetBox"/>

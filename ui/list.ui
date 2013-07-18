@@ -18,7 +18,11 @@
     <number>0</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="boxActions"/>
+    <layout class="QHBoxLayout" name="boxActions">
+     <property name="margin">
+      <number>0</number>
+     </property>
+    </layout>
    </item>
    <item>
     <widget class="QWidget" name="tableWidget" native="true"/>
@@ -40,6 +44,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="searchBTN">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>32</height>
+        </size>
+       </property>
        <property name="text">
         <string>Search</string>
        </property>

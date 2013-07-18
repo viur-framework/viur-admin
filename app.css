@@ -1,6 +1,11 @@
 QScrollArea,
 QWidget {
 	border:0;
+	/*background-color: inherit;  sets background color for every widget */
+}
+
+#Preloader {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #eee);
 }
 
 #verticalLayout {
@@ -135,7 +140,8 @@ QLabel {
 	font-size:30px;
 	color:#222;
 	height:50px;
-	margin-left:5px;
+	margin:0;
+	padding:0;
 }
 
 #modulLbl {
@@ -355,11 +361,60 @@ QListWidget:item:selected {
 
 	/*
  	=======================================
+	Tabs
+	=======================================	
+	*/
+
+	/*To style individual tabs based on their state (:only-one, :first, :last, :middle, :previous-selected, :next-selected, :selected) you can use stylesheet-code similar to this:*/
+
+QTabBar::tab {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ddd, stop: 1 #ccc);
+    border: 1px solid #ccc;
+    border-bottom-color: #C2C7CB;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    padding:6px 7px 7px;
+    margin-left: 4px;
+    margin-bottom:-1px;
+}
+
+QTabBar::tab:!selected {
+     margin-top: 2px; /* make non-selected tabs look smaller */
+ }
+
+QTabBar::tab:selected {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eee, stop: 1 #f7f7f7);
+    border-bottom:1px solid #f7f7f7;
+    z-index: 1000;
+}
+
+QTabWidget::pane {
+	background:#f7f7f7;
+	border:1px solid #ccc;
+	border-bottom: 1px solid #BE1622;
+}
+
+/*
+ QTabBar::close-button {
+     image: url(close.png)
+     subcontrol-position: left;
+ }
+ QTabBar::close-button:hover {
+     image: url(close-hover.png)
+ }*/
+
+	/*
+ 	=======================================
 	Tabellen
 	=======================================	
 	*/
 	
 #tableWidget {
+	margin: 0;
+	padding:0;
+	border:1px solid #ccc;
+    background-color: #f0f0f0;
+   	border-bottom:1px solid #BE1622;
 }	
 
 QTableView {
@@ -368,6 +423,7 @@ QTableView {
 	alternate-background-color: #eee;
 	selection-background-color: #ccc;	
 	left:0;
+	border-bottom:1px solid #ddd;
 }
 
 QTableView QAbstractButton {
