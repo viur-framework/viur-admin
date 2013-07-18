@@ -20,7 +20,6 @@ QWidget {
 }
 
 #stackedWidget {
-	border:1px solid green;
 }
 
 
@@ -360,8 +359,6 @@ QListWidget:item:selected {
 	*/
 	
 #tableWidget {
-	border:1px solid orange;
-	left:0;
 }	
 
 QTableView {
@@ -369,7 +366,6 @@ QTableView {
     background-color: #f7f7f7;
 	alternate-background-color: #eee;
 	selection-background-color: #ccc;	
-	border-left:1px solid red;
 	left:0;
 }
 
