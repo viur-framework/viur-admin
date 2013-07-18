@@ -150,7 +150,7 @@ class HierarchyWrapper( QtCore.QObject ):
 	def add( self, parent, **kwargs ):
 		tmp = {k:v for (k,v) in kwargs.items() }
 		tmp["parent"] = parent
-		req = NetworkService.request("/%s/add/" % ( self.modul ), tmp, secure=True, finishedHandler=self.onSaveResult )
+		req = NetworkService.request("/%s/add/" % ( self.modul ), tmp, secure=(len(kwargs)>0), finishedHandler=self.onSaveResult )
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
