@@ -1,3 +1,7 @@
 *.pyc
 /generate.bat
 /start.bat
+/plugins/hsk
+/ui/*.bak
+/ui/*.bat
+/cacert.pem_

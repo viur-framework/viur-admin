@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'fileDownloadProgress.ui'
+# Form implementation generated from reading ui file 'ui\fileDownloadProgress.ui'
 #
-# Created: Tue Jun 11 11:37:52 2013
-#      by: PyQt4 UI code generator 4.10.1
+# Created: Thu Jul 18 16:20:07 2013
+#      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,22 +12,14 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+    _fromUtf8 = lambda s: s
 
 class Ui_FileDownloadProgress(object):
     def setupUi(self, FileDownloadProgress):
         FileDownloadProgress.setObjectName(_fromUtf8("FileDownloadProgress"))
         FileDownloadProgress.resize(400, 300)
         self.horizontalLayout = QtGui.QHBoxLayout(FileDownloadProgress)
+        self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
@@ -56,8 +48,18 @@ class Ui_FileDownloadProgress(object):
         QtCore.QMetaObject.connectSlotsByName(FileDownloadProgress)
 
     def retranslateUi(self, FileDownloadProgress):
-        FileDownloadProgress.setWindowTitle(_translate("FileDownloadProgress", "Form", None))
-        self.label.setText(_translate("FileDownloadProgress", "ProgressTotal", None))
-        self.lblProgress.setText(_translate("FileDownloadProgress", "Progress", None))
-        self.btnCancel.setText(_translate("FileDownloadProgress", "Cancel", None))
+        FileDownloadProgress.setWindowTitle(QtGui.QApplication.translate("FileDownloadProgress", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("FileDownloadProgress", "ProgressTotal", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblProgress.setText(QtGui.QApplication.translate("FileDownloadProgress", "Progress", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnCancel.setText(QtGui.QApplication.translate("FileDownloadProgress", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    FileDownloadProgress = QtGui.QWidget()
+    ui = Ui_FileDownloadProgress()
+    ui.setupUi(FileDownloadProgress)
+    FileDownloadProgress.show()
+    sys.exit(app.exec_())
 
