@@ -50,7 +50,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/delete_small.png</normaloff>icons/actions/delete_small.png</iconset>
+         <normaloff>icons/actions/cancel_small.png</normaloff>icons/actions/cancel_small.png</iconset>
        </property>
       </widget>
      </item>

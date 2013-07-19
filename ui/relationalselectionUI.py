@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Thu Jul 11 11:23:56 2013
+# Created: Fri Jul 19 12:17:01 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -28,12 +28,13 @@ class Ui_relationalSelector(object):
         relationalSelector.setObjectName(_fromUtf8("relationalSelector"))
         relationalSelector.resize(857, 612)
         self.verticalLayout = QtGui.QVBoxLayout(relationalSelector)
+        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.scrollArea = QtGui.QScrollArea(relationalSelector)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 843, 598))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 855, 610))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -50,7 +51,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.btnCancel = QtGui.QPushButton(self.scrollAreaWidgetContents)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/cancel_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnCancel.setIcon(icon)
         self.btnCancel.setObjectName(_fromUtf8("btnCancel"))
         self.horizontalLayout_2.addWidget(self.btnCancel)
