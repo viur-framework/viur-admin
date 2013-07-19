@@ -8,7 +8,7 @@ from event import event
 class TaskEntryHandler( WidgetHandler ):
 	def __init__( self, widgetFactory,  *args, **kwargs ):
 		name = QtCore.QCoreApplication.translate("tasks", "Tasks")
-		super( TaskEntryHandler, self ).__init__( widgetFactory, icon=loadIcon("icons/modules/tasks.png"), vanishOnClose=False , *args, **kwargs )
+		super( TaskEntryHandler, self ).__init__( widgetFactory, icon=loadIcon("icons/modules/tasks.png"), vanishOnClose=True , *args, **kwargs )
 		self.setText(0,name)
 
 	def getBreadCrumb(self):
