@@ -61,7 +61,7 @@ class MainWindow( QtGui.QMainWindow ):
 		self.logger = logging.getLogger( "MainWindow" )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )
-		self.ui.treeWidget.setColumnWidth(0,269)
+		self.ui.treeWidget.setColumnWidth(0,266)
 		self.ui.treeWidget.setColumnWidth(1,25)
 		event.connectWithPriority( 'loginSucceeded', self.loadConfig, event.lowPriority )
 		#event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler, event.lowestPriority )
