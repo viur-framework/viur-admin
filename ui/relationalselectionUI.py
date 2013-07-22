@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Fri Jul 19 12:17:01 2013
+# Created: Mon Jul 22 11:57:37 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,26 +27,31 @@ class Ui_relationalSelector(object):
     def setupUi(self, relationalSelector):
         relationalSelector.setObjectName(_fromUtf8("relationalSelector"))
         relationalSelector.resize(857, 612)
-        self.verticalLayout = QtGui.QVBoxLayout(relationalSelector)
-        self.verticalLayout.setMargin(0)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(relationalSelector)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.scrollArea = QtGui.QScrollArea(relationalSelector)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 855, 610))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 843, 598))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.tableWidget = QtGui.QWidget(self.scrollAreaWidgetContents)
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
-        self.verticalLayout_2.addWidget(self.tableWidget)
+        self.horizontalLayout.addWidget(self.tableWidget)
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.lblSelected = QtGui.QLabel(self.scrollAreaWidgetContents)
         self.lblSelected.setObjectName(_fromUtf8("lblSelected"))
-        self.verticalLayout_2.addWidget(self.lblSelected)
+        self.verticalLayout.addWidget(self.lblSelected)
         self.listSelected = QtGui.QWidget(self.scrollAreaWidgetContents)
         self.listSelected.setObjectName(_fromUtf8("listSelected"))
-        self.verticalLayout_2.addWidget(self.listSelected)
+        self.verticalLayout.addWidget(self.listSelected)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.btnCancel = QtGui.QPushButton(self.scrollAreaWidgetContents)
@@ -65,7 +70,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.addWidget(self.btnSelect)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-        self.verticalLayout.addWidget(self.scrollArea)
+        self.verticalLayout_3.addWidget(self.scrollArea)
 
         self.retranslateUi(relationalSelector)
         QtCore.QMetaObject.connectSlotsByName(relationalSelector)
