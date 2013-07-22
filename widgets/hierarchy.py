@@ -347,7 +347,7 @@ class HierarchyWidget( QtGui.QWidget ):
 			A item has been selected. If we have a previewURL -> show it
 		"""
 		config = conf.serverConfig["modules"][ self.modul ]
-		if "previewURL" in config.keys():
+		if "previewURL" in config.keys() and config["previewURL"]:
 			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])
 			if not previewURL.lower().startswith("http"):
 				previewURL = NetworkService.url.replace("/admin","")+previewURL
