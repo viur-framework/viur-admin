@@ -100,6 +100,9 @@ conf.cmdLineOpts = options #Store the command-line options
 
 app = QtGui.QApplication(sys.argv)
 
+#Enfoce Plastique GUI Style
+QtGui.QApplication.setStyle( "plastique" )
+
 import plugin
 
 #Load translations
