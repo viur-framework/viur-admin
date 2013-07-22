@@ -9,6 +9,49 @@ from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector
 from math import pow
 
+class WheelEventFilter( QtCore.QObject ):
+	def eventFilter( self, obj, event ):
+		if( event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus ):
+			event.ignore()
+			return( True )
+		return( False )
+whEventFilter = WheelEventFilter()
+
+class FixedQSpinBox( QtGui.QSpinBox ):
+	"""
+		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedQSpinBox, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( whEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedQSpinBox, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedQSpinBox, self ).focusOutEvent( e )
+		
+class FixedQDoubleSpinBox( QtGui.QDoubleSpinBox ):
+	"""
+		Subclass of QDoubleSpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedQDoubleSpinBox, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( whEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedQDoubleSpinBox, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedQDoubleSpinBox, self ).focusOutEvent( e )
+
+
 class NumericViewBoneDelegate( BaseViewBoneDelegate ):
 	def displayText(self, value, locale ):
 		if self.boneName in self.skelStructure.keys() and "precision" in self.skelStructure[ self.boneName ].keys():
@@ -43,10 +86,10 @@ class NumericEditBone( BaseEditBone ):
 
 	def getLineEdit(self):
 		if self.precision:
-			spinBox=QtGui.QDoubleSpinBox( self )
+			spinBox=FixedQDoubleSpinBox( self )
 			spinBox.setDecimals( self.precision )
 		else: #Just ints
-			spinBox=QtGui.QSpinBox( self )
+			spinBox=FixedQSpinBox( self )
 		spinBox.setRange( self.min , self.max)
 		return (spinBox)
 
