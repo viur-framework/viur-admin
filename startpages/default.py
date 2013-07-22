@@ -11,9 +11,11 @@ class DefaultWidget(QtGui.QWidget):
 
 	def __init__(self):
 		super(DefaultWidget, self).__init__()
-		self.layout = QtGui.QVBoxLayout()
-		self.setLayout( self.layout )
-		self.imgLbl = QtGui.QLabel( self )
-		self.imgLbl.setPixmap( QtGui.QPixmap( "icons/viur_splash.png" ) )
-		self.layout.addWidget( self.imgLbl )
+		layout = QtGui.QVBoxLayout()
+		self.setLayout( layout )
+		scrollArea = QtGui.QScrollArea( self )
+		self.layout().addWidget( scrollArea )
+		imgLbl = QtGui.QLabel( scrollArea )
+		imgLbl.setPixmap( QtGui.QPixmap( "icons/viur_splash.png" ) )
+		scrollArea.setWidget( imgLbl )
 
