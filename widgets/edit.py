@@ -101,7 +101,7 @@ class EditWidget( QtGui.QWidget ):
 				self.ui.btnPreview.hide()
 		if modul == "_tasks":
 			self.ui.btnPreview.hide()
-			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditHandler", "Execute") )
+			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditWidget", "Execute") )
 			self.ui.btnSaveContinue.hide()
 			self.ui.btnReset.hide()
 		self.ui.btnReset.released.connect( self.onBtnResetReleased )
@@ -109,6 +109,12 @@ class EditWidget( QtGui.QWidget ):
 		self.ui.btnSaveClose.released.connect( self.onBtnSaveCloseReleased )
 		self.ui.btnPreview.released.connect( self.onBtnPreviewReleased )
 		self.ui.btnClose.released.connect( self.onBtnCloseReleased )
+		if not self.key and not self.clone:
+			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditWidget", "Save and Close") )
+			self.ui.btnSaveContinue.setText( QtCore.QCoreApplication.translate("EditWidget", "Save and New") )
+		else:
+			self.ui.btnSaveClose.setText( QtCore.QCoreApplication.translate("EditWidget", "Save and Close") )
+			self.ui.btnSaveContinue.setText( QtCore.QCoreApplication.translate("EditWidget", "Save and Continue") )
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		protoWrap.updatingSucceeded.connect( self.onSaveSuccess )
 		protoWrap.updatingFailedError.connect(self.onSaveError )
@@ -133,18 +139,18 @@ class EditWidget( QtGui.QWidget ):
 			itemName = ""
 		if self.clone:
 			if itemName:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone: %s") % itemName
+				descr = QtCore.QCoreApplication.translate("EditWidget", "Clone: %s") % itemName
 			else:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Clone entry")
+				descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
 			icon = QtGui.QIcon( "icons/actions/clone.png" )
 		elif self.key or self.applicationType == EditWidget.appSingleton: #Were editing
 			if itemName:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit: %s") % itemName
+				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit: %s") % itemName
 			else:
-				descr = QtCore.QCoreApplication.translate("EditHandler", "Edit entry")
+				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
 			icon = QtGui.QIcon( "icons/actions/edit.png" )
 		else: #Were adding 
-			descr = QtCore.QCoreApplication.translate("EditHandler", "Add entry") #We know that we cant know the name yet
+			descr = QtCore.QCoreApplication.translate("EditWidget", "Add entry") #We know that we cant know the name yet
 			icon = QtGui.QIcon( "icons/actions/add.png" )
 		return( descr, icon )
 		
@@ -185,8 +191,8 @@ class EditWidget( QtGui.QWidget ):
 
 	def onBtnResetReleased( self, *args, **kwargs ):
 		res = QtGui.QMessageBox.question(	self,
-						QtCore.QCoreApplication.translate("EditHandler", "Confirm reset"),
-						QtCore.QCoreApplication.translate("EditHandler", "Discard all unsaved changes?"),
+						QtCore.QCoreApplication.translate("EditWidget", "Confirm reset"),
+						QtCore.QCoreApplication.translate("EditWidget", "Discard all unsaved changes?"),
 						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No
 						)
 		if res == QtGui.QMessageBox.Yes:
@@ -250,7 +256,7 @@ class EditWidget( QtGui.QWidget ):
 			if "params" in bone.keys() and bone["params"] and "category" in bone["params"].keys():
 				tabName = bone["params"]["category"]
 			else:
-				tabName = QtCore.QCoreApplication.translate("EditHandler", "General")
+				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
 			if not tabName in tabs.keys():
 				scrollArea = QtGui.QScrollArea()
 				containerWidget = QtGui.QWidget( scrollArea )
@@ -335,7 +341,7 @@ class EditWidget( QtGui.QWidget ):
 		"""
 		if editTaskID!=self.editTaskID: #Not our task
 			return
-		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditHandler", "Entry saved")  )
+		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditWidget", "Entry saved")  )
 		if self.closeOnSuccess:
 			event.emit( 'popWidget', self )
 		else:
@@ -349,20 +355,20 @@ class EditWidget( QtGui.QWidget ):
 			return
 		self.setData( data=data, ignoreMissing=wasInitial )
 		if not wasInitial:
-			self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditHandler", "Missing data") )
+			self.overlay.inform( self.overlay.MISSING, QtCore.QCoreApplication.translate("EditWidget", "Missing data") )
 		
 	
 	def onSaveError( self, error ):
 		"""
 			Unspecified error on saving/editing
 		"""
-		self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditHandler", "There was an error saving your changes") )
+		self.overlay.inform( self.overlay.ERROR, QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes") )
 		return
 	
 
 	def taskAdded(self):
 		QtGui.QMessageBox.information(	self,
-									QtCore.QCoreApplication.translate("EditHandler", "Task created"), 
-									QtCore.QCoreApplication.translate("EditHandler", "The task was sucessfully created."), 
-									QtCore.QCoreApplication.translate("EditHandler", "Okay") )
+									QtCore.QCoreApplication.translate("EditWidget", "Task created"), 
+									QtCore.QCoreApplication.translate("EditWidget", "The task was sucessfully created."), 
+									QtCore.QCoreApplication.translate("EditWidget", "Okay") )
 		self.parent().deleteLater()
