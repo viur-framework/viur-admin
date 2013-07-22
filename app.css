@@ -147,7 +147,7 @@ QLabel {
 #modulLbl {
 	font-size:30px;
 	font-weight:lighter;
-	color:#BE1622;
+	color:#666;
 	height:50px;
 }
 
@@ -389,9 +389,8 @@ QTabBar::tab:selected {
 }
 
 QTabWidget::pane {
-	background:#f7f7f7;
-	border:1px solid #ccc;
-	border-bottom: 1px solid #BE1622;
+	background:transparent;
+	border:0;
 }
 
 /*
