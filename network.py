@@ -359,12 +359,13 @@ class RemoteFile( QtCore.QObject ):
 	
 	def onTimerEvent( self ):
 		self.logger.debug("Checkpoint: onTimerEvent")
-		s = self.successHandlerSelf()
-		if s:
-			try:
-				getattr( s, self.successHandlerName )( self )
-			except e:
-				self.logger.exception( e )
+		if "successHandlerSelf" in dir( self ):
+			s = self.successHandlerSelf()
+			if s:
+				try:
+					getattr( s, self.successHandlerName )( self )
+				except e:
+					self.logger.exception( e )
 		self._delayTimer = QtCore.QTimer( self )
 		self._delayTimer.singleShot( 250, self.remove )
 
