@@ -22,8 +22,8 @@ class DateEditBone( QtGui.QWidget ):
 		self.boneName = boneName
 		self.layout = QtGui.QHBoxLayout( self ) 
 		
-		self.time = hasDate
-		self.date = hasTime
+		self.time = hasTime
+		self.date = hasDate
 		
 		#builds inputspecific Widgets
 		if (self.time and self.date):#(...skelStructure ...) #date AND time
