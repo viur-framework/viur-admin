@@ -215,7 +215,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/modules/account_small.png</normaloff>icons/modules/account_small.png</iconset>
+            <normaloff>icons/accounts.svg</normaloff>icons/accounts.svg</iconset>
           </property>
          </widget>
         </item>
