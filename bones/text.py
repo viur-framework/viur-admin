@@ -155,8 +155,8 @@ class DocumentToHtml:
 		if txtFormat.objectType() == txtFormat.ImageObject: 
 			#FIXME: Why isnt txtFormat an instance of QtGui.QTextImageFormat in this case?
 			imgSrc = txtFormat.property( txtFormat.ImageName )
-			imgWidth = txtFormat.property( txtFormat.ImageWidth )
-			imgHeight = txtFormat.property( txtFormat.ImageHeight )
+			imgWidth = int( txtFormat.property( txtFormat.ImageWidth ))
+			imgHeight = int(txtFormat.property( txtFormat.ImageHeight ))
 			self.res += "<img src=\"%s\"" % imgSrc
 			if imgWidth!=-2 and imgWidth is not None:
 				self.res += " width=\"%s\"" % imgWidth
@@ -529,7 +529,7 @@ class TextEdit(QtGui.QMainWindow):
 			tb.addAction(self.actionInsertLink)
 			self.actionInsertLink.triggered.connect(self.insertLink)
 		if "img" in self.validHtml["validTags"]:
-			self.actionInsertImage = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Image", self)
+			self.actionInsertImage = QtGui.QAction(QtGui.QIcon(rsrcPath + '/image_add.png'),"&Image", self)
 			tb.addAction(self.actionInsertImage)
 			self.actionInsertImage.triggered.connect(self.insertImage)
 
@@ -539,17 +539,17 @@ class TextEdit(QtGui.QMainWindow):
 			self.addToolBar(tb)
 
 		if "h1" in self.validHtml["validTags"]:
-			self.actionInsertH1 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&H1", self)
+			self.actionInsertH1 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H1", self)
 			tb.addAction(self.actionInsertH1)
 			self.actionInsertH1.triggered.connect(self.insertH1)
 		
 		if "h2" in self.validHtml["validTags"]:
-			self.actionInsertH2 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&H2", self)
+			self.actionInsertH2 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H2", self)
 			tb.addAction(self.actionInsertH2)
 			self.actionInsertH2.triggered.connect(self.insertH2)
 
 		if "h3" in self.validHtml["validTags"]:
-			self.actionInsertH3 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&H3", self)
+			self.actionInsertH3 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H3", self)
 			tb.addAction(self.actionInsertH3)
 			self.actionInsertH3.triggered.connect(self.insertH3)
 
