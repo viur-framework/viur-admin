@@ -348,6 +348,21 @@ class GroupHandler( WidgetHandler ):
 		"""
 		pass
 
+
+class WheelEventFilter( QtCore.QObject ):
+	"""
+		Prevent MouseWheelActions if the widget has no focus.
+		This fixes accidential changing values in editWidget while scrolling.
+	"""
+	def eventFilter( self, obj, event ):
+		if( event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus ):
+			event.ignore()
+			return( True )
+		return( False )
+wheelEventFilter = WheelEventFilter()
+
+
+
 def urlForItem( modul, item ):
 	"""
 		Returns a QUrl for the given item.

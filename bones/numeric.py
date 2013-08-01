@@ -7,15 +7,9 @@ from event import event
 from bones.base import BaseEditBone
 from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector
+from utils import wheelEventFilter
 from math import pow
 
-class WheelEventFilter( QtCore.QObject ):
-	def eventFilter( self, obj, event ):
-		if( event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus ):
-			event.ignore()
-			return( True )
-		return( False )
-whEventFilter = WheelEventFilter()
 
 class FixedQSpinBox( QtGui.QSpinBox ):
 	"""
@@ -24,7 +18,7 @@ class FixedQSpinBox( QtGui.QSpinBox ):
 	def __init__( self, *args, **kwargs ):
 		super( FixedQSpinBox, self ).__init__( *args, **kwargs )
 		self.setFocusPolicy( QtCore.Qt.StrongFocus )
-		self.installEventFilter( whEventFilter )
+		self.installEventFilter( wheelEventFilter )
 	
 	def focusInEvent( self, e ):
 		self.setFocusPolicy( QtCore.Qt.WheelFocus )
@@ -41,7 +35,7 @@ class FixedQDoubleSpinBox( QtGui.QDoubleSpinBox ):
 	def __init__( self, *args, **kwargs ):
 		super( FixedQDoubleSpinBox, self ).__init__( *args, **kwargs )
 		self.setFocusPolicy( QtCore.Qt.StrongFocus )
-		self.installEventFilter( whEventFilter )
+		self.installEventFilter( wheelEventFilter )
 	
 	def focusInEvent( self, e ):
 		self.setFocusPolicy( QtCore.Qt.WheelFocus )
