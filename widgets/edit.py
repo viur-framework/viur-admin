@@ -26,15 +26,14 @@ class Preview( QtGui.QWidget ):
 		self.show()
 	
 	def loadURL( self ):
+		NetworkService.request( "%s/%s/preview" % (NetworkService.url.replace("/admin",""), self.modul ), self.data, secure=True, successHandler=self.setHTML )
+	
+	def setHTML( self, req ):
 		try:
-			res = NetworkService.request( "%s/%s/preview" % (NetworkService.url.replace("/admin",""), self.modul ), self.data, secure=True )
-			res = res.decode("UTF-8")
+			res = req.readAll().data().decode("UTF-8")
 		except:
 			res = QtCore.QCoreApplication.translate("Preview", "Preview not possible")
-		self.setHTML( res )
-	
-	def setHTML( self, html ):
-		self.ui.webView.setHtml( html, QtCore.QUrl( "%s/%s/preview" % (NetworkService.url.replace("/admin",""), self.modul ) ) )
+		self.ui.webView.setHtml( res, QtCore.QUrl( "%s/%s/preview" % (NetworkService.url.replace("/admin",""), self.modul ) ) )
 		
 	def onBtnReloadReleased(self, *args, **kwargs):
 		self.loadURL()
@@ -330,9 +329,7 @@ class EditWidget( QtGui.QWidget ):
 	def onBtnPreviewReleased( self, *args, **kwargs ):
 		res = {}
 		for key, bone in self.bones.items():
-			value = bone.serialize()
-			if value!=None:
-				res[ key ] = value
+			res.update( bone.serializeForPost() )
 		self.preview = Preview( self.modul, res )
 	
 	def onSaveSuccess( self, editTaskID ):
