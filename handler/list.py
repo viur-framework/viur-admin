@@ -27,7 +27,7 @@ class PredefinedViewHandler( WidgetHandler ): #EntryHandler
 			else:
 				icon = loadIcon( myview["icon"] )
 		else:
-			icon = loadIcon( None )
+			icon = loadIcon( "icons/modules/list.svg" )
 		super( PredefinedViewHandler, self ).__init__( widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs )
 		self.viewName = viewName
 		self.setText( 0, myview["name"] )
@@ -53,7 +53,7 @@ class ListCoreHandler( WidgetHandler ): #EntryHandler
 			else:
 				icon = loadIcon( config["icon"] )
 		else:
-			icon = loadIcon( None )
+			icon = loadIcon( "icons/modules/list.svg" )
 		super( ListCoreHandler, self ).__init__( widgetGen, descr=config["name"], icon=icon, vanishOnClose=False, *args, **kwargs )
 		if "views" in config.keys():
 			for view in config["views"]:

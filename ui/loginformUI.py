@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'loginform.ui'
 #
-# Created: Tue Jun 11 11:38:37 2013
+# Created: Thu Aug  1 16:08:04 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -104,7 +104,7 @@ class Ui_LoginWindow(object):
         self.startAccManagerBTN = QtGui.QPushButton(self.logincentralwidget)
         self.startAccManagerBTN.setMinimumSize(QtCore.QSize(0, 32))
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/modules/accounts.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/accounts.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.startAccManagerBTN.setIcon(icon1)
         self.startAccManagerBTN.setObjectName(_fromUtf8("startAccManagerBTN"))
         self.horizontalLayout.addWidget(self.startAccManagerBTN)
@@ -131,7 +131,7 @@ class Ui_LoginWindow(object):
         self.btnLogin.setMinimumSize(QtCore.QSize(0, 64))
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/login_white.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/login.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnLogin.setIcon(icon2)
         self.btnLogin.setObjectName(_fromUtf8("btnLogin"))
         self.verticalLayout_2.addWidget(self.btnLogin)

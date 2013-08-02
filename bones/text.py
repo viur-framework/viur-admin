@@ -10,6 +10,8 @@ import html.parser
 from ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
 from priorityqueue import editBoneSelector, viewDelegateSelector
+from bones.file import FileBoneSelector
+from network import RemoteFile
 
 rsrcPath = "icons/actions/text"
 
@@ -73,6 +75,11 @@ class DocumentToHtml:
 		Sadly, the default .toHtml() function produces lots of inline style (ie blue links)
 		which arent appropriate in this case.
 	"""
+	
+	headingMap = {	87: 1, #Font-weight of 700 (87) is a H1
+			75: 2,
+			62: 3
+			}
 
 	def __init__( self ):
 		super( DocumentToHtml, self ).__init__()
@@ -143,7 +150,32 @@ class DocumentToHtml:
 			Processes one fragment in block "block" from
 			document "document".
 		"""
+		print("ProcessFragment")
 		txtFormat = fragment.charFormat()
+		if txtFormat.objectType() == txtFormat.ImageObject: 
+			#FIXME: Why isnt txtFormat an instance of QtGui.QTextImageFormat in this case?
+			imgSrc = txtFormat.property( txtFormat.ImageName )
+			imgWidth = int( txtFormat.property( txtFormat.ImageWidth ))
+			imgHeight = int(txtFormat.property( txtFormat.ImageHeight ))
+			self.res += "<img src=\"%s\"" % imgSrc
+			if imgWidth!=-2 and imgWidth is not None:
+				self.res += " width=\"%s\"" % imgWidth
+			if imgHeight!=-2 and imgHeight is not None:
+				self.res += " height=\"%s\"" % imgHeight
+			self.res += " />"
+			return
+		elif txtFormat.objectType() == txtFormat.TableObject: #txtFormat.isTableFormat():
+			txtFormat = txtFormat.toTableFormat()
+			self.res += "<table>"
+			for row in range(0, txtFormat.rows()):
+				self.res += "<tr>"
+				for col in range(0, txtFormat.columns()):
+					cell = txtFormat.cellAt( row, col )
+					# Prevent messing up row/col spans
+					if cell.row() != row or cell.column() != col:
+						continue
+					self.res += "<td>"
+			print( "TABLE" )
 		#Check for hrefs
 		if self.isTagOpen( "a" ) and not txtFormat.anchorHref(): #This a has been closed recently
 			self.closeTag( "a" )
@@ -163,25 +195,29 @@ class DocumentToHtml:
 			#Check for <strong>
 			if not txtFormat.font().bold() and self.isTagOpen( "strong" ):
 				self.closeTag("strong")
-
+			if txtFormat.fontWeight() in self.headingMap.keys() and self.isTagOpen( ("h1","h2","h3") ):
+				self.closeTag( ("h1","h2","h3") )
 			#Check for opening tags
 			#Check for <i>
-			if txtFormat.fontItalic() and not self.isTagOpen( "i" ):
-				self.openTag( "i" )
-			#Check for <u>
-			if txtFormat.fontUnderline() and not self.isTagOpen( "u" ):
-				self.openTag( "u" )
-			#Check for <strong>
-			if txtFormat.font().bold() and not self.isTagOpen( "strong" ):
-				self.openTag( "strong" )
-			#Check for font color
-			color = txtFormat.foreground().color().toRgb()
-			colorStr = self.colorToHtml( color )
-			if color.red() or color.green() or color.blue(): #It's not black
-				if not self.isTagOpen("font") or self.getLastInternalInfo("font") != colorStr:
+			if txtFormat.fontWeight() in self.headingMap.keys():
+				self.openTag( "h%s" % self.headingMap[ txtFormat.fontWeight() ] )
+			else:
+				if txtFormat.fontItalic() and not self.isTagOpen( "i" ):
+					self.openTag( "i" )
+				#Check for <u>
+				if txtFormat.fontUnderline() and not self.isTagOpen( "u" ):
+					self.openTag( "u" )
+				#Check for <strong>
+				if txtFormat.font().bold() and not self.isTagOpen( "strong" ):
+					self.openTag( "strong" )
+				#Check for font color
+				color = txtFormat.foreground().color().toRgb()
+				colorStr = self.colorToHtml( color )
+				if color.red() or color.green() or color.blue(): #It's not black
+					if not self.isTagOpen("font") or self.getLastInternalInfo("font") != colorStr:
+						self.openTag( "font", tagArgs={"color": colorStr}, internalInfo=colorStr )
+				elif self.isTagOpen("font") and self.getLastInternalInfo("font") != colorStr: #Its black and doesn't equal the last open color
 					self.openTag( "font", tagArgs={"color": colorStr}, internalInfo=colorStr )
-			elif self.isTagOpen("font") and self.getLastInternalInfo("font") != colorStr: #Its black and doesn't equal the last open color
-				self.openTag( "font", tagArgs={"color": colorStr}, internalInfo=colorStr )
 		self.res += fragment.text()
 
 	def colorToHtml( self, color ):
@@ -249,6 +285,97 @@ class DocumentToHtml:
 				return( t[1] )
 
 
+class ExtendedTextEdit( QtGui.QTextEdit ):
+	
+	def __init__( self, *args, **kwargs ):
+		super( ExtendedTextEdit, self ).__init__( *args, **kwargs )
+		self.ressourceMapCache = {}
+		self._dragData=None
+		self.document().setDefaultStyleSheet( "h1 { color: green; font-weight: 700 } h2 { color: red; font-weight: 600 } h3 { color: blue; font-weight: 500 }" )
+	
+	def loadResource( self, rType, name ):
+		if rType==QtGui.QTextDocument.ImageResource:
+			name = name.path()
+			if name.startswith("/file/download/"):
+				name = name[ len("/file/download/"): ]
+			if name in self.ressourceMapCache.keys():
+				if self.ressourceMapCache[ name ] is not None:
+					return( QtGui.QImage( self.ressourceMapCache[ name ]["filename"] ) )
+			else:
+				RemoteFile( name, self.onFileAvaiable )
+				self.ressourceMapCache[ name ] = None
+		return( None )
+
+	def onFileAvaiable( self, rFile ):
+		size = None
+		pic = QtGui.QPixmap( rFile.getFileName() )
+		size = pic.width(), pic.height()
+		self.ressourceMapCache[ rFile.dlKey ] = {	"filename": rFile.getFileName(),
+								"size": size 
+								}
+		self.document().markContentsDirty(0,len( self.document().toPlainText() ) )
+		#self.markContentsDirty( 0, len( self.getText() ) )
+	
+	def mousePressEvent( self, e ):
+		"""
+			Allow resizing inline Images using drag&drop
+			Record the start of a potential drag&drop operation
+		"""
+		cursor = self.cursorForPosition( e.pos() )
+		txtFormat = cursor.charFormat()
+		if txtFormat.objectType() == txtFormat.ImageObject:
+			self._dragData = e.x(), e.y()
+		super( ExtendedTextEdit, self ).mousePressEvent( e )
+	
+	def mouseMoveEvent( self, e ):
+		"""
+			Allow resizing inline Images using drag&drop
+			Do the actual work and resize the image
+		"""
+		if self._dragData:
+			dx = e.x()-self._dragData[0]
+			dy = e.y()-self._dragData[1]
+			self._dragData = e.x(), e.y()
+			currentBlock = self.textCursor().block()
+			it = currentBlock.begin()
+			while not it.atEnd():
+				fragment = it.fragment()
+				if fragment.isValid():
+					if fragment.charFormat().isImageFormat():
+						newImageFormat = fragment.charFormat().toImageFormat()
+						fname = newImageFormat.name()
+						if fname.startswith("/file/download/"):
+							fname = fname[ len("/file/download/"): ]
+						if fname in self.ressourceMapCache.keys() and self.ressourceMapCache[ fname ]["size"] is not None:
+							ratio = float(self.ressourceMapCache[ fname ]["size"][0]) / float(self.ressourceMapCache[ fname ]["size"][1])
+							newX = max(50,newImageFormat.width()+dx)
+							newY = max(50,newImageFormat.height()+dy)
+							newX = min( newX, newY*ratio)
+							newY = newX/ratio
+							newImageFormat.setWidth( newX )
+							newImageFormat.setHeight( newY )
+						else:
+							newImageFormat.setWidth( max(50,newImageFormat.width()+dx) )
+							newImageFormat.setHeight( max(50,newImageFormat.height()+dy) )
+						if newImageFormat.isValid():
+							helper = self.textCursor()
+							helper.setPosition(fragment.position())
+							helper.setPosition(fragment.position() + fragment.length(), helper.KeepAnchor)
+							helper.setCharFormat(newImageFormat)
+				it += 1
+		super( ExtendedTextEdit, self ).mouseMoveEvent( e )
+	
+	def mouseReleaseEvent( self, e ):
+		"""
+			Allow resizing inline Images using drag&drop
+			Destroy our recording of the potential start-drag position.
+		"""
+		self._dragData = None
+		super( ExtendedTextEdit, self ).mouseReleaseEvent( e )
+		
+
+class ExtObj( object ):
+	pass
 
 class TextEdit(QtGui.QMainWindow):
 	
@@ -258,8 +385,15 @@ class TextEdit(QtGui.QMainWindow):
 		super(TextEdit, self).__init__(parent)
 		self.validHtml = validHtml
 		self.serializer = HtmlSerializer( validHtml )
-		self.ui = Ui_textEditWindow()
-		self.ui.setupUi( self )
+		self.ui = ExtObj()#Ui_textEditWindow()
+		#self.ui.setupUi( self )
+		self.ui.centralWidget = QtGui.QWidget( self )
+		self.setCentralWidget( self.ui.centralWidget )
+		self.ui.centralWidget.setLayout( QtGui.QVBoxLayout() )
+		self.ui.textEdit = ExtendedTextEdit( self.ui.centralWidget )
+		self.ui.centralWidget.layout().addWidget( self.ui.textEdit )
+		self.ui.btnSave = QtGui.QPushButton( QtGui.QIcon("icons/actions/accept.png"), QtCore.QCoreApplication.translate("TextEdit", "Apply"), self.ui.centralWidget )
+		self.ui.centralWidget.layout().addWidget( self.ui.btnSave )
 		self.linkEditor = None
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
 		self.setupEditActions()
@@ -285,7 +419,6 @@ class TextEdit(QtGui.QMainWindow):
 		self.ui.textEdit.copyAvailable.connect(self.actionCut.setEnabled)
 		self.ui.textEdit.copyAvailable.connect(self.actionCopy.setEnabled)
 		QtGui.QApplication.clipboard().dataChanged.connect(self.clipboardDataChanged)
-		self.actionInsertLink.triggered.connect(self.insertLink)
 		self.ui.textEdit.setHtml( text )
 		#self.saveCallback = saveCallback
 		self.ui.btnSave.released.connect( self.onBtnSaveReleased )
@@ -387,12 +520,43 @@ class TextEdit(QtGui.QMainWindow):
 		tb.addAction(self.actionPaste)
 		
 	def setupInsertActions(self):
-		if "a" in self.validHtml["validTags"]:
+		if "a" in self.validHtml["validTags"] or "img" in self.validHtml["validTags"]:
 			tb = QtGui.QToolBar(self)
 			tb.setWindowTitle("Insert Actions")
 			self.addToolBar(tb)
+		if "a" in self.validHtml["validTags"]:
 			self.actionInsertLink = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Link", self)
 			tb.addAction(self.actionInsertLink)
+			self.actionInsertLink.triggered.connect(self.insertLink)
+		if "img" in self.validHtml["validTags"]:
+			self.actionInsertImage = QtGui.QAction(QtGui.QIcon(rsrcPath + '/image_add.png'),"&Image", self)
+			tb.addAction(self.actionInsertImage)
+			self.actionInsertImage.triggered.connect(self.insertImage)
+
+		if any( [x in self.validHtml["validTags"] for x in ["h1","h2","h3"] ] ):
+			tb = QtGui.QToolBar(self)
+			tb.setWindowTitle("Insert Actions")
+			self.addToolBar(tb)
+
+		if "h1" in self.validHtml["validTags"]:
+			self.actionInsertH1 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H1", self)
+			tb.addAction(self.actionInsertH1)
+			self.actionInsertH1.triggered.connect(self.insertH1)
+		
+		if "h2" in self.validHtml["validTags"]:
+			self.actionInsertH2 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H2", self)
+			tb.addAction(self.actionInsertH2)
+			self.actionInsertH2.triggered.connect(self.insertH2)
+
+		if "h3" in self.validHtml["validTags"]:
+			self.actionInsertH3 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H3", self)
+			tb.addAction(self.actionInsertH3)
+			self.actionInsertH3.triggered.connect(self.insertH3)
+
+			#self.actionInsertTable = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Table", self)
+			#tb.addAction(self.actionInsertTable)
+			#self.actionInsertTable.triggered.connect(self.insertTable)
+
 
 	def setupTextActions(self):
 		tb = QtGui.QToolBar(self)
@@ -447,9 +611,6 @@ class TextEdit(QtGui.QMainWindow):
 				self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
 						"&Left", grp)
 
-			self.actionAlignJustify = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
-					"&Justify", grp)
-
 			self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
 			self.actionAlignLeft.setCheckable(True)
 			self.actionAlignLeft.setPriority(QtGui.QAction.LowPriority)
@@ -461,10 +622,6 @@ class TextEdit(QtGui.QMainWindow):
 			self.actionAlignRight.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
 			self.actionAlignRight.setCheckable(True)
 			self.actionAlignRight.setPriority(QtGui.QAction.LowPriority)
-
-			self.actionAlignJustify.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
-			self.actionAlignJustify.setCheckable(True)
-			self.actionAlignJustify.setPriority(QtGui.QAction.LowPriority)
 
 			tb.addActions(grp.actions())
 
@@ -489,6 +646,7 @@ class TextEdit(QtGui.QMainWindow):
 
 	def save(self, *args, **kwargs):
 		html = DocumentToHtml().serializeDocument( self.ui.textEdit.document() )
+		print( html )
 		self.onDataChanged.emit( html )
 		event.emit( "popWidget", self )
 
@@ -577,6 +735,48 @@ class TextEdit(QtGui.QMainWindow):
 		txt = cursor.selectedText()
 		self.ui.textEdit.insertHtml( "<a href=\"%s\" target=\"_blank\">%s</a>" % (dest, txt))
 
+	def insertHeading( self, lvl ):
+		assert 0 < lvl < 7
+		cursor = self.ui.textEdit.textCursor()
+		if not cursor.hasSelection():
+			cursor.select(QtGui.QTextCursor.WordUnderCursor)
+		txt = cursor.selectedText()
+		cursor.insertHtml( "<h%s>%s</h%s> " % (lvl,txt,lvl)) #The tailing whitespace is nessesary to reset the style afterwards
+
+
+	def insertH1( self, *args, **kwargs ):
+		self.insertHeading( 1 )
+
+	def insertH2( self, *args, **kwargs ):
+		self.insertHeading( 2 )
+
+	def insertH3( self, *args, **kwargs ):
+		self.insertHeading( 3 )
+
+	def insertImage( self, *args, **kwargs ):
+		d = FileBoneSelector( "-", "file", False, "file", None )
+		d.selectionChanged.connect( self.onFileSelected )
+
+	
+	def insertTable( self, *args, **kwargs ):
+		cursor = self.ui.textEdit.textCursor()
+		cursor.insertHtml( "<br /><table border=\"1\"><thead><tr><td>a</td><td>b</td></tr></thead><tr><td>c</td><td>d</td></tr><tr><td>e</td><td>f</td></tr></table><br />" )
+
+	
+	def onFileSelected( self, selection ):
+		if selection:
+			w, h = 50, 50
+			try:
+				tmp = RemoteFile( selection[0]["dlkey"] )
+				fname = tmp.getFileName()
+				if fname: #Seems this is allready cached
+					pic = QtGui.QPixmap( fname )
+					w, h = pic.width(), pic.height()
+			except:
+				pass
+			cursor = self.ui.textEdit.textCursor() #  width=\"75\" height=\"50\"
+			cursor.insertHtml( "<img src=\"/file/download/%s\" width=\"%s\" height=\"%s\" >" % ( selection[0]["dlkey"], w, h ) ) # selection[0]["id"],
+
 	def textAlign(self, action):
 		if action == self.actionAlignLeft:
 			self.ui.textEdit.setAlignment(
@@ -584,10 +784,7 @@ class TextEdit(QtGui.QMainWindow):
 		elif action == self.actionAlignCenter:
 			self.ui.textEdit.setAlignment(QtCore.Qt.AlignHCenter)
 		elif action == self.actionAlignRight:
-			self.ui.textEdit.setAlignment(
-					QtCore.Qt.AlignRight | QtCore.Qt.AlignAbsolute)
-		elif action == self.actionAlignJustify:
-			self.ui.textEdit.setAlignment(QtCore.Qt.AlignJustify)
+			self.ui.textEdit.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignAbsolute)
 
 	def currentCharFormatChanged(self, format):
 		self.fontChanged(format.font())
@@ -650,9 +847,6 @@ class TextEdit(QtGui.QMainWindow):
 		elif alignment & QtCore.Qt.AlignRight:
 			if "actionAlignRight" in dir( self ):
 				self.actionAlignRight.setChecked(True)
-		elif alignment & QtCore.Qt.AlignJustify:
-			if "actionAlignJustify" in dir( self ):
-				self.actionAlignJustify.setChecked(True)
 	
 	def onBtnSaveReleased( self ):
 		self.save()
@@ -877,7 +1071,7 @@ class TextEditBone( QtGui.QWidget ):
 			return
 		if self.languages and isinstance( data[ self.boneName ], dict ):
 			for lang in self.languages:
-				if lang in data[ self.boneName ].keys():
+				if lang in data[ self.boneName ].keys() and data[ self.boneName ][ lang ] is not None:
 					self.html[ lang ] = data[ self.boneName ][lang].replace( "target=\"_blank\" href=\"", "href=\"!" )
 				else:
 					self.html[ lang ] = ""
