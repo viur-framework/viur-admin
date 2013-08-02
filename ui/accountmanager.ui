@@ -52,7 +52,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/actions/add_white.png</normaloff>icons/actions/add_white.png</iconset>
+            <normaloff>icons/actions/add_white.svg</normaloff>icons/actions/add_white.svg</iconset>
           </property>
          </widget>
         </item>
@@ -66,7 +66,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/actions/delete_white.png</normaloff>icons/actions/delete_white.png</iconset>
+            <normaloff>icons/actions/delete_white.svg</normaloff>icons/actions/delete_white.svg</iconset>
           </property>
          </widget>
         </item>
