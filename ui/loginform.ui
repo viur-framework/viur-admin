@@ -215,7 +215,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/modules/account_small.png</normaloff>icons/modules/account_small.png</iconset>
+            <normaloff>icons/modules/accounts.svg</normaloff>icons/modules/accounts.svg</iconset>
           </property>
          </widget>
         </item>
@@ -279,7 +279,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/login.png</normaloff>icons/actions/login.png</iconset>
+        <normaloff>icons/actions/login_white.svg</normaloff>icons/actions/login_white.svg</iconset>
       </property>
      </widget>
     </item>

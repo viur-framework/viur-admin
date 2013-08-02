@@ -1,3 +1,9 @@
+QMainWindow {
+	background:#f4f4f4;
+}
+
+
+
 QScrollArea,
 QWidget {
 	border:0;
@@ -21,7 +27,7 @@ QWidget {
 }
 
 #logincentralwidget {
-	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #eee);
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #f4f4f4);
 }
 
 #stackedWidget {
@@ -206,6 +212,10 @@ QToolButton:disabled {
 	border: 1px solid #22601e;
 }
 
+#btnLogin {
+	width:100px;
+}
+
 #delAccBTN {
 	color:#eee;
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e20614, stop: 1 #c31520);
@@ -309,7 +319,7 @@ QComboBox:on {
 QComboBox::down-arrow,
 QDateEdit::down-arrow,
 QDateTimeEdit::down-arrow {
-    background-image: url(icons/actions/dropdownarrow.png);
+    background-image: url(icons/actions/dropdownarrow.svg);
     background-position: center;
 	width:20px;
 	height:24px;
@@ -321,7 +331,7 @@ QDateTimeEdit::down-arrow {
 QComboBox::down-arrow:on,
 QDateEdit::down-arrow:on,
 QDateTimeEdit::down-arrow:on { /* shift the arrow when popup is open */
-    background-image: url(icons/actions/dropdownarrow_on.png);
+    background: url(icons/actions/dropdownarrow_on.svg);
     left: 6px;
 }
 
@@ -385,7 +395,6 @@ QTabBar::tab:!selected {
 QTabBar::tab:selected {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eee, stop: 1 #f7f7f7);
     border-bottom:1px solid #f7f7f7;
-    z-index: 1000;
 }
 
 QTabWidget::pane {
