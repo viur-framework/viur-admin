@@ -98,7 +98,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+         <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
        </property>
       </widget>
      </item>
@@ -109,7 +109,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+         <normaloff>icons/actions/save_continue.svg</normaloff>icons/actions/save_continue.svg</iconset>
        </property>
       </widget>
      </item>

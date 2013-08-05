@@ -7,7 +7,7 @@ QMainWindow {
 QScrollArea,
 QWidget {
 	border:0;
-	/*background-color: inherit;  sets background color for every widget */
+	background-color: transparent;  /*sets background color for every widget */
 }
 
 #Preloader {
@@ -279,8 +279,7 @@ QComboBox,
 QListWidget, 
 QDateEdit,
 QDateTimeEdit,
-QTextEdit,
-WebView {
+QTextEdit {
 	padding:6px 7px 7px;
 	height:16px;
 	border:1px solid #ccc;
@@ -288,6 +287,10 @@ WebView {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eaeaea, stop: 1 #fafafa);
 	margin:0;
 	margin-right: 6px;
+}
+
+QWebView {
+	background:#fafafa;
 }
 
 QLineEdit {
@@ -361,6 +364,7 @@ QComboBox QAbstractItemView {
 
 QComboBox QAbstractItemView::item:selected {color:#65b0a5;outline:none;}
 
+
 QListWidget:item {
 	padding:2px;
 }
@@ -393,12 +397,17 @@ QTabBar::tab:!selected {
  }
 
 QTabBar::tab:selected {
-	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eee, stop: 1 #f7f7f7);
-    border-bottom:1px solid #f7f7f7;
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fafafa, stop: 1 #eee);
+    border:1px solid #ddd;
 }
 
 QTabWidget::pane {
-	background:transparent;
+	background:#eee;
+	border:1px solid #ccc;
+	border-bottom:1px solid #BE1622;
+}
+
+QTabWidget QTabWidget::pane {
 	border:0;
 }
 

@@ -40,7 +40,7 @@ class Ui_HierarchySelector(object):
         self.verticalLayout.addWidget(self.listSelected)
         self.btnSelect = QtGui.QPushButton(HierarchySelector)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/relationalselect.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/add.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSelect.setIcon(icon)
         self.btnSelect.setObjectName(_fromUtf8("btnSelect"))
         self.verticalLayout.addWidget(self.btnSelect)

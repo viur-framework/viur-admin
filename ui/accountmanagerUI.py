@@ -102,7 +102,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.FinishedBTN = QtGui.QPushButton(self.centralwidget)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/success_transparent.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.FinishedBTN.setIcon(icon3)
         self.FinishedBTN.setObjectName(_fromUtf8("FinishedBTN"))
         self.verticalLayout_3.addWidget(self.FinishedBTN)

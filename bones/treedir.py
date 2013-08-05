@@ -27,7 +27,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 		self.layout = QtGui.QHBoxLayout( self )
 		self.addBtn = QtGui.QPushButton( "Auswählen", parent=self )
 		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.released.connect( self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )

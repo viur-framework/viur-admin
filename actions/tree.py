@@ -14,7 +14,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 
 class TreeAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
+		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -24,7 +24,7 @@ class TreeAddAction( QtGui.QAction ):
 		modul = self.parent().tree.modul
 		node = self.parent().getNode()
 		widget = lambda: EditWidget( modul, EditWidget.appTree, 0, node=node)
-		handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/add_small.png") )
+		handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/add.svg") )
 		event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
 	@staticmethod

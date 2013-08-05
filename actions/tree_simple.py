@@ -61,7 +61,7 @@ actionDelegateSelector.insert( 3, TreeSimpleEditAction.isSuitableFor, TreeSimple
 
 class TreeMkDirAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
+		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add.svg"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( "SHIFT+Ctrl+N" )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )

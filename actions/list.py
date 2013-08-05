@@ -11,7 +11,7 @@ from config import conf
 
 class ListAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Add entry"), parent )
+		super( ListAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("ListHandler", "Add entry"), parent )
 		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
@@ -24,7 +24,7 @@ class ListAddAction( QtGui.QAction ):
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
 		modul = self.parentWidget().list.modul
-		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add_small.png") )
+		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, 0 ), descr, QtGui.QIcon("icons/actions/add.svg") )
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	

@@ -55,7 +55,7 @@ class Ui_Updater(object):
         self.verticalLayout.addWidget(self.btnCheck)
         self.btnUpdate = QtGui.QPushButton(self.centralwidget)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnUpdate.setIcon(icon2)
         self.btnUpdate.setObjectName(_fromUtf8("btnUpdate"))
         self.verticalLayout.addWidget(self.btnUpdate)

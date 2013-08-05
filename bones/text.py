@@ -392,7 +392,7 @@ class TextEdit(QtGui.QMainWindow):
 		self.ui.centralWidget.setLayout( QtGui.QVBoxLayout() )
 		self.ui.textEdit = ExtendedTextEdit( self.ui.centralWidget )
 		self.ui.centralWidget.layout().addWidget( self.ui.textEdit )
-		self.ui.btnSave = QtGui.QPushButton( QtGui.QIcon("icons/actions/accept.png"), QtCore.QCoreApplication.translate("TextEdit", "Apply"), self.ui.centralWidget )
+		self.ui.btnSave = QtGui.QPushButton( QtGui.QIcon("icons/actions/accept.svg"), QtCore.QCoreApplication.translate("TextEdit", "Apply"), self.ui.centralWidget )
 		self.ui.centralWidget.layout().addWidget( self.ui.btnSave )
 		self.linkEditor = None
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)

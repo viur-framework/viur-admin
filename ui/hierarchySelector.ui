@@ -37,7 +37,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>icons/actions/relationalselect.png</normaloff>icons/actions/relationalselect.png</iconset>
+       <normaloff>icons/actions/add.svg</normaloff>icons/actions/add.svg</iconset>
      </property>
     </widget>
    </item>

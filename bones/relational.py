@@ -91,7 +91,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.layout.addWidget( self.previewWidget )
 		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"), parent=self )
 		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.released.connect( self.onAddBtnReleased )
 		if not self.multiple:
@@ -268,7 +268,7 @@ class RelationalBoneSelector( QtGui.QWidget ):
 						skel = protoWrap.editStructure
 		assert skel is not None
 		assert self.boneName in skel.keys()
-		return( QtCore.QCoreApplication.translate("RelationalBoneSelector", "Select %s") % skel[ self.boneName ]["descr"], QtGui.QIcon( "icons/actions/relationalselect.png" ) )
+		return( QtCore.QCoreApplication.translate("RelationalBoneSelector", "Select %s") % skel[ self.boneName ]["descr"], QtGui.QIcon( "icons/actions/change_selection.svg" ) )
 
 
 	def onSourceItemDoubleClicked(self, item):

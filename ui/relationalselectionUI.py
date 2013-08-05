@@ -64,7 +64,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.addItem(spacerItem)
         self.btnSelect = QtGui.QPushButton(self.scrollAreaWidgetContents)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSelect.setIcon(icon1)
         self.btnSelect.setObjectName(_fromUtf8("btnSelect"))
         self.horizontalLayout_2.addWidget(self.btnSelect)

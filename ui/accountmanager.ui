@@ -150,7 +150,7 @@
         </property>
         <property name="icon">
          <iconset>
-          <normaloff>icons/success_transparent.png</normaloff>icons/success_transparent.png</iconset>
+          <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
         </property>
        </widget>
       </item>

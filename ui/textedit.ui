@@ -28,7 +28,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/accept.png</normaloff>icons/actions/accept.png</iconset>
+        <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
       </property>
      </widget>
     </item>

@@ -12,7 +12,7 @@ from mainwindow import WidgetHandler
 
 class HierarchyAddAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
+		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.New )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -22,7 +22,7 @@ class HierarchyAddAction( QtGui.QAction ):
 		modul = self.parent().getModul()
 		node = self.parent().hierarchy.rootNode
 		widget = lambda: EditWidget(modul, EditWidget.appHierarchy, 0, node=node)
-		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add_small.png") )
+		handler = WidgetHandler(  widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"), icon=QtGui.QIcon("icons/actions/add.svg") )
 		handler.stackHandler()
 		#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 	
