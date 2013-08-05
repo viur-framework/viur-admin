@@ -7,7 +7,7 @@ QMainWindow {
 QScrollArea,
 QWidget {
 	border:0;
-	background-color: transparent;  /*sets background color for every widget */
+	/*background-color: transparent;  /*sets background color for every widget */
 }
 
 #Preloader {

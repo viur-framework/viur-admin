@@ -44,5 +44,5 @@ class Ui_Preloader(object):
         QtCore.QMetaObject.connectSlotsByName(Preloader)
 
     def retranslateUi(self, Preloader):
-        Preloader.setWindowTitle(_translate("Preloader", "Form", None))
+        Preloader.setWindowTitle(_translate("Preloader", "Loading...", None))
 
