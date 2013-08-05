@@ -5,6 +5,7 @@ from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
+from utils import wheelEventFilter
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale ):
@@ -14,6 +15,25 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 		else:
 			return( value )
 
+
+class FixedComboBox( QtGui.QComboBox ):
+	"""
+		Subclass of QComboBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedComboBox, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( wheelEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedComboBox, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedComboBox, self ).focusOutEvent( e )
+
+
 class SelectOneEditBone( QtGui.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs ):
 		super( SelectOneEditBone,  self ).__init__( *args, **kwargs )
@@ -22,7 +42,7 @@ class SelectOneEditBone( QtGui.QWidget ):
 		self.readOnly = readOnly
 		self.values = values
 		self.layout = QtGui.QVBoxLayout( self ) 
-		self.comboBox = QtGui.QComboBox( self )
+		self.comboBox = FixedComboBox( self )
 		self.layout.addWidget( self.comboBox )
 		tmpList = values
 		if sortBy=="keys":

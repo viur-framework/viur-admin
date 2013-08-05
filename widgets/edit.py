@@ -296,6 +296,11 @@ class EditWidget( QtGui.QWidget ):
 				lblWidget.setToolTip( self.parseHelpText( bone["params"]["tooltip"] ) )
 			descrLbl = QtGui.QLabel( bone["descr"], lblWidget )
 			descrLbl.setWordWrap(True)
+			if bone["required"]:
+				font = descrLbl.font()
+				font.setBold( True )
+				font.setUnderline( True )
+				descrLbl.setFont( font )
 			layout.addWidget( descrLbl )
 			tabs[tabName].addRow( lblWidget , dataWidget )
 			dataWidget.show()
