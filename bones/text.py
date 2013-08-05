@@ -291,7 +291,7 @@ class ExtendedTextEdit( QtGui.QTextEdit ):
 		super( ExtendedTextEdit, self ).__init__( *args, **kwargs )
 		self.ressourceMapCache = {}
 		self._dragData=None
-		self.document().setDefaultStyleSheet( "h1 { color: green; font-weight: 700 } h2 { color: red; font-weight: 600 } h3 { color: blue; font-weight: 500 }" )
+		self.document().setDefaultStyleSheet( "h1 { font-weight: 700 } h2 { font-weight: 600 } h3 { font-weight: 500 }" )
 	
 	def loadResource( self, rType, name ):
 		if rType==QtGui.QTextDocument.ImageResource:
