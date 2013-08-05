@@ -539,17 +539,17 @@ class TextEdit(QtGui.QMainWindow):
 			self.addToolBar(tb)
 
 		if "h1" in self.validHtml["validTags"]:
-			self.actionInsertH1 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H1", self)
+			self.actionInsertH1 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/headline1.svg'),"&H1", self)
 			tb.addAction(self.actionInsertH1)
 			self.actionInsertH1.triggered.connect(self.insertH1)
 		
 		if "h2" in self.validHtml["validTags"]:
-			self.actionInsertH2 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H2", self)
+			self.actionInsertH2 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/headline2.svg'),"&H2", self)
 			tb.addAction(self.actionInsertH2)
 			self.actionInsertH2.triggered.connect(self.insertH2)
 
 		if "h3" in self.validHtml["validTags"]:
-			self.actionInsertH3 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/texttypes/headline.png'),"&H3", self)
+			self.actionInsertH3 = QtGui.QAction(QtGui.QIcon(rsrcPath + '/headline3.svg'),"&H3", self)
 			tb.addAction(self.actionInsertH3)
 			self.actionInsertH3.triggered.connect(self.insertH3)
 
