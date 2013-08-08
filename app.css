@@ -1,13 +1,14 @@
-QMainWindow {
+QMainWindow, QMenuBar, QStatusBar {
 	background:#f4f4f4;
 }
 
-
+QInputDialog {} 
+QMessageBox {}
 
 QScrollArea,
 QWidget {
 	border:0;
-	/*background-color: transparent;  /*sets background color for every widget */
+	 /*background-color: transparent; sets background color for every widget */
 }
 
 #Preloader {
@@ -33,6 +34,9 @@ QWidget {
 #stackedWidget {
 }
 
+:focus {
+	outline: 0;
+} 
 
 	/*
  	=======================================
@@ -86,6 +90,11 @@ QTreeView::branch:has-siblings:adjoins-item:selected,
 QTreeView::branch:has-siblings:!adjoins-item:selected,
 QTreeView::branch:!has-children:!has-siblings:adjoins-item:selected {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #666, stop: 1 #777);
+}
+
+QTreeView:focus,
+QTreeView::branch:focus,
+QTreeView::item:focus {
 }
 
 QTreeView::branch,
@@ -157,13 +166,17 @@ QLabel {
 	height:50px;
 }
 
-
 	/*
  	=======================================
 	Buttons
 	=======================================	
 	*/
 	
+
+QPushButton:focus,
+QToolButton:focus {
+	border: 1px solid #777;
+}
 
 QPushButton,
 QToolButton {
@@ -212,6 +225,13 @@ QToolButton:disabled {
 	border: 1px solid #22601e;
 }
 
+#addAccBTN:focus,
+#saveAccBTN:focus,
+#btnMkDir:focus,
+#btnLogin:focus {
+	border: 1px solid #72D46A;	
+}
+
 #btnLogin {
 	width:100px;
 }
@@ -220,6 +240,10 @@ QToolButton:disabled {
 	color:#eee;
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e20614, stop: 1 #c31520);
 	border: 1px solid #BE1622;
+}
+
+#delAccBTN:focus {
+	border: 1px solid #ff9a9a;
 }
 
 #addAccBTN:hover,
@@ -267,6 +291,15 @@ QToolButton:disabled {
 	border: 1px solid #fd3c3c;
 }
 
+QPushButton:focus,
+QToolButton:focus {
+	border: 1px solid #777;
+}
+
+QCheckBox:focus,
+QRadioButton:focus {
+	outline:1px dotted #777;	
+}
 
 	/*
  	=======================================
@@ -297,6 +330,7 @@ QLineEdit {
 	width:250px;
 }
 
+QComboBox:focus,
 QLineEdit:focus {
 	border:1px solid #C00;
 }
@@ -370,7 +404,11 @@ QListWidget:item {
 }
 
 QListWidget:item:selected {
-	background: #BE1622;
+	background: #ccc;
+}
+
+QListWidget:item:focus {
+	border-right:4px solid #BE1622;
 }
 
 	/*
@@ -449,8 +487,11 @@ QTableView QAbstractButton {
 	background: #f1f1f1;
 }
 
-QListView {
+QListView{
 }
+
+QTableView::item:selected {outline:0;}
+QTableView::item:focus {outline:0; border-right:4px solid #BE1622;}
 
 QHeaderView::section {
 	padding:7px;
@@ -500,8 +541,6 @@ QDoubleSpinBox::up-button {
  QDoubleSpinBox::up-arrow {
 	image: url(icons/menu/greyarrowup.png);
  }
-
-
 
  QSpinBox::down-button,
  QDoubleSpinBox::down-button {
