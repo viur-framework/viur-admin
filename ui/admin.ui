@@ -221,7 +221,7 @@
   <action name="actionAbout">
    <property name="icon">
     <iconset>
-     <normaloff>icons/Apexico_black.ico</normaloff>icons/Apexico_black.ico</iconset>
+     <normaloff>icons/viur_win.ico</normaloff>icons/viur_win.ico</iconset>
    </property>
    <property name="text">
     <string>About</string>
