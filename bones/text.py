@@ -553,6 +553,9 @@ class TextEdit(QtGui.QMainWindow):
 			tb.addAction(self.actionInsertH3)
 			self.actionInsertH3.triggered.connect(self.insertH3)
 
+		self.actionClearFormat = QtGui.QAction(QtGui.QIcon(rsrcPath + '/clear-format.png'),"&Clear", self)
+		tb.addAction(self.actionClearFormat)
+		self.actionClearFormat.triggered.connect(self.clearFormat)
 			#self.actionInsertTable = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Table", self)
 			#tb.addAction(self.actionInsertTable)
 			#self.actionInsertTable.triggered.connect(self.insertTable)
@@ -788,6 +791,7 @@ class TextEdit(QtGui.QMainWindow):
 
 	def currentCharFormatChanged(self, format):
 		self.fontChanged(format.font())
+		print( format.fontWeight() )
 		self.colorChanged(format.foreground().color())
 
 	def cursorPositionChanged(self):
@@ -821,6 +825,7 @@ class TextEdit(QtGui.QMainWindow):
 		if not cursor.hasSelection():
 			cursor.select(QtGui.QTextCursor.WordUnderCursor)
 		cursor.mergeCharFormat(format)
+		
 		self.ui.textEdit.mergeCurrentCharFormat(format)
 
 	def fontChanged(self, font):
@@ -830,6 +835,31 @@ class TextEdit(QtGui.QMainWindow):
 			self.actionTextItalic.setChecked(font.italic())
 		if "actionTextUnderline" in dir(self ):
 			self.actionTextUnderline.setChecked(font.underline())
+
+	def clearFormat( self, *args, **kwargs ):
+		"""
+			Clears headings etc. applied the the current selection.
+			FIXME: Bad hack...
+		"""
+		cursorpos = self.ui.textEdit.textCursor().position()
+		fmt = QtGui.QTextCharFormat()
+		fmt.setFontWeight(QtGui.QFont.Normal)
+		fmt.setFontUnderline(False)
+		fmt.setFontItalic(False)
+		fmt.setForeground( QtGui.QColor("black"))
+		fmt.setFont( QtGui.QFont ("Courier", 9) )
+		self.mergeFormatOnWordOrSelection(fmt)
+		block = self.ui.textEdit.document().begin()
+		while( block.isValid() ):
+			if block.contains(cursorpos):
+				cursor = QtGui.QTextCursor( block )
+				fmt = block.blockFormat()
+				fmt.setTopMargin(0)
+				fmt.setBottomMargin(0)
+				cursor.setBlockFormat(QtGui.QTextBlockFormat())
+				break
+			block = block.next()
+		self.ui.textEdit.setHtml( DocumentToHtml().serializeDocument( self.ui.textEdit.document() ) ) #Ive no cloue how to to this cleanly without reloading the whole text
 
 	def colorChanged(self, color):
 		if "actionTextColor" in dir( self ):
@@ -849,6 +879,7 @@ class TextEdit(QtGui.QMainWindow):
 				self.actionAlignRight.setChecked(True)
 	
 	def onBtnSaveReleased( self ):
+		print( self.ui.textEdit.toHtml() )
 		self.save()
 
 ### Copy&Paste from server/bones/textBone.py
