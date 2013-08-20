@@ -147,10 +147,10 @@ class EditWidget( QtGui.QWidget ):
 				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit: %s") % itemName
 			else:
 				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
-			icon = QtGui.QIcon( "icons/actions/edit.png" )
+			icon = QtGui.QIcon( "icons/actions/edit.svg" )
 		else: #Were adding 
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Add entry") #We know that we cant know the name yet
-			icon = QtGui.QIcon( "icons/actions/add.png" )
+			icon = QtGui.QIcon( "icons/actions/add.svg" )
 		return( descr, icon )
 		
 	
