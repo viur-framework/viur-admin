@@ -148,7 +148,7 @@ class MainWindow( QtGui.QMainWindow ):
 			parent.addChild( handler )
 			self.ui.treeWidget.expandItem( parent )
 		else:
-			self.ui.treeWidget.invisibleRootItem().addChild( handler )
+			self.ui.treeWidget.addTopLevelItem( handler )
 		self.ui.treeWidget.sortItems( 0, QtCore.Qt.AscendingOrder )
 
 
