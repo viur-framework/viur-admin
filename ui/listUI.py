@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\list.ui'
+# Form implementation generated from reading ui file 'list.ui'
 #
-# Created: Thu Jul 18 16:21:12 2013
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Fri Aug 23 13:01:07 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_List(object):
     def setupUi(self, List):
@@ -22,6 +31,7 @@ class Ui_List(object):
         self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
+        self.boxActions.setMargin(0)
         self.boxActions.setObjectName(_fromUtf8("boxActions"))
         self.verticalLayout.addLayout(self.boxActions)
         self.tableWidget = QtGui.QWidget(List)
@@ -34,6 +44,7 @@ class Ui_List(object):
         self.editSearch.setObjectName(_fromUtf8("editSearch"))
         self.layoutToolBar.addWidget(self.editSearch)
         self.searchBTN = QtGui.QPushButton(List)
+        self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.searchBTN.setIcon(icon)
@@ -45,17 +56,7 @@ class Ui_List(object):
         QtCore.QMetaObject.connectSlotsByName(List)
 
     def retranslateUi(self, List):
-        List.setWindowTitle(QtGui.QApplication.translate("List", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.editSearch.setText(QtGui.QApplication.translate("List", "Search", None, QtGui.QApplication.UnicodeUTF8))
-        self.searchBTN.setText(QtGui.QApplication.translate("List", "Search", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    List = QtGui.QWidget()
-    ui = Ui_List()
-    ui.setupUi(List)
-    List.show()
-    sys.exit(app.exec_())
+        List.setWindowTitle(_translate("List", "Form", None))
+        self.editSearch.setText(_translate("List", "Search", None))
+        self.searchBTN.setText(_translate("List", "Search", None))
 

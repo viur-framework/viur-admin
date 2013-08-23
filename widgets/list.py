@@ -192,7 +192,8 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if not index.isValid():
 			return( QtCore.Qt.NoItemFlags )
 		return( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled )
-		
+
+
 
 class ListTableView( QtGui.QTableView ):
 	"""
@@ -212,6 +213,7 @@ class ListTableView( QtGui.QTableView ):
 
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
 		super( ListTableView, self ).__init__( parent,  *args, **kwargs )
+		self.missingImage = QtGui.QImage( "icons/status/missing.png" )
 		self.modul = modul
 		filter = filter or {}
 		self.structureCache = None
@@ -376,6 +378,21 @@ class ListTableView( QtGui.QTableView ):
 			Returns a list of items currently selected.
 		"""
 		return( [self.model().getData()[ x ] for x in set( [x.row() for x in self.selectionModel().selection().indexes()] ) ] )
+
+	def paintEvent(self, event):
+		super( ListTableView, self ).paintEvent( event )
+		if not len( self.model().getData() ):
+			print("xxxx")
+			painter = QtGui.QPainter(self.viewport())
+			painter.setRenderHint(QtGui.QPainter.Antialiasing)
+			painter.drawImage( (self.width()/2-self.missingImage.width()/2),(self.height()/2-self.missingImage.height()/2), self.missingImage )
+			painter.pen().setWidth( 1 )
+			painter.setPen(QtGui.QColor( 0,0,0, 255 ))
+			fm = QtGui.QFontMetrics( painter.font() )
+			msg = QtCore.QCoreApplication.translate("List","No items in the current selection")
+			fontWidth = fm.width( msg )
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2)+55, msg )
+			painter.end()
 
 	
 class ListWidget( QtGui.QWidget ):
