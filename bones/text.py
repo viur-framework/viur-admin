@@ -199,7 +199,8 @@ class DocumentToHtml:
 				self.closeTag( ("h1","h2","h3") )
 			#Check for opening tags
 			#Check for <i>
-			if txtFormat.fontWeight() in self.headingMap.keys():
+			color = txtFormat.foreground().color().toRgb()
+			if txtFormat.fontWeight() in self.headingMap.keys() and all( [x==1 for x in [color.red(), color.blue(), color.green()]]):
 				self.openTag( "h%s" % self.headingMap[ txtFormat.fontWeight() ] )
 			else:
 				if txtFormat.fontItalic() and not self.isTagOpen( "i" ):
@@ -291,7 +292,7 @@ class ExtendedTextEdit( QtGui.QTextEdit ):
 		super( ExtendedTextEdit, self ).__init__( *args, **kwargs )
 		self.ressourceMapCache = {}
 		self._dragData=None
-		self.document().setDefaultStyleSheet( "h1 { font-weight: 700 } h2 { font-weight: 600 } h3 { font-weight: 500 }" )
+		self.document().setDefaultStyleSheet( "h1 { font-weight: 700; color: #010101 } h2 { font-weight: 600; color: #010101 } h3 { font-weight: 500; color: #010101 }" )
 	
 	def loadResource( self, rType, name ):
 		if rType==QtGui.QTextDocument.ImageResource:
