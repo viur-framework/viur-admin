@@ -11,6 +11,7 @@ from ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
 from priorityqueue import editBoneSelector, viewDelegateSelector
 from bones.file import FileBoneSelector
+from bones.string import chooseLang
 from network import RemoteFile
 
 rsrcPath = "icons/actions/text"
@@ -43,6 +44,12 @@ class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 		self.modulName=modulName
 	
 	def displayText(self, value, locale ):
+		if "languages" in self.skelStructure[ self.boneName ].keys():
+			languages = self.skelStructure[ self.boneName ]["languages"]
+		else:
+			languages = None
+		if languages is not None:
+			value = chooseLang( value, languages )
 		if value:
 			value = HtmlStripper.strip( value )
 		return( super( TextViewBoneDelegate, self ).displayText( value, locale ) )
