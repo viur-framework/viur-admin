@@ -542,7 +542,9 @@ class TreeWidget( QtGui.QWidget ):
 		for a in self.actions():
 			self.removeAction( a )
 		if not actions:
+			self._currentActions = []
 			return
+		self._currentActions = actions[:]
 		for action in actions:
 			modulCfg = conf.serverConfig["modules"][ self.modul ]
 			actionWdg = actionDelegateSelector.select( "%s.%s" % ( modulCfg["handler"], self.getModul() ), action )
@@ -558,7 +560,7 @@ class TreeWidget( QtGui.QWidget ):
 		"""
 			Returns a list of the currently activated actions on this tree.
 		"""
-		return( self.actions() )
+		return( self._currentActions )
 
 	def selectedItems(self):
 		"""

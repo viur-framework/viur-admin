@@ -459,7 +459,9 @@ class ListWidget( QtGui.QWidget ):
 		for a in self.actions():
 			self.removeAction( a )
 		if not actions:
+			self._currentActions = []
 			return
+		self._currentActions = actions[:]
 		for action in actions:
 			if action=="|":
 				self.toolBar.addSeparator()
@@ -477,7 +479,7 @@ class ListWidget( QtGui.QWidget ):
 		"""
 			Returns a list of the currently activated actions on this list.
 		"""
-		return( self.actions() )
+		return( self._currentActions )
 
 	def search( self, *args, **kwargs ):
 		"""

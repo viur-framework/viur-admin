@@ -325,7 +325,9 @@ class HierarchyWidget( QtGui.QWidget ):
 		for a in self.actions():
 			self.removeAction( a )
 		if not actions:
+			self._currentActions = []
 			return
+		self._currentActions = actions[:]
 		for action in actions:
 			actionWdg = actionDelegateSelector.select( "hierarchy.%s" % self.modul, action )
 			if actionWdg is not None:
@@ -340,7 +342,7 @@ class HierarchyWidget( QtGui.QWidget ):
 		"""
 			Returns a list of the currently activated actions on this widget.
 		"""
-		return( self.actions() )
+		return( self._currentActions )
 
 	def onItemClicked( self, item, col ):
 		"""
