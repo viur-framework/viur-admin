@@ -138,7 +138,7 @@ class SecurityTokenProvider( QObject ):
 		if not skey:
 			return
 		try:
-			self.queue.put( skey, False )
+			self.queue.put( (skey,time.time()), False )
 		except QFull:
 			print( "Err: Queue FULL" )
 	
@@ -152,7 +152,11 @@ class SecurityTokenProvider( QObject ):
 		while not skey:
 			self.fetchNext()
 			try:
-				skey = self.queue.get( False )
+				skey, creationTime = self.queue.get( False )
+				if creationTime<time.time()-600: #Its older than 10 minutes - dont use
+					self.logger.debug( "Discarding old skey" )
+					skey = None
+					raise QEmpty()
 			except QEmpty:
 				self.logger.debug( "Empty cache! Please wait..." )
 				QtCore.QCoreApplication.processEvents()
