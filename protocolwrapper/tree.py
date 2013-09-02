@@ -164,6 +164,7 @@ class TreeWrapper( QtCore.QObject ):
 		r.queryArgs = None
 		r.skelType = skelType
 		r.node = key
+		return( key )
 	
 	def execDefered( self, *args, **kwargs ):
 		m, key = self.deferedTaskQueue.pop(0)
