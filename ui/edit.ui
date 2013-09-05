@@ -74,7 +74,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/preview_small.png</normaloff>icons/actions/preview_small.png</iconset>
+         <normaloff>icons/actions/preview.svg</normaloff>icons/actions/preview.svg</iconset>
        </property>
       </widget>
      </item>

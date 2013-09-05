@@ -35,7 +35,7 @@ actionDelegateSelector.insert( 1, TreeAddAction.isSuitableFor, TreeAddAction )
 
 class TreeEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
+		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.setShortcut( QtGui.QKeySequence.Open )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
 		self.triggered.connect( self.onTriggered )
@@ -54,7 +54,7 @@ class TreeEditAction( QtGui.QAction ):
 			modul = self.parent().modul
 			key = entry["id"]
 			widget = lambda: EditWidget( modul, EditWidget.appTree, key, skelType=skelType )
-			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
+			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit.svg") )
 			handler.stackHandler()
 
 	@staticmethod
@@ -100,7 +100,7 @@ actionDelegateSelector.insert( 1, TreeDirUpAction.isSuitableFor, TreeDirUpAction
 
 class TreeDeleteAction( QtGui.QAction ): 
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent )
+		super( TreeDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )

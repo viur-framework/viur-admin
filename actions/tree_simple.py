@@ -18,7 +18,7 @@ class TreeSimpleEditAction( QtGui.QAction ):
 		Overriden edit-action which prevents editing Nodes
 	"""
 	def __init__(self, parent, *args, **kwargs ):
-		super( TreeSimpleEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
+		super( TreeSimpleEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Open )
@@ -49,7 +49,7 @@ class TreeSimpleEditAction( QtGui.QAction ):
 			modul = self.parent().modul
 			key = entry["id"]
 			widget = lambda: EditWidget( modul, EditWidget.appTree, key, skelType=skelType )
-			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit_small.png") )
+			handler = WidgetHandler( widget, descr=name, icon=QtGui.QIcon("icons/actions/edit.svg") )
 			handler.stackHandler()
 
 	@staticmethod

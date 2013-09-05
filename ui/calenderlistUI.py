@@ -39,7 +39,7 @@ class Ui_List(object):
         self.horizontalLayout_2.addWidget(self.editSearch)
         self.searchBTN = QtGui.QPushButton(List)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.searchBTN.setIcon(icon)
         self.searchBTN.setObjectName(_fromUtf8("searchBTN"))
         self.horizontalLayout_2.addWidget(self.searchBTN)

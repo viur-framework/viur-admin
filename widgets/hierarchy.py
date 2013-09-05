@@ -360,7 +360,7 @@ class HierarchyWidget( QtGui.QWidget ):
 			Open a editor for this entry.
 		"""
 		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"] )
-		handler = utils.WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png") )
+		handler = utils.WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit.svg") )
 		handler.stackHandler()
 
 	def loadPreview( self, url ):

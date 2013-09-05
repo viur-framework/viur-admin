@@ -34,7 +34,7 @@ actionDelegateSelector.insert( 1, HierarchyAddAction.isSuitableFor, HierarchyAdd
 
 class HierarchyEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
+		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Open )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -45,7 +45,7 @@ class HierarchyEditAction( QtGui.QAction ):
 			modul = self.parent().getModul()
 			key = item.entryData["id"]
 			widget = lambda: EditWidget( modul, EditWidget.appHierarchy, key )
-			handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit_small.png")  )
+			handler = WidgetHandler( widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), icon=QtGui.QIcon("icons/actions/edit.svg")  )
 			handler.stackHandler()
 			#event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
 
@@ -57,7 +57,7 @@ actionDelegateSelector.insert( 1, HierarchyEditAction.isSuitableFor, HierarchyEd
 
 class HierarchyDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
+		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )

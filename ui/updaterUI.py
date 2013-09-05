@@ -49,7 +49,7 @@ class Ui_Updater(object):
         self.verticalLayout.addWidget(self.progressBar)
         self.btnCheck = QtGui.QPushButton(self.centralwidget)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnCheck.setIcon(icon1)
         self.btnCheck.setObjectName(_fromUtf8("btnCheck"))
         self.verticalLayout.addWidget(self.btnCheck)

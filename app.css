@@ -1,14 +1,14 @@
+
 QMainWindow, QMenuBar, QStatusBar {
 	background:#f4f4f4;
 }
 
 QInputDialog {} 
-QMessageBox {}
 
 QScrollArea,
 QWidget {
 	border:0;
-	 /*background-color: transparent; sets background color for every widget */
+	/*background-color: transparent;  sets background color for every widget */
 }
 
 #Preloader {
@@ -322,8 +322,10 @@ QTextEdit {
 	margin-right: 6px;
 }
 
-QWebView {
+QWebView,
+QPreviewWidget {
 	background:#fafafa;
+	border:1px solid #ccc;
 }
 
 QLineEdit {
@@ -447,6 +449,11 @@ QTabWidget::pane {
 
 QTabWidget QTabWidget::pane {
 	border:0;
+}
+
+QTabWidget QLabel {
+	width:170px;
+	/*qproperty-alignment: AlignBottom AlignRight;*/
 }
 
 /*
@@ -643,7 +650,7 @@ background: none;}
 	
 	/*
  	=======================================
-	Progressbars
+	ProgressBars
 	=======================================	
 	*/
 
@@ -661,3 +668,12 @@ QProgressBar::chunk {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #298342, stop: 1 #479c42);
 }
 
+	/*
+ 	=======================================
+	MessageBox
+	=======================================	
+	*/
+	
+QMessageBox {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #f4f4f4);
+}

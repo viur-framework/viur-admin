@@ -56,7 +56,7 @@ class Ui_Edit(object):
         self.horizontalLayout_2.addItem(spacerItem)
         self.btnPreview = QtGui.QPushButton(Edit)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/preview_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/preview.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPreview.setIcon(icon2)
         self.btnPreview.setObjectName(_fromUtf8("btnPreview"))
         self.horizontalLayout_2.addWidget(self.btnPreview)

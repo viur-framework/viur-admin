@@ -1014,7 +1014,7 @@ class TextEditBone( QtGui.QWidget ):
 				self.languageContainer[ lang ] = container
 				btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
 				iconbtn = QtGui.QIcon()
-				iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+				iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 				btn.setIcon(iconbtn)
 				btn.released.connect( self.openEditor )
 				btn.lang = lang
@@ -1029,7 +1029,7 @@ class TextEditBone( QtGui.QWidget ):
 		else:
 			btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )
 			iconbtn = QtGui.QIcon()
-			iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			btn.setIcon(iconbtn)
 			btn.lang = None
 			btn.released.connect( self.openEditor )

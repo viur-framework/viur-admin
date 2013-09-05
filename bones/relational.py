@@ -99,7 +99,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.installAutoCompletion()
 			self.layout.addWidget( self.entry )
 			icon6 = QtGui.QIcon()
-			icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			icon6.addPixmap(QtGui.QPixmap("icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.delBtn.released.connect( self.onDelBtnReleased )

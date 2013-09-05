@@ -64,9 +64,9 @@ class Overlay(QtGui.QWidget):
 	ERROR = "error"
 	SUCCESS = "okay"
 	
-	INFO_DURATION = 20 # 2 seconds
-	WARNING_DURATION = 20
-	ERROR_DURATION = 20
+	INFO_DURATION = 30 # 2 seconds
+	WARNING_DURATION = 30
+	ERROR_DURATION = 30
 	
 	def __init__(self, parent = None):
 		"""
@@ -78,9 +78,9 @@ class Overlay(QtGui.QWidget):
 		self.setPalette(palette)
 		self.status = None
 		animIdx= 0
-		self.okayImage = QtGui.QImage( "icons/status/success.png" )
-		self.missingImage = QtGui.QImage( "icons/status/missing.png" )
-		self.errorImage = QtGui.QImage( "icons/status/error.png" )
+		self.okayImage = QtGui.QImage( "icons/status/success_white.svg" )
+		self.missingImage = QtGui.QImage( "icons/status/missing_white.svg" )
+		self.errorImage = QtGui.QImage( "icons/status/error_transparent.svg" )
 		self.timer = None
 		self.resize( QtCore.QSize( 1, 1) )
 		self.hide()
@@ -128,23 +128,23 @@ class Overlay(QtGui.QWidget):
 		elif self.status==self.SUCCESS:
 			if self.counter>self.INFO_DURATION-10:
 				painter.setOpacity((20-self.counter)/10.0)
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(52, 131, 63, 192) ) )
 			painter.drawImage( (self.width()/2-self.okayImage.width()/2),(self.height()/2-self.okayImage.height()/2), self.okayImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.okayImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 255,255,255 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.okayImage.height()/2)+50, self.message )
 			if self.counter > self.INFO_DURATION:
 				self.clear(True)
 		elif self.status==self.MISSING:
 			if self.counter>self.WARNING_DURATION-10:
 				painter.setOpacity((20-self.counter)/10.0)
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 65, 110, 192) ) )
 			painter.drawImage( (self.width()/2-self.missingImage.width()/2),(self.height()/2-self.missingImage.height()/2), self.missingImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.missingImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 255,255,255 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.missingImage.height()/2)+50, self.message )
 			if self.counter > self.WARNING_DURATION:
 				self.clear(True)
 		elif self.status==self.ERROR:
@@ -154,8 +154,8 @@ class Overlay(QtGui.QWidget):
 			painter.drawImage( (self.width()/2-self.errorImage.width()/2),(self.height()/2-self.errorImage.height()/2), self.errorImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.errorImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 248,197,51 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.errorImage.height()/2)+50, self.message )
 			if self.counter > self.ERROR_DURATION:
 				self.clear(True)
 		painter.end()

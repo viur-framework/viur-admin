@@ -36,7 +36,7 @@ actionDelegateSelector.insert( 1, ListAddAction.isSuitableFor, ListAddAction )
 
 class ListEditAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
+		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Open )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -63,7 +63,7 @@ actionDelegateSelector.insert( 1, ListEditAction.isSuitableFor, ListEditAction )
 
 class ListCloneAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
+		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone.svg"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.SaveAs )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -82,7 +82,7 @@ actionDelegateSelector.insert( 1, ListCloneAction.isSuitableFor, ListCloneAction
 
 class ListDeleteAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
+		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
 		self.triggered.connect( self.onTriggered )
 		self.setShortcut( QtGui.QKeySequence.Delete )
 		self.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
@@ -156,7 +156,7 @@ class Preview( QtGui.QWidget ):
 
 class ListPreviewAction( QtGui.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
-		super( ListPreviewAction, self ).__init__( QtGui.QIcon("icons/actions/preview_small.png"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
+		super( ListPreviewAction, self ).__init__( QtGui.QIcon("icons/actions/preview.svg"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
 		self.modul = self.parentWidget().list.modul
 		self.widget = None
 		if self.modul in conf.serverConfig["modules"].keys():
