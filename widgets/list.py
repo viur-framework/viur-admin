@@ -181,12 +181,31 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			@type searchStr: String or None
 		"""
 		if searchStr:
+			if "name$lk" in self.filter.keys():
+				del self.filter["name$lk"]
 			self.filter["search"] = searchStr
 			self.reload()
 		else:
 			if "search" in self.filter.keys():
 				del self.filter[ "search" ]
 			self.reload()
+
+	def prefixSearch(self, searchStr ):
+		"""
+			Merge the prefix search in our filter dict if possible.
+			Does noting if the list isn't sorted by name.
+		"""
+		if not "orderby" in self.filter.keys() or not self.filter["orderby"]=="name":
+			return
+		if "search" in self.filter.keys():
+			del self.filter[ "search" ]
+		if not searchStr and "name$lk" in self.filter.keys():
+			del self.filter["name$lk"]
+		if searchStr:
+			self.filter["name$lk"] = searchStr
+		self.reload()
+
+
 	
 	def flags( self, index ):
 		if not index.isValid():
@@ -440,6 +459,8 @@ class ListWidget( QtGui.QWidget ):
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		self.ui.searchBTN.released.connect( self.search )
 		self.ui.editSearch.returnPressed.connect( self.search )
+		self.ui.editSearch.textEdited.connect( self.prefixSearch )
+		self.prefixSearchTimer = None
 		#self.overlay.inform( self.overlay.BUSY )
 		
 	def onBusyStateChanged( self, busy ):
@@ -488,8 +509,32 @@ class ListWidget( QtGui.QWidget ):
 			@param searchStr: Token to search for
 			@type searchStr: String or None
 		"""
+		if self.prefixSearchTimer:
+			self.killTimer( self.prefixSearchTimer )
+			self.prefixSearchTimer = None
 		self.list.model().search( self.ui.editSearch.text() )
-	
+
+
+	def prefixSearch( self, *args, **kwargs ):
+		"""
+			Trigger a prefix search for the current text is no key is
+			pressed within the next 500ms.
+		"""
+		if self.prefixSearchTimer:
+			self.killTimer( self.prefixSearchTimer )
+		self.prefixSearchTimer = self.startTimer( 500 )
+
+	def timerEvent(self, QTimerEvent):
+		"""
+			Perform the actual prefix search
+		"""
+		if QTimerEvent.timerId()!=self.prefixSearchTimer:
+			super( ListWidget, self ).timerEvent( QTimerEvent )
+		else:
+			self.killTimer( self.prefixSearchTimer )
+			self.prefixSearchTimer = None
+			self.list.model().prefixSearch( self.ui.editSearch.text() )
+
 	def getFilter( self ):
 		return( self.list.getFilter() )
 	
