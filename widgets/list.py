@@ -459,6 +459,8 @@ class ListWidget( QtGui.QWidget ):
 		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
 		self.ui.searchBTN.released.connect( self.search )
 		self.ui.editSearch.returnPressed.connect( self.search )
+		self.ui.btnPrefixSearch.released.connect( self.doPrefixSearch )
+		self.ui.btnPrefixSearch.setEnabled( "orderby" in self.list.model().getFilter().keys() and self.list.model().getFilter()["orderby"]=="name" )
 		self.ui.editSearch.textEdited.connect( self.prefixSearch )
 		self.prefixSearchTimer = None
 		#self.overlay.inform( self.overlay.BUSY )
@@ -518,11 +520,11 @@ class ListWidget( QtGui.QWidget ):
 	def prefixSearch( self, *args, **kwargs ):
 		"""
 			Trigger a prefix search for the current text is no key is
-			pressed within the next 500ms.
+			pressed within the next 1500ms.
 		"""
 		if self.prefixSearchTimer:
 			self.killTimer( self.prefixSearchTimer )
-		self.prefixSearchTimer = self.startTimer( 500 )
+		self.prefixSearchTimer = self.startTimer( 1500 )
 
 	def timerEvent(self, QTimerEvent):
 		"""
@@ -531,9 +533,13 @@ class ListWidget( QtGui.QWidget ):
 		if QTimerEvent.timerId()!=self.prefixSearchTimer:
 			super( ListWidget, self ).timerEvent( QTimerEvent )
 		else:
+			self.doPrefixSearch()
+
+	def doPrefixSearch(self, *args, **kwargs):
+		if self.prefixSearchTimer:
 			self.killTimer( self.prefixSearchTimer )
 			self.prefixSearchTimer = None
-			self.list.model().prefixSearch( self.ui.editSearch.text() )
+		self.list.model().prefixSearch( self.ui.editSearch.text() )
 
 	def getFilter( self ):
 		return( self.list.getFilter() )

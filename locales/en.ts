@@ -370,37 +370,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="258"/>
+        <location filename="edit.py" line="259"/>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="346"/>
+        <location filename="edit.py" line="351"/>
         <source>Entry saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="360"/>
+        <location filename="edit.py" line="365"/>
         <source>Missing data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="367"/>
+        <location filename="edit.py" line="372"/>
         <source>There was an error saving your changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="372"/>
+        <location filename="edit.py" line="377"/>
         <source>Task created</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="372"/>
+        <location filename="edit.py" line="377"/>
         <source>The task was sucessfully created.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="edit.py" line="372"/>
+        <location filename="edit.py" line="377"/>
         <source>Okay</source>
         <translation type="unfinished"></translation>
     </message>
@@ -431,7 +431,7 @@
 <context>
     <name>FileHandler</name>
     <message>
-        <location filename="file.py" line="130"/>
+        <location filename="file.py" line="131"/>
         <source>Files: %s/%s, Directories: %s/%s, Bytes: %s/%s</source>
         <translation type="unfinished"></translation>
     </message>
@@ -655,7 +655,7 @@
 <context>
     <name>List</name>
     <message>
-        <location filename="listUI.py" line="59"/>
+        <location filename="listUI.py" line="63"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
@@ -665,33 +665,43 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="listUI.py" line="61"/>
+        <location filename="listUI.py" line="64"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="515"/>
+        <location filename="list.py" line="566"/>
         <source>Clone: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="517"/>
+        <location filename="list.py" line="568"/>
         <source>Clone entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="521"/>
+        <location filename="list.py" line="572"/>
         <source>Edit: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="523"/>
+        <location filename="list.py" line="574"/>
         <source>Edit entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="392"/>
+        <location filename="list.py" line="411"/>
         <source>No items in the current selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="listUI.py" line="65"/>
+        <source>Prefix search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="listUI.py" line="66"/>
+        <source>Fulltext search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -751,17 +761,17 @@
 <context>
     <name>ListTableView</name>
     <message>
-        <location filename="list.py" line="325"/>
+        <location filename="list.py" line="344"/>
         <source>Confirm delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="325"/>
+        <location filename="list.py" line="344"/>
         <source>Delete %s entries?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="list.py" line="337"/>
+        <location filename="list.py" line="356"/>
         <source>Deleting: %s of %s removed.</source>
         <translation type="unfinished"></translation>
     </message>
