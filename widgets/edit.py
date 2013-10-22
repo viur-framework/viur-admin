@@ -247,6 +247,7 @@ class EditWidget( QtGui.QWidget ):
 		self.dataCache = data
 		tmpDict = {}
 		tabs = {}
+		tmpTabs = [] #Sort tabs by their description
 		for key, bone in data["structure"]:
 			tmpDict[ key ] = bone
 		for key, bone in data["structure"]:
@@ -263,8 +264,12 @@ class EditWidget( QtGui.QWidget ):
 				tabs[tabName] = QtGui.QFormLayout( containerWidget )
 				containerWidget.setLayout( tabs[tabName] )
 				containerWidget.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred) )
-				self.ui.tabWidget.addTab( scrollArea,  tabName )
+				tmpTabs.append( (scrollArea, tabName))
 				scrollArea.setWidgetResizable(True)
+		tmpTabs.sort( key=lambda x: x[1])
+		for scrollArea,tabName in tmpTabs:
+			self.ui.tabWidget.addTab( scrollArea,  tabName )
+		for key, bone in data["structure"]:
 			#queue = RegisterQueue()
 			#event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),queue, self.modul, key, tmpDict )
 			#widget = queue.getBest()
