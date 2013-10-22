@@ -25,8 +25,9 @@ class FileItem( LeafItem ):
 			icon = QtGui.QIcon("icons/filetypes/%s.png"%(extension))
 		else:
 			icon = QtGui.QIcon("icons/filetypes/unknown.png")		
-		if "meta_mime" in data.keys() and str(data["meta_mime"]).lower().startswith("image"):
+		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (extension in ["jpg","jpeg","png"] and "servingurl" in data.keys() and data["servingurl"]):
 			RemoteFile( data["dlkey"], successHandler=self.updateIcon )
+		self.setText( self.entryData["name"][:20])
 	
 	def updateIcon(self, remoteFile ):
 		pixmap = QtGui.QPixmap()
