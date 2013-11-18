@@ -270,6 +270,12 @@ class EditWidget( QtGui.QWidget ):
 		for scrollArea,tabName in tmpTabs:
 			self.ui.tabWidget.addTab( scrollArea,  tabName )
 		for key, bone in data["structure"]:
+			if bone["visible"]==False:
+				continue
+			if "params" in bone.keys() and bone["params"] and "category" in bone["params"].keys():
+				tabName = bone["params"]["category"]
+			else:
+				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
 			#queue = RegisterQueue()
 			#event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),queue, self.modul, key, tmpDict )
 			#widget = queue.getBest()
