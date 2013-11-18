@@ -14,6 +14,9 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QWidget" name="hierarchyWidget" native="true"/>
    </item>
@@ -34,7 +37,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>icons/actions/relationalselect.png</normaloff>icons/actions/relationalselect.png</iconset>
+       <normaloff>icons/actions/add.svg</normaloff>icons/actions/add.svg</iconset>
      </property>
     </widget>
    </item>

@@ -1,45 +1,108 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 from event import event
 from datetime import datetime, date, time, tzinfo
+from priorityqueue import editBoneSelector
+from utils import wheelEventFilter
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-class DateBone:
-	pass
+
+class FixedDateTimeEdit( QtGui.QDateTimeEdit ):
+	"""
+		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedDateTimeEdit, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( wheelEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedDateTimeEdit, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedDateTimeEdit, self ).focusOutEvent( e )
 
 
-class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+class FixedDateEdit( QtGui.QDateEdit ):
+	"""
+		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedDateEdit, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( wheelEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedDateEdit, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedDateEdit, self ).focusOutEvent( e )
+
+
+class FixedTimeEdit( QtGui.QTimeEdit ):
+	"""
+		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""
+	def __init__( self, *args, **kwargs ):
+		super( FixedTimeEdit, self ).__init__( *args, **kwargs )
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		self.installEventFilter( wheelEventFilter )
+	
+	def focusInEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.WheelFocus )
+		super( FixedTimeEdit, self ).focusInEvent( e )
+	
+	def focusOutEvent( self, e ):
+		self.setFocusPolicy( QtCore.Qt.StrongFocus )
+		super( FixedTimeEdit, self ).focusOutEvent( e )
+		
+
+
+
+class DateEditBone( QtGui.QWidget ):
+	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, *args, **kwargs ):
 		super( DateEditBone,  self ).__init__( *args, **kwargs )
 		
 		self.boneName = boneName
 		self.layout = QtGui.QHBoxLayout( self ) 
-		
-		self.time = skelStructure[boneName]["time"]
-		self.date = skelStructure[boneName]["date"]
-		
+
+		self.time = hasTime
+		self.date = hasDate
 		
 		#builds inputspecific Widgets
 		if (self.time and self.date):#(...skelStructure ...) #date AND time
-			self.lineEdit = QtGui.QDateTimeEdit(self)
+			self.lineEdit = FixedDateTimeEdit(self)
 			self.lineEdit.setGeometry(QtCore.QRect(170, 50, 173, 20))
 			self.lineEdit.setAccelerated(False)
 			self.lineEdit.setCalendarPopup(True)
 		elif (self.date): # date only
-			self.lineEdit = QtGui.QDateEdit(self)
+			self.lineEdit = FixedDateEdit(self)
 			self.lineEdit.setGeometry(QtCore.QRect(190, 90, 110, 22))
 			self.lineEdit.setCalendarPopup(True)
 		else: # time only
-			self.lineEdit = QtGui.QTimeEdit(self)
+			self.lineEdit = FixedTimeEdit(self)
 			self.lineEdit.setGeometry(QtCore.QRect(190, 190, 118, 22))
 			
 		self.lineEdit.setObjectName(_fromUtf8(boneName))
 		self.layout.addWidget( self.lineEdit )
 		self.lineEdit.show()
+		
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		hasDate = skelStructure[boneName]["date"]
+		hasTime = skelStructure[boneName]["time"]
+		return( DateEditBone( modulName, boneName, readOnly, hasDate, hasTime ) )
 	
 	def unserialize(self, data):
 		value = None
@@ -78,13 +141,7 @@ class DateEditBone( QtGui.QWidget ):# Renders the Bon in Edits
 	def serializeForDocument(self):
 		return( self.serialize( ) )
 
-class DateHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
+def CheckForDateBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="date" )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelData ):
-		if (skelData[boneName]["type"]=="date"):
-			registerObject.registerHandler( 10, DateEditBone( modulName, boneName, skelData ) )
-
-_DateHandler = DateHandler()
+editBoneSelector.insert( 2, CheckForDateBone, DateEditBone )

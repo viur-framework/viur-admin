@@ -5,7 +5,7 @@ import math
 import os, os.path
 import os
 from config import conf
-from network import NetworkService
+from network import NetworkService, RemoteFile
 
 
 class RegisterQueue():
@@ -64,9 +64,9 @@ class Overlay(QtGui.QWidget):
 	ERROR = "error"
 	SUCCESS = "okay"
 	
-	INFO_DURATION = 20 # 2 seconds
-	WARNING_DURATION = 20
-	ERROR_DURATION = 20
+	INFO_DURATION = 30 # 2 seconds
+	WARNING_DURATION = 30
+	ERROR_DURATION = 30
 	
 	def __init__(self, parent = None):
 		"""
@@ -78,9 +78,9 @@ class Overlay(QtGui.QWidget):
 		self.setPalette(palette)
 		self.status = None
 		animIdx= 0
-		self.okayImage = QtGui.QImage( "icons/status/success.png" )
-		self.missingImage = QtGui.QImage( "icons/status/missing.png" )
-		self.errorImage = QtGui.QImage( "icons/status/error.png" )
+		self.okayImage = QtGui.QImage( "icons/status/success_white.svg" )
+		self.missingImage = QtGui.QImage( "icons/status/missing_white.svg" )
+		self.errorImage = QtGui.QImage( "icons/status/error_transparent.svg" )
 		self.timer = None
 		self.resize( QtCore.QSize( 1, 1) )
 		self.hide()
@@ -91,22 +91,35 @@ class Overlay(QtGui.QWidget):
 		
 		See http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/qwidget.html#paintEvent
 		"""
+		"""
+		Draws the message/busy overlay
+		
+		See http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/qwidget.html#paintEvent
+		"""
 		painter = QtGui.QPainter()
 		painter.begin(self)
 		painter.setRenderHint(QtGui.QPainter.Antialiasing)
 		if self.status == self.BUSY:
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
-			animIdx= int( (self.counter)%32 )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(255, 255, 255, 128) ) )
+			animIdx= int( (self.counter)%7 )
 			painter.pen().setWidth( 4 )
-			for i in range(32):
-				color = QtGui.QColor( max( 127, 255-6*((animIdx-i)%32)), 0, 0, min(255, self.counter*10) )
-				painter.setPen( color )
-				painter.drawLine(
-					self.width()/2 + 30 * math.cos(2 * math.pi * i / 32.0),
-					self.height()/2 + 30 * math.sin(2 * math.pi * i / 32.0),
-					self.width()/2 + 40 * math.cos(2 * math.pi * i / 32.0),
-					self.height()/2 + 40 * math.sin(2 * math.pi * i / 32.0),
-					)
+			coords = [	(self.width()/2-30,self.height()/2-30), #Top left
+					(self.width()/2,(self.height()/2)-30), #Top center
+					(self.width()/2+30,(self.height()/2)-30), #Top right
+					(self.width()/2+30,(self.height()/2)), #Center right
+					(self.width()/2+30,(self.height()/2)+30), #Bottom right
+					(self.width()/2,(self.height()/2)+30), #Bottom center
+					(self.width()/2-30, (self.height()/2)+30), #Bottom left
+					(self.width()/2-30,(self.height()/2)) ] #Center left
+			for i in range(0,8):
+				if (animIdx-i)%8==0:
+					color = QtGui.QColor( 84, 1, 11, min(255, self.counter*10) )
+				elif (animIdx-i)%8==1:
+					color = QtGui.QColor( 147, 2, 20, min(255, self.counter*10) )
+				else:
+					color = QtGui.QColor( 211, 3, 28, min(255, self.counter*10) )
+				x,y = coords[ i ]
+				painter.fillRect( int(x-15), int(y-15), 20, 20, color )
 			painter.pen().setWidth( 1 )
 			painter.setPen(QtGui.QColor( 0,0,0, min(255, self.counter*10) ))
 			fm = QtGui.QFontMetrics( painter.font() )
@@ -115,23 +128,23 @@ class Overlay(QtGui.QWidget):
 		elif self.status==self.SUCCESS:
 			if self.counter>self.INFO_DURATION-10:
 				painter.setOpacity((20-self.counter)/10.0)
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(52, 131, 63, 192) ) )
 			painter.drawImage( (self.width()/2-self.okayImage.width()/2),(self.height()/2-self.okayImage.height()/2), self.okayImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.okayImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 255,255,255 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.okayImage.height()/2)+50, self.message )
 			if self.counter > self.INFO_DURATION:
 				self.clear(True)
 		elif self.status==self.MISSING:
 			if self.counter>self.WARNING_DURATION-10:
 				painter.setOpacity((20-self.counter)/10.0)
-			#painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 0, 0, 128) ) )
+			painter.fillRect(event.rect(), QtGui.QBrush(QtGui.QColor(0, 65, 110, 192) ) )
 			painter.drawImage( (self.width()/2-self.missingImage.width()/2),(self.height()/2-self.missingImage.height()/2), self.missingImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.missingImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 255,255,255 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.missingImage.height()/2)+50, self.message )
 			if self.counter > self.WARNING_DURATION:
 				self.clear(True)
 		elif self.status==self.ERROR:
@@ -141,8 +154,8 @@ class Overlay(QtGui.QWidget):
 			painter.drawImage( (self.width()/2-self.errorImage.width()/2),(self.height()/2-self.errorImage.height()/2), self.errorImage )
 			fm = QtGui.QFontMetrics( painter.font() )
 			fontWidth = fm.width(self.message)
-			painter.setPen(QtGui.QColor( 0,0,0 ))
-			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.errorImage.height()/2)+25, self.message )
+			painter.setPen(QtGui.QColor( 248,197,51 ))
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2+self.errorImage.height()/2)+50, self.message )
 			if self.counter > self.ERROR_DURATION:
 				self.clear(True)
 		painter.end()
@@ -213,6 +226,143 @@ class Overlay(QtGui.QWidget):
 			return
 		self.update()
 
+
+
+class WidgetHandler( QtGui.QTreeWidgetItem ):
+	""" 
+	Holds the items displayed top-left within the admin.
+	Each of these provides access to one modul and holds the references
+	to the widgets shown inside L{MainWindow.ui.stackedWidget}
+	"""
+	mainWindow = None
+	
+	def __init__( self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, *args, **kwargs ):
+		"""
+		@type modul: string
+		@param modul: Name of the modul handled
+		"""
+		super( WidgetHandler, self ).__init__( *args, **kwargs )
+		if mainWindow:
+			self.mainWindow = mainWindow
+		if self.mainWindow is None:
+			raise UnboundLocalError("You either have to create the mainwindow before using this class or specifiy an replacement.")
+		self.widgets = []
+		self.widgetGenerator = widgetGenerator
+		self.setText(0, descr)
+		if icon is not None:
+			if isinstance( icon, QtGui.QIcon):
+				self.setIcon(0, icon )
+			elif isinstance( icon, str ) and not icon.startswith("/") and not ("..") in icon and not icon.startswith("https://") and not icon.startswith("http://"):
+				if os.path.isfile( os.path.join( os.getcwd(), icon ) ):
+					self.setIcon(0, QtGui.QIcon( os.path.join( os.getcwd(), icon ) ) )
+			elif isinstance( icon, str ):
+				RemoteFile( icon, successHandler=self.loadIconFromRequest )
+		self.vanishOnClose = vanishOnClose
+
+	def loadIconFromRequest( self, request ):
+		icon = QtGui.QIcon( request.getFileName() )
+		self.setIcon(0, icon)
+
+	def focus( self ):
+		"""
+		If this handler holds at least one widget, the last widget
+		on the stack gains focus
+		"""
+		if not self.widgets:
+			self.widgets.append( self.widgetGenerator() )
+			self.mainWindow.addWidget( self.widgets[ -1 ] )
+			#event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
+			self.setIcon( 1, QtGui.QIcon( "icons/actions/exit_small.png") )
+		self.mainWindow.focusHandler( self )
+		#event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
+	
+	def close( self ):
+		"""
+		Closes *one* widgets of this handler
+		"""
+		if self.widgets:
+			self.mainWindow.removeWidget( self.widgets.pop() )
+		if len( self.widgets ) > 0:
+			self.focus()
+		else:
+			if self.vanishOnClose:
+				self.mainWindow.removeHandler( self )
+			else:
+				self.mainWindow.unfocusHandler( self )
+				self.setIcon( 1, QtGui.QIcon() )
+	
+	def getBreadCrumb(self):
+		for widget in self.widgets[ : : -1 ]:
+			try:
+				txt, icon = widget.getBreadCrumb()
+				if not icon:
+					icon = QtGui.QIcon()
+				elif not isinstance( icon, QtGui.QIcon ):
+					icon = QtGui.QIcon( icon )
+				self.setIcon( 0, icon )
+				self.setText( 0, txt )
+				return( txt, icon )
+			except:
+				continue
+		return( self.text(0), self.icon(0) )
+
+	def clicked( self ):
+		"""
+		Called whenever the user selects the handler from the treeWidget.
+		"""
+		self.focus()
+		
+	def contextMenu( self ):
+		"""
+		Currently unused
+		"""
+		pass
+	
+	def stackHandler( self ):
+		"""
+			Stacks this handler onto the currently active one.
+		"""
+		self.mainWindow.stackHandler( self )
+	
+	def register( self ):
+		"""
+			Adds this handler as a top-level one
+		"""
+		self.mainWindow.addHandler( self )
+		
+	
+class GroupHandler( WidgetHandler ):
+	"""
+		Toplevel widget for one modul-group
+	"""
+	
+	def clicked( self ):
+		"""
+		Called whenever the user selects the handler from the treeWidget.
+		"""
+		pass
+		
+	def contextMenu( self ):
+		"""
+		Currently unused
+		"""
+		pass
+
+
+class WheelEventFilter( QtCore.QObject ):
+	"""
+		Prevent MouseWheelActions if the widget has no focus.
+		This fixes accidential changing values in editWidget while scrolling.
+	"""
+	def eventFilter( self, obj, event ):
+		if( event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus ):
+			event.ignore()
+			return( True )
+		return( False )
+wheelEventFilter = WheelEventFilter()
+
+
+
 def urlForItem( modul, item ):
 	"""
 		Returns a QUrl for the given item.
@@ -225,9 +375,9 @@ def urlForItem( modul, item ):
 	"""
 	if "dlkey" in item.keys(): #Its a file, fill in its dlkey, sothat drag&drop to the outside works
 		if "name" in item.keys():
-			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"], item["name"] ) ) )
+			return( QtCore.QUrl( "%s/%s/download/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"], item["name"] ) ) )
 		else: #Return a URL without a name appended
-			return( QtCore.QUrl( "%s/%s/view/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"] ) ) )
+			return( QtCore.QUrl( "%s/%s/download/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["dlkey"] ) ) )
 	else:
 		if "name" in item.keys():
 			return( QtCore.QUrl( "%s/%s/view/%s/%s" % ( NetworkService.url.replace("/admin", "") , modul, item["id"], item["name"] ) ) )
@@ -278,24 +428,38 @@ def formatString( format, skelStructure, data, prefix=None ):
 	@param data: Data applied to the format String
 	@return: String
 	"""
-	def chooseLang( value, prefs ): #FIXME: Copy&Paste from bones/string
+	def chooseLang( value, prefs, key ): #FIXME: Copy&Paste from bones/string
 		"""
 			Tries to select the best language for the current user.
 			Value is the dictionary of lang -> text recived from the server,
 			prefs the list of languages (in order of preference) for that bone.
 		"""
 		if not isinstance( value, dict ):
-			return( value )
+			return( str(value) )
+		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
-			lang = conf.adminConfig["language"]
+			lang = "%s.%s" % (key,conf.adminConfig["language"]) 
 		except:
 			lang = ""
 		if lang in value.keys() and value[ lang ]:
 			return( value[ lang ] )
 		for lang in prefs:
-			if lang in value.keys():
-				if value[ lang ]:
-					return( value[ lang ] )
+			if "%s.%s" % (key,lang) in value.keys():
+				if value[ "%s.%s" % (key,lang) ]:
+					return( value[ "%s.%s" % (key,lang) ] )
+		# Normal edit format ( name : { lang: xx } ) format
+		if key in value.keys() and isinstance( value[ key ], dict ):
+			langDict = value[ key ]
+			try:
+				lang = conf.adminConfig["language"]
+			except:
+				lang = ""
+			if lang in langDict.keys():
+				return( langDict[ lang ] )
+			for lang in prefs:
+				if lang in langDict.keys():
+					if langDict[ lang ]:
+						return( langDict[ lang ] )
 		return( "" )
 	if isinstance( skelStructure, list):
 		# The server sends the information as list; but the first thing
@@ -323,8 +487,8 @@ def formatString( format, skelStructure, data, prefix=None ):
 	#Check for translated top-level bones
 	if not prefix:
 		for key, bone in skelStructure.items():
-			if key in data.keys() and isinstance( data[key], dict ) and "languages" in bone.keys() and bone[ "languages" ]:
-				res = res.replace( "$(%s)" % key, chooseLang( data[ key ], bone[ "languages" ]) )
+			if "languages" in bone.keys() and bone[ "languages" ]:
+				res = res.replace( "$(%s)" % key, str(chooseLang( data, bone[ "languages" ], key) ) )
 	return( res )
 
 def loadIcon( iconFile ):

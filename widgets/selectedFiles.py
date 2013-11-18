@@ -28,9 +28,9 @@ class SelectedFilesWidget( QtGui.QListWidget ):
 		for s in self.selection:
 			self.addItem( FileItem( s ) )
 		self.setAcceptDrops( True )
-		self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
+		self.itemDoubleClicked.connect( self.onItemDoubleClicked )
 	
-	def itemDoubleClicked(self, item):
+	def onItemDoubleClicked(self, item):
 		"""
 			One of our Items has been double-clicked.
 			Remove it from the selection

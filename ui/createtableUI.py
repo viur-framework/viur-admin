@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\createtable.ui'
+# Form implementation generated from reading ui file 'createtable.ui'
 #
-# Created: Mon Nov 26 19:34:48 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Tue Jun 11 11:36:48 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_DialogCreateTable(object):
     def setupUi(self, DialogCreateTable):
@@ -54,21 +63,11 @@ class Ui_DialogCreateTable(object):
         QtCore.QMetaObject.connectSlotsByName(DialogCreateTable)
 
     def retranslateUi(self, DialogCreateTable):
-        DialogCreateTable.setWindowTitle(QtGui.QApplication.translate("DialogCreateTable", "Create Table", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("DialogCreateTable", "Rows", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("DialogCreateTable", "Columns", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("DialogCreateTable", "Alignment", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAlignment.setItemText(0, QtGui.QApplication.translate("DialogCreateTable", "Left", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAlignment.setItemText(1, QtGui.QApplication.translate("DialogCreateTable", "Center", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAlignment.setItemText(2, QtGui.QApplication.translate("DialogCreateTable", "Right", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    DialogCreateTable = QtGui.QDialog()
-    ui = Ui_DialogCreateTable()
-    ui.setupUi(DialogCreateTable)
-    DialogCreateTable.show()
-    sys.exit(app.exec_())
+        DialogCreateTable.setWindowTitle(_translate("DialogCreateTable", "Create Table", None))
+        self.label.setText(_translate("DialogCreateTable", "Rows", None))
+        self.label_2.setText(_translate("DialogCreateTable", "Columns", None))
+        self.label_3.setText(_translate("DialogCreateTable", "Alignment", None))
+        self.cbAlignment.setItemText(0, _translate("DialogCreateTable", "Left", None))
+        self.cbAlignment.setItemText(1, _translate("DialogCreateTable", "Center", None))
+        self.cbAlignment.setItemText(2, _translate("DialogCreateTable", "Right", None))
 

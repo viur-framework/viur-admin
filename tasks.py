@@ -1,9 +1,37 @@
 from PyQt4 import QtCore, QtGui
-import math
 from ui.taskUI import Ui_Task
-import os, os.path
 from network import NetworkService
-from utils import Overlay
+from utils import Overlay, WidgetHandler, loadIcon
+from event import event
+
+
+class TaskEntryHandler( WidgetHandler ):
+	def __init__( self, widgetFactory,  *args, **kwargs ):
+		name = QtCore.QCoreApplication.translate("tasks", "Tasks")
+		super( TaskEntryHandler, self ).__init__( widgetFactory, icon=loadIcon("icons/modules/tasks.png"), vanishOnClose=True , *args, **kwargs )
+		self.setText(0,name)
+
+	def getBreadCrumb(self):
+		"""
+			Dont use the description of our edit widget here
+		"""
+		if len( self.widgets )==2: #We adding exactly one task
+			try:
+				tasks = self.widgets[0].tasks
+			except:
+				tasks = None
+			if tasks:
+				taskDict = {}
+				for t in tasks["skellist"]:
+					taskDict[ t["id"] ] = t
+				try:
+					taskID = self.widgets[1].key
+				except:
+					taskID = None
+				if taskID and taskID in taskDict.keys():
+					return( taskDict[ taskID ]["name"], self.icon(0) )
+		return( self.text(0), self.icon(0) )
+
 
 
 class TaskItem(QtGui.QListWidgetItem):
@@ -19,14 +47,12 @@ class TaskViewer( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		self.overlay = Overlay( self )
 		self.overlay.inform( self.overlay.BUSY )
-		self.request = NetworkService.request( "/_tasks/list" )
-		self.connect( self.request, QtCore.SIGNAL("finished()"), self.onTaskList )
-		self.setWindowTitle( QtCore.QCoreApplication.translate("Tasks", "Tasks") )
-		self.setWindowIcon( QtGui.QIcon( QtGui.QPixmap( "icons/menu/tasks.png" ) ) )
+		self.tasks = None
+		NetworkService.request( "/_tasks/list", secure=True, successHandler=self.onTaskList )
 		self.show()
 		
-	def onTaskList(self):
-		self.tasks = NetworkService.decode( self.request )
+	def onTaskList(self, req):
+		self.tasks = NetworkService.decode( req )
 		for task in self.tasks["skellist"]:
 			item = TaskItem( task )
 			self.ui.listWidget.addItem( item )
@@ -41,6 +67,7 @@ class TaskViewer( QtGui.QWidget ):
 		if not item:
 			return
 		taskID = item.task["id"]
+		"""
 		for i in range(self.ui.horizontalLayout.count()):
 			if self.ui.horizontalLayout.itemAt(i).widget():
 				self.ui.horizontalLayout.itemAt(i).widget().close()
@@ -58,6 +85,7 @@ class TaskViewer( QtGui.QWidget ):
 		self.ui.verticalLayout.addWidget( nameLbl )
 		descrLbl = QtGui.QLabel( task["descr"], self )
 		self.ui.verticalLayout.addWidget( descrLbl )
+		"""
 		from widgets.edit import EditWidget
-		self.ui.verticalLayout.addWidget( EditWidget( "_tasks", EditWidget.appSingleton,  taskID ) )
+		event.emit("stackWidget", EditWidget( "_tasks", EditWidget.appSingleton,  taskID ) )
 

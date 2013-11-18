@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
-from utils import Overlay, RegisterQueue, formatString
+from utils import Overlay, RegisterQueue, formatString, urlForItem
 from network import NetworkService, RequestGroup
 from event import event
+from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from widgets.edit import EditWidget
+from mainwindow import WidgetHandler
+from ui.listUI import Ui_List
+from config import conf
+import json
 
 class ListTableModel( QtCore.QAbstractTableModel ):
 	"""Model for displaying data within a listView"""
+	GarbargeTypeName = "ListTableModel"
 	_chunkSize = 25
-	def __init__(self, tableView, modul, fields=None, filter=None, parent=None, *args): 
+	
+	rebuildDelegates = QtCore.pyqtSignal( (object, ) )
+	
+	def __init__(self, modul, fields=None, filter=None, parent=None, *args): 
 		QtCore.QAbstractTableModel.__init__(self, parent, *args) 
-		self.tableView = tableView
 		self.modul = modul
 		self.fields = fields or ["name"]
 		self._validFields = [] #Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
@@ -20,7 +29,12 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		self.completeList = False #Have we all items?
 		self.isLoading = 0
 		self.cursor = None
-		self.setIndex = 0 #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
+		self.loadingKey = None #As loading is performed in background, they might return results for a dataset which isnt displayed anymore
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.entitiesChanged.connect( self.reload )
+		protoWrap.queryResultAvaiable.connect( self.addData )
+		#self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
 		self.reload()
 
 	def setDisplayedFields(self, fields ):
@@ -46,9 +60,11 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 	def getFields( self ):
 		return( self.fields )
 	
+	def getModul( self ):
+		return( self.modul )
+	
 	def reload( self ):
 		self.emit(QtCore.SIGNAL("modelAboutToBeReset()"))
-		self.setIndex += 1
 		self.dataCache = []
 		self.completeList = False
 		self.cursor = False
@@ -91,7 +107,6 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 		if self.isLoading and not forceLoading:
 			return
 		self.isLoading += 1
-		index = self.setIndex
 		filter = self.filter.copy() or {}
 		if self.cursor:
 			filter["cursor"] = self.cursor
@@ -104,35 +119,43 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 					filter[ filter["orderby"]+"$lt" ] = self.dataCache[-1][filter["orderby"]]
 				else:
 					filter[ filter["orderby"]+"$gt" ] = self.dataCache[-1][filter["orderby"]]
-		req = NetworkService.request("/%s/list?amount=%s" % (self.modul, self._chunkSize), filter, successHandler=self.addData)
-		req.requestIndex = index
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		filter["amount"] = self._chunkSize 
+		self.loadingKey = protoWrap.queryData( **filter )
 
-	def addData( self, query ):
-		data = NetworkService.decode( query )
+	def addData( self, queryKey ):
 		self.isLoading -= 1
-		if query.requestIndex!=self.setIndex: #The Data is for a list we dont display anymore
+		if queryKey is not None and queryKey!= self.loadingKey: #The Data is for a list we dont display anymore
 			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		if( data["structure"] ): #Reset Headers
-			self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), data["structure"] )
-			#Rebuild our local cache of valid fields
-			bones = {}
-			for key, bone in data["structure"]:
-				bones[ key ] = bone
-			self._validFields = [ x for x in self.fields if x in bones.keys() ]
-		for item in data["skellist"]: #Insert the new Data at the coresponding Position
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		cacheTime, skellist, cursor = protoWrap.dataCache[ queryKey ]
+		self.layoutAboutToBeChanged.emit()
+		self.rebuildDelegates.emit( protoWrap.viewStructure )
+		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		#self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
+		#Rebuild our local cache of valid fields
+		bones = {}
+		for key, bone in protoWrap.viewStructure.items():
+			bones[ key ] = bone
+		self._validFields = [ x for x in self.fields if x in bones.keys() ]
+		for item in skellist: #Insert the new Data at the coresponding Position
 			self.dataCache.append( item )
-		if len(data["skellist"]) < self._chunkSize:
+		if len(skellist) < self._chunkSize:
 			self.completeList = True
-		if "cursor" in data.keys():
-			self.cursor = data["cursor"]
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
-		self.emit(QtCore.SIGNAL("dataRecived()"))
+		self.cursor = cursor
+		self.layoutChanged.emit()
+		self.loadingKey = None
+		#self.emit(QtCore.SIGNAL("layoutChanged()"))
+		#self.emit(QtCore.SIGNAL("dataRecived()"))
 
 	
 	def repaint(self): #Currently an ugly hack to redraw the table
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutAboutToBeChanged.emit()
+		self.layoutChanged.emit()
+		#self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		#self.emit(QtCore.SIGNAL("layoutChanged()"))
 	
 	def getData(self):
 		return self.dataCache
@@ -150,7 +173,48 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 			filter["orderdir"] = "0"
 		self.setFilter( filter )
 
-class ListWidget( QtGui.QTableView ):
+	def search( self, searchStr ):
+		"""
+			Start a search for the given string.
+			If searchStr is None, it ends any currently active search.
+			@param searchStr: Token to search for
+			@type searchStr: String or None
+		"""
+		if searchStr:
+			if "name$lk" in self.filter.keys():
+				del self.filter["name$lk"]
+			self.filter["search"] = searchStr
+			self.reload()
+		else:
+			if "search" in self.filter.keys():
+				del self.filter[ "search" ]
+			self.reload()
+
+	def prefixSearch(self, searchStr ):
+		"""
+			Merge the prefix search in our filter dict if possible.
+			Does noting if the list isn't sorted by name.
+		"""
+		if not "orderby" in self.filter.keys() or not self.filter["orderby"]=="name":
+			return
+		if "search" in self.filter.keys():
+			del self.filter[ "search" ]
+		if not searchStr and "name$lk" in self.filter.keys():
+			del self.filter["name$lk"]
+		if searchStr:
+			self.filter["name$lk"] = searchStr
+		self.reload()
+
+
+	
+	def flags( self, index ):
+		if not index.isValid():
+			return( QtCore.Qt.NoItemFlags )
+		return( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled )
+
+
+
+class ListTableView( QtGui.QTableView ):
 	"""
 		Provides an interface for Data structured as a simple list.
 		
@@ -160,40 +224,41 @@ class ListWidget( QtGui.QTableView ):
 		@emits onItemActivated(PyQt_PyObject=item.data)
 		
 	"""
+	GarbargeTypeName = "ListTableView"
 	
+	itemClicked = QtCore.pyqtSignal( (object,) )
+	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
+	itemActivated = QtCore.pyqtSignal( (object,) )
+
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs ):
-		super( ListWidget, self ).__init__( parent,  *args, **kwargs )
+		super( ListTableView, self ).__init__( parent,  *args, **kwargs )
+		self.missingImage = QtGui.QImage( "icons/status/missing.png" )
 		self.modul = modul
 		filter = filter or {}
 		self.structureCache = None
-		model = ListTableModel( self, self.modul, fields or ["name"], filter  )
+		model = ListTableModel( self.modul, fields or ["name"], filter  )
 		self.setModel( model )
-		self.overlay = Overlay( self )
+		self.setDragDropMode( self.DragDrop )
+		self.setDragEnabled( True )
+		self.setAcceptDrops( True ) #Needed to recive dragEnterEvent, not actually wanted
+		self.setSelectionBehavior( self.SelectRows )
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
 		self.verticalHeader().hide()
-		self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
-		self.connect( model, QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
-		self.connect( model, QtCore.SIGNAL("layoutChanged()"), self.realignHeaders )
-		self.connect( self, QtCore.SIGNAL("clicked (const QModelIndex&)"), self.onItemClicked )
-		self.connect( self, QtCore.SIGNAL("doubleClicked (const QModelIndex&)"), self.onItemDoubleClicked )
-		self.connect( model, QtCore.SIGNAL("dataRecived()"), self.onDataRecived )
-		self.overlay.inform( self.overlay.BUSY )
-
-	def onDataRecived(self):
-		"""
-			The model just recived data from the server,
-			clear our overlay
-		"""
-		self.overlay.clear()
+		#self.connect( event, QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onListChanged )
+		model.rebuildDelegates.connect( self.rebuildDelegates )
+		model.layoutChanged.connect( self.realignHeaders )
+		self.clicked.connect( self.onItemClicked )
+		self.doubleClicked.connect( self.onItemDoubleClicked )
 
 	def onItemClicked(self, index ):
-		self.emit( QtCore.SIGNAL("onItemClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		self.itemClicked.emit( self.model().getData()[index.row()] )
 
 	def onItemDoubleClicked(self, index ):
-		self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
-		self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		self.itemDoubleClicked.emit( self.model().getData()[index.row()] )
+		#self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
+		#self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
 
 	def onListChanged(self, emitter, modul, itemID ):
 		"""
@@ -214,16 +279,13 @@ class ListWidget( QtGui.QTableView ):
 		for x in range( 0, len( self.model().headers ) ):
 			self.setColumnWidth(x, int( width/len( self.model().headers ) ) )
 
-	def rebuildDelegates( self, data ):
+	def rebuildDelegates( self, bones ):
 		"""
 			(Re)Attach the viewdelegates to the table.
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
 		self.delegates = [] # Qt Dosnt take ownership of viewdelegates -> garbarge collected
-		bones = {}
-		for key, bone in data:
-			bones[ key ] = bone
 		self.structureCache = bones
 		self.model().headers = []
 		colum = 0
@@ -231,10 +293,9 @@ class ListWidget( QtGui.QTableView ):
 		for field in fields:
 			self.model().headers.append( bones[field]["descr"] )
 			#Locate the best ViewDeleate for this colum
-			queue = RegisterQueue()
-			event.emit( QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modul, field, self.structureCache)
-			delegate = queue.getBest()()
-			self.setItemDelegateForColumn( colum, delegate  )
+			delegateFactory = viewDelegateSelector.select( self.modul, field, self.structureCache )
+			delegate = delegateFactory( self.modul, field, self.structureCache )
+			self.setItemDelegateForColumn( colum, delegate )
 			self.delegates.append( delegate )
 			self.connect( delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint )
 			colum += 1
@@ -250,12 +311,12 @@ class ListWidget( QtGui.QTableView ):
 			for row in rows:
 				data = self.model().getData()[ row ]
 				idList.append( data["id"] )
-			self.delete( idList, ask=True )
+			self.requestDelete( idList )
 		elif e.key() == QtCore.Qt.Key_Return:
 			for index in self.selectedIndexes():
-				self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
+				self.itemActivated.emit(  self.model().getData()[index.row()] )
 		else:
-			super( ListWidget, self ).keyPressEvent( e )
+			super( ListTableView, self ).keyPressEvent( e )
 
 	def tableHeaderContextMenuEvent(self, point ):
 		class FieldAction( QtGui.QAction ):
@@ -279,24 +340,20 @@ class ListWidget( QtGui.QTableView ):
 		if selection:
 			self.model().setDisplayedFields( [ x.key for x in actions if x.isChecked() ] )
 
-	def delete(self, ids, ask=False ):
-		if ask:
-			if QtGui.QMessageBox.question(	self,
-										QtCore.QCoreApplication.translate("ListWidget", "Confirm delete"),
-										QtCore.QCoreApplication.translate("ListWidget", "Delete %s entries?") % len( ids ),
-										QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-										QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
-				return
-		self.overlay.inform( self.overlay.BUSY )
-		reqGroup = RequestGroup( finishedHandler=self.onQuerySuccess )
-		for id in ids:
-			reqGroup.addQuery( NetworkService.request("/%s/delete/%s" % ( self.modul, id ), secure=True ) )
-		reqGroup.queryType = "delete"
-		self.connect( reqGroup, QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.onProgessUpdate )
+	def requestDelete(self, ids):
+		if QtGui.QMessageBox.question(	self,
+						QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+						QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len( ids ),
+						QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+						QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+			return
+		protoWrap = protocolWrapperInstanceSelector.select( self.model().modul )
+		assert protoWrap is not None
+		protoWrap.deleteEntities( ids )
 	
 	def onProgessUpdate(self, request, done, maximum ):
 		if request.queryType == "delete":
-			descr =  QtCore.QCoreApplication.translate("ListWidget", "Deleting: %s of %s removed.")
+			descr =  QtCore.QCoreApplication.translate("ListTableView", "Deleting: %s of %s removed.")
 		else:
 			raise NotImplementedError()
 		self.overlay.inform( self.overlay.BUSY, descr % (done, maximum) )
@@ -305,3 +362,224 @@ class ListWidget( QtGui.QTableView ):
 		self.model().reload()
 		event.emit( QtCore.SIGNAL("listChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self, self.modul, None )
 		self.overlay.inform( self.overlay.SUCCESS )
+
+	def dragEnterEvent(self, event ):
+		"""
+			Allow Drag&Drop to the outside (ie relationalBone)
+		"""
+		if event.source() == self:
+			event.accept()
+			tmpList = []
+			for itemIndex in self.selectionModel().selection().indexes():
+				tmpList.append( self.model().getData()[ itemIndex.row() ] )
+			event.mimeData().setData( "viur/listDragData", json.dumps( { "entities": tmpList } ) )
+			event.mimeData().setUrls( [ urlForItem( self.model().modul, x) for x in tmpList] )
+		return( super( ListTableView, self ).dragEnterEvent( event ) )
+	
+	def dragMoveEvent( self, event ):
+		"""
+			We need to have drops enabled to recive dragEnterEvents, so we can add our mimeData;
+			but we won't ever recive an actual drop.
+		"""
+		event.ignore()
+
+	def getFilter( self ):
+		return( self.model().getFilter() )
+	
+	def setFilter( self, filter ):
+		self.model().setFilter( filter )
+	
+	def getModul( self ):
+		return( self.model().getModul() )
+	
+	def getSelection( self ):
+		"""
+			Returns a list of items currently selected.
+		"""
+		return( [self.model().getData()[ x ] for x in set( [x.row() for x in self.selectionModel().selection().indexes()] ) ] )
+
+	def paintEvent(self, event):
+		super( ListTableView, self ).paintEvent( event )
+		if not len( self.model().getData() ):
+			print("xxxx")
+			painter = QtGui.QPainter(self.viewport())
+			painter.setRenderHint(QtGui.QPainter.Antialiasing)
+			painter.drawImage( (self.width()/2-self.missingImage.width()/2),(self.height()/2-self.missingImage.height()/2), self.missingImage )
+			painter.pen().setWidth( 1 )
+			painter.setPen(QtGui.QColor( 0,0,0, 255 ))
+			fm = QtGui.QFontMetrics( painter.font() )
+			msg = QtCore.QCoreApplication.translate("List","No items in the current selection")
+			fontWidth = fm.width( msg )
+			painter.drawText( self.width()/2-fontWidth/2, (self.height()/2)+55, msg )
+			painter.end()
+
+	
+class ListWidget( QtGui.QWidget ):
+	
+	itemClicked = QtCore.pyqtSignal( (object,) )
+	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
+	itemActivated = QtCore.pyqtSignal( (object,) )
+	
+	defaultActions = { 	"list": ["add","edit","clone","preview","delete"],
+				"list.order": ["add", "edit", "delete", "markpayed", "marksend", "markcanceled", "downloadbill", "downloaddeliverynote"]
+			
+				}
+	
+	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
+		super( ListWidget, self ).__init__( *args, **kwargs )
+		self.modul = modul
+		self.ui = Ui_List()
+		self.ui.setupUi( self )
+		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
+		self.ui.tableWidget.setLayout( layout )
+		self.list = ListTableView( self.ui.tableWidget, modul, fields, filter )
+		layout.addWidget( self.list )
+		self.list.show()
+		self.toolBar = QtGui.QToolBar( self )
+		self.toolBar.setIconSize( QtCore.QSize( 32, 32 ) )
+		self.ui.boxActions.addWidget( self.toolBar )
+		if filter is not None and "search" in filter.keys():
+			self.ui.editSearch.setText( filter["search"] )
+		config = conf.serverConfig["modules"][ modul ]
+		if not actions:
+			handler = config["handler"]
+			if handler in self.defaultActions.keys():
+				actions = self.defaultActions[ handler ]
+		if actions is None: #Still None
+			actions = self.defaultActions[ "list" ]
+		self.setActions( actions )
+		if editOnDoubleClick:
+			self.list.itemDoubleClicked.connect( self.openEditor )
+		self.list.itemClicked.connect( self.itemClicked )
+		self.list.itemDoubleClicked.connect( self.itemDoubleClicked )
+		self.list.itemActivated.connect( self.itemActivated )
+		self.overlay = Overlay( self )
+		protoWrap = protocolWrapperInstanceSelector.select( self.modul )
+		assert protoWrap is not None
+		protoWrap.busyStateChanged.connect( self.onBusyStateChanged )
+		self.ui.searchBTN.released.connect( self.search )
+		self.ui.editSearch.returnPressed.connect( self.search )
+		self.ui.btnPrefixSearch.released.connect( self.doPrefixSearch )
+		self.ui.btnPrefixSearch.setEnabled( "orderby" in self.list.model().getFilter().keys() and self.list.model().getFilter()["orderby"]=="name" )
+		self.ui.editSearch.textEdited.connect( self.prefixSearch )
+		self.prefixSearchTimer = None
+		#self.overlay.inform( self.overlay.BUSY )
+		
+	def onBusyStateChanged( self, busy ):
+		if busy:
+			self.overlay.inform( self.overlay.BUSY )
+		else:
+			self.overlay.clear()
+
+	def setActions( self, actions ):
+		"""
+			Sets the actions avaiable for this widget (ie. its toolBar contents).
+			Setting None removes all existing actions
+			@param actions: List of actionnames
+			@type actions: List or None
+		"""
+		self.toolBar.clear()
+		for a in self.actions():
+			self.removeAction( a )
+		if not actions:
+			self._currentActions = []
+			return
+		self._currentActions = actions[:]
+		for action in actions:
+			if action=="|":
+				self.toolBar.addSeparator()
+			else:
+				actionWdg = actionDelegateSelector.select( "list.%s" % self.modul, action )
+				if actionWdg is not None:
+					actionWdg = actionWdg( self )
+					if isinstance( actionWdg, QtGui.QAction ):
+						self.toolBar.addAction( actionWdg )
+						self.addAction( actionWdg )
+					else:
+						self.toolBar.addWidget( actionWdg )
+	
+	def getActions( self ):
+		"""
+			Returns a list of the currently activated actions on this list.
+		"""
+		return( self._currentActions )
+
+	def search( self, *args, **kwargs ):
+		"""
+			Start a search for the given string.
+			If searchStr is None, it ends any currently active search.
+			@param searchStr: Token to search for
+			@type searchStr: String or None
+		"""
+		if self.prefixSearchTimer:
+			self.killTimer( self.prefixSearchTimer )
+			self.prefixSearchTimer = None
+		self.list.model().search( self.ui.editSearch.text() )
+
+
+	def prefixSearch( self, *args, **kwargs ):
+		"""
+			Trigger a prefix search for the current text is no key is
+			pressed within the next 1500ms.
+		"""
+		if self.prefixSearchTimer:
+			self.killTimer( self.prefixSearchTimer )
+		self.prefixSearchTimer = self.startTimer( 1500 )
+
+	def timerEvent(self, QTimerEvent):
+		"""
+			Perform the actual prefix search
+		"""
+		if QTimerEvent.timerId()!=self.prefixSearchTimer:
+			super( ListWidget, self ).timerEvent( QTimerEvent )
+		else:
+			self.doPrefixSearch()
+
+	def doPrefixSearch(self, *args, **kwargs):
+		if self.prefixSearchTimer:
+			self.killTimer( self.prefixSearchTimer )
+			self.prefixSearchTimer = None
+		self.list.model().prefixSearch( self.ui.editSearch.text() )
+
+	def getFilter( self ):
+		return( self.list.getFilter() )
+	
+	def setFilter( self, filter ):
+		self.list.setFilter( filter )
+		
+	def getModul( self ):
+		return( self.list.getModul() )
+	
+	def openEditor( self, item, clone=False ):
+		"""
+			Open a new Editor-Widget for the given entity.
+			@param item: Entity to open the editor for
+			@type item: Dict
+			@param clone: Clone the given entry?
+			@type clone: Bool
+		"""
+		myHandler = WidgetHandler.mainWindow.handlerForWidget( self ) #Always stack them as my child
+		assert myHandler is not None
+		if clone:
+			icon = QtGui.QIcon("icons/actions/clone.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Clone: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Clone entry")
+		else:
+			icon = QtGui.QIcon("icons/actions/edit.png")
+			if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][ self.list.modul ].keys() :
+				descr=QtCore.QCoreApplication.translate("List", "Edit: %s") % conf.serverConfig["modules"][ self.list.modul ]["name"]
+			else:
+				descr=QtCore.QCoreApplication.translate("List", "Edit entry")
+		modul = self.list.modul
+		key = item["id"]
+		handler = WidgetHandler( lambda: EditWidget( modul, EditWidget.appList, key, clone=clone ), descr, icon )
+		handler.mainWindow.addHandler( handler, myHandler )
+		handler.focus()
+
+	def requestDelete( self, ids ):
+		return( self.list.requestDelete( ids ) )
+		
+	def getSelection( self ):
+		return( self.list.getSelection() )

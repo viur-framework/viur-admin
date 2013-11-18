@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'list.ui'
 #
-# Created: Tue Jan 15 11:25:50 2013
-#      by: PyQt4 UI code generator 4.9.6
+# Created: Tue Oct 22 14:28:41 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,10 +26,12 @@ except AttributeError:
 class Ui_List(object):
     def setupUi(self, List):
         List.setObjectName(_fromUtf8("List"))
-        List.resize(690, 525)
+        List.resize(771, 525)
         self.verticalLayout = QtGui.QVBoxLayout(List)
+        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
+        self.boxActions.setMargin(0)
         self.boxActions.setObjectName(_fromUtf8("boxActions"))
         self.verticalLayout.addLayout(self.boxActions)
         self.tableWidget = QtGui.QWidget(List)
@@ -41,9 +43,14 @@ class Ui_List(object):
         self.editSearch.setMinimumSize(QtCore.QSize(0, 32))
         self.editSearch.setObjectName(_fromUtf8("editSearch"))
         self.layoutToolBar.addWidget(self.editSearch)
-        self.searchBTN = QtGui.QPushButton(List)
+        self.btnPrefixSearch = QtGui.QPushButton(List)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnPrefixSearch.setIcon(icon)
+        self.btnPrefixSearch.setObjectName(_fromUtf8("btnPrefixSearch"))
+        self.layoutToolBar.addWidget(self.btnPrefixSearch)
+        self.searchBTN = QtGui.QPushButton(List)
+        self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
         self.searchBTN.setIcon(icon)
         self.searchBTN.setObjectName(_fromUtf8("searchBTN"))
         self.layoutToolBar.addWidget(self.searchBTN)
@@ -55,5 +62,6 @@ class Ui_List(object):
     def retranslateUi(self, List):
         List.setWindowTitle(_translate("List", "Form", None))
         self.editSearch.setText(_translate("List", "Search", None))
-        self.searchBTN.setText(_translate("List", "Search", None))
+        self.btnPrefixSearch.setText(_translate("List", "Prefix search", None))
+        self.searchBTN.setText(_translate("List", "Fulltext search", None))
 

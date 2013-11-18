@@ -1,28 +1,26 @@
 from ui.loginformUI import Ui_LoginWindow
 from accountmanager import Accountmanager
 from PyQt4 import QtCore, QtGui, QtWebKit
-from network import NetworkService
+from network import NetworkService, securityTokenProvider
 from event import event
 from config import conf
 from utils import Overlay, showAbout
 import urllib.parse
 from urllib.error import HTTPError
-from PyQt4 import QtCore
 import json
 from locales import ISO639CODES
 import logging
 import re
 
 class LoginTask( QtCore.QObject ):
-	def __init__(self, username, password, captchaToken=None, captcha=None ):
-		QtCore.QObject.__init__( self )
+	loginFailed = QtCore.pyqtSignal( (str,) )
+	loginSucceeded = QtCore.pyqtSignal()
+	captchaRequired = QtCore.pyqtSignal( (str,str) )
+	
+	def __init__(self, username, password, captchaToken=None, captcha=None, *args, **kwargs ):
+		super( LoginTask, self ).__init__( *args, **kwargs )
 		self.logger = logging.getLogger( "LoginTask" )
 		self.logger.debug("Starting LoginTask")
-		try:
-			event.emit( QtCore.SIGNAL( "loginStarted(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)" ), username, password, captchaToken, captcha )
-		except StopIteration:
-			logging.info("Login aborted by StopIteration")
-			return
 		self.username = username
 		self.password = password
 		self.captcha = captcha
@@ -50,7 +48,7 @@ class LoginTask( QtCore.QObject ):
 	
 	def onAuthMethodKnown(self, request ):
 		self.logger.debug("Checkpoint: onAuthMethodKnown")
-		method = bytes( request.readAll() ).decode("UTF-8").lower()
+		method = request.readAll().data().decode("UTF-8").lower()
 		if method == "x-viur-internal":
 			logging.debug("LoginTask using method x-viur-internal")
 			NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True, successHandler=self.onViurAuth, failureHandler=self.onError )
@@ -78,30 +76,19 @@ class LoginTask( QtCore.QObject ):
 			self.onError( msg = "Unable to decode response!" )
 			return
 		if str(res).lower()=="okay":
-			self.loadConfig()
+			securityTokenProvider.reset() #User-login flushes the session, invalidate all skeys
+			self.onLoginSucceeded( request )
 		else:
 			self.onError( msg = "Recived response!=\"okay\"!" )
 
 	def onLocalAuth(self, request):
 		self.logger.debug("Checkpoint: onLocalAuth")
-		NetworkService.request("http://%s:%s/admin/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None, successHandler=self.loadConfig, failureHandler=self.onError )
+		NetworkService.request("http://%s:%s/admin/user/login" % ( self.hostName, urllib.parse.urlparse( NetworkService.url ).port ), None, successHandler=self.onLoginSucceeded, failureHandler=self.onError )
 		
-	def loadConfig(self, request=None):
-		self.logger.debug("Checkpoint: loadConfig")
-		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError )
-		
-	def onLoadConfig(self, request):
-		self.logger.debug("Checkpoint: onLoadConfig")
-		try:
-			conf.serverConfig = NetworkService.decode( request )
-		except ValueError:
-			self.onError( msg = "Unable to decode response!" )
-			return
-		event.emit( QtCore.SIGNAL("loginSucceeded()") )
 
 	def onGoogleAuthSuccess( self, request ):
 		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
-		res = bytes( request.readAll() ).decode("UTF-8")
+		res = bytes( request.readAll().data() ).decode("UTF-8")
 		authToken=None
 		for line in res.splitlines():
 			if line.lower().startswith("auth="):
@@ -118,7 +105,8 @@ class LoginTask( QtCore.QObject ):
 					elif line.lower().startswith("captchaurl"):
 						captchaURL = line[ 11: ]
 				assert captchaToken and captchaURL
-				self.emit(QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), captchaToken, captchaURL)
+				self.captchaRequired.emit( captchaToken, captchaURL )
+				self.deleteLater()
 				return
 			else:
 				self.onError( msg="Found no authToken in response!" )
@@ -140,15 +128,29 @@ class LoginTask( QtCore.QObject ):
 	
 	def onGAEAuth( self, request=None ):
 		self.logger.debug("Checkpoint: onGAEAuth")
-		self.req = NetworkService.request( "/user/login", successHandler=self.loadConfig, failureHandler=self.onError )
+		NetworkService.request( "/user/login", successHandler=self.onLoginSucceeded, failureHandler=self.onError )
 	
 	def onError( self, request=None, error=None, msg=None ):
-		event.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), QtCore.QCoreApplication.translate("Login", msg or str( error ) ) )
-		self.emit( QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), msg or str( error ) )
-		
+		self.loginFailed.emit( QtCore.QCoreApplication.translate("Login", msg or str( error ) ) )
+		self.deleteLater()
 
+	def onLoginSucceeded( self, req ):
+		"""
+			Try to convince the server to send us its content in our language
+		"""
+		if "language" in conf.adminConfig.keys():
+			lang = conf.adminConfig["language"]
+		else:
+			lang = "en"
+		NetworkService.request( "/setLanguage/%s" % lang, secure=True, successHandler=self.onLanguageSet, failureHandler=self.onError )
 	
-
+	def onLanguageSet( self, req ):
+		"""
+			The language has been set, we are done with this task
+		"""
+		self.loginSucceeded.emit()
+		self.deleteLater()
+	
 class Login( QtGui.QMainWindow ):
 	def __init__( self, *args, **kwargs ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
@@ -156,10 +158,9 @@ class Login( QtGui.QMainWindow ):
 		self.ui.setupUi( self )
 		self.accman = None #Reference to our Account-MGR
 		self.helpBrowser = None
-		self.connect( event, QtCore.SIGNAL('resetLoginWindow()'), self.enableForm )
-		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
-		self.connect( event, QtCore.SIGNAL('loginSucceeded()'), self.closeWindow )
-		self.connect( event, QtCore.SIGNAL('accountListChanged()'), self.loadAccounts )
+		event.connectWithPriority( 'resetLoginWindow', self.enableForm,  event.lowPriority )
+		event.connectWithPriority( 'accountListChanged', self.loadAccounts,  event.lowPriority )
+		self.ui.cbPortal.currentIndexChanged.connect( self.onCbPortalCurrentIndexChanged )
 		self.ui.lblCaptcha.setText( QtCore.QCoreApplication.translate("Login", "Not required"))
 		self.ui.editCaptcha.hide()
 		self.captchaToken = None
@@ -167,7 +168,7 @@ class Login( QtGui.QMainWindow ):
 		self.overlay = Overlay( self )
 		shortCut = QtGui.QShortcut( self )
 		shortCut.setKey("Return")
-		self.connect( shortCut, QtCore.SIGNAL("activated()"), self.on_btnLogin_released )
+		shortCut.activated.connect( self.onBtnLoginReleased )
 		#Populate the language-selector
 		self.langKeys = list( conf.availableLanguages.keys() )
 		self.ui.cbLanguages.blockSignals( True )
@@ -179,6 +180,9 @@ class Login( QtGui.QMainWindow ):
 		if currentLang in self.langKeys:
 			self.ui.cbLanguages.setCurrentIndex( self.langKeys.index( currentLang ) )
 		self.ui.cbLanguages.blockSignals( False )
+		self.ui.btnLogin.clicked.connect( self.onBtnLoginReleased )
+		self.ui.startAccManagerBTN.released.connect( self.onStartAccManagerBTNReleased )
+		self.ui.cbLanguages.currentIndexChanged.connect( self.onCbLanguagesCurrentIndexChanged )
 		
 	def changeEvent(self, *args, **kwargs):
 		super( Login, self ).changeEvent( *args, **kwargs )
@@ -191,12 +195,12 @@ class Login( QtGui.QMainWindow ):
 			cb.addItem(account["name"])
 		if len( conf.accounts ) > 0:
 			cb.setCurrentIndex( 0 )
-			self.on_cbPortal_currentIndexChanged( 0 )
+			self.onCbPortalCurrentIndexChanged( 0 )
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
 
-	def on_cbPortal_currentIndexChanged (self, index):
+	def onCbPortalCurrentIndexChanged (self, index):
 		if isinstance(index, str):
 			return
 		if ( self.ui.cbPortal.currentIndex() == -1 ):
@@ -207,16 +211,19 @@ class Login( QtGui.QMainWindow ):
 		self.ui.editPassword.setText(activeaccount["password"])
 		self.ui.editUrl.setText(activeaccount["url"])
 
-	def closeWindow(self):
+	def onLoginSucceeded(self):
+		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
+		conf.loadPortalConfig( NetworkService.url )
+		event.emit("loginSucceeded")
 		self.hide()
 
 	def statusMessageUpdate(self, type, message ):
 		self.ui.statusbar.showMessage( message, 5000 )
 		
-	def on_editPassword_returnPressed (self):
-		self.on_btnLogin_released()
+	def onEditPasswordReturnPressed (self):
+		self.onBtnLoginReleased()
 
-	def on_btnLogin_released( self ):
+	def onBtnLoginReleased( self ):
 		url = self.ui.editUrl.displayText()
 		username =self.ui.editUsername.text()
 		password = self.ui.editPassword.text()
@@ -236,7 +243,7 @@ class Login( QtGui.QMainWindow ):
 					"url":url
 					}
 					conf.accounts.append(saveacc)
-		elif cb.currentIndex()!=0: #Move this account to the beginning, so it will be selected on the next start of apex
+		elif cb.currentIndex()!=0: #Move this account to the beginning, so it will be selected on the next start of admin
 			account = conf.accounts[ cb.currentIndex() ]
 			conf.accounts.remove( account )
 			conf.accounts.insert(0, account)
@@ -254,21 +261,21 @@ class Login( QtGui.QMainWindow ):
 			self.helpBrowser = None
 		self.login( username, password, captcha )
 
-	def on_startAccManagerBTN_released(self):
+	def onStartAccManagerBTNReleased(self):
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
 		self.accman = Accountmanager()
 		self.accman.show()
 		
-	def on_actionAccountmanager_triggered(self):
-		self.on_startAccManagerBTN_released()
+	def onActionAccountmanagerTriggered(self):
+		self.onStartAccManagerBTNReleased()
 	
-	def on_actionAbout_triggered(self, checked=None):
+	def onActionAboutTriggered(self, checked=None):
 		if checked is None: return
 		showAbout( self )
 		
-	def on_actionHelp_triggered(self):
+	def onActionHelpTriggered(self):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 		self.helpBrowser = QtWebKit.QWebView( )
@@ -279,8 +286,7 @@ class Login( QtGui.QMainWindow ):
 	
 	def setCaptcha( self, token, url ):
 		self.captchaToken = token
-		self.captchaReq = NetworkService.request("https://www.google.com/accounts/"+url)
-		self.connect( self.captchaReq, QtCore.SIGNAL("finished()"), self.onCaptchaAvaiable )
+		self.captchaReq = NetworkService.request("https://www.google.com/accounts/"+url, finishedHandler=self.onCaptchaAvaiable)
 
 	def onCaptchaAvaiable(self):
 		pixmap = QtGui.QPixmap()
@@ -301,17 +307,18 @@ class Login( QtGui.QMainWindow ):
 		"""
 		self.overlay.inform( self.overlay.BUSY )
 		if captcha:
-			self.loginTask = LoginTask( username, password, self.captchaToken, captcha )
+			loginTask = LoginTask( username, password, self.captchaToken, captcha, parent=self )
 		else:
-			self.loginTask = LoginTask( username, password )
-		self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
-		self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
-		self.connect( event, QtCore.SIGNAL("loginSucceeded()"), self.loginSucceeded )
+			loginTask = LoginTask( username, password, parent=self )
+		loginTask.loginSucceeded.connect( self.onLoginSucceeded )
+		loginTask.captchaRequired.connect( self.setCaptcha )
+		loginTask.loginFailed.connect( self.onLoginFailed )
+		#self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
+		
+		#self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
 
-
-	def loginSucceeded( self ):
-		self.overlay.inform( self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful") )
-		conf.loadPortalConfig( NetworkService.url )
+	def onLoginFailed( self, msg ):
+		self.overlay.inform( self.overlay.ERROR, msg )
 	
 	def enableForm(self, msg=None):
 		if msg:
@@ -320,7 +327,7 @@ class Login( QtGui.QMainWindow ):
 			self.overlay.clear()
 		self.show()
 
-	def on_cbLanguages_currentIndexChanged(self, index):
+	def onCbLanguagesCurrentIndexChanged(self, index):
 		if not isinstance( index, int):
 			return
 		for v in conf.availableLanguages.values(): #Fixme: Removes all (even unloaded) translations
@@ -329,7 +336,7 @@ class Login( QtGui.QMainWindow ):
 		QtCore.QCoreApplication.installTranslator( conf.availableLanguages[ newLanguage ] )
 		conf.adminConfig["language"] = newLanguage
 	
-	def on_editUsername_textChanged( self, txt ):
+	def onEditUsernameTextChanged( self, txt ):
 		"""
 			Check if the Username given is a valid email-address, and warn
 			the user if it isnt

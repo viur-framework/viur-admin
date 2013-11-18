@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'treeselector.ui'
 #
-# Created: Fri Jan 18 15:30:58 2013
-#      by: PyQt4 UI code generator 4.9.6
+# Created: Tue Jun 11 11:39:26 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 

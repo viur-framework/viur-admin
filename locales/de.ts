@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="de_DE" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.0" language="de_DE">
 <context>
     <name>Accountmanager</name>
     <message>
-        <location filename="accountmanager.py" line="58"/>
+        <location filename="accountmanager.py" line="60"/>
         <source>New</source>
         <translation>Neu</translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="70"/>
+        <location filename="accountmanager.py" line="72"/>
         <source>Account deletion</source>
         <translation>Account löschen</translation>
     </message>
     <message>
-        <location filename="accountmanager.py" line="70"/>
+        <location filename="accountmanager.py" line="72"/>
         <source>Really delete the account &quot;%s&quot;?</source>
         <translation>Den Account &quot;%s&quot; wirklich löschen?</translation>
     </message>
@@ -37,24 +38,45 @@
     </message>
 </context>
 <context>
+    <name>BasePreview</name>
+    <message>
+        <location filename="editpreviewUI.py" line="47"/>
+        <source>Reload</source>
+        <translation>Neu laden</translation>
+    </message>
+</context>
+<context>
+    <name>BooleanEditBone</name>
+    <message>
+        <location filename="boolean.py" line="25"/>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <location filename="boolean.py" line="25"/>
+        <source>No</source>
+        <translation>Nein</translation>
+    </message>
+</context>
+<context>
     <name>CalenderList</name>
     <message>
-        <location filename="calender.py" line="19"/>
+        <location filename="calender.py" line="12"/>
         <source>unfiltered</source>
         <translation>ungefiltert</translation>
     </message>
     <message>
-        <location filename="calender.py" line="20"/>
+        <location filename="calender.py" line="13"/>
         <source>Year</source>
         <translation>Jahr</translation>
     </message>
     <message>
-        <location filename="calender.py" line="21"/>
+        <location filename="calender.py" line="14"/>
         <source>Month</source>
         <translation>Monat</translation>
     </message>
     <message>
-        <location filename="calender.py" line="22"/>
+        <location filename="calender.py" line="15"/>
         <source>Day</source>
         <translation>Tag</translation>
     </message>
@@ -77,37 +99,37 @@
 <context>
     <name>DialogCreateTable</name>
     <message>
-        <location filename="createtable.ui" line="17"/>
+        <location filename="createtableUI.py" line="66"/>
         <source>Create Table</source>
         <translation>Tabelle erstellen</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="23"/>
+        <location filename="createtableUI.py" line="67"/>
         <source>Rows</source>
         <translation>Reihen</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="33"/>
+        <location filename="createtableUI.py" line="68"/>
         <source>Columns</source>
         <translation>Spalten</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="43"/>
+        <location filename="createtableUI.py" line="69"/>
         <source>Alignment</source>
         <translation>Ausrichtung</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="51"/>
+        <location filename="createtableUI.py" line="70"/>
         <source>Left</source>
         <translation>Links</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="56"/>
+        <location filename="createtableUI.py" line="71"/>
         <source>Center</source>
         <translation>Zentriert</translation>
     </message>
     <message>
-        <location filename="createtable.ui" line="61"/>
+        <location filename="createtableUI.py" line="72"/>
         <source>Right</source>
         <translation>Rechts</translation>
     </message>
@@ -115,47 +137,47 @@
 <context>
     <name>DocEdit</name>
     <message>
-        <location filename="docEdit.ui" line="14"/>
+        <location filename="docEditUI.py" line="115"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="24"/>
+        <location filename="docEditUI.py" line="116"/>
         <source>Import/Export</source>
         <translation>Import/Export</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="57"/>
+        <location filename="docEditUI.py" line="118"/>
         <source>New caption</source>
         <translation>Neue Überschrift</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="68"/>
+        <location filename="docEditUI.py" line="119"/>
         <source>New Image</source>
         <translation>Neues Bild</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="79"/>
+        <location filename="docEditUI.py" line="120"/>
         <source>New Text</source>
         <translation>Neuer Text</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="90"/>
+        <location filename="docEditUI.py" line="121"/>
         <source>Apply</source>
         <translation>Übernehmen</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="101"/>
+        <location filename="docEditUI.py" line="122"/>
         <source>New Table</source>
         <translation>Neue Tabelle</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="112"/>
+        <location filename="docEditUI.py" line="123"/>
         <source>Extensions</source>
         <translation>Erweiterung</translation>
     </message>
     <message>
-        <location filename="docEdit.ui" line="124"/>
+        <location filename="docEditUI.py" line="124"/>
         <source>Add</source>
         <translation>Hinzufügen</translation>
     </message>
@@ -173,7 +195,7 @@
         <translation>Link bearbeiten</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="770"/>
+        <location filename="docEdit.py" line="769"/>
         <source>Table</source>
         <translation>Tabelle</translation>
     </message>
@@ -218,42 +240,42 @@
         <translation>Diese Spalte</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1523"/>
+        <location filename="docEdit.py" line="1522"/>
         <source>Document editor</source>
         <translation>Dokument-Editor</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="800"/>
+        <location filename="docEdit.py" line="799"/>
         <source>Text</source>
         <translation>Text</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="833"/>
+        <location filename="docEdit.py" line="832"/>
         <source>Image</source>
         <translation>Bild</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="864"/>
+        <location filename="docEdit.py" line="863"/>
         <source>(empty caption)</source>
         <translation>(keine Überschrift)</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="883"/>
+        <location filename="docEdit.py" line="882"/>
         <source>Change caption</source>
         <translation>Überschrift ändern</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1481"/>
+        <location filename="docEdit.py" line="1480"/>
         <source>Insert new caption</source>
         <translation>Neue Überschrift einfügen</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1481"/>
+        <location filename="docEdit.py" line="1480"/>
         <source>New caption</source>
         <translation>Neue Überschrift</translation>
     </message>
     <message>
-        <location filename="docEdit.py" line="1489"/>
+        <location filename="docEdit.py" line="1488"/>
         <source>New text</source>
         <translation>Neuer Text</translation>
     </message>
@@ -261,159 +283,148 @@
 <context>
     <name>Edit</name>
     <message>
-        <location filename="edit.ui" line="14"/>
+        <location filename="editUI.py" line="84"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="edit.ui" line="35"/>
+        <location filename="editUI.py" line="85"/>
         <source>Reset</source>
         <translation>Zurücksetzen</translation>
     </message>
     <message>
-        <location filename="edit.ui" line="70"/>
+        <location filename="editUI.py" line="87"/>
         <source>Preview</source>
         <translation>Vorschau</translation>
     </message>
     <message>
-        <location filename="edit.ui" line="105"/>
+        <location filename="editUI.py" line="89"/>
         <source>Save and continue</source>
         <translation>Speichern und Weiter</translation>
     </message>
     <message>
-        <location filename="edit.ui" line="94"/>
+        <location filename="editUI.py" line="88"/>
         <source>Save and close</source>
         <translation>Speichern und Schließen</translation>
     </message>
     <message>
-        <location filename="edit.ui" line="46"/>
+        <location filename="editUI.py" line="86"/>
         <source>Close</source>
         <translation>Schließen</translation>
     </message>
 </context>
 <context>
-    <name>EditHandler</name>
-    <message>
-        <location filename="edit.py" line="191"/>
-        <source>Confirm reset</source>
-        <translation>Zurücksetzen bestätigen</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="191"/>
-        <source>Discard all unsaved changes?</source>
-        <translation>Alle ungespeicherten Änderungen verwerfen?</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="258"/>
-        <source>General</source>
-        <translation>Allgemeines</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="347"/>
-        <source>Entry saved</source>
-        <translation>Eintrag gespeichert</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="353"/>
-        <source>Missing data</source>
-        <translation>Fehlende Daten</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="358"/>
-        <source>Task created</source>
-        <translation>Aufgabe erstellt</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="358"/>
-        <source>The task was sucessfully created.</source>
-        <translation>Die Aufgabe wurde erfolgreich erstellt.</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="358"/>
-        <source>Okay</source>
-        <translation>Ok</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="116"/>
-        <source>Edit: %s</source>
-        <translation>Bearbeiten: %s</translation>
-    </message>
-    <message>
-        <location filename="edit.py" line="340"/>
-        <source>There was an error saving your changes</source>
-        <translation>Es gab einen Fehler beim Speichern der Änderungen</translation>
-    </message>
+    <name>EditWidget</name>
     <message>
         <location filename="edit.py" line="103"/>
         <source>Execute</source>
         <translation>Ausführen</translation>
     </message>
     <message>
-        <location filename="edit.py" line="110"/>
+        <location filename="edit.py" line="115"/>
+        <source>Save and Close</source>
+        <translation>Speichern und Schließen</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="113"/>
+        <source>Save and New</source>
+        <translation>Speichern und Neu</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="116"/>
+        <source>Save and Continue</source>
+        <translation>Speichern und weiter</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="141"/>
         <source>Clone: %s</source>
         <translation>Klonen: %s</translation>
     </message>
     <message>
-        <location filename="edit.py" line="112"/>
+        <location filename="edit.py" line="143"/>
         <source>Clone entry</source>
         <translation>Eintrag klonen</translation>
     </message>
     <message>
-        <location filename="edit.py" line="118"/>
+        <location filename="edit.py" line="147"/>
+        <source>Edit: %s</source>
+        <translation>Bearbeiten: %s</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="149"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="edit.py" line="121"/>
+        <location filename="edit.py" line="152"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
-</context>
-<context>
-    <name>EditPreview</name>
     <message>
-        <location filename="editpreview.ui" line="32"/>
-        <source>Reload</source>
-        <translation>Neu laden</translation>
+        <location filename="edit.py" line="192"/>
+        <source>Confirm reset</source>
+        <translation>Zurücksetzen bestätigen</translation>
     </message>
     <message>
-        <location filename="editpreview.ui" line="42"/>
-        <source>about:blank</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FileBone</name>
-    <message>
-        <location filename="file.py" line="72"/>
-        <source>Change selection</source>
-        <translation>Auswahl ändern</translation>
+        <location filename="edit.py" line="192"/>
+        <source>Discard all unsaved changes?</source>
+        <translation>Alle ungespeicherten Änderungen verwerfen?</translation>
     </message>
     <message>
-        <location filename="file.py" line="134"/>
-        <source>Select file</source>
-        <translation>Datei auswählen</translation>
+        <location filename="edit.py" line="259"/>
+        <source>General</source>
+        <translation>Allgemeines</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="351"/>
+        <source>Entry saved</source>
+        <translation>Eintrag gespeichert</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="365"/>
+        <source>Missing data</source>
+        <translation>Fehlende Daten</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="372"/>
+        <source>There was an error saving your changes</source>
+        <translation>Es gab einen Fehler beim Speichern der Änderungen</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="377"/>
+        <source>Task created</source>
+        <translation>Aufgabe erstellt</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="377"/>
+        <source>The task was sucessfully created.</source>
+        <translation>Die Aufgabe wurde erfolgreich erstellt.</translation>
+    </message>
+    <message>
+        <location filename="edit.py" line="377"/>
+        <source>Okay</source>
+        <translation>Ok</translation>
     </message>
 </context>
 <context>
     <name>FileDownloadProgress</name>
     <message>
-        <location filename="fileDownloadProgress.ui" line="14"/>
+        <location filename="fileDownloadProgressUI.py" line="51"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="fileDownloadProgress.ui" line="27"/>
+        <location filename="fileDownloadProgressUI.py" line="52"/>
         <source>ProgressTotal</source>
         <translation>Fortschritt Gesamt</translation>
     </message>
     <message>
-        <location filename="fileDownloadProgress.ui" line="43"/>
+        <location filename="fileDownloadProgressUI.py" line="53"/>
         <source>Progress</source>
         <translation>Fortschritt</translation>
     </message>
     <message>
-        <location filename="fileDownloadProgress.ui" line="65"/>
+        <location filename="fileDownloadProgressUI.py" line="54"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
@@ -421,110 +432,45 @@
 <context>
     <name>FileHandler</name>
     <message>
-        <location filename="file.py" line="197"/>
-        <source>Creating dir %s in %s</source>
-        <translation>Erstelle Verzeichnis %s in %s</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="211"/>
-        <source>File %s exists in %s. Overwrite?</source>
-        <translation>Datei %s existiert in %s. Überschreiben?</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="232"/>
+        <location filename="file.py" line="131"/>
         <source>Files: %s/%s, Directories: %s/%s, Bytes: %s/%s</source>
         <translation>Dateien: %s von %s, Verzeichnisse: %s von %s, Bytes: %s von %s</translation>
     </message>
     <message>
-        <location filename="file.py" line="294"/>
-        <source>Downloading: %s</source>
-        <translation>Herunterladen:%s</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="430"/>
-        <source>Rename</source>
-        <translation>Umbenennen</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="414"/>
-        <source>Edit</source>
-        <translation>Bearbeiten</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="418"/>
-        <source>Copy</source>
-        <translation>Kopieren</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="419"/>
-        <source>Cut</source>
-        <translation>Ausschneiden</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="420"/>
-        <source>Delete</source>
-        <translation>Löschen</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="430"/>
-        <source>New name</source>
-        <translation>Neuer Name</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="452"/>
-        <source>Insert</source>
-        <translation>Einfügen</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="73"/>
+        <location filename="file.py" line="18"/>
         <source>Upload files</source>
         <translation>Dateien hochladen</translation>
     </message>
     <message>
-        <location filename="file.py" line="84"/>
+        <location filename="file.py" line="35"/>
         <source>Download files</source>
         <translation>Dateien herunterladen</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="360"/>
-        <source>Error during upload</source>
-        <translation>Fehler während dem Hochladen</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="360"/>
-        <source>There was an error uploading your files</source>
-        <translation>Es gab einen Fehler beim hochladen der Dateien</translation>
-    </message>
-    <message>
-        <location filename="file.py" line="211"/>
-        <source>Please confirm</source>
-        <translation>Bitte bestätigen</translation>
     </message>
 </context>
 <context>
     <name>FileUploadProgress</name>
     <message>
-        <location filename="fileUploadProgress.ui" line="14"/>
+        <location filename="fileUploadProgressUI.py" line="57"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="fileUploadProgress.ui" line="24"/>
+        <location filename="fileUploadProgressUI.py" line="58"/>
         <source>ProgressTotal</source>
         <translation>Fortschritt Gesamt</translation>
     </message>
     <message>
-        <location filename="fileUploadProgress.ui" line="38"/>
+        <location filename="fileUploadProgressUI.py" line="59"/>
         <source>ProgressFile</source>
         <translation>Fortschritt Datei</translation>
     </message>
     <message>
-        <location filename="fileUploadProgress.ui" line="54"/>
+        <location filename="fileUploadProgressUI.py" line="60"/>
         <source>Progress</source>
         <translation>Fortschritt</translation>
     </message>
     <message>
-        <location filename="fileUploadProgress.ui" line="76"/>
+        <location filename="fileUploadProgressUI.py" line="61"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
@@ -532,110 +478,105 @@
 <context>
     <name>Form</name>
     <message>
-        <location filename="docEditfileEdit.ui" line="14"/>
+        <location filename="docEditfileEditUI.py" line="124"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="43"/>
+        <location filename="docEditfileEditUI.py" line="125"/>
         <source>x</source>
-        <translation type="unfinished"></translation>
+        <translation>x</translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="61"/>
+        <location filename="docEditfileEditUI.py" line="126"/>
         <source>%</source>
-        <translation type="unfinished"></translation>
+        <translation>%</translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="66"/>
+        <location filename="docEditfileEditUI.py" line="127"/>
         <source>px</source>
-        <translation type="unfinished"></translation>
+        <translation>px</translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="71"/>
+        <location filename="docEditfileEditUI.py" line="128"/>
         <source>em</source>
-        <translation type="unfinished"></translation>
+        <translation>em</translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="81"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="129"/>
         <source>Größe</source>
-        <translation type="unfinished"></translation>
+        <translation>Größe</translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="93"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="130"/>
         <source>Auswählen</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="102"/>
+        <location filename="docEditfileEditUI.py" line="131"/>
         <source>Datei</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="112"/>
+        <location filename="docEditfileEditUI.py" line="132"/>
         <source>Links</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="117"/>
+        <location filename="docEditfileEditUI.py" line="133"/>
         <source>Mitte</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="122"/>
+        <location filename="docEditfileEditUI.py" line="134"/>
         <source>Rechts</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="130"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="135"/>
         <source>FolgendenText umfließen lassen</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="139"/>
+        <location filename="docEditfileEditUI.py" line="136"/>
         <source>Ausrichtung</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="152"/>
+        <location filename="docEditfileEditUI.py" line="137"/>
         <source>Titel</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="159"/>
+        <location filename="docEditfileEditUI.py" line="138"/>
         <source>Alternativ-Text</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="166"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="139"/>
         <source>Verknüpfen mit</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="docEditfileEdit.ui" line="182"/>
+        <location filename="docEditfileEditUI.py" line="140"/>
         <source>-Keine Verlinkung-</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="187"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="141"/>
         <source>Vergrößern</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditfileEdit.ui" line="195"/>
+    <message utf8="true">
+        <location filename="docEditfileEditUI.py" line="142"/>
         <source>In neuem Fenster öffnen</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="docEditfileEdit.ui" line="21"/>
-        <source>about:blank</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
     <name>Help</name>
     <message>
-        <location filename="mainwindow.py" line="394"/>
+        <location filename="mainwindow.py" line="367"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
@@ -643,190 +584,195 @@
 <context>
     <name>Hierarchy</name>
     <message>
-        <location filename="hierarchy.py" line="148"/>
+        <location filename="hierarchy.py" line="363"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="134"/>
+        <location filename="hierarchy.py" line="25"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
     <message>
-        <location filename="hierarchy.py" line="153"/>
+        <location filename="hierarchy.py" line="60"/>
         <source>Delete entry</source>
         <translation>Eintrag löschen</translation>
     </message>
     <message>
-        <location filename="hierarchy.ui" line="20"/>
+        <location filename="hierarchyUI.py" line="60"/>
         <source>Form</source>
-        <translation type="unfinished">Form</translation>
-    </message>
-    <message>
-        <location filename="hierarchy.ui" line="60"/>
-        <source>about:blank</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>HierarchyHandler</name>
-    <message>
-        <location filename="hierarchy.py" line="162"/>
-        <source>Delete entry %s and everything beneath?</source>
-        <translation>Eintrag %s und alles darunter löschen?</translation>
-    </message>
-    <message>
-        <location filename="hierarchy.py" line="164"/>
-        <source>Delete this entry and everything beneath?</source>
-        <translation>Diesen Eintrag und alles darunter löschen?</translation>
-    </message>
-    <message>
-        <location filename="hierarchy.py" line="165"/>
-        <source>Confirm delete</source>
-        <translation>Löschen bestätigen</translation>
+        <translation>Form</translation>
     </message>
 </context>
 <context>
     <name>HierarchySelector</name>
     <message>
-        <location filename="hierarchySelector.ui" line="14"/>
+        <location filename="hierarchySelectorUI.py" line="52"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="hierarchySelector.ui" line="23"/>
+        <location filename="hierarchySelectorUI.py" line="53"/>
         <source>Selected:</source>
         <translation>Ausgewählt:</translation>
     </message>
     <message>
-        <location filename="hierarchySelector.ui" line="33"/>
+        <location filename="hierarchySelectorUI.py" line="54"/>
         <source>Apply</source>
         <translation>Übernehmen</translation>
     </message>
 </context>
 <context>
+    <name>HierarchyTreeWidget</name>
+    <message>
+        <location filename="hierarchy.py" line="268"/>
+        <source>Confirm delete</source>
+        <translation>Löschen bestätigen</translation>
+    </message>
+    <message>
+        <location filename="hierarchy.py" line="268"/>
+        <source>Delete %s entries and everything below?</source>
+        <translation>%s Einträge samt Untereinträgen löschen?</translation>
+    </message>
+</context>
+<context>
     <name>LinkEdit</name>
     <message>
-        <location filename="docEditlinkEdit.ui" line="14"/>
+        <location filename="docEditlinkEditUI.py" line="46"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditlinkEdit.ui" line="20"/>
+    <message utf8="true">
+        <location filename="docEditlinkEditUI.py" line="47"/>
         <source>Verknüpfungsziel</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="docEditlinkEdit.ui" line="30"/>
+    <message utf8="true">
+        <location filename="docEditlinkEditUI.py" line="48"/>
         <source>In neuem Fenster öffnen</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
     <name>List</name>
     <message>
-        <location filename="list.ui" line="14"/>
+        <location filename="listUI.py" line="63"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="calenderlist.ui" line="60"/>
+        <location filename="calenderlistUI.py" line="77"/>
         <source>dd.MM.yyyy</source>
         <translation>tt.mm.jjjj</translation>
     </message>
     <message>
-        <location filename="list.ui" line="41"/>
+        <location filename="listUI.py" line="64"/>
         <source>Search</source>
         <translation>Suchen</translation>
     </message>
     <message>
-        <location filename="list.py" line="79"/>
+        <location filename="list.py" line="566"/>
         <source>Clone: %s</source>
         <translation>Klonen: %s</translation>
     </message>
     <message>
-        <location filename="list.py" line="81"/>
+        <location filename="list.py" line="568"/>
         <source>Clone entry</source>
         <translation>Eintrag klonen</translation>
     </message>
     <message>
-        <location filename="list.py" line="85"/>
+        <location filename="list.py" line="572"/>
         <source>Edit: %s</source>
         <translation>Bearbeiten: %s</translation>
     </message>
     <message>
-        <location filename="list.py" line="87"/>
+        <location filename="list.py" line="574"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
+    </message>
+    <message>
+        <location filename="list.py" line="411"/>
+        <source>No items in the current selection</source>
+        <translation>Die aktuelle Auswahl enthält keine Einträge</translation>
+    </message>
+    <message>
+        <location filename="listUI.py" line="65"/>
+        <source>Prefix search</source>
+        <translation>Schnellsuche</translation>
+    </message>
+    <message>
+        <location filename="listUI.py" line="66"/>
+        <source>Fulltext search</source>
+        <translation type="unfinished">Volltextsuche</translation>
     </message>
 </context>
 <context>
     <name>ListHandler</name>
     <message>
-        <location filename="list.py" line="93"/>
+        <location filename="list.py" line="14"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
     <message>
-        <location filename="list.py" line="102"/>
+        <location filename="list.py" line="25"/>
         <source>Add entry: %s</source>
         <translation>Eintrag hinzufügen: %s</translation>
     </message>
     <message>
-        <location filename="list.py" line="110"/>
+        <location filename="list.py" line="39"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="list.py" line="152"/>
-        <source>Aborted</source>
-        <translation>Abgebrochen</translation>
-    </message>
-    <message>
-        <location filename="list.py" line="167"/>
+        <location filename="list.py" line="85"/>
         <source>Delete</source>
         <translation>Löschen</translation>
     </message>
     <message>
-        <location filename="list.py" line="196"/>
+        <location filename="list.py" line="122"/>
         <source>Preview: %s</source>
         <translation>Vorschau: %s</translation>
     </message>
     <message>
-        <location filename="list.py" line="231"/>
+        <location filename="list.py" line="159"/>
         <source>Preview</source>
         <translation>Vorschau</translation>
     </message>
     <message>
-        <location filename="list.py" line="220"/>
+        <location filename="list.py" line="150"/>
         <source>Preview not possible</source>
         <translation>Vorschau nicht möglich</translation>
     </message>
     <message>
-        <location filename="list.py" line="50"/>
-        <source>Search</source>
-        <translation>Suchen</translation>
-    </message>
-    <message>
-        <location filename="list.py" line="121"/>
+        <location filename="list.py" line="66"/>
         <source>Clone entry</source>
         <translation>Eintrag klonen</translation>
     </message>
+    <message>
+        <location filename="list.py" line="49"/>
+        <source>Edit multiple Entries</source>
+        <translation>Mehrere Einträge bearbeiten</translation>
+    </message>
+    <message>
+        <location filename="list.py" line="49"/>
+        <source>Edit all %s accounts?</source>
+        <translation>Alle %s Accounts bearbeiten?</translation>
+    </message>
 </context>
 <context>
-    <name>ListWidget</name>
+    <name>ListTableView</name>
     <message>
-        <location filename="list.py" line="280"/>
+        <location filename="list.py" line="344"/>
         <source>Confirm delete</source>
         <translation>Löschen bestätigen</translation>
     </message>
     <message>
-        <location filename="list.py" line="280"/>
+        <location filename="list.py" line="344"/>
         <source>Delete %s entries?</source>
         <translation>%s Einträge Löschen?</translation>
     </message>
     <message>
-        <location filename="list.py" line="295"/>
+        <location filename="list.py" line="356"/>
         <source>Deleting: %s of %s removed.</source>
         <translation>Lösche: %s von %s gelöscht</translation>
     </message>
@@ -834,131 +780,141 @@
 <context>
     <name>Login</name>
     <message>
-        <location filename="login.py" line="230"/>
+        <location filename="login.py" line="237"/>
         <source>Save this account</source>
         <translation>Diesen Account speichern</translation>
     </message>
     <message>
-        <location filename="login.py" line="225"/>
+        <location filename="login.py" line="232"/>
         <source>Save this account permanently?</source>
         <translation>Diesen Account dauerhaft speichern?</translation>
     </message>
     <message>
-        <location filename="login.py" line="228"/>
+        <location filename="login.py" line="235"/>
         <source>Enter a name for this account</source>
         <translation>Geben Sie einen Namen für diesen Account ein</translation>
     </message>
     <message>
-        <location filename="login.py" line="230"/>
+        <location filename="login.py" line="237"/>
         <source>Save the password, too?</source>
         <translation>Das Passwort ebenfalls speichern?</translation>
     </message>
     <message>
-        <location filename="login.py" line="248"/>
+        <location filename="login.py" line="255"/>
         <source>Login in progress</source>
         <translation>Einloggen im Gange</translation>
     </message>
     <message>
-        <location filename="login.py" line="292"/>
+        <location filename="login.py" line="298"/>
         <source>Captcha required</source>
         <translation>Captcha notwendig</translation>
     </message>
     <message>
-        <location filename="login.py" line="313"/>
+        <location filename="login.py" line="215"/>
         <source>Login successful</source>
         <translation>Login erfolgreich</translation>
     </message>
     <message>
-        <location filename="login.py" line="163"/>
+        <location filename="login.py" line="164"/>
         <source>Not required</source>
         <translation>Nicht benötigt</translation>
+    </message>
+    <message>
+        <location filename="login.py" line="349"/>
+        <source>This Email address looks valid</source>
+        <translation>Diese EMailadresse scheint gültig zu sein</translation>
+    </message>
+    <message>
+        <location filename="login.py" line="352"/>
+        <source>This Email address is invalid</source>
+        <translation>Diese EMailadresse ist ungültig</translation>
     </message>
 </context>
 <context>
     <name>LoginWindow</name>
     <message>
-        <location filename="loginform.ui" line="89"/>
+        <location filename="loginformUI.py" line="173"/>
         <source>Portal</source>
         <translation>Portal</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="105"/>
+        <location filename="loginformUI.py" line="174"/>
         <source>Server</source>
         <translation>Server</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="128"/>
+        <location filename="loginformUI.py" line="175"/>
         <source>Captcha</source>
         <translation>Captcha</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="167"/>
+        <location filename="loginformUI.py" line="177"/>
         <source>Password</source>
         <translation>Passwort</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="214"/>
+        <location filename="loginformUI.py" line="178"/>
         <source>Accountmannager</source>
         <translation>Account Manager</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="241"/>
+        <location filename="loginformUI.py" line="180"/>
         <source>Language</source>
         <translation>Sprache</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="278"/>
+        <location filename="loginformUI.py" line="181"/>
         <source>Login</source>
         <translation>Einloggen</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="302"/>
+        <location filename="loginformUI.py" line="182"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="320"/>
+        <location filename="loginformUI.py" line="184"/>
         <source>Erste Schritte</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="340"/>
+        <location filename="loginformUI.py" line="188"/>
         <source>Accountmanager</source>
         <translation>Account Manager</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="144"/>
+        <location filename="loginformUI.py" line="176"/>
         <source>User</source>
         <comment>xy&lt;</comment>
         <translation>Nutzer</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="310"/>
+        <location filename="loginformUI.py" line="183"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="335"/>
+        <location filename="loginformUI.py" line="187"/>
         <source>Generel settigs</source>
         <translation>Allgemeine Einstellungen</translation>
     </message>
-    <message encoding="UTF-8">
-        <location filename="loginform.ui" line="26"/>
+    <message utf8="true">
+        <location filename="loginformUI.py" line="172"/>
         <source>ViurAdmin – Hello!</source>
         <translation>ViurAdmin – Hallo!</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="330"/>
+        <location filename="loginformUI.py" line="186"/>
         <source>About this Software</source>
         <translation>Über diese Software</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="325"/>
+        <location filename="loginformUI.py" line="185"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
     <message>
-        <location filename="loginform.ui" line="229"/>
+        <location filename="loginformUI.py" line="179"/>
         <source>Not required</source>
         <translation>Nicht benötigt</translation>
     </message>
@@ -966,107 +922,107 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="accountmanager.ui" line="26"/>
+        <location filename="accountmanagerUI.py" line="123"/>
         <source>Viur Accountmanager</source>
         <translation>Viur Accountmanager</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="85"/>
+        <location filename="accountmanagerUI.py" line="126"/>
         <source>Account Name</source>
         <translation>Account Name</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="51"/>
+        <location filename="accountmanagerUI.py" line="124"/>
         <source>New Account</source>
         <translation>Neuer Account</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="65"/>
+        <location filename="accountmanagerUI.py" line="125"/>
         <source>Delete Account</source>
         <translation>Account löschen</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="95"/>
+        <location filename="accountmanagerUI.py" line="127"/>
         <source>Serveradress</source>
         <translation>Serveradresse</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="105"/>
+        <location filename="accountmanagerUI.py" line="128"/>
         <source>Username</source>
         <translation>Benutzer</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="131"/>
+        <location filename="accountmanagerUI.py" line="129"/>
         <source>Userpassword</source>
         <translation>Passwort</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="138"/>
+        <location filename="accountmanagerUI.py" line="130"/>
         <source>Save Password</source>
         <translation>Passwort sichern</translation>
     </message>
     <message>
-        <location filename="accountmanager.ui" line="149"/>
+        <location filename="accountmanagerUI.py" line="131"/>
         <source>Back to Loginscreen</source>
         <translation>Zurück zum Loginscreen</translation>
     </message>
     <message>
-        <location filename="mainwindow.py" line="279"/>
+        <location filename="mainwindow.py" line="280"/>
         <source>Welcome to ViUR!</source>
         <translation>Willkommen bei ViUR!</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="14"/>
+        <location filename="adminUI.py" line="128"/>
         <source>ViUR Admin</source>
         <translation>ViUR Admin</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="62"/>
+        <location filename="adminUI.py" line="130"/>
         <source>Module</source>
         <translation>Module</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="112"/>
+        <location filename="adminUI.py" line="132"/>
         <source>TextLabel</source>
-        <translation type="unfinished">Beschriftung</translation>
+        <translation>Beschriftung</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="157"/>
+        <location filename="adminUI.py" line="133"/>
         <source>Info</source>
         <translation>Hinweis</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="165"/>
+        <location filename="adminUI.py" line="134"/>
         <source>Advanced</source>
         <translation>Erweitert</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="179"/>
+        <location filename="adminUI.py" line="135"/>
         <source>Beenden</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="admin.ui" line="188"/>
+        <location filename="adminUI.py" line="136"/>
         <source>Erste Schritte</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="admin.ui" line="197"/>
+        <location filename="adminUI.py" line="137"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="209"/>
+        <location filename="adminUI.py" line="138"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="admin.ui" line="218"/>
+        <location filename="adminUI.py" line="139"/>
         <source>Ausloggen</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
-        <location filename="admin.ui" line="223"/>
+        <location filename="adminUI.py" line="140"/>
         <source>Tasks</source>
         <translation>Aufgaben</translation>
     </message>
@@ -1074,17 +1030,17 @@
 <context>
     <name>NetworkService</name>
     <message>
-        <location filename="network.py" line="377"/>
+        <location filename="network.py" line="457"/>
         <source>Insecure connection</source>
         <translation>Unverschlüsselte Verbindung</translation>
     </message>
     <message>
-        <location filename="network.py" line="377"/>
+        <location filename="network.py" line="457"/>
         <source>Continue in unsecure mode</source>
         <translation>Trotz unverschlüsselte Verbindung fortfahren</translation>
     </message>
     <message>
-        <location filename="network.py" line="377"/>
+        <location filename="network.py" line="457"/>
         <source>Abort</source>
         <translation>Abbrechen</translation>
     </message>
@@ -1092,124 +1048,148 @@
 <context>
     <name>OrderHandler</name>
     <message>
-        <location filename="order.py" line="18"/>
+        <location filename="list_order.py" line="19"/>
         <source>Payment recived</source>
         <translation>Zahlung erhalten</translation>
     </message>
     <message>
-        <location filename="order.py" line="27"/>
+        <location filename="list_order.py" line="30"/>
         <source>Mark as payed</source>
         <translation>Als bezahlt markieren</translation>
     </message>
     <message>
-        <location filename="order.py" line="27"/>
+        <location filename="list_order.py" line="30"/>
         <source>Mark %s orders as payed?</source>
         <translation>%s Bestellungen als bezahlt markieren?</translation>
     </message>
     <message>
-        <location filename="order.py" line="53"/>
+        <location filename="list_order.py" line="45"/>
         <source>Order Shipped</source>
         <translation>Bestellung verschickt</translation>
     </message>
     <message>
-        <location filename="order.py" line="96"/>
+        <location filename="list_order.py" line="88"/>
         <source>Mark shipped</source>
         <translation>Als versendet markieren</translation>
     </message>
     <message>
-        <location filename="order.py" line="62"/>
+        <location filename="list_order.py" line="55"/>
         <source>Mark %s orders as shipped?</source>
         <translation>%s Bestellungen als versendet markieren?</translation>
     </message>
     <message>
-        <location filename="order.py" line="8"/>
+        <location filename="list_order.py" line="9"/>
         <source>Please confirm</source>
         <translation>Bitte bestätigen</translation>
     </message>
     <message>
-        <location filename="order.py" line="87"/>
+        <location filename="list_order.py" line="78"/>
         <source>Order canceled</source>
         <translation>Bestellung storniert</translation>
     </message>
     <message>
-        <location filename="order.py" line="96"/>
+        <location filename="list_order.py" line="88"/>
         <source>Cancel %s orders?</source>
         <translation>%s Bestellungen stornieren?</translation>
     </message>
     <message>
-        <location filename="order.py" line="147"/>
+        <location filename="list_order.py" line="131"/>
         <source>Bill</source>
         <translation>Rechnung</translation>
     </message>
     <message>
-        <location filename="order.py" line="184"/>
+        <location filename="list_order.py" line="167"/>
         <source>Delivery Note</source>
         <translation>Lieferschein</translation>
     </message>
     <message>
-        <location filename="order.py" line="122"/>
+        <location filename="list_order.py" line="111"/>
         <source>Download Bill</source>
         <translation>Rechnung herunterladen</translation>
     </message>
     <message>
-        <location filename="order.py" line="159"/>
+        <location filename="list_order.py" line="146"/>
         <source>Download delivery note</source>
         <translation>Lieferschein herunterladen</translation>
     </message>
 </context>
 <context>
+    <name>Preloader</name>
+    <message>
+        <location filename="preloaderUI.py" line="47"/>
+        <source>Loading...</source>
+        <translation>Lade...</translation>
+    </message>
+</context>
+<context>
     <name>Preview</name>
     <message>
-        <location filename="edit.py" line="32"/>
+        <location filename="edit.py" line="35"/>
         <source>Preview not possible</source>
         <translation>Vorschau nicht möglich</translation>
     </message>
 </context>
 <context>
+    <name>RelationalBoneSelector</name>
+    <message>
+        <location filename="relational.py" line="271"/>
+        <source>Select %s</source>
+        <translation>Wähle %s</translation>
+    </message>
+</context>
+<context>
+    <name>RelationalEditBone</name>
+    <message>
+        <location filename="relational.py" line="92"/>
+        <source>Change selection</source>
+        <translation>Auswahl ändern</translation>
+    </message>
+</context>
+<context>
     <name>Task</name>
     <message>
-        <location filename="task.ui" line="14"/>
+        <location filename="taskUI.py" line="54"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="task.ui" line="25"/>
+        <location filename="taskUI.py" line="55"/>
         <source>TextLabel</source>
         <translation>Beschriftung</translation>
     </message>
     <message>
-        <location filename="task.ui" line="48"/>
+        <location filename="taskUI.py" line="56"/>
         <source>Execute</source>
         <translation>Ausführen</translation>
     </message>
 </context>
 <context>
-    <name>Tasks</name>
+    <name>TextEdit</name>
     <message>
-        <location filename="tasks.py" line="24"/>
-        <source>Tasks</source>
-        <translation>Aufgaben</translation>
+        <location filename="text.py" line="403"/>
+        <source>Apply</source>
+        <translation>Übernehmen</translation>
     </message>
 </context>
 <context>
     <name>TextEditBone</name>
     <message>
-        <location filename="text.py" line="577"/>
+        <location filename="text.py" line="1030"/>
         <source>Open editor</source>
         <translation>Editor öffnen</translation>
     </message>
     <message>
-        <location filename="text.py" line="194"/>
+        <location filename="text.py" line="500"/>
         <source>Text edit</source>
         <translation>Text bearbeiten</translation>
     </message>
     <message>
-        <location filename="text.py" line="408"/>
+        <location filename="text.py" line="740"/>
         <source>Specify target</source>
         <translation>Ziel bestimmen</translation>
     </message>
     <message>
-        <location filename="text.py" line="408"/>
+        <location filename="text.py" line="740"/>
         <source>Link target:</source>
         <translation>Ziel verlinken:</translation>
     </message>
@@ -1217,12 +1197,12 @@
 <context>
     <name>Tree</name>
     <message>
-        <location filename="tree.ui" line="14"/>
+        <location filename="treeUI.py" line="60"/>
         <source>Form</source>
-        <translation type="unfinished">Form</translation>
+        <translation>Form</translation>
     </message>
     <message>
-        <location filename="tree.ui" line="35"/>
+        <location filename="treeUI.py" line="62"/>
         <source>Search</source>
         <translation>Suchen</translation>
     </message>
@@ -1230,149 +1210,157 @@
 <context>
     <name>TreeHandler</name>
     <message>
-        <location filename="tree.py" line="115"/>
+        <location filename="tree.py" line="103"/>
         <source>Delete</source>
         <translation>Löschen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="71"/>
+        <location filename="tree.py" line="23"/>
         <source>Add entry</source>
         <translation>Eintrag hinzufügen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="94"/>
+        <location filename="tree.py" line="68"/>
         <source>Directory up</source>
         <translation>Verzeichnis nach oben</translation>
     </message>
     <message>
-        <location filename="tree.py" line="103"/>
+        <location filename="tree_simple.py" line="64"/>
         <source>New directory</source>
         <translation>Neues Verzeichnis</translation>
     </message>
     <message>
-        <location filename="tree.py" line="109"/>
+        <location filename="tree_simple.py" line="70"/>
         <source>Create directory</source>
         <translation>Verzeichnis erstellen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="109"/>
+        <location filename="tree_simple.py" line="70"/>
         <source>Directory name</source>
         <translation>Verzeichnisname</translation>
     </message>
     <message>
-        <location filename="tree.py" line="82"/>
+        <location filename="tree_simple.py" line="39"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
+    <message>
+        <location filename="tree.py" line="136"/>
+        <source>Switch View</source>
+        <translation>Ansicht wechseln</translation>
+    </message>
+    <message>
+        <location filename="tree_simple.py" line="88"/>
+        <source>Rename entry</source>
+        <translation>Eintrag umbenennen</translation>
+    </message>
 </context>
 <context>
-    <name>TreeItemEditBone</name>
+    <name>TreeListView</name>
     <message>
-        <location filename="treeitem.py" line="27"/>
-        <source>Select</source>
-        <translation>Auswählen</translation>
+        <location filename="tree.py" line="388"/>
+        <source>Confirm delete</source>
+        <translation>Löschen bestätigen</translation>
+    </message>
+    <message>
+        <location filename="tree.py" line="388"/>
+        <source>Delete %s nodes and %s leafs?</source>
+        <translation>%s Container und %s Einträge löschen?</translation>
     </message>
 </context>
 <context>
     <name>TreeSelector</name>
     <message>
-        <location filename="treeselector.ui" line="14"/>
+        <location filename="treeselectorUI.py" line="68"/>
         <source>File selection</source>
         <translation>Dateiauswahl</translation>
     </message>
     <message>
-        <location filename="treeselector.ui" line="42"/>
+        <location filename="treeselectorUI.py" line="69"/>
         <source>Add to selected</source>
         <translation>Zur Auswahl hinzufügen</translation>
     </message>
     <message>
-        <location filename="treeselector.ui" line="49"/>
+        <location filename="treeselectorUI.py" line="70"/>
         <source>Selected:</source>
         <translation>Ausgewählt:</translation>
     </message>
     <message>
-        <location filename="treeselector.ui" line="59"/>
+        <location filename="treeselectorUI.py" line="71"/>
         <source>Apply</source>
         <translation>Übernehmen</translation>
     </message>
 </context>
 <context>
-    <name>TreeWidget</name>
+    <name>TreeSimpleRenameAction</name>
     <message>
-        <location filename="tree.py" line="53"/>
+        <location filename="tree_simple.py" line="106"/>
         <source>Edit entry</source>
         <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="tree.py" line="319"/>
-        <source>Home</source>
-        <translation>Home</translation>
+        <location filename="tree_simple.py" line="113"/>
+        <source>Rename directory</source>
+        <translation>Verzeichnis umbenennen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="529"/>
-        <source>Rename</source>
-        <translation>Umbenennen</translation>
+        <location filename="tree_simple.py" line="113"/>
+        <source>New name:</source>
+        <translation>Neuer Name:</translation>
+    </message>
+</context>
+<context>
+    <name>TreeWidget</name>
+    <message>
+        <location filename="tree.py" line="527"/>
+        <source>Edit entry</source>
+        <translation>Eintrag bearbeiten</translation>
     </message>
     <message>
-        <location filename="tree.py" line="519"/>
-        <source>Copy</source>
-        <translation>Kopieren</translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="520"/>
+        <location filename="tree.py" line="344"/>
         <source>Cut</source>
         <translation>Ausschneiden</translation>
     </message>
     <message>
-        <location filename="tree.py" line="521"/>
+        <location filename="tree.py" line="346"/>
         <source>Delete</source>
         <translation>Löschen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="529"/>
-        <source>New name</source>
-        <translation>Neuer Name</translation>
-    </message>
-    <message>
-        <location filename="tree.py" line="552"/>
+        <location filename="tree.py" line="349"/>
         <source>Insert</source>
         <translation>Einfügen</translation>
     </message>
     <message>
-        <location filename="tree.py" line="470"/>
+        <location filename="tree.py" line="638"/>
         <source>Moving: %s of %s finished.</source>
         <translation>Verschiebe: %s von %s verschoben</translation>
     </message>
     <message>
-        <location filename="tree.py" line="472"/>
+        <location filename="tree.py" line="640"/>
         <source>Copying: %s of %s finished.</source>
         <translation>Kopiere: %s von %s kopiert.</translation>
     </message>
     <message>
-        <location filename="tree.py" line="474"/>
+        <location filename="tree.py" line="642"/>
         <source>Deleting: %s of %s removed.</source>
         <translation>Lösche: %s von %s gelöscht</translation>
-    </message>
-    <message>
-        <location filename="treeWidget.ui" line="14"/>
-        <source>Form</source>
-        <translation>Form</translation>
     </message>
 </context>
 <context>
     <name>Updater</name>
     <message>
-        <location filename="updater.ui" line="14"/>
+        <location filename="updaterUI.py" line="81"/>
         <source>ViUR Admin Updater</source>
         <translation>ViUR Admin Updater</translation>
     </message>
     <message>
-        <location filename="updater.ui" line="49"/>
+        <location filename="updaterUI.py" line="82"/>
         <source>Check for Updates</source>
         <translation>Nach Updates suchen</translation>
     </message>
     <message>
-        <location filename="updater.ui" line="60"/>
+        <location filename="updaterUI.py" line="83"/>
         <source>Update now</source>
         <translation>Update starten</translation>
     </message>
@@ -1407,12 +1395,12 @@
         <translation>Aktualisierung erfolgreich</translation>
     </message>
     <message>
-        <location filename="updater.ui" line="71"/>
+        <location filename="updaterUI.py" line="84"/>
         <source>Exit</source>
         <translation>Schließen</translation>
     </message>
     <message>
-        <location filename="network.py" line="377"/>
+        <location filename="network.py" line="457"/>
         <source>The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose &quot;abort&quot;!</source>
         <translation>Die Datei cacerts.pem fehlt oder ist ungültig. Ihre Daten und Passwörter werden unverschlüsselt übertragen. Fortfahren?</translation>
     </message>
@@ -1420,53 +1408,56 @@
 <context>
     <name>rawTextEditWindow</name>
     <message>
-        <location filename="rawtextedit.ui" line="14"/>
-        <source>MainWindow</source>
-        <translation>Hauptfenster</translation>
-    </message>
-    <message>
-        <location filename="rawtextedit.ui" line="24"/>
+        <location filename="rawtexteditUI.py" line="44"/>
         <source>Apply</source>
         <translation>Übernehmen</translation>
+    </message>
+    <message>
+        <location filename="rawtexteditUI.py" line="43"/>
+        <source>Form</source>
+        <translation>Form</translation>
     </message>
 </context>
 <context>
     <name>relationalSelector</name>
     <message>
-        <location filename="relationalselection.ui" line="14"/>
+        <location filename="relationalselectionUI.py" line="79"/>
         <source>Form</source>
-        <translation type="unfinished">Form</translation>
+        <translation>Form</translation>
     </message>
     <message>
-        <location filename="relationalselection.ui" line="29"/>
-        <source>Search</source>
-        <translation>Suchen</translation>
-    </message>
-    <message>
-        <location filename="relationalselection.ui" line="60"/>
+        <location filename="relationalselectionUI.py" line="80"/>
         <source>Selected:</source>
         <translation>Ausgewählt:</translation>
     </message>
     <message>
-        <location filename="relationalselection.ui" line="72"/>
+        <location filename="relationalselectionUI.py" line="81"/>
         <source>Abort</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location filename="relationalselection.ui" line="96"/>
-        <source>Save</source>
-        <translation>Speichern</translation>
+        <location filename="relationalselectionUI.py" line="82"/>
+        <source>Apply</source>
+        <translation>Übernehmen</translation>
+    </message>
+</context>
+<context>
+    <name>tasks</name>
+    <message>
+        <location filename="tasks.py" line="10"/>
+        <source>Tasks</source>
+        <translation>Aufgaben</translation>
     </message>
 </context>
 <context>
     <name>textEditWindow</name>
     <message>
-        <location filename="textedit.ui" line="14"/>
+        <location filename="texteditUI.py" line="56"/>
         <source>MainWindow</source>
         <translation>Hauptfenster</translation>
     </message>
     <message>
-        <location filename="textedit.ui" line="24"/>
+        <location filename="texteditUI.py" line="57"/>
         <source>Apply</source>
         <translation>Übernehmen</translation>
     </message>

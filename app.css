@@ -1,16 +1,42 @@
+
+QMainWindow, QMenuBar, QStatusBar {
+	background:#f4f4f4;
+}
+
+QInputDialog {} 
+
 QScrollArea,
 QWidget {
 	border:0;
+	/*background-color: transparent;  sets background color for every widget */
+}
+
+#Preloader {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #eee);
+}
+
+#verticalLayout {
+	layoutLeftMargin:100px;
 }
 
 #centralwidget {
 	background:#f4f4f4;
 }
 
-#logincentralwidget {
-	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #eee);
+#widget {
+	border-bottom:1px solid #BE1622;
 }
 
+#logincentralwidget {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #f4f4f4);
+}
+
+#stackedWidget {
+}
+
+:focus {
+	outline: 0;
+} 
 
 	/*
  	=======================================
@@ -64,6 +90,11 @@ QTreeView::branch:has-siblings:adjoins-item:selected,
 QTreeView::branch:has-siblings:!adjoins-item:selected,
 QTreeView::branch:!has-children:!has-siblings:adjoins-item:selected {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #666, stop: 1 #777);
+}
+
+QTreeView:focus,
+QTreeView::branch:focus,
+QTreeView::item:focus {
 }
 
 QTreeView::branch,
@@ -120,14 +151,20 @@ QLabel {
 	color:#444;
 }
 
-#modulLbl {
+#iconLbl {
 	font-size:30px;
-    border-left: 1px solid #ddd;
-	border-bottom: 1px solid #ddd;
 	color:#222;
 	height:50px;
+	margin:0;
+	padding:0;
 }
 
+#modulLbl {
+	font-size:30px;
+	font-weight:lighter;
+	color:#666;
+	height:50px;
+}
 
 	/*
  	=======================================
@@ -135,6 +172,11 @@ QLabel {
 	=======================================	
 	*/
 	
+
+QPushButton:focus,
+QToolButton:focus {
+	border: 1px solid #777;
+}
 
 QPushButton,
 QToolButton {
@@ -183,10 +225,25 @@ QToolButton:disabled {
 	border: 1px solid #22601e;
 }
 
+#addAccBTN:focus,
+#saveAccBTN:focus,
+#btnMkDir:focus,
+#btnLogin:focus {
+	border: 1px solid #72D46A;	
+}
+
+#btnLogin {
+	width:100px;
+}
+
 #delAccBTN {
 	color:#eee;
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e20614, stop: 1 #c31520);
 	border: 1px solid #BE1622;
+}
+
+#delAccBTN:focus {
+	border: 1px solid #ff9a9a;
 }
 
 #addAccBTN:hover,
@@ -234,6 +291,15 @@ QToolButton:disabled {
 	border: 1px solid #fd3c3c;
 }
 
+QPushButton:focus,
+QToolButton:focus {
+	border: 1px solid #777;
+}
+
+QCheckBox:focus,
+QRadioButton:focus {
+	outline:1px dotted #777;	
+}
 
 	/*
  	=======================================
@@ -246,8 +312,7 @@ QComboBox,
 QListWidget, 
 QDateEdit,
 QDateTimeEdit,
-QTextEdit,
-WebView {
+QTextEdit {
 	padding:6px 7px 7px;
 	height:16px;
 	border:1px solid #ccc;
@@ -257,10 +322,17 @@ WebView {
 	margin-right: 6px;
 }
 
+QWebView,
+QPreviewWidget {
+	background:#fafafa;
+	border:1px solid #ccc;
+}
+
 QLineEdit {
 	width:250px;
 }
 
+QComboBox:focus,
 QLineEdit:focus {
 	border:1px solid #C00;
 }
@@ -286,7 +358,7 @@ QComboBox:on {
 QComboBox::down-arrow,
 QDateEdit::down-arrow,
 QDateTimeEdit::down-arrow {
-    background-image: url(icons/actions/dropdownarrow.png);
+    background-image: url(icons/actions/dropdownarrow.svg);
     background-position: center;
 	width:20px;
 	height:24px;
@@ -298,7 +370,7 @@ QDateTimeEdit::down-arrow {
 QComboBox::down-arrow:on,
 QDateEdit::down-arrow:on,
 QDateTimeEdit::down-arrow:on { /* shift the arrow when popup is open */
-    background-image: url(icons/actions/dropdownarrow_on.png);
+    background: url(icons/actions/dropdownarrow_on.svg);
     left: 6px;
 }
 
@@ -328,25 +400,92 @@ QComboBox QAbstractItemView {
 
 QComboBox QAbstractItemView::item:selected {color:#65b0a5;outline:none;}
 
+
 QListWidget:item {
 	padding:2px;
 }
 
 QListWidget:item:selected {
-	background: #BE1622;
+	background: #ccc;
 }
+
+QListWidget:item:focus {
+	border-right:4px solid #BE1622;
+}
+
+	/*
+ 	=======================================
+	Tabs
+	=======================================	
+	*/
+
+	/*To style individual tabs based on their state (:only-one, :first, :last, :middle, :previous-selected, :next-selected, :selected) you can use stylesheet-code similar to this:*/
+
+QTabBar::tab {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ddd, stop: 1 #ccc);
+    border: 1px solid #ccc;
+    border-bottom-color: #C2C7CB;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    padding:6px 7px 7px;
+    margin-left: 4px;
+    margin-bottom:-1px;
+}
+
+QTabBar::tab:!selected {
+     margin-top: 2px; /* make non-selected tabs look smaller */
+ }
+
+QTabBar::tab:selected {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fafafa, stop: 1 #eee);
+    border:1px solid #ddd;
+}
+
+QTabWidget::pane {
+	background:#eee;
+	border:1px solid #ccc;
+	border-bottom:1px solid #BE1622;
+}
+
+QTabWidget QTabWidget::pane {
+	border:0;
+}
+
+QTabWidget QLabel {
+	width:170px;
+	/*qproperty-alignment: AlignBottom AlignRight;*/
+}
+
+/*
+ QTabBar::close-button {
+     image: url(close.png)
+     subcontrol-position: left;
+ }
+ QTabBar::close-button:hover {
+     image: url(close-hover.png)
+ }*/
 
 	/*
  	=======================================
 	Tabellen
 	=======================================	
 	*/
+	
+#tableWidget {
+	margin: 0;
+	padding:0;
+	border:1px solid #ccc;
+    background-color: #f0f0f0;
+   	border-bottom:1px solid #BE1622;
+}	
 
 QTableView {
 	gridline-color: #ddd;
     background-color: #f7f7f7;
 	alternate-background-color: #eee;
 	selection-background-color: #ccc;	
+	left:0;
+	border-bottom:1px solid #ddd;
 }
 
 QTableView QAbstractButton {
@@ -355,8 +494,11 @@ QTableView QAbstractButton {
 	background: #f1f1f1;
 }
 
-QListView {
+QListView{
 }
+
+QTableView::item:selected {outline:0;}
+QTableView::item:focus {outline:0; border-right:4px solid #BE1622;}
 
 QHeaderView::section {
 	padding:7px;
@@ -406,8 +548,6 @@ QDoubleSpinBox::up-button {
  QDoubleSpinBox::up-arrow {
 	image: url(icons/menu/greyarrowup.png);
  }
-
-
 
  QSpinBox::down-button,
  QDoubleSpinBox::down-button {
@@ -510,7 +650,7 @@ background: none;}
 	
 	/*
  	=======================================
-	Progressbars
+	ProgressBars
 	=======================================	
 	*/
 
@@ -528,3 +668,12 @@ QProgressBar::chunk {
 	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #298342, stop: 1 #479c42);
 }
 
+	/*
+ 	=======================================
+	MessageBox
+	=======================================	
+	*/
+	
+QMessageBox {
+	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fff, stop: 1 #f4f4f4);
+}

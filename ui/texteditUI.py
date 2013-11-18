@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\textedit.ui'
+# Form implementation generated from reading ui file 'textedit.ui'
 #
-# Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Tue Jun 11 11:39:16 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_textEditWindow(object):
     def setupUi(self, textEditWindow):
@@ -27,7 +36,7 @@ class Ui_textEditWindow(object):
         self.verticalLayout.addWidget(self.textEdit)
         self.btnSave = QtGui.QPushButton(self.centralwidget)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSave.setIcon(icon)
         self.btnSave.setObjectName(_fromUtf8("btnSave"))
         self.verticalLayout.addWidget(self.btnSave)
@@ -44,16 +53,6 @@ class Ui_textEditWindow(object):
         QtCore.QMetaObject.connectSlotsByName(textEditWindow)
 
     def retranslateUi(self, textEditWindow):
-        textEditWindow.setWindowTitle(QtGui.QApplication.translate("textEditWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSave.setText(QtGui.QApplication.translate("textEditWindow", "Apply", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    textEditWindow = QtGui.QMainWindow()
-    ui = Ui_textEditWindow()
-    ui.setupUi(textEditWindow)
-    textEditWindow.show()
-    sys.exit(app.exec_())
+        textEditWindow.setWindowTitle(_translate("textEditWindow", "MainWindow", None))
+        self.btnSave.setText(_translate("textEditWindow", "Apply", None))
 

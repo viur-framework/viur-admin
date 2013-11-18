@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
-from utils import RegisterQueue,  formatString
-from handler.list import ListTableModel
+from utils import RegisterQueue, formatString, Overlay, WidgetHandler
 from ui.relationalselectionUI import Ui_relationalSelector
-from widgets.list import ListWidget, ListTableModel
+from widgets.list import ListWidget
+from widgets.edit import EditWidget
 from widgets.selectedEntities import SelectedEntitiesWidget
 from network import NetworkService
 from config import conf
+from priorityqueue import editBoneSelector, viewDelegateSelector
+from priorityqueue import protocolWrapperInstanceSelector
 
 class BaseBone:
 	pass
@@ -15,11 +17,12 @@ class BaseBone:
 
 class RelationalViewBoneDelegate(QtGui.QStyledItemDelegate):
 	cantSort = True
-	def __init__(self, structure, boneName):
+	def __init__(self, modul, boneName, structure):
 		super(RelationalViewBoneDelegate, self).__init__()
 		self.format = "$(name)"
 		if "format" in structure[boneName].keys():
 			self.format = structure[boneName]["format"]
+		self.modul = modul
 		self.structure = structure
 		self.boneName = boneName
 
@@ -53,11 +56,11 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 			data = NetworkService.decode( req )
 		except ValueError: #Query was canceled
 			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		self.layoutAboutToBeChanged.emit()
 		self.dataCache = []
 		for skel in data["skellist"]:
 			self.dataCache.append( skel )
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutChanged.emit()
 	
 	def getItem(self, label):
 		res = [ x for x in self.dataCache if formatString( self.format, self.structure, x)==label ]
@@ -67,63 +70,100 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 	
 
 class RelationalEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	GarbargeTypeName = "RelationalEditBone"
+	skelType = None
+
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", *args, **kwargs ):
 		super( RelationalEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
-		self.modulName = modulName
+		self.modulName =  modulName
 		self.boneName = boneName
-		self.toModul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
-		if not skelStructure[boneName]["multiple"]:
+		self.readOnly = readOnly
+		self.toModul = destModul
+		self.multiple = multiple
+		self.format = format
+		self.overlay = Overlay( self )
+		if not self.multiple:
 			self.layout = QtGui.QHBoxLayout( self )
 		else:
 			self.layout = QtGui.QVBoxLayout( self )
 			self.previewWidget = QtGui.QWidget( self )
 			self.previewLayout = QtGui.QVBoxLayout( self.previewWidget )
 			self.layout.addWidget( self.previewWidget )
-		self.addBtn = QtGui.QPushButton( "Auswählen", parent=self )
+		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"), parent=self )
 		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
-		if not skelStructure[boneName]["multiple"]:
+		self.addBtn.released.connect( self.onAddBtnReleased )
+		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
-			self.autoCompletionModel = AutocompletionModel( self.toModul, self.skelStructure[ self.boneName ]["format"], self.skelStructure )
-			self.autoCompleter = QtGui.QCompleter( self.autoCompletionModel )
-			self.autoCompleter.setModel( self.autoCompletionModel )
-			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
-			self.entry.setCompleter( self.autoCompleter )
-			self.entry.connect( self.entry, QtCore.SIGNAL('textChanged(QString)'), self.reloadAutocompletion )
-			self.autoCompleter.connect( self.autoCompleter, QtCore.SIGNAL('activated(QString)'), self.setAutoCompletion )  #Broken...
-			self.autoCompleter.connect( self.autoCompleter, QtCore.SIGNAL('highlighted(QString)'), self.setAutoCompletion ) 
+			self.installAutoCompletion()
 			self.layout.addWidget( self.entry )
 			icon6 = QtGui.QIcon()
-			icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			icon6.addPixmap(QtGui.QPixmap("icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
+			self.delBtn.released.connect( self.onDelBtnReleased )
 			self.layout.addWidget( self.addBtn )
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.on_delBtn_released )
 			self.selection = None
 		else:
 			self.selection = []
 			self.layout.addWidget( self.addBtn )
-	
+		
+
+	@classmethod
+	def fromSkelStructure( cls, modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		multiple = skelStructure[boneName]["multiple"]
+		if "modul" in skelStructure[ boneName ].keys():
+			destModul = skelStructure[ boneName ][ "modul" ]
+		else:
+			destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		format= "$(name)"
+		if "format" in skelStructure[ boneName ].keys():
+			format = skelStructure[ boneName ]["format"]
+		return( cls( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
+
+	def installAutoCompletion( self ):
+		"""
+			Installs our autoCompleter on self.entry if possible
+		"""
+		if not self.multiple:
+			self.autoCompletionModel = AutocompletionModel( self.toModul, format, {} ) #FIXME: {} was self.skelStructure
+			self.autoCompleter = QtGui.QCompleter( self.autoCompletionModel )
+			self.autoCompleter.setModel( self.autoCompletionModel )
+			self.autoCompleter.setCaseSensitivity( QtCore.Qt.CaseInsensitive )
+			self.entry.setCompleter( self.autoCompleter )
+			self.entry.textChanged.connect( self.reloadAutocompletion )
+			self.autoCompleter.activated.connect( self.setAutoCompletion )  #Broken...
+			self.autoCompleter.highlighted.connect( self.setAutoCompletion ) 
+
 	def updateVisiblePreview(self):
-		if self.skelStructure[self.boneName]["multiple"]:
+		protoWrap = protocolWrapperInstanceSelector.select( self.toModul )
+		assert protoWrap is not None
+		if self.skelType is None:
+			structure = protoWrap.viewStructure
+		elif self.skelType=="leaf":
+			structure = protoWrap.viewLeafStructure
+		elif self.skelType=="node":
+			structure = protoWrap.viewNodeStructure
+		if structure is None:
+			return
+		if self.multiple:
 			widgetItem = self.previewLayout.takeAt( 0 )
 			while widgetItem:
 				widgetItem = self.previewLayout.takeAt( 0 )
 			if self.selection and len(self.selection)>0:
 				for item in self.selection:
 					lbl = QtGui.QLabel( self.previewWidget )
-					lbl.setText( formatString( self.skelStructure[ self.boneName ]["format"], self.skelStructure, item ) )
+					lbl.setText( formatString( self.format, structure, item ) ) 
 					self.previewLayout.addWidget( lbl )
 				self.addBtn.setText("Auswahl ändern")
 			else:
 				self.addBtn.setText("Auswählen")
 		else:
 			if self.selection:
-				self.entry.setText( formatString( self.skelStructure[ self.boneName ]["format"], self.skelStructure, self.selection ) )
+				self.entry.setText( formatString( self.format, structure, self.selection ) )
 			else:
 				self.entry.setText( "" )
 
@@ -137,7 +177,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.setSelection( [ res ] )
 
 	def setSelection(self, selection):
-		if self.skelStructure[self.boneName]["multiple"]:
+		if self.multiple:
 			self.selection = selection
 		elif len( selection )>0 :
 			self.selection = selection[0]
@@ -145,13 +185,12 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.selection = None
 		self.updateVisiblePreview()
 	
-	def on_addBtn_released(self, *args, **kwargs ):
-		queue = RegisterQueue()
-		event.emit( QtCore.SIGNAL('requestRelationalBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection )
-		self.editWidget = queue.getBest()()
+	def onAddBtnReleased(self, *args, **kwargs ):
+		editWidget = RelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection )
+		editWidget.selectionChanged.connect( self.setSelection )
 
-	def on_delBtn_released(self, *args, **kwargs ):
-		if self.skelStructure[ self.boneName ]["multiple"]:
+	def onDelBtnReleased(self, *args, **kwargs ):
+		if self.multiple:
 			self.selection = []
 		else:
 			self.selection = None
@@ -164,7 +203,7 @@ class RelationalEditBone( QtGui.QWidget ):
 	def serializeForPost(self):
 		if not self.selection:
 			return( { self.boneName:None } )
-		if self.skelStructure[self.boneName]["multiple"]:
+		if self.multiple:
 			return( { self.boneName: [ str( x["id"] ) for x in self.selection ] } )
 		elif self.selection:
 			return( { self.boneName: str( self.selection["id"] ) } )
@@ -172,123 +211,99 @@ class RelationalEditBone( QtGui.QWidget ):
 			return( { self.boneName: None } )
 
 
-class BaseRelationalBoneSelector( QtGui.QWidget ):
-	""" 	
-		FIXME: This claas should derive from hander.List
-	"""
-	def __init__(self, modulName, boneName, skelStructure, selection, setSelection,  *args, **kwargs ):
-		QtGui.QWidget.__init__( self, *args, **kwargs )
+class RelationalBoneSelector( QtGui.QWidget ):
+	
+	selectionChanged = QtCore.pyqtSignal( (object, ) )
+	displaySourceWidget = ListWidget
+	displaySelectionWidget = SelectedEntitiesWidget
+	GarbargeTypeName = "RelationalBoneSelector"
+	
+	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs ):
+		super( RelationalBoneSelector, self ).__init__( *args, **kwargs )
 		self.modulName = modulName
 		self.boneName = boneName
-		self.skelStructure = skelStructure
+		self.multiple = multiple
+		self.modul = toModul
 		self.selection = selection
-		self.setSelection = setSelection
-		self.modul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
-		self.page = 0
 		self.ui = Ui_relationalSelector()
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.tableWidget )
 		self.ui.tableWidget.setLayout( layout )
-		self.list = ListWidget( self.ui.tableWidget, self.modul )
+		self.list = self.displaySourceWidget( self.modul, editOnDoubleClick=False, parent=self )
 		layout.addWidget( self.list )
 		self.list.show()
-		if not self.skelStructure[ self.boneName ]["multiple"]:
-			self.multiSelection = False
-		else:
-			self.multiSelection = True
 		layout = QtGui.QHBoxLayout( self.ui.listSelected )
 		self.ui.listSelected.setLayout( layout )
-		self.selection = SelectedEntitiesWidget( self, self.modul, selection, self.list )
+		self.selection = self.displaySelectionWidget( self.modul, selection, parent=self )
 		layout.addWidget( self.selection )
 		self.selection.show()
-		#self.selectedModel = RelationalSelectedTableModel( self.ui.tableSelected, self.modul,  self.model, self.selection, True  )
-		#self.ui.tableSelected.setModel( self.selectedModel )
-		#self.tableSelectedselectionModel = self.ui.tableSelected.selectionModel(  )
-		#self.ui.tableSelected.keyPressEvent = self.on_tableSelected_keyPressEvent
-		if not self.multiSelection:
-			self.list.setSelectionMode( self.list.SingleSelection )
+		if not self.multiple:
+			#self.list.setSelectionMode( self.list.SingleSelection )
 			self.selection.hide()
 			self.ui.lblSelected.hide()
-		#header = self.ui.tableView.horizontalHeader()
-		#header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		#header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
-		event.emit( QtCore.SIGNAL('stackWidget(PyQt_PyObject)'), self )
-		self.selection.connect( self.list, QtCore.SIGNAL("doubleClicked(const QModelIndex&)"), self.onSourceItemDoubleClicked )
+		self.list.itemDoubleClicked.connect( self.onSourceItemDoubleClicked )
+		self.ui.btnSelect.clicked.connect( self.onBtnSelectReleased )
+		self.ui.btnCancel.clicked.connect( self.onBtnCancelReleased )
+		event.emit( 'stackWidget', self )
 
-	def onSourceItemDoubleClicked(self, index):
+	def getBreadCrumb( self ):
+		protoWrap = protocolWrapperInstanceSelector.select( self.modulName )
+		assert protoWrap is not None
+		#FIXME: Bad hack to get the editWidget we belong to
+		for widget in WidgetHandler.mainWindow.handlerForWidget( self ).widgets:
+			if isinstance( widget, EditWidget ):
+				if (not widget.key) or widget.clone: #We're adding a new entry
+					if widget.skelType=="leaf":
+						skel = protoWrap.addLeafStructure
+					elif widget.skelType=="node":
+						skel = protoWrap.addNodeStructure
+					else:
+						skel = protoWrap.addStructure
+				else:
+					if widget.skelType=="leaf":
+						skel = protoWrap.editLeafStructure
+					elif widget.skelType=="node":
+						skel = protoWrap.editNodeStructure
+					else:
+						skel = protoWrap.editStructure
+		assert skel is not None
+		assert self.boneName in skel.keys()
+		return( QtCore.QCoreApplication.translate("RelationalBoneSelector", "Select %s") % skel[ self.boneName ]["descr"], QtGui.QIcon( "icons/actions/change_selection.svg" ) )
+
+
+	def onSourceItemDoubleClicked(self, item):
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		data = self.list.model().getData()[ index.row() ]
-		if self.multiSelection:
+		data = item
+		if self.multiple:
 			self.selection.extend( [data] )
-		if not self.multiSelection:
-			self.setSelection( [data] )
-			event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+		else:
+			self.selectionChanged.emit( [data] )
+			event.emit( "popWidget", self )
 
-	def reload(self, newFilter=None):
-		if newFilter == None:
-			newFilter = self.model().getFilter()
-		self.model().setFilter( newFilter )
+	def onBtnSelectReleased(self, *args, **kwargs):
+		self.selectionChanged.emit( self.selection.get() )
+		event.emit( "popWidget", self )
+
+	def onBtnCancelReleased(self, *args,  **kwargs ):
+		event.emit( "popWidget", self )
+
+	def getFilter( self ):
+		return( self.list.getFilter() )
 	
-	def reloadData(self ):
-		event.emit( QtCore.SIGNAL('dataChanged(PyQt_PyObject,PyQt_PyObject)'), self.modulName, self )
+	def setFilter( self, filter ):
+		return( self.list.setFilter( filter ) )
 	
-	def onDataChanged(self, modulName, emitingEntry):
-		if (modulName==self.modul or emitingEntry==self):
-			self.reload( )
-		
-	def on_tableSelected_doubleClicked (self,index):
-		self.selectedModel.removeItemAtIndex( index )
-		
-	def on_tableSelected_keyPressEvent(self, key):
-		"""Remove the currently selected Items from the selection"""
-		if( key.key()==QtCore.Qt.Key_Delete ):
-			selIdx = self.ui.tableSelected.selectedIndexes()
-			selIdx.sort( key=lambda x: x.row() )
-			selIdx.reverse()
-			for index in selIdx:
-				self.selectedModel.removeItemAtIndex( index )
+	def getModul( self ):
+		return( self.list.getModul() )
 
-	def on_btnSelect_released(self, *args, **kwargs):
-		self.setSelection( self.selection.get() )
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
 
-	def on_btnCancel_released(self, *args,  **kwargs ):
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+def CheckForRelationalicBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"].startswith("relational.") )
 
-	def on_editSearch_returnPressed(self):
-		self.search()
-	
-	def on_btnSearch_released(self):
-		self.search()
-	
-	def search(self):
-		searchstr=self.ui.editSearch.text()
-		filter = self.list.model().getFilter()
-		if searchstr=="" and "search" in filter.keys():
-			del filter["search"]
-		elif searchstr!="":
-			filter["search"]= searchstr
-		self.list.model().setFilter( filter )
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForRelationalicBone, RelationalEditBone)
+viewDelegateSelector.insert( 2, CheckForRelationalicBone, RelationalViewBoneDelegate)
 
-class RelationalHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		self.connect( event, QtCore.SIGNAL('requestRelationalBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.relationalBoneSeletor )
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
-		if skelStucture[boneName]["type"].startswith("relational."):
-			registerObject.registerHandler( 5, lambda: RelationalViewBoneDelegate(skelStucture,boneName) )
-
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStucture ):
-		if skelStucture[boneName]["type"].startswith("relational."):
-			registerObject.registerHandler( 10, RelationalEditBone( modulName, boneName, skelStucture ) )
-
-	def relationalBoneSeletor(self, registerObject, modulName, boneName, skelStructure, selection, setSelection ):
-		registerObject.registerHandler( 10, lambda: BaseRelationalBoneSelector( modulName, boneName, skelStructure, selection, setSelection ) )
-
-_RelationalHandler = RelationalHandler()

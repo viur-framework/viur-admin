@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\accountmanager.ui'
+# Form implementation generated from reading ui file 'accountmanager.ui'
 #
-# Created: Mon Nov 26 19:34:47 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Tue Jun 11 11:36:17 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -37,14 +46,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.addAccBTN = QtGui.QPushButton(self.centralwidget)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/add_white.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/add_white.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.addAccBTN.setIcon(icon1)
         self.addAccBTN.setObjectName(_fromUtf8("addAccBTN"))
         self.horizontalLayout_3.addWidget(self.addAccBTN)
         self.delAccBTN = QtGui.QPushButton(self.centralwidget)
         self.delAccBTN.setEnabled(False)
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete_white.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/delete_white.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.delAccBTN.setIcon(icon2)
         self.delAccBTN.setObjectName(_fromUtf8("delAccBTN"))
         self.horizontalLayout_3.addWidget(self.delAccBTN)
@@ -93,7 +102,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.FinishedBTN = QtGui.QPushButton(self.centralwidget)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/success_transparent.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.FinishedBTN.setIcon(icon3)
         self.FinishedBTN.setObjectName(_fromUtf8("FinishedBTN"))
         self.verticalLayout_3.addWidget(self.FinishedBTN)
@@ -111,23 +120,13 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Viur Accountmanager", None, QtGui.QApplication.UnicodeUTF8))
-        self.addAccBTN.setText(QtGui.QApplication.translate("MainWindow", "New Account", None, QtGui.QApplication.UnicodeUTF8))
-        self.delAccBTN.setText(QtGui.QApplication.translate("MainWindow", "Delete Account", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("MainWindow", "Account Name", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("MainWindow", "Serveradress", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("MainWindow", "Username", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("MainWindow", "Userpassword", None, QtGui.QApplication.UnicodeUTF8))
-        self.accSavePWcheckBox.setText(QtGui.QApplication.translate("MainWindow", "Save Password", None, QtGui.QApplication.UnicodeUTF8))
-        self.FinishedBTN.setText(QtGui.QApplication.translate("MainWindow", "Back to Loginscreen", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        MainWindow.setWindowTitle(_translate("MainWindow", "Viur Accountmanager", None))
+        self.addAccBTN.setText(_translate("MainWindow", "New Account", None))
+        self.delAccBTN.setText(_translate("MainWindow", "Delete Account", None))
+        self.label.setText(_translate("MainWindow", "Account Name", None))
+        self.label_2.setText(_translate("MainWindow", "Serveradress", None))
+        self.label_5.setText(_translate("MainWindow", "Username", None))
+        self.label_3.setText(_translate("MainWindow", "Userpassword", None))
+        self.accSavePWcheckBox.setText(_translate("MainWindow", "Save Password", None))
+        self.FinishedBTN.setText(_translate("MainWindow", "Back to Loginscreen", None))
 

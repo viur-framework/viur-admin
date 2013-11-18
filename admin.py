@@ -19,16 +19,16 @@ min_version = (3,2)
 if sys.version_info<min_version:
 	print("You need python3.2 or newer!")
 	sys.exit(1)
-try:
-	from PyQt4 import Qt, QtGui, QtCore, QtOpenGL, QtWebKit
-except ImportError:
+if 1:
+	from PyQt4 import QtGui, QtCore, QtOpenGL, QtWebKit
+else: # ImportError:
 	print( "QT Bindings are missing or incomplete! Ensure PyQT is build with Qt, QtGui, QtCore, QtOpenGL and QtWebKit" )
 	sys.exit(1)
-try:
-	from PyQt4 import Qsci
-except ImportError:
-	print( "Error importing QScintilla2 (Qsci)!")
-	sys.exit(1)
+#try:
+#	from PySide import Qsci
+#except ImportError:
+#	print( "Error importing QScintilla2 (Qsci)!")
+#	sys.exit(1)
 
 import logging
 
@@ -60,6 +60,8 @@ from config import conf
 import urllib, urllib.request
 from urllib.parse import quote_plus
 from bugsnag import Notification
+import protocolwrapper
+import actions
 
 def reportError( type, value, tb ):
 	print( "*"*40 )
@@ -96,9 +98,13 @@ if (options.report == "auto" and not os.path.exists( ".git" )) or options.report
 
 conf.cmdLineOpts = options #Store the command-line options
 
+app = QtGui.QApplication(sys.argv)
+
+#Enfoce Plastique GUI Style
+QtGui.QApplication.setStyle( "plastique" )
+
 import plugin
 
-app = Qt.QApplication(sys.argv)
 #Load translations
 transFiles = os.listdir("./locales/")
 for file in transFiles:
@@ -114,6 +120,8 @@ mw = MainWindow()
 l = Login()
 l.show()
 app.exec_()
+
 conf.savePortalConfig()
 conf.saveConfig()
+
 

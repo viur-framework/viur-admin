@@ -1,7 +1,16 @@
+# -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
 from bones.base import BaseViewBoneDelegate
 from config import conf
+from priorityqueue import editBoneSelector, viewDelegateSelector
+from html.parser import HTMLParser
+
+def unescapeHtml( html ):
+	if 1:
+		return( HTMLParser.unescape(HTMLParser, html) )
+	else: #except:
+		return( html )
 
 def chooseLang( value, prefs ):
 	"""
@@ -64,8 +73,8 @@ class Tag( QtGui.QWidget ):
 		else:
 			self.lblDisplay.show()
 			self.editField.hide()
-		self.connect( self.editField, QtCore.SIGNAL("editingFinished()"), self.onEditingFinished )
-		self.connect( self.btnDelete, QtCore.SIGNAL("released()"), lambda *args, **kwargs: self.deleteLater() )
+		self.editField.editingFinished.connect( self.onEditingFinished )
+		self.btnDelete.released.connect( self.deleteLater )
 		self.lblDisplay.mousePressEvent = self.onEdit
 	
 	def onEdit( self, *args, **kwargs ):
@@ -75,28 +84,25 @@ class Tag( QtGui.QWidget ):
 	
 	def onEditingFinished( self, *args, **kwargs ):
 		self.tag = self.editField.text()
-		self.lblDisplay.setText( self.tag )
+		self.lblDisplay.setText( str( self.tag ) )
 		self.lblDisplay.show()
 		self.editField.hide()
 
 class StringEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, multiple=False, languages=None, *args, **kwargs ):
 		super( StringEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
-		self.multiple = False
-		self.languages = None
-		if boneName in skelStructure.keys():
-			if "multiple" in skelStructure[ boneName ].keys():
-				self.multiple = skelStructure[ boneName ]["multiple"]
-			if "languages" in skelStructure[ boneName ].keys():
-				self.languages = skelStructure[ boneName ]["languages"]
+		self.modulName = modulName
 		self.boneName = boneName
-		if self.languages and self.multiple:
+		self.readOnly = readOnly
+		self.multiple = multiple
+		self.languages = languages
+		self.boneName = boneName
+		if self.languages and self.multiple: #FIXME: Multiple and readOnly...
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
-			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.tabWidget.currentChanged.connect( self.onTabCurrentChanged )
+			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
@@ -108,19 +114,20 @@ class StringEditBone( QtGui.QWidget ):
 				container.layout().addWidget( btnAdd )
 				def genLambda( lang ):
 					return lambda *args, **kwargs: self.genTag("",True,lang)
-				self.connect( btnAdd, QtCore.SIGNAL("released()"), genLambda( lang ) )
+				btnAdd.released.connect( genLambda( lang ) ) #FIXME: Lambda..
 			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
 		elif self.languages and not self.multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.tabWidget = QtGui.QTabWidget( self )
 			self.tabWidget.blockSignals(True)
-			self.connect( self.tabWidget, QtCore.SIGNAL("currentChanged (int)"), self.onTabCurrentChanged )
-			event.connectWithPriority( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), self.onTabLanguageChanged, event.lowPriority )
+			self.tabWidget.currentChanged.connect( self.onTabCurrentChanged )
+			event.connectWithPriority( "tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority )
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
 				edit = QtGui.QLineEdit()
+				edit.setReadOnly( self.readOnly )
 				self.langEdits[ lang ] = edit
 				self.tabWidget.addTab( edit, lang )
 			self.tabWidget.blockSignals(False)
@@ -128,13 +135,28 @@ class StringEditBone( QtGui.QWidget ):
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.btnAdd = QtGui.QPushButton( "Hinzufügen", self )
 			self.layout().addWidget( self.btnAdd )
-			self.connect( self.btnAdd, QtCore.SIGNAL("released()"), lambda *args, **kwargs: self.genTag("",True) )
+			self.btnAdd.released.connect( lambda *args, **kwargs: self.genTag("",True) ) #FIXME: Lambda
 			self.btnAdd.show()
 		else: #not languages and not multiple:
 			self.setLayout( QtGui.QVBoxLayout( self ) )
 			self.lineEdit = QtGui.QLineEdit( self )
 			self.layout().addWidget( self.lineEdit )
 			self.lineEdit.show()
+			self.lineEdit.setReadOnly( self.readOnly )
+
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		if boneName in skelStructure.keys():
+			if "multiple" in skelStructure[ boneName ].keys():
+				multiple = skelStructure[ boneName ]["multiple"]
+			else:
+				multiple = False
+			if "languages" in skelStructure[ boneName ].keys():
+				languages = skelStructure[ boneName ]["languages"]
+			else:
+				languages = None
+		return( StringEditBone( modulName, boneName, readOnly, multiple=multiple, languages=languages ) ) 
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.langEdits.keys():
@@ -146,7 +168,7 @@ class StringEditBone( QtGui.QWidget ):
 		wdg = self.tabWidget.widget( idx )
 		for k, v in self.langEdits.items():
 			if v == wdg:
-				event.emit( QtCore.SIGNAL("tabLanguageChanged(PyQt_PyObject)"), k )
+				event.emit( "tabLanguageChanged", k )
 				wdg.setFocus()
 				return
 
@@ -162,23 +184,23 @@ class StringEditBone( QtGui.QWidget ):
 				if lang in data.keys():
 					val = data[ lang ]
 					if isinstance( val, str ):
-						self.genTag( val, lang=lang )
+						self.genTag( unescapeHtml(val), lang=lang )
 					elif isinstance( val, list ):
 						for v in val:
-							self.genTag( v, lang=lang )
+							self.genTag( unescapeHtml(v), lang=lang )
 		elif self.languages and not self.multiple:
 			assert isinstance(data,dict)
 			for lang in self.languages:
 				if lang in data.keys():
-					self.langEdits[ lang ].setText( str(data[ lang ]) )
+					self.langEdits[ lang ].setText( unescapeHtml(str(data[ lang ])) )
 		elif not self.languages and self.multiple:
 			if isinstance( data,list ):
 				for tagStr in data:
-					self.genTag( tagStr )
+					self.genTag( unescapeHtml(tagStr) )
 			else:
-				self.genTag( data )
+				self.genTag( unescapeHtml(data) )
 		elif not self.languages and not self.multiple:
-			self.lineEdit.setText( data )
+			self.lineEdit.setText( unescapeHtml(str( data )) )
 		else: 
 			pass
 
@@ -214,19 +236,11 @@ class StringEditBone( QtGui.QWidget ):
 			self.layout().addWidget( Tag( tag, editMode ) )
 
 
-class StringHandler( QtCore.QObject ):
-	"""Override the default if we are a selectMulti String Bone"""
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget )
+def CheckForStringBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"]=="str" )
 
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"]=="str":
-			registerObject.registerHandler( 5, lambda: StringViewBoneDelegate(registerObject, modulName, boneName, skelStructure) )
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForStringBone, StringEditBone)
+viewDelegateSelector.insert( 2, CheckForStringBone, StringViewBoneDelegate)
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"]=="str":
-			registerObject.registerHandler( 10, StringEditBone( modulName, boneName, skelStructure ) )
 
-_stringHandler = StringHandler()

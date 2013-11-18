@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\rawtextedit.ui'
+# Form implementation generated from reading ui file 'rawtextedit.ui'
 #
-# Created: Mon Nov 26 19:34:49 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Tue Jun 11 11:38:52 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,46 +12,34 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_rawTextEditWindow(object):
     def setupUi(self, rawTextEditWindow):
         rawTextEditWindow.setObjectName(_fromUtf8("rawTextEditWindow"))
-        rawTextEditWindow.resize(625, 475)
-        self.centralwidget = QtGui.QWidget(rawTextEditWindow)
-        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
+        rawTextEditWindow.resize(400, 300)
+        self.verticalLayout = QtGui.QVBoxLayout(rawTextEditWindow)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.textEdit = Qsci.QsciScintilla(self.centralwidget)
+        self.textEdit = QtGui.QTextEdit(rawTextEditWindow)
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
         self.verticalLayout.addWidget(self.textEdit)
-        self.btnSave = QtGui.QPushButton(self.centralwidget)
+        self.btnSave = QtGui.QPushButton(rawTextEditWindow)
         self.btnSave.setObjectName(_fromUtf8("btnSave"))
         self.verticalLayout.addWidget(self.btnSave)
-        rawTextEditWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(rawTextEditWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 625, 22))
-        self.menubar.setObjectName(_fromUtf8("menubar"))
-        rawTextEditWindow.setMenuBar(self.menubar)
-        self.statusbar = QtGui.QStatusBar(rawTextEditWindow)
-        self.statusbar.setObjectName(_fromUtf8("statusbar"))
-        rawTextEditWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(rawTextEditWindow)
         QtCore.QMetaObject.connectSlotsByName(rawTextEditWindow)
 
     def retranslateUi(self, rawTextEditWindow):
-        rawTextEditWindow.setWindowTitle(QtGui.QApplication.translate("rawTextEditWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSave.setText(QtGui.QApplication.translate("rawTextEditWindow", "Apply", None, QtGui.QApplication.UnicodeUTF8))
-
-from PyQt4 import Qsci
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    rawTextEditWindow = QtGui.QMainWindow()
-    ui = Ui_rawTextEditWindow()
-    ui.setupUi(rawTextEditWindow)
-    rawTextEditWindow.show()
-    sys.exit(app.exec_())
+        rawTextEditWindow.setWindowTitle(_translate("rawTextEditWindow", "Form", None))
+        self.btnSave.setText(_translate("rawTextEditWindow", "Apply", None))
 

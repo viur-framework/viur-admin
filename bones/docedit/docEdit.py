@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from PyQt4 import QtGui, QtCore,  QtWebKit
+from PySide import QtGui, QtCore,  QtWebKit
 from ui.docEditUI import Ui_DocEdit
 import html.parser, string,  re
 from ui.docEditfileEditUI import Ui_Form

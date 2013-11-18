@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'hierarchySelector.ui'
 #
-# Created: Wed Jan 23 18:15:43 2013
-#      by: PyQt4 UI code generator 4.9.6
+# Created: Tue Jun 11 11:38:15 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -40,7 +40,7 @@ class Ui_HierarchySelector(object):
         self.verticalLayout.addWidget(self.listSelected)
         self.btnSelect = QtGui.QPushButton(HierarchySelector)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/relationalselect.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/add.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSelect.setIcon(icon)
         self.btnSelect.setObjectName(_fromUtf8("btnSelect"))
         self.verticalLayout.addWidget(self.btnSelect)

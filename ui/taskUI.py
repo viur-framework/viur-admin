@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\task.ui'
+# Form implementation generated from reading ui file 'task.ui'
 #
-# Created: Mon Nov 26 19:34:50 2012
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Tue Jun 11 11:39:08 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Task(object):
     def setupUi(self, Task):
@@ -42,17 +51,7 @@ class Ui_Task(object):
         QtCore.QMetaObject.connectSlotsByName(Task)
 
     def retranslateUi(self, Task):
-        Task.setWindowTitle(QtGui.QApplication.translate("Task", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblName.setText(QtGui.QApplication.translate("Task", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnExecute.setText(QtGui.QApplication.translate("Task", "Execute", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    Task = QtGui.QWidget()
-    ui = Ui_Task()
-    ui.setupUi(Task)
-    Task.show()
-    sys.exit(app.exec_())
+        Task.setWindowTitle(_translate("Task", "Form", None))
+        self.lblName.setText(_translate("Task", "TextLabel", None))
+        self.btnExecute.setText(_translate("Task", "Execute", None))
 

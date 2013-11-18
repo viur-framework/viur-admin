@@ -6,7 +6,7 @@ from hashlib import sha512
 class Config( object ):
 	def __init__(self):
 		object.__init__( self )
-		self.storagePath = os.path.join( os.path.expanduser("~"),".fwadmin" )
+		self.storagePath = os.path.join( os.path.expanduser("~"),".viuradmin" )
 		if not os.path.isdir( self.storagePath ):
 			os.mkdir( self.storagePath )
 		self.accounts = []
@@ -39,8 +39,14 @@ class Config( object ):
 			cfg = json.loads( configData )
 			self.accounts = cfg
 		except:
-			print("Could not load Accounts")
-			self.accounts = []
+			try: #Loading it from the old directory
+				configFileObject = open( os.path.join( os.path.join( os.path.expanduser("~"),".fwadmin" ), "accounts.dat" ) ,"rb")
+				configData = self.xor( configFileObject.read() ).decode("UTF-8")
+				cfg = json.loads( configData )
+				self.accounts = cfg
+			except:
+				print("Could not load Accounts")
+				self.accounts = []
 		#Load rest of the config
 		configFileName = os.path.join( self.storagePath, "config.dat" )
 		try:
@@ -70,6 +76,7 @@ class Config( object ):
 		configFileObject.close()
 		
 	def loadPortalConfig( self, url ):
+		print("------------------ LOADING PORTAL CONFIG -------------_" )
 		self.currentPortalConfigDirectory = os.path.join( self.storagePath, sha512( url.encode("UTF-8") ).hexdigest() )
 		try:
 			if not os.path.isdir( self.currentPortalConfigDirectory ):

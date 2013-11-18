@@ -13,29 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLineEdit" name="editSearch">
-       <property name="text">
-        <string>Search</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSearch">
-       <property name="text">
-        <string>Search</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>icons/actions/search.png</normaloff>icons/actions/search.png</iconset>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
@@ -47,22 +25,30 @@
         <x>0</x>
         <y>0</y>
         <width>843</width>
-        <height>567</height>
+        <height>598</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QWidget" name="tableWidget" native="true"/>
-       </item>
-       <item>
-        <widget class="QLabel" name="lblSelected">
-         <property name="text">
-          <string>Selected:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QWidget" name="listSelected" native="true"/>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QWidget" name="tableWidget" native="true"/>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="lblSelected">
+             <property name="text">
+              <string>Selected:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="listSelected" native="true"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -73,7 +59,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>icons/actions/delete.png</normaloff>icons/actions/delete.png</iconset>
+             <normaloff>icons/actions/cancel_small.png</normaloff>icons/actions/cancel_small.png</iconset>
            </property>
           </widget>
          </item>
@@ -93,11 +79,11 @@
          <item>
           <widget class="QPushButton" name="btnSelect">
            <property name="text">
-            <string>Save</string>
+            <string>Apply</string>
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+             <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
            </property>
           </widget>
          </item>

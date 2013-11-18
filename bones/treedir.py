@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui
 from event import event
-from utils import RegisterQueue
+from utils import RegisterQueue, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector
-from handler.tree import TreeList
+from widgets.tree import TreeWidget
 from ui.treeselectorUI import Ui_TreeSelector
 from os import path
 from bones.relational import RelationalViewBoneDelegate
+from priorityqueue import editBoneSelector, viewDelegateSelector
 
 class TreeDirViewBoneDelegate( RelationalViewBoneDelegate ):
 	pass
@@ -14,20 +15,23 @@ class TreeDirViewBoneDelegate( RelationalViewBoneDelegate ):
 
 
 class TreeDirEditBone( QtGui.QWidget ):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", *args, **kwargs ):
 		super( TreeDirEditBone,  self ).__init__( *args, **kwargs )
-		self.skelStructure = skelStructure
 		self.modulName = modulName
 		self.boneName = boneName
-		self.toModul = self.skelStructure[ self.boneName ]["type"].split(".")[1]
+		self.readOnly = readOnly
+		self.toModul = destModul
+		self.multiple = multiple
+		self.format = format
+		self.targetModulStructure = None
 		self.layout = QtGui.QHBoxLayout( self )
 		self.addBtn = QtGui.QPushButton( "Auswählen", parent=self )
 		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap("icons/actions/relationalselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
-		self.addBtn.connect( self.addBtn, QtCore.SIGNAL('released()'), self.on_addBtn_released )
+		self.addBtn.released.connect( self.onAddBtnReleased )
 		self.layout.addWidget( self.addBtn )
-		if not skelStructure[boneName]["multiple"]:
+		if not self.multiple:
 			self.entry = QtGui.QLineEdit( self )
 			self.entry.setReadOnly(True)
 			self.layout.addWidget( self.entry )
@@ -36,14 +40,25 @@ class TreeDirEditBone( QtGui.QWidget ):
 			self.delBtn = QtGui.QPushButton( "", parent=self )
 			self.delBtn.setIcon(icon6)
 			self.layout.addWidget( self.delBtn )
-			self.delBtn.connect( self.delBtn, QtCore.SIGNAL('released()'), self.on_delBtn_released )
+			self.delBtn.released.connect( self.onDelBtnReleased )
 			self.selection = None
 		else:
 			self.selection = []
-		
+		self.overlay = Overlay( self )
+		#NetworkService.request( "/%s/list?amount=1" % self.toModul, successHandler=self.onTargetModulStructureAvaiable ) #Fetch the structure of our referenced modul
+
+	@staticmethod
+	def fromSkelStructure( modulName, boneName, skelStructure ):
+		readOnly = "readonly" in skelStructure[ boneName ].keys() and skelStructure[ boneName ]["readonly"]
+		multiple = skelStructure[boneName]["multiple"]
+		destModul = skelStructure[ boneName ]["type"].split(".")[1]
+		format= "$(name)"
+		if "format" in skelStructure[ boneName ].keys():
+			format = skelStructure[ boneName ]["format"]
+		return( TreeDirEditBone( modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format ) )
 
 	def setSelection(self, selection):
-		if self.skelStructure[self.boneName]["multiple"]:
+		if self.multiple:
 			self.selection = selection
 		elif len( selection )>0 :
 			self.selection = selection[0]
@@ -51,13 +66,13 @@ class TreeDirEditBone( QtGui.QWidget ):
 		else:
 			self.selection = None
 	
-	def on_addBtn_released(self, *args, **kwargs ):
+	def onAddBtnReleased(self, *args, **kwargs ):
 		queue = RegisterQueue()
 		event.emit( QtCore.SIGNAL('requestTreeDirBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection )
 		self.widget = queue.getBest()()
 
-	def on_delBtn_released(self, *args, **kwargs ):
-		if self.skelStructure[ self.boneName ]["multiple"]:
+	def onDelBtnReleased(self, *args, **kwargs ):
+		if self.multiple:
 			self.selection = []
 		else:
 			self.selection = None
@@ -67,7 +82,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 		if not self.boneName in data.keys():
 			return
 		self.selection = data[ self.boneName ]
-		if not self.skelStructure[self.boneName]["multiple"]:
+		if not self.multiple:
 			path = ""
 			try:
 				repo, path = data[ self.boneName ].split("/",1)
@@ -77,7 +92,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 
 	def serializeForPost(self):
 		if self.selection:
-			if not self.skelStructure[self.boneName]["multiple"]:
+			if not self.multiple:
 				return( { self.boneName: str( self.selection ) } )
 			else:
 				return( { self.boneName: self.selection } )
@@ -85,7 +100,7 @@ class TreeDirEditBone( QtGui.QWidget ):
 			return( { self.boneName: None } )
 
 
-class BaseTreeDirBoneSelector( TreeList ):
+class BaseTreeDirBoneSelector( TreeWidget ):
 	def __init__(self, modulName, boneName, skelStructure, selection, setSelection,  *args, **kwargs ):
 		self.modul = skelStructure[ boneName ]["type"].split(".")[1]
 		self.boneName = boneName
@@ -97,7 +112,6 @@ class BaseTreeDirBoneSelector( TreeList ):
 		self.ui = Ui_TreeSelector()
 		self.ui.setupUi( self )		
 		super( BaseTreeDirBoneSelector, self ).__init__( self.modul, {"name":self.boneName,"handler":"treeItem"}, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('reloadlist(PyQt_PyObject)'),self.doReloadData )
 		self.loadRepositorys()
 		self.setAcceptDrops( True )
 		if not self.multiple:
@@ -107,25 +121,25 @@ class BaseTreeDirBoneSelector( TreeList ):
 			if selection:
 				for sel in selection:
 					self.ui.listSelected.addItem( self.dirItem(sel.split("/",1)[1] ) )
-		self.ui.listSelected.keyPressEvent = self.on_listSelection_event
+		#self.ui.listSelected.keyPressEvent = self.onListSelectionEvent
 		self.show()
 		
 
-	def on_btnSelect_released(self, *args, **kwargs):
+	def onBtnSelectReleased(self, *args, **kwargs):
 		if not self.multiple:
 			for item in self.ui.listWidget.selectedItems():
 				if isinstance( item, self.dirItem ):
 					path = self.currentRepository+"/"+"/".join( self.path+[ item.dirName ] )
 					self.setSelection( [path] )
-					event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+					event.emit( "popWidget", self )
 					return
 			path = self.currentRepository+"/"+"/".join( self.path )
 			self.setSelection( [path] )
 		else:
 			self.setSelection( self.selection )
-		event.emit( QtCore.SIGNAL("popWidget(PyQt_PyObject)"), self )
+		event.emit( "popWidget", self )
 	
-	def on_listSelection_event(self, event ):
+	def onListSelectionEvent(self, event ):
 		if event.key()==QtCore.Qt.Key_Delete:
 			items = self.ui.listSelected.selectedItems()
 			for item in items:
@@ -133,11 +147,11 @@ class BaseTreeDirBoneSelector( TreeList ):
 				self.ui.listSelected.takeItem( self.ui.listSelected.indexFromItem( item ).row() )
 				self.selection.remove( path )
 	
-	def on_listWidget_itemDoubleClicked(self, item):
+	def onListWidgetItemDoubleClicked(self, item):
 		if isinstance( item, self.treeItem ):
 			return
 		else:
-			super( BaseTreeDirBoneSelector, self ).on_listWidget_itemDoubleClicked( item )
+			super( BaseTreeDirBoneSelector, self ).onListWidgetItemDoubleClicked( item )
 
 	def dropEvent(self, event):
 		if event.source()==self.ui.listWidget and self.ui.listSelected.childrenRect().contains( self.ui.listSelected.mapFromGlobal( self.mapToGlobal(event.pos()) ) ):
@@ -155,23 +169,9 @@ class BaseTreeDirBoneSelector( TreeList ):
 		event.accept()
 
 
-class TreeDirHandler( QtCore.QObject ):
-	def __init__(self, *args, **kwargs ):
-		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestTreeDirViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneViewDelegate ) #RegisterObj, ModulName, BoneName, SkelStructure
-		self.connect( event, QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.onRequestBoneEditWidget ) 
-		self.connect( event, QtCore.SIGNAL('requestTreeDirBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'), self.RelationalBoneSeletor )
-	
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStructure):
-		if skelStructure[boneName]["type"].startswith("treedir."):
-			registerObject.registerHandler( 10, lambda: TreeDirViewBoneDelegate() )
+def CheckForTreeDirBone(  modulName, boneName, skelStucture ):
+	return( skelStucture[boneName]["type"].startswith("treedir.") )
 
-	def onRequestBoneEditWidget(self, registerObject,  modulName, boneName, skelStructure ):
-		if skelStructure[boneName]["type"].startswith("treedir."):
-			registerObject.registerHandler( 10, TreeDirEditBone( modulName, boneName, skelStructure ) )
-
-	def RelationalBoneSeletor(self, registerObject, modulName, boneName, skelStructure, selection, setSelection ):
-		if skelStructure[boneName]["type"].startswith("treedir."):
-			registerObject.registerHandler( 10, lambda: BaseTreeDirBoneSelector( modulName, boneName, skelStructure, selection, setSelection ) )
-
-_TreeDirHandler = TreeDirHandler()
+#Register this Bone in the global queue
+editBoneSelector.insert( 2, CheckForTreeDirBone, TreeDirEditBone)
+viewDelegateSelector.insert( 2, CheckForTreeDirBone, TreeDirViewBoneDelegate)

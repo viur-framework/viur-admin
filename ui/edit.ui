@@ -14,6 +14,9 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
@@ -47,7 +50,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/delete_small.png</normaloff>icons/actions/delete_small.png</iconset>
+         <normaloff>icons/actions/cancel_small.png</normaloff>icons/actions/cancel_small.png</iconset>
        </property>
       </widget>
      </item>
@@ -71,7 +74,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/preview_small.png</normaloff>icons/actions/preview_small.png</iconset>
+         <normaloff>icons/actions/preview.svg</normaloff>icons/actions/preview.svg</iconset>
        </property>
       </widget>
      </item>
@@ -95,7 +98,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+         <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
        </property>
       </widget>
      </item>
@@ -106,7 +109,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/save.png</normaloff>icons/actions/save.png</iconset>
+         <normaloff>icons/actions/save_continue.svg</normaloff>icons/actions/save_continue.svg</iconset>
        </property>
       </widget>
      </item>

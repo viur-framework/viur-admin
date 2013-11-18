@@ -7,7 +7,7 @@ from widgets.edit import EditWidget
 from utils import loadIcon
 import os
 
-class SingletonEntryHandler( WidgetHandler ): #FIXME
+class SingletonEntryHandler( WidgetHandler ): 
 	"""Class for holding the main (module) Entry within the modules-list"""
 	
 	def __init__( self, modul,  *args, **kwargs ):
@@ -21,15 +21,21 @@ class SingletonEntryHandler( WidgetHandler ): #FIXME
 				else:
 					icon = loadIcon( config["icon"] )
 			else:
-				icon = loadIcon( None )
+				icon = loadIcon( "icons/modules/singleton.svg" )
 			name = config["name"]
 		super( SingletonEntryHandler, self ).__init__( widgetFactory, icon=icon, vanishOnClose=False , *args, **kwargs )
 		self.setText(0,name)
 
+	def getBreadCrumb(self):
+		"""
+			Dont use the description of our edit widget here
+		"""
+		return( self.text(0), self.icon(0) )
+
 class SingletonHandler( QtCore.QObject ):
 	def __init__(self, *args, **kwargs ):
 		QtCore.QObject.__init__( self, *args, **kwargs )
-		self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+		event.connectWithPriority( 'requestModulHandler', self.requestModulHandler, event.lowPriority )
 
 	def requestModulHandler(self, queue, modulName ):
 		config = conf.serverConfig["modules"][ modulName ]

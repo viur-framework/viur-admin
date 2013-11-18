@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui\fileDownloadProgress.ui'
 #
-# Created: Mon Nov 26 19:34:48 2012
+# Created: Thu Jul 18 16:20:07 2013
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -19,6 +19,7 @@ class Ui_FileDownloadProgress(object):
         FileDownloadProgress.setObjectName(_fromUtf8("FileDownloadProgress"))
         FileDownloadProgress.resize(400, 300)
         self.horizontalLayout = QtGui.QHBoxLayout(FileDownloadProgress)
+        self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))

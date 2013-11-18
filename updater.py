@@ -24,7 +24,7 @@ else:
 	path = os.path.abspath( os.path.dirname( os.path.join( cwd, prgc ) ) )
 os.chdir( path )
 
-from PyQt4 import Qt, QtCore, QtGui
+from PySide import Qt, QtCore, QtGui
 from ui.updaterUI import Ui_Updater
 from utils import Overlay
 from network import NetworkService

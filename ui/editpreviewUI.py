@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui\editpreview.ui'
 #
-# Created: Mon Nov 26 19:34:50 2012
+# Created: Thu Jul 18 16:19:44 2013
 #      by: PyQt4 UI code generator 4.9.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,12 +17,13 @@ except AttributeError:
 class Ui_EditPreview(object):
     def setupUi(self, BasePreview):
         BasePreview.setObjectName(_fromUtf8("BasePreview"))
-        BasePreview.setGeometry(QtCore.QRect(0, 0, 701, 482))
+        BasePreview.resize(701, 482)
         BasePreview.setWindowTitle(_fromUtf8(""))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/ViURadmin.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         BasePreview.setWindowIcon(icon)
         self.verticalLayout = QtGui.QVBoxLayout(BasePreview)
+        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
@@ -43,7 +44,7 @@ class Ui_EditPreview(object):
         QtCore.QMetaObject.connectSlotsByName(BasePreview)
 
     def retranslateUi(self, BasePreview):
-        self.btnReload.setText(QtGui.QApplication.translate("EditPreview", "Reload", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnReload.setText(QtGui.QApplication.translate("BasePreview", "Reload", None, QtGui.QApplication.UnicodeUTF8))
 
 from PyQt4 import QtWebKit
 
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
     BasePreview = QtGui.QWidget()
-    ui = Ui_EditPreview()
+    ui = Ui_BasePreview()
     ui.setupUi(BasePreview)
     BasePreview.show()
     sys.exit(app.exec_())

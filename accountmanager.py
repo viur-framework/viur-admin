@@ -1,5 +1,4 @@
 from ui.accountmanagerUI import Ui_MainWindow
-from PyQt4 import Qt
 import sys
 from PyQt4 import QtCore, QtGui
 from event import event
@@ -25,12 +24,18 @@ class Accountmanager( QtGui.QMainWindow ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )
-		self.connect( event, QtCore.SIGNAL('statusMessage(PyQt_PyObject,PyQt_PyObject)'), self.statusMessageUpdate )
 		self.loadAccountList()
+		self.ui.addAccBTN.released.connect( self.onAddAccBTNReleased )
+		self.ui.acclistWidget.itemClicked.connect( self.onAcclistWidgetItemClicked )
+		self.ui.delAccBTN.released.connect( self.onDelAccBTNReleased )
+		self.ui.editAccountName.textChanged.connect( self.onEditAccountNameTextChanged )
+		self.ui.editUserName.textChanged.connect( self.onEditUserNameTextChanged )
+		self.ui.editPassword.textChanged.connect( self.onEditPasswordTextChanged )
+		self.ui.editUrl.textChanged.connect( self.onEditUrlTextChanged )
+		self.ui.FinishedBTN.released.connect( self.onFinishedBTNReleased )
 		if len (conf.accounts)==0:
-			self.on_addAccBTN_released()
+			self.onAddAccBTNReleased()
 
-		
 	def loadAccountList(self):
 		guiList = self.ui.acclistWidget
 		guiList.setIconSize( QtCore.QSize( 128, 128 ) )
@@ -40,30 +45,27 @@ class Accountmanager( QtGui.QMainWindow ):
 			guiList.addItem( item )
 		if len( conf.accounts ) > 0:
 			guiList.setCurrentRow( 0 )
-			self.on_acclistWidget_itemClicked( None )
+			self.onAcclistWidgetItemClicked( None )
 
 	def closeEvent(self, e):
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count() ):
 			conf.accounts.append( self.ui.acclistWidget.item( itemIndex ).account )
-		event.emit( QtCore.SIGNAL( "accountListChanged()" ) )
+		event.emit( "accountListChanged()" )
 		conf.saveConfig()
 		self.close()
 
-	def statusMessageUpdate(self, type, message ):
-		self.ui.statusbar.showMessage( message, 5000 )
-
-	def on_addAccBTN_released (self):
+	def onAddAccBTNReleased (self):
 		guiList = self.ui.acclistWidget
 		item=AccountItem( {"name": QtCore.QCoreApplication.translate("Accountmanager", "New"), "user":"", "password":"", "url":"" } )
 		guiList.addItem( item )
 		guiList.setCurrentItem( item )
 		self.updateUI()
 	
-	def on_acclistWidget_itemClicked (self,clickeditem):
+	def onAcclistWidgetItemClicked (self,clickeditem):
 		self.updateUI( )
 		
-	def  on_delAccBTN_released(self):
+	def  onDelAccBTNReleased(self):
 		item = self.ui.acclistWidget.currentItem()
 		if not item:
 			return
@@ -105,9 +107,9 @@ class Accountmanager( QtGui.QMainWindow ):
 			self.ui.editUserName.blockSignals( False )
 			self.ui.editPassword.blockSignals( False )
 			if (item.account["password"]!=""):
-				self.ui.accSavePWcheckBox.setCheckState(2)
+				self.ui.accSavePWcheckBox.setCheckState(QtCore.Qt.Checked)
 		
-	def on_accSavePWcheckBox_stateChanged (self,state):
+	def onAccSavePWcheckBoxStateChanged(self,state):
 		self.ui.editPassword.setEnabled(state)
 		if (state==0):
 			self.ui.editPassword.setText("")
@@ -130,26 +132,22 @@ class Accountmanager( QtGui.QMainWindow ):
 		item.update( account )
 	
 	
-	def on_editAccountName_textChanged (self):
+	def onEditAccountNameTextChanged (self):
 		self.saveAccount()
 		
-	def on_editUserName_textChanged (self):
+	def onEditUserNameTextChanged (self):
 		self.saveAccount()
 		
-	def on_editPassword_textChanged(self):
+	def onEditPasswordTextChanged(self):
 		self.saveAccount()
 		
-	def on_editUrl_textChanged(self):
+	def onEditUrlTextChanged(self):
 		self.saveAccount()
 			
-	
-	def on_FinishedBTN_released(self):
+	def onFinishedBTNReleased(self):
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count() ):
 			conf.accounts.append( self.ui.acclistWidget.item( itemIndex ).account )
-		event.emit( QtCore.SIGNAL( "accountListChanged()" ) )
+		event.emit( "accountListChanged" )
 		self.close()
 		
-
-
-

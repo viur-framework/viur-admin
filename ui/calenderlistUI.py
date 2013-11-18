@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'calenderlist.ui'
 #
-# Created: Wed Dec 19 14:51:17 2012
-#      by: PyQt4 UI code generator 4.8.6
+# Created: Tue Jun 11 11:36:38 2013
+#      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,13 +12,21 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_List(object):
     def setupUi(self, List):
         List.setObjectName(_fromUtf8("List"))
         List.resize(690, 525)
-        List.setWindowTitle(QtGui.QApplication.translate("List", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.verticalLayout = QtGui.QVBoxLayout(List)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.boxActions = QtGui.QHBoxLayout()
@@ -27,13 +35,11 @@ class Ui_List(object):
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.editSearch = QtGui.QLineEdit(List)
-        self.editSearch.setText(QtGui.QApplication.translate("List", "Search", None, QtGui.QApplication.UnicodeUTF8))
         self.editSearch.setObjectName(_fromUtf8("editSearch"))
         self.horizontalLayout_2.addWidget(self.editSearch)
         self.searchBTN = QtGui.QPushButton(List)
-        self.searchBTN.setText(QtGui.QApplication.translate("List", "Search", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search_small.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.searchBTN.setIcon(icon)
         self.searchBTN.setObjectName(_fromUtf8("searchBTN"))
         self.horizontalLayout_2.addWidget(self.searchBTN)
@@ -50,7 +56,6 @@ class Ui_List(object):
         self.horizontalLayout.addWidget(self.line)
         self.deFilter = QtGui.QDateEdit(List)
         self.deFilter.setCurrentSection(QtGui.QDateTimeEdit.DaySection)
-        self.deFilter.setDisplayFormat(QtGui.QApplication.translate("List", "dd.MM.yyyy", None, QtGui.QApplication.UnicodeUTF8))
         self.deFilter.setCalendarPopup(False)
         self.deFilter.setObjectName(_fromUtf8("deFilter"))
         self.horizontalLayout.addWidget(self.deFilter)
@@ -66,5 +71,8 @@ class Ui_List(object):
         QtCore.QMetaObject.connectSlotsByName(List)
 
     def retranslateUi(self, List):
-        pass
+        List.setWindowTitle(_translate("List", "Form", None))
+        self.editSearch.setText(_translate("List", "Search", None))
+        self.searchBTN.setText(_translate("List", "Search", None))
+        self.deFilter.setDisplayFormat(_translate("List", "dd.MM.yyyy", None))
 
