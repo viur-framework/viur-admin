@@ -269,10 +269,10 @@ class TreeWrapper( QtCore.QObject ):
 		request = RequestGroup( finishedHandler=self.delayEmitEntriesChanged)
 		for leaf in leafs:
 			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id": leaf, 
-												"skelType": "leaf" }, parent=self ) )
+												"skelType": "leaf" }, parent=self, secure=True ) )
 		for node in nodes:
 			request.addQuery( NetworkService.request("/%s/delete" % self.modul, {	"id":node, 
-												"skelType": "node" }, parent=self ) )
+												"skelType": "node" }, parent=self, secure=True ) )
 		#request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
 		self.checkBusyStatus()
@@ -296,13 +296,13 @@ class TreeWrapper( QtCore.QObject ):
 												"skelType": "node",
 												"destNode": destNode
 												}
-											, parent=self ) )
+											, parent=self, secure=True ) )
 		for leaf in leafs:
 			request.addQuery( NetworkService.request( "/%s/move" % self.modul , {	"id": leaf,
 												"skelType": "leaf",
 												"destNode": destNode
 												}
-											, parent=self ) )
+											, parent=self, secure=True ) )
 		request.queryType = "move"
 		self.checkBusyStatus()
 		return( str( id( request ) ) )

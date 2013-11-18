@@ -41,7 +41,7 @@ class FileUploader( QtCore.QObject ):
 		self.cancel.connect( self.onCanceled )
 		self.bytesTotal = len(open( self.fileName.encode(sys.getfilesystemencoding()),  "rb" ).read())
 		self.bytesDone = 0
-		NetworkService.request("/file/getUploadURL", successHandler=self.startUpload )
+		NetworkService.request("/file/getUploadURL", successHandler=self.startUpload, secure=True )
 	
 	def startUpload(self, req):
 		self.uploadProgress.emit(0,1)
