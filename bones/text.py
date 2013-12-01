@@ -656,6 +656,10 @@ class TextEdit(QtGui.QMainWindow):
 			tb.addAction(self.actionNumberedList)
 
 	def save(self, *args, **kwargs):
+		if self.linkEditor is not None:
+			self.saveLinkEditor()
+			self.linkEditor.deleteLater()
+			self.linkEditor = None
 		html = DocumentToHtml().serializeDocument( self.ui.textEdit.document() )
 		print( html )
 		self.onDataChanged.emit( html )
