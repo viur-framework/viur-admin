@@ -503,12 +503,15 @@ def loadIcon( iconFile ):
 		icon.addFile( iconFile )
 	baseName = os.path.basename( iconFile ) #Strip the path
 	baseName = baseName[ : baseName.rfind(".") ] #Strip the file-ext
-	for f in os.listdir( os.path.dirname( iconFile ) ):
-		if f.startswith( baseName ):
-			res = f.replace( baseName, "" )
-			res = res[ : res.rfind(".") ]
-			if res.lower().strip("-").replace("x","",1).isdigit():
-				icon.addFile( os.path.join( os.path.dirname( iconFile ), f ) )
+	try: #This may fail if iconFile points to a wrong directory
+		for f in os.listdir( os.path.dirname( iconFile ) ):
+			if f.startswith( baseName ):
+				res = f.replace( baseName, "" )
+				res = res[ : res.rfind(".") ]
+				if res.lower().strip("-").replace("x","",1).isdigit():
+					icon.addFile( os.path.join( os.path.dirname( iconFile ), f ) )
+	except:
+		pass
 	return( icon )
 
 
