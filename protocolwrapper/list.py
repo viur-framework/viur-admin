@@ -4,7 +4,6 @@
 from PyQt4 import QtCore
 from network import NetworkService, RequestGroup, RequestWrapper
 from time import time
-import weakref
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from collections import OrderedDict
 
