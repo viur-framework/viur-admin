@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'edit.ui'
 #
-# Created: Fri Jul 19 11:36:13 2013
-#      by: PyQt4 UI code generator 4.10.1
+# Created: Thu Jul 17 15:20:42 2014
+#      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -64,7 +64,7 @@ class Ui_Edit(object):
         self.horizontalLayout_2.addItem(spacerItem1)
         self.btnSaveClose = QtGui.QPushButton(Edit)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/accept.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/save_new.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSaveClose.setIcon(icon3)
         self.btnSaveClose.setObjectName(_fromUtf8("btnSaveClose"))
         self.horizontalLayout_2.addWidget(self.btnSaveClose)
