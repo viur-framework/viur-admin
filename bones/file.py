@@ -4,6 +4,8 @@ from PyQt4 import QtCore, QtGui
 from widgets.file import FileWidget
 from bones.treeitem import TreeItemBone, TreeBoneSelector
 from priorityqueue import editBoneSelector, viewDelegateSelector
+from priorityqueue import protocolWrapperInstanceSelector
+
 from network import RemoteFile 
 from utils import formatString
 
@@ -58,6 +60,49 @@ class FileItemBone( TreeItemBone ):
 	def onAddBtnReleased(self, *args, **kwargs ):
 		editWidget = FileBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection, parent=self )
 		editWidget.selectionChanged.connect( self.setSelection )
+
+	def loadIconFromRequest(self, request):
+		preview = QtGui.QIcon(request.getFileName())
+		label = QtGui.QLabel(self)
+		label.setPixmap(preview.pixmap(QtCore.QSize(16, 16)))
+		self.layout.insertWidget(0, label)
+
+	def updateVisiblePreview(self):
+		protoWrap = protocolWrapperInstanceSelector.select( self.toModul )
+		assert protoWrap is not None
+		if self.skelType is None:
+			structure = protoWrap.viewStructure
+		elif self.skelType=="leaf":
+			structure = protoWrap.viewLeafStructure
+		elif self.skelType=="node":
+			structure = protoWrap.viewNodeStructure
+		if structure is None:
+			return
+		if self.multiple:
+			widgetItem = self.previewLayout.takeAt( 0 )
+			while widgetItem:
+				widgetItem = self.previewLayout.takeAt( 0 )
+			if self.selection and len(self.selection)>0:
+				for item in self.selection:
+					print("format", self.format, structure, item)
+					previewIcon = QtGui.QIcon(item)
+					lbl = QtGui.QLabel( self.previewWidget )
+					lbl.setText( formatString( self.format, structure, item ) ) 
+					self.previewLayout.addWidget( lbl )
+				self.addBtn.setText("blah Auswahl ändern")
+			else:
+				self.addBtn.setText("blub Auswählen")
+		else:
+			if self.selection:
+				print("format", self.format, structure, self.selection)
+				if self.selection["mimetype"].startswith("image/"):
+					
+
+					RemoteFile(self.selection["dlkey"], successHandler=self.loadIconFromRequest)
+				self.entry.setText( formatString( self.format, structure, self.selection ) )
+			else:
+				self.entry.setText( "" )
+
 
 
 class FileBoneSelector( TreeBoneSelector ):
