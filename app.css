@@ -451,11 +451,6 @@ QTabWidget QTabWidget::pane {
 	border:0;
 }
 
-QTabWidget QLabel {
-	width:170px;
-	/*qproperty-alignment: AlignBottom AlignRight;*/
-}
-
 /*
  QTabBar::close-button {
      image: url(close.png)
