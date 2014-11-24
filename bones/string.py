@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from bones.base import BaseViewBoneDelegate
 from config import conf
@@ -56,7 +56,7 @@ class StringViewBoneDelegate( BaseViewBoneDelegate ):
 				pass
 		return( super(StringViewBoneDelegate, self).displayText( str(value), locale ) )
 
-class Tag( QtGui.QWidget ):
+class Tag( QtWidgets.QWidget ):
 	def __init__( self, tag, editMode, *args, **kwargs ):
 		super( Tag,  self ).__init__( *args, **kwargs )
 		self.setLayout( QtGui.QHBoxLayout( self ) )
@@ -88,7 +88,7 @@ class Tag( QtGui.QWidget ):
 		self.lblDisplay.show()
 		self.editField.hide()
 
-class StringEditBone( QtGui.QWidget ):
+class StringEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, multiple=False, languages=None, *args, **kwargs ):
 		super( StringEditBone,  self ).__init__( *args, **kwargs )
 		self.modulName = modulName
@@ -106,7 +106,7 @@ class StringEditBone( QtGui.QWidget ):
 			self.layout().addWidget( self.tabWidget )
 			self.langEdits = {}
 			for lang in self.languages:
-				container = QtGui.QWidget()
+				container = QtWidgets.QWidget()
 				self.langEdits[ lang ] = container
 				container.setLayout( QtGui.QVBoxLayout(container) ) 
 				self.tabWidget.addTab( container, lang )

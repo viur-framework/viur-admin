@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from utils import RegisterQueue,  formatString, itemFromUrl
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -116,7 +116,7 @@ class SelectedEntitiesTableModel( QtCore.QAbstractTableModel ):
 		self.dataCache = []
 		self.emit(QtCore.SIGNAL("layoutChanged()"))
 
-class SelectedEntitiesWidget( QtGui.QTableView ):
+class SelectedEntitiesWidget( QtWidgets.QTableView ):
 	"""
 		Displayes the currently selected entities of one relationalBone.
 	"""

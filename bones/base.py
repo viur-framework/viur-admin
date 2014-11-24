@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from priorityqueue import editBoneSelector, viewDelegateSelector
 
 
-class BaseViewBoneDelegate(QtGui.QStyledItemDelegate):
+class BaseViewBoneDelegate(QtWidgets.QTreeWidgetItem):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( BaseViewBoneDelegate, self ).__init__()
 		self.skelStructure = skelStructure
@@ -14,7 +14,7 @@ class BaseViewBoneDelegate(QtGui.QStyledItemDelegate):
 		self.modulName=modulName
 
 
-class BaseEditBone( QtGui.QWidget ):
+class BaseEditBone( QtWidgets.QWidget ):
 	def getLineEdit(self):
 		return (QtGui.QLineEdit( self ))
 	

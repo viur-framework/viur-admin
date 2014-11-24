@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
@@ -13,14 +13,14 @@ class BooleanViewBoneDelegate(BaseViewBoneDelegate):
 		else:
 			return( QtCore.QCoreApplication.translate("BooleanEditBone", "No") )
 
-class BooleanEditBone( QtGui.QWidget ):
+class BooleanEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, *args, **kwargs ):
 		super( BooleanEditBone,  self ).__init__( *args, **kwargs )
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.layout = QtGui.QVBoxLayout( self ) 
-		self.comboBox = QtGui.QComboBox( self )
+		self.comboBox = QtWidgets.QComboBox( self )
 		self.layout.addWidget( self.comboBox )
 		self.comboBox.addItems( [QtCore.QCoreApplication.translate("BooleanEditBone", "No"), QtCore.QCoreApplication.translate("BooleanEditBone", "Yes") ] )
 

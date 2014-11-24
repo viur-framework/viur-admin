@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from utils import RegisterQueue, formatString, Overlay, WidgetHandler
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -15,7 +15,7 @@ class BaseBone:
 	pass
 
 
-class RelationalViewBoneDelegate(QtGui.QStyledItemDelegate):
+class RelationalViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	cantSort = True
 	def __init__(self, modul, boneName, structure):
 		super(RelationalViewBoneDelegate, self).__init__()
@@ -69,7 +69,7 @@ class AutocompletionModel( QtCore.QAbstractListModel ):
 		return( None )
 	
 
-class RelationalEditBone( QtGui.QWidget ):
+class RelationalEditBone( QtWidgets.QWidget ):
 	GarbargeTypeName = "RelationalEditBone"
 	skelType = None
 
@@ -86,7 +86,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.layout = QtGui.QHBoxLayout( self )
 		else:
 			self.layout = QtGui.QVBoxLayout( self )
-			self.previewWidget = QtGui.QWidget( self )
+			self.previewWidget = QtWidgets.QWidget( self )
 			self.previewLayout = QtGui.QVBoxLayout( self.previewWidget )
 			self.layout.addWidget( self.previewWidget )
 		self.addBtn = QtGui.QPushButton( QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"), parent=self )
@@ -211,7 +211,7 @@ class RelationalEditBone( QtGui.QWidget ):
 			return( { self.boneName: None } )
 
 
-class RelationalBoneSelector( QtGui.QWidget ):
+class RelationalBoneSelector( QtWidgets.QWidget ):
 	
 	selectionChanged = QtCore.pyqtSignal( (object, ) )
 	displaySourceWidget = ListWidget

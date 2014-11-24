@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from bones.base import BaseViewBoneDelegate
 from priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
@@ -16,7 +16,7 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 			return( value )
 
 
-class FixedComboBox( QtGui.QComboBox ):
+class FixedComboBox( QtWidgets.QComboBox ):
 	"""
 		Subclass of QComboBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
@@ -34,7 +34,7 @@ class FixedComboBox( QtGui.QComboBox ):
 		super( FixedComboBox, self ).focusOutEvent( e )
 
 
-class SelectOneEditBone( QtGui.QWidget ):
+class SelectOneEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs ):
 		super( SelectOneEditBone,  self ).__init__( *args, **kwargs )
 		self.modulName = modulName

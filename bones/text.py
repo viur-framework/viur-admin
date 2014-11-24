@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets, QtWebKitWidgets
 #from PySide.Qsci import QsciScintilla, QsciLexerHTML
 import sys
 from event import event
@@ -13,7 +13,7 @@ from priorityqueue import editBoneSelector, viewDelegateSelector
 from bones.file import FileBoneSelector
 from bones.string import chooseLang
 from network import RemoteFile
-from PyQt4.Qsci import QsciScintilla, QsciLexerHTML, QsciStyle
+from PyQt5.Qsci import QsciScintilla, QsciLexerHTML, QsciStyle
 
 rsrcPath = "icons/actions/text"
 
@@ -36,10 +36,10 @@ class HtmlStripper( html.parser.HTMLParser ):
 		return( s.getData() )
 
 
-class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
+class TextViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	cantSort=True
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
-		super( QtGui.QStyledItemDelegate,self ).__init__()
+		super( QtWidgets.QStyledItemDelegate,self ).__init__()
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName=modulName
@@ -57,14 +57,14 @@ class TextViewBoneDelegate(QtGui.QStyledItemDelegate):
 		
 
 
-class InsertImageDialog( QtGui.QDialog ):
+class InsertImageDialog( QtWidgets.QDialog ):
 	onInsertText = QtCore.pyqtSignal( (object, ) )
 	def __init__(self, file):
 		super( InsertImageDialog, self ).__init__()
 		self.setModal(True)
 		self.file = file
 		self.setLayout( QtGui.QVBoxLayout() )
-		self.cb = QtGui.QComboBox( self )
+		self.cb = QtWidgets.QComboBox( self )
 		self.layout().addWidget( self.cb )
 		acceptButton = QtGui.QPushButton("Accept")
 		acceptButton.released.connect( self.accept )
@@ -85,7 +85,7 @@ class InsertImageDialog( QtGui.QDialog ):
 		super( InsertImageDialog, self ).accept()
 
 
-class TextEditor( QtGui.QWidget ):
+class TextEditor( QtWidgets.QWidget ):
 	onDataChanged = QtCore.pyqtSignal( (object, ) )
 
 	def __init__(self, txt, validHtml, *args, **kwargs):
@@ -128,14 +128,14 @@ class TextEditor( QtGui.QWidget ):
 		self.onDataChanged.emit( self.editor.text() )
 		event.emit( 'popWidget', self )
 
-class ClickableWebView( QtWebKit.QWebView ):
+class ClickableWebView( QtWebKitWidgets.QWebView ):
 	clicked = QtCore.pyqtSignal( ) 
 	
 	def mousePressEvent(self, ev):
 		super( ClickableWebView, self ).mousePressEvent( ev ) 
 		self.clicked.emit()
 
-class TextEditBone( QtGui.QWidget ):
+class TextEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, *args, **kwargs ):
 		super( TextEditBone,  self ).__init__( *args, **kwargs )
 		self.modulName = modulName
@@ -155,7 +155,7 @@ class TextEditBone( QtGui.QWidget ):
 			self.layout().addWidget( self.tabWidget )
 			for lang in self.languages:
 				self.html[ lang ] = ""
-				container = QtGui.QWidget()
+				container = QtWidgets.QWidget()
 				container.setLayout( QtGui.QVBoxLayout( container ) )
 				self.languageContainer[ lang ] = container
 				btn = QtGui.QPushButton( QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self )

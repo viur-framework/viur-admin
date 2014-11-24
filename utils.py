@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import math
 import os, os.path
 import os
@@ -53,7 +53,7 @@ class RegisterQueue():
 		return( res )
 
 
-class Overlay(QtGui.QWidget):
+class Overlay(QtWidgets.QWidget):
 	"""
 	Blocks its parent widget by displaying a busy or a short message over
 	the parent.
@@ -72,7 +72,7 @@ class Overlay(QtGui.QWidget):
 		"""
 		@type parent: QWidget
 		"""
-		QtGui.QWidget.__init__(self, parent)
+		QtWidgets.QWidget.__init__(self, parent)
 		palette = QtGui.QPalette(self.palette())
 		palette.setColor(palette.Background, QtCore.Qt.transparent)
 		self.setPalette(palette)
@@ -228,7 +228,7 @@ class Overlay(QtGui.QWidget):
 
 
 
-class WidgetHandler( QtGui.QTreeWidgetItem ):
+class WidgetHandler( QtWidgets.QTreeWidgetItem ):
 	""" 
 	Holds the items displayed top-left within the admin.
 	Each of these provides access to one modul and holds the references

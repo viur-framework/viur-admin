@@ -20,7 +20,7 @@ if sys.version_info<min_version:
 	print("You need python3.2 or newer!")
 	sys.exit(1)
 if 1:
-	from PyQt4 import QtGui, QtCore, QtWebKit
+	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets
 else: # ImportError:
 	print( "QT Bindings are missing or incomplete! Ensure PyQT is build with Qt, QtGui, QtCore, QtOpenGL and QtWebKit" )
 	sys.exit(1)
@@ -98,10 +98,10 @@ if (options.report == "auto" and not os.path.exists( ".git" )) or options.report
 
 conf.cmdLineOpts = options #Store the command-line options
 
-app = QtGui.QApplication(sys.argv)
+app = QtWidgets.QApplication(sys.argv)
 
 #Enfoce Plastique GUI Style
-QtGui.QApplication.setStyle( "plastique" )
+QtWidgets.QApplication.setStyle( "plastique" )
 
 import plugin
 

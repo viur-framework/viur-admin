@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay, RegisterQueue, formatString, urlForItem
 from network import NetworkService, RequestGroup
 from event import event
@@ -214,7 +214,7 @@ class ListTableModel( QtCore.QAbstractTableModel ):
 
 
 
-class ListTableView( QtGui.QTableView ):
+class ListTableView( QtWidgets.QTableView ):
 	"""
 		Provides an interface for Data structured as a simple list.
 		
@@ -319,7 +319,7 @@ class ListTableView( QtGui.QTableView ):
 			super( ListTableView, self ).keyPressEvent( e )
 
 	def tableHeaderContextMenuEvent(self, point ):
-		class FieldAction( QtGui.QAction ):
+		class FieldAction( QtWidgets.QAction ):
 			def __init__(self, key, name, *args, **kwargs ):
 				super( FieldAction, self ).__init__( *args, **kwargs )
 				self.key = key
@@ -414,7 +414,7 @@ class ListTableView( QtGui.QTableView ):
 			painter.end()
 
 	
-class ListWidget( QtGui.QWidget ):
+class ListWidget( QtWidgets.QWidget ):
 	
 	itemClicked = QtCore.pyqtSignal( (object,) )
 	itemDoubleClicked = QtCore.pyqtSignal( (object,) )
@@ -492,7 +492,7 @@ class ListWidget( QtGui.QWidget ):
 				actionWdg = actionDelegateSelector.select( "list.%s" % self.modul, action )
 				if actionWdg is not None:
 					actionWdg = actionWdg( self )
-					if isinstance( actionWdg, QtGui.QAction ):
+					if isinstance( actionWdg, QtWidgets.QAction ):
 						self.toolBar.addAction( actionWdg )
 						self.addAction( actionWdg )
 					else:

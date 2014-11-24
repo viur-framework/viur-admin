@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ui.fileUploadProgressUI import Ui_FileUploadProgress
 from ui.fileDownloadProgressUI import Ui_FileDownloadProgress
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay
 from network import NetworkService, RemoteFile, RequestGroup
 from event import event
@@ -44,7 +44,7 @@ class FileItem( LeafItem ):
 		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % ( remoteFile.getFileName(), str( self.entryData["name"] ) ) )
 
 
-class UploadStatusWidget( QtGui.QWidget ): 
+class UploadStatusWidget( QtWidgets.QWidget ):
 	"""
 		Upload files and/or directories from the the local filesystem to the server.
 		This one is recursive, it supports uploading of files in subdirectories as well.
@@ -95,7 +95,7 @@ class UploadStatusWidget( QtGui.QWidget ):
 	def onFinished( self, req ):
 		self.deleteLater()
 
-class DownloadStatusWidget( QtGui.QWidget ): 
+class DownloadStatusWidget( QtWidgets.QWidget ):
 	"""
 		Download files and/or directories from the server into the local filesystem.
 		The functionality is bound to a widget displaying the current progress.

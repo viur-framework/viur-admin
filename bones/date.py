@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from datetime import datetime, date, time, tzinfo
 from priorityqueue import editBoneSelector
@@ -13,7 +13,7 @@ except AttributeError:
     _fromUtf8 = lambda s: s
 
 
-class FixedDateTimeEdit( QtGui.QDateTimeEdit ):
+class FixedDateTimeEdit( QtWidgets.QDateTimeEdit ):
 	"""
 		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
@@ -31,7 +31,7 @@ class FixedDateTimeEdit( QtGui.QDateTimeEdit ):
 		super( FixedDateTimeEdit, self ).focusOutEvent( e )
 
 
-class FixedDateEdit( QtGui.QDateEdit ):
+class FixedDateEdit( QtWidgets.QDateEdit ):
 	"""
 		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
@@ -49,7 +49,7 @@ class FixedDateEdit( QtGui.QDateEdit ):
 		super( FixedDateEdit, self ).focusOutEvent( e )
 
 
-class FixedTimeEdit( QtGui.QTimeEdit ):
+class FixedTimeEdit( QtWidgets.QTimeEdit ):
 	"""
 		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
@@ -69,7 +69,7 @@ class FixedTimeEdit( QtGui.QTimeEdit ):
 
 
 
-class DateEditBone( QtGui.QWidget ):
+class DateEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, *args, **kwargs ):
 		super( DateEditBone,  self ).__init__( *args, **kwargs )
 		

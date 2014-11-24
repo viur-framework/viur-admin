@@ -71,7 +71,7 @@ class TextEdit(QtGui.QMainWindow):
 		self.linkEditor = QtGui.QDockWidget( QtCore.QCoreApplication.translate("DocumentEditBone", "Edit link"), self )
 		self.linkEditor.setAllowedAreas( QtCore.Qt.BottomDockWidgetArea )
 		self.linkEditor.setFeatures( QtGui.QDockWidget.NoDockWidgetFeatures )
-		self.linkEditor.cWidget = QtGui.QWidget()
+		self.linkEditor.cWidget = QtWidgets.QWidget()
 		self.linkEditor.ui = Ui_LinkEdit()
 		self.linkEditor.ui.setupUi( self.linkEditor.cWidget )
 		self.linkEditor.setWidget( self.linkEditor.cWidget )
@@ -184,24 +184,24 @@ class TextEdit(QtGui.QMainWindow):
 		self.addToolBar(tb)
 
 
-		self.actionUndo = QtGui.QAction(QtGui.QIcon('icons/actions/undo_small.png'),"&Undo", self, shortcut=QtGui.QKeySequence.Undo)
+		self.actionUndo = QtWidgets.QAction(QtGui.QIcon('icons/actions/undo_small.png'),"&Undo", self, shortcut=QtGui.QKeySequence.Undo)
 		tb.addAction(self.actionUndo)
-		self.actionRedo = QtGui.QAction(QtGui.QIcon('icons/actions/redo_small.png'),
-				"&Redo", self, priority=QtGui.QAction.LowPriority,
+		self.actionRedo = QtWidgets.QAction(QtGui.QIcon('icons/actions/redo_small.png'),
+				"&Redo", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtGui.QKeySequence.Redo)
 		tb.addAction(self.actionRedo)
 
-		self.actionCut = QtGui.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
-				"Cu&t", self, priority=QtGui.QAction.LowPriority,
+		self.actionCut = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
+				"Cu&t", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtGui.QKeySequence.Cut)
 		tb.addAction(self.actionCut)
 
-		self.actionCopy = QtGui.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
-				"&Copy", self, priority=QtGui.QAction.LowPriority,
+		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
+				"&Copy", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtGui.QKeySequence.Copy)
 		tb.addAction(self.actionCopy)
-		self.actionPaste = QtGui.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
-				"&Paste", self, priority=QtGui.QAction.LowPriority,
+		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
+				"&Paste", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtGui.QKeySequence.Paste,
 				enabled=(len(QtGui.QApplication.clipboard().text()) != 0))
 		tb.addAction(self.actionPaste)
@@ -212,31 +212,31 @@ class TextEdit(QtGui.QMainWindow):
 		self.addToolBar(tb)
 
 
-		#self.actionInsertImage = QtGui.QAction(QtGui.QIcon(rsrcPath + '/image.png'),"&Image", self)
+		#self.actionInsertImage = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/image.png'),"&Image", self)
 		#tb.addAction(self.actionInsertImage)
 		
-		#self.actionInsertTable = QtGui.QAction(QtGui.QIcon(rsrcPath + '/table-add.png'),"&Table", self)
+		#self.actionInsertTable = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/table-add.png'),"&Table", self)
 		#tb.addAction(self.actionInsertTable)
 		
-		self.actionInsertLink = QtGui.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Link", self)
+		self.actionInsertLink = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/link.png'),"&Link", self)
 		tb.addAction(self.actionInsertLink)
 
-#		self.actionRedo = QtGui.QAction(QtGui.QIcon(rsrcPath + '/redo.png'),
-#				"&Redo", self, priority=QtGui.QAction.LowPriority,
+#		self.actionRedo = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/redo.png'),
+#				"&Redo", self, priority=QtWidgets.QAction.LowPriority,
 #				shortcut=QtGui.QKeySequence.Redo)
 #		tb.addAction(self.actionRedo)
 #
-#		self.actionCut = QtGui.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
-#				"Cu&t", self, priority=QtGui.QAction.LowPriority,
+#		self.actionCut = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
+#				"Cu&t", self, priority=QtWidgets.QAction.LowPriority,
 #				shortcut=QtGui.QKeySequence.Cut)
 #		tb.addAction(self.actionCut)
 #
-#		self.actionCopy = QtGui.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
-#				"&Copy", self, priority=QtGui.QAction.LowPriority,
+#		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
+#				"&Copy", self, priority=QtWidgets.QAction.LowPriority,
 #				shortcut=QtGui.QKeySequence.Copy)
 #		tb.addAction(self.actionCopy)
-#		self.actionPaste = QtGui.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
-#				"&Paste", self, priority=QtGui.QAction.LowPriority,
+#		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
+#				"&Paste", self, priority=QtWidgets.QAction.LowPriority,
 #				shortcut=QtGui.QKeySequence.Paste,
 #				enabled=(len(QtGui.QApplication.clipboard().text()) != 0))
 #		tb.addAction(self.actionPaste)
@@ -246,8 +246,8 @@ class TextEdit(QtGui.QMainWindow):
 		tb.setWindowTitle("Format Actions")
 		self.addToolBar(tb)
 
-		self.actionTextBold = QtGui.QAction(QtGui.QIcon(rsrcPath + '/bold.png'),
-				"&Bold", self, priority=QtGui.QAction.LowPriority,
+		self.actionTextBold = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/bold.png'),
+				"&Bold", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
 				triggered=self.textBold, checkable=True)
 		bold = QtGui.QFont()
@@ -256,8 +256,8 @@ class TextEdit(QtGui.QMainWindow):
 		tb.addAction(self.actionTextBold)
 
 
-		self.actionTextItalic = QtGui.QAction(QtGui.QIcon(rsrcPath + '/italic.png'),
-				"&Italic", self, priority=QtGui.QAction.LowPriority,
+		self.actionTextItalic = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/italic.png'),
+				"&Italic", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
 				triggered=self.textItalic, checkable=True)
 		italic = QtGui.QFont()
@@ -265,8 +265,8 @@ class TextEdit(QtGui.QMainWindow):
 		self.actionTextItalic.setFont(italic)
 		tb.addAction(self.actionTextItalic)
 
-		self.actionTextUnderline = QtGui.QAction(QtGui.QIcon(rsrcPath + '/underline.png'),
-				"&Underline", self, priority=QtGui.QAction.LowPriority,
+		self.actionTextUnderline = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/underline.png'),
+				"&Underline", self, priority=QtWidgets.QAction.LowPriority,
 				shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
 				triggered=self.textUnderline, checkable=True)
 		underline = QtGui.QFont()
@@ -275,48 +275,48 @@ class TextEdit(QtGui.QMainWindow):
 		tb.addAction(self.actionTextUnderline)
 
 
-		grp = QtGui.QActionGroup(self, triggered=self.textAlign)
+		grp = QtWidgets.QActionGroup(self, triggered=self.textAlign)
 
 		# Make sure the alignLeft is always left of the alignRight.
 		if QtGui.QApplication.isLeftToRight():
-			self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+			self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
 					"&Left", grp)
-			self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+			self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
 					"C&enter", grp)
-			self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+			self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
 					"&Right", grp)
 		else:
-			self.actionAlignRight = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+			self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
 					"&Right", grp)
-			self.actionAlignCenter = QtGui.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+			self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
 					"C&enter", grp)
-			self.actionAlignLeft = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+			self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
 					"&Left", grp)
 
-		self.actionAlignJustify = QtGui.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
+		self.actionAlignJustify = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
 				"&Justify", grp)
 
 		self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
 		self.actionAlignLeft.setCheckable(True)
-		self.actionAlignLeft.setPriority(QtGui.QAction.LowPriority)
+		self.actionAlignLeft.setPriority(QtWidgets.QAction.LowPriority)
 
 		self.actionAlignCenter.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_E)
 		self.actionAlignCenter.setCheckable(True)
-		self.actionAlignCenter.setPriority(QtGui.QAction.LowPriority)
+		self.actionAlignCenter.setPriority(QtWidgets.QAction.LowPriority)
 
 		self.actionAlignRight.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
 		self.actionAlignRight.setCheckable(True)
-		self.actionAlignRight.setPriority(QtGui.QAction.LowPriority)
+		self.actionAlignRight.setPriority(QtWidgets.QAction.LowPriority)
 
 		self.actionAlignJustify.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
 		self.actionAlignJustify.setCheckable(True)
-		self.actionAlignJustify.setPriority(QtGui.QAction.LowPriority)
+		self.actionAlignJustify.setPriority(QtWidgets.QAction.LowPriority)
 
 		tb.addActions(grp.actions())
 
 		pix = QtGui.QPixmap(16, 16)
 		pix.fill(QtCore.Qt.black)
-		self.actionTextColor = QtGui.QAction(QtGui.QIcon(pix), "&Color...",
+		self.actionTextColor = QtWidgets.QAction(QtGui.QIcon(pix), "&Color...",
 				self, triggered=self.textColor)
 		tb.addAction(self.actionTextColor)
 
@@ -324,12 +324,12 @@ class TextEdit(QtGui.QMainWindow):
 		self.addToolBarBreak(QtCore.Qt.TopToolBarArea)
 		self.addToolBar(tb)
 
-		self.actionBulletList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/bullet.png'), "Bullet",
+		self.actionBulletList = QtWidgets.QAction(	QtGui.QIcon('icons/actions/text/bullet.png'), "Bullet",
 										self,
 										triggered=self.onBulletList)
 		tb.addAction(self.actionBulletList)
 
-		self.actionNumberedList = QtGui.QAction(	QtGui.QIcon('icons/actions/text/numbered.png'), "Numbered",
+		self.actionNumberedList = QtWidgets.QAction(	QtGui.QIcon('icons/actions/text/numbered.png'), "Numbered",
 											self,
 											triggered=self.onNumberedList)
 		tb.addAction(self.actionNumberedList)
@@ -503,7 +503,7 @@ class TextEdit(QtGui.QMainWindow):
 			self.actionAlignJustify.setChecked(True)
 
 
-class CreateTableDialog( QtGui.QDialog ):
+class CreateTableDialog( QtWidgets.QDialog ):
 	def __init__(self, textCursor,  *args, **kwargs ):
 		super( CreateTableDialog, self ).__init__( *args, **kwargs )
 		self.ui = Ui_DialogCreateTable()
@@ -521,7 +521,7 @@ class CreateTableDialog( QtGui.QDialog ):
 ###################### File #####################
 
 
-class FileEdit( QtGui.QWidget ):
+class FileEdit( QtWidgets.QWidget ):
 	loremIpsum = """Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.  """
 	units = ["%", "px", "em"]
 	def __init__(self, saveCallback, attrs, href, *args, **kwargs ):
@@ -1249,7 +1249,7 @@ class EmbeddedImageUploader( QtCore.QObject ):
 	def getHtml(self):
 		return( self.txt )
 
-class DocEdit( QtGui.QWidget ):
+class DocEdit( QtWidgets.QWidget ):
 	def __init__( self, saveCallback, extensions, *args, **kwargs ):
 		super( DocEdit, self ).__init__( *args, **kwargs )
 		self.extensions = extensions
@@ -1277,7 +1277,7 @@ class DocEdit( QtGui.QWidget ):
 		if self.currentEditor:
 			self.currentEditor.save()
 			self.currentEditor = None
-		self.ui.scrollArea.setWidget( QtGui.QWidget() )
+		self.ui.scrollArea.setWidget( QtWidgets.QWidget() )
 		self.processDocument()
 
 	def addParent( self, parent, newChild ):
@@ -1363,7 +1363,7 @@ class DocEdit( QtGui.QWidget ):
 		if not inFile:
 			return
 		self.ui.treeWidget.clear()
-		self.ui.scrollArea.setWidget( QtGui.QWidget() )
+		self.ui.scrollArea.setWidget( QtWidgets.QWidget() )
 		self.currentEditor = None
 		self.imageUploader = EmbeddedImageUploader()
 		self.connect( self.imageUploader, QtCore.SIGNAL("finished()"), self.setImportedHtml )
@@ -1472,7 +1472,7 @@ class DocEdit( QtGui.QWidget ):
 	def unserialize( self, txt ):
 		self.ui.treeWidget.clear()
 		self.currentEditor = None
-		self.ui.scrollArea.setWidget( QtGui.QWidget() )
+		self.ui.scrollArea.setWidget( QtWidgets.QWidget() )
 		Parser( self.extensions ).parseInto( txt+" " , self.ui.treeWidget )
 		self.processDocument()
 	

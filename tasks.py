@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from ui.taskUI import Ui_Task
 from network import NetworkService
 from utils import Overlay, WidgetHandler, loadIcon
@@ -34,13 +34,13 @@ class TaskEntryHandler( WidgetHandler ):
 
 
 
-class TaskItem(QtGui.QListWidgetItem):
+class TaskItem(QtWidgets.QListWidgetItem):
 	def __init__(self, task, *args, **kwargs ):
 		super(TaskItem,self).__init__(  task["name"], *args, **kwargs )
 		self.task = task
 
 
-class TaskViewer( QtGui.QWidget ):
+class TaskViewer( QtWidgets.QWidget ):
 	def __init__(self, parent=None, *args, **kwargs ):
 		super( TaskViewer, self ).__init__( parent, *args,  **kwargs )
 		self.ui = Ui_Task()

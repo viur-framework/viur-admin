@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.treeUI import Ui_Tree
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from network import NetworkService, RemoteFile
 from event import event
 from config import conf
@@ -13,7 +13,7 @@ from utils import RegisterQueue, loadIcon
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
 
-class FileUploadAction( QtGui.QAction ): 
+class FileUploadAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( FileUploadAction, self ).__init__(  QtGui.QIcon("icons/actions/upload_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Upload files"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -30,7 +30,7 @@ class FileUploadAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 3, FileUploadAction.isSuitableFor, FileUploadAction )
 
-class FileDownloadAction( QtGui.QAction ): 
+class FileDownloadAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( FileDownloadAction, self ).__init__(  QtGui.QIcon("icons/actions/download_small.png"), QtCore.QCoreApplication.translate("FileHandler", "Download files"), parent )
 		self.triggered.connect( self.onTriggered )

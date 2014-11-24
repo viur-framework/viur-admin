@@ -1,55 +1,51 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\tree.ui'
+# Form implementation generated from reading ui file 'tree.ui'
 #
-# Created: Thu Jul 18 16:21:27 2013
-#      by: PyQt4 UI code generator 4.9.5
+# Created: Mon Nov 24 18:30:24 2014
+#      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Tree(object):
     def setupUi(self, Tree):
-        Tree.setObjectName(_fromUtf8("Tree"))
+        Tree.setObjectName("Tree")
         Tree.resize(659, 479)
-        self.verticalLayout = QtGui.QVBoxLayout(Tree)
-        self.verticalLayout.setMargin(0)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.boxActions = QtGui.QHBoxLayout()
-        self.boxActions.setObjectName(_fromUtf8("boxActions"))
+        self.verticalLayout = QtWidgets.QVBoxLayout(Tree)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.boxActions = QtWidgets.QHBoxLayout()
+        self.boxActions.setObjectName("boxActions")
         self.verticalLayout.addLayout(self.boxActions)
-        self.pathListBox = QtGui.QVBoxLayout()
-        self.pathListBox.setObjectName(_fromUtf8("pathListBox"))
+        self.pathListBox = QtWidgets.QVBoxLayout()
+        self.pathListBox.setContentsMargins(-1, 10, -1, 10)
+        self.pathListBox.setObjectName("pathListBox")
         self.verticalLayout.addLayout(self.pathListBox)
-        self.verticalLayout_3 = QtGui.QWidget(Tree)
-        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.verticalLayout_3)
-        self.verticalLayout_2.setMargin(0)
-        self.verticalLayout_2.setMargin(0)
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.listWidgetBox = QtGui.QVBoxLayout()
-        self.listWidgetBox.setObjectName(_fromUtf8("listWidgetBox"))
+        self.verticalLayout_3 = QtWidgets.QWidget(Tree)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalLayout_3)
+        self.verticalLayout_2.setContentsMargins(0, 10, 0, 10)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.listWidgetBox = QtWidgets.QVBoxLayout()
+        self.listWidgetBox.setContentsMargins(0, 0, 0, 0)
+        self.listWidgetBox.setObjectName("listWidgetBox")
         self.verticalLayout_2.addLayout(self.listWidgetBox)
-        self.boxUpload = QtGui.QVBoxLayout()
-        self.boxUpload.setObjectName(_fromUtf8("boxUpload"))
+        self.boxUpload = QtWidgets.QVBoxLayout()
+        self.boxUpload.setObjectName("boxUpload")
         self.verticalLayout_2.addLayout(self.boxUpload)
         self.verticalLayout.addWidget(self.verticalLayout_3)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.editSearch = QtGui.QLineEdit(Tree)
-        self.editSearch.setObjectName(_fromUtf8("editSearch"))
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.editSearch = QtWidgets.QLineEdit(Tree)
+        self.editSearch.setObjectName("editSearch")
         self.horizontalLayout.addWidget(self.editSearch)
-        self.btnSearch = QtGui.QPushButton(Tree)
+        self.btnSearch = QtWidgets.QPushButton(Tree)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icons/actions/search.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSearch.setIcon(icon)
-        self.btnSearch.setObjectName(_fromUtf8("btnSearch"))
+        self.btnSearch.setObjectName("btnSearch")
         self.horizontalLayout.addWidget(self.btnSearch)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -57,17 +53,8 @@ class Ui_Tree(object):
         QtCore.QMetaObject.connectSlotsByName(Tree)
 
     def retranslateUi(self, Tree):
-        Tree.setWindowTitle(QtGui.QApplication.translate("Tree", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.editSearch.setText(QtGui.QApplication.translate("Tree", "Search", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnSearch.setText(QtGui.QApplication.translate("Tree", "Search", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    Tree = QtGui.QWidget()
-    ui = Ui_Tree()
-    ui.setupUi(Tree)
-    Tree.show()
-    sys.exit(app.exec_())
+        _translate = QtCore.QCoreApplication.translate
+        Tree.setWindowTitle(_translate("Tree", "Form"))
+        self.editSearch.setText(_translate("Tree", "Search"))
+        self.btnSearch.setText(_translate("Tree", "Search"))
 

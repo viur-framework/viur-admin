@@ -1,6 +1,6 @@
 from ui.loginformUI import Ui_LoginWindow
 from accountmanager import Accountmanager
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets
 from network import NetworkService, securityTokenProvider
 from event import event
 from config import conf
@@ -151,9 +151,9 @@ class LoginTask( QtCore.QObject ):
 		self.loginSucceeded.emit()
 		self.deleteLater()
 	
-class Login( QtGui.QMainWindow ):
+class Login( QtWidgets.QMainWindow ):
 	def __init__( self, *args, **kwargs ):
-		QtGui.QMainWindow.__init__(self, *args, **kwargs )
+		QtWidgets.QMainWindow.__init__(self, *args, **kwargs )
 		self.ui = Ui_LoginWindow()
 		self.ui.setupUi( self )
 		self.accman = None #Reference to our Account-MGR
@@ -166,7 +166,7 @@ class Login( QtGui.QMainWindow ):
 		self.captchaToken = None
 		self.loadAccounts()
 		self.overlay = Overlay( self )
-		shortCut = QtGui.QShortcut( self )
+		shortCut = QtWidgets.QShortcut( self )
 		shortCut.setKey("Return")
 		shortCut.activated.connect( self.onBtnLoginReleased )
 		#Populate the language-selector

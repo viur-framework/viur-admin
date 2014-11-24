@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from PyQt4 import QtGui, QtCore, QtWebKit
+from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtWebKitWidgets
 from network import NetworkService
 from config import conf
 
@@ -9,7 +9,7 @@ from config import conf
 	Displayes the specified webpage.
 """
 
-class WebWidget( QtWebKit.QWebView ):
+class WebWidget( QtWebKitWidgets.QWebView ):
 
 	def __init__(self):
 		super( WebWidget, self ).__init__()

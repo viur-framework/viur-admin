@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ui.hierarchyUI import Ui_Hierarchy
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from config import conf
@@ -36,7 +36,7 @@ class HierarchyCoreHandler( WidgetHandler ): #FIXME
 		super( HierarchyCoreHandler, self ).__init__( lambda: HierarchyWidget( modul ), icon=icon, vanishOnClose=False, *args, **kwargs )
 		self.setText( 0, config["name"] )
 		self.repos = []
-		self.tmpObj = QtGui.QWidget()
+		self.tmpObj = QtWidgets.QWidget()
 		fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
 		self.tmpObj.connect(fetchTask, QtCore.SIGNAL("finished()"), self.setRepos) 
 

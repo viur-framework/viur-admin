@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from network import NetworkService
 from event import event
 from config import conf
@@ -12,7 +12,7 @@ from widgets.tree import TreeWidget
 from widgets.edit import EditWidget
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
-class TreeAddAction( QtGui.QAction ):
+class TreeAddAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -33,7 +33,7 @@ class TreeAddAction( QtGui.QAction ):
 		
 actionDelegateSelector.insert( 1, TreeAddAction.isSuitableFor, TreeAddAction )
 
-class TreeEditAction( QtGui.QAction ):
+class TreeEditAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent )
 		self.setShortcut( QtGui.QKeySequence.Open )
@@ -63,7 +63,7 @@ class TreeEditAction( QtGui.QAction ):
 		
 actionDelegateSelector.insert( 1, TreeEditAction.isSuitableFor, TreeEditAction )
 
-class TreeDirUpAction( QtGui.QAction ):
+class TreeDirUpAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDirUpAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_back_small.png"), QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent )
 		self.parent().nodeChanged.connect( self.onNodeChanged )
@@ -98,7 +98,7 @@ class TreeDirUpAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, TreeDirUpAction.isSuitableFor, TreeDirUpAction )
 
 
-class TreeDeleteAction( QtGui.QAction ): 
+class TreeDeleteAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent )
 		self.parent().itemSelectionChanged.connect( self.onItemSelectionChanged )
@@ -131,7 +131,7 @@ class TreeDeleteAction( QtGui.QAction ):
 		
 actionDelegateSelector.insert( 1, TreeDeleteAction.isSuitableFor, TreeDeleteAction )
 
-class TreeSwitchViewAction( QtGui.QAction ):
+class TreeSwitchViewAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeSwitchViewAction, self ).__init__(  QtGui.QIcon("icons/actions/switch_list.png"), QtCore.QCoreApplication.translate("TreeHandler", "Switch View"), parent )
 		self.triggered.connect( self.onTriggered )

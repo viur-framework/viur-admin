@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay
 from network import NetworkService, RequestGroup
 from event import event
@@ -11,7 +11,7 @@ from widgets.edit import EditWidget
 from config import conf
 import json
 
-class NodeItem(QtGui.QListWidgetItem):
+class NodeItem(QtWidgets.QListWidgetItem):
 	"""
 		Displayes one subfolder inside a QListWidget
 	"""
@@ -35,7 +35,7 @@ class NodeItem(QtGui.QListWidgetItem):
 		else:
 			return( str( self ) < str( other ) )
 
-class LeafItem(QtGui.QListWidgetItem):
+class LeafItem(QtWidgets.QListWidgetItem):
 	"""
 		Displayes one generic entry inside a QListWidget.
 		Can be overriden for a more accurate representation of the element.
@@ -64,7 +64,7 @@ class LeafItem(QtGui.QListWidgetItem):
 		else:
 			return( str( self ) < str( other ) )
 
-class PathListView( QtGui.QListWidget ):
+class PathListView( QtWidgets.QListWidget ):
 	pathChanged = QtCore.pyqtSignal( (list,) ) #FIXME: DELETE ME
 	rootNodeChanged = QtCore.pyqtSignal( (str,) )
 	nodeChanged = QtCore.pyqtSignal( (str,) )
@@ -143,7 +143,7 @@ class PathListView( QtGui.QListWidget ):
 		#self.pathChanged.emit( self.path )
 
 
-class TreeListView( QtGui.QListWidget ):
+class TreeListView( QtWidgets.QListWidget ):
 	
 	gridSizeIcon = (128,128)
 	gridSizeList = (32,32)
@@ -415,7 +415,7 @@ class TreeListView( QtGui.QListWidget ):
 			self.setGridSize( QtCore.QSize( *self.gridSizeList ) )
 			self.setIconSize( QtCore.QSize( *[x-8 for x in self.gridSizeList] ) )
 
-class TreeWidget( QtGui.QWidget ):
+class TreeWidget( QtWidgets.QWidget ):
 	"""
 		Provides an interface for Data structured as a tree on the server.
 
@@ -428,9 +428,9 @@ class TreeWidget( QtGui.QWidget ):
 	pathChanged = QtCore.pyqtSignal( (list,) )
 	rootNodeChanged = QtCore.pyqtSignal( (str,) )
 	nodeChanged = QtCore.pyqtSignal( (str,) )
-	currentItemChanged = QtCore.pyqtSignal( (QtGui.QListWidgetItem,QtGui.QListWidgetItem) )
+	currentItemChanged = QtCore.pyqtSignal( (QtWidgets.QListWidgetItem,QtWidgets.QListWidgetItem) )
 	itemSelectionChanged = QtCore.pyqtSignal( )
-	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QListWidgetItem) )
+	itemDoubleClicked = QtCore.pyqtSignal( (QtWidgets.QListWidgetItem) )
 	
 	lastSeenNode = {} # allow opening the last viewed node again
 
@@ -550,7 +550,7 @@ class TreeWidget( QtGui.QWidget ):
 			actionWdg = actionDelegateSelector.select( "%s.%s" % ( modulCfg["handler"], self.getModul() ), action )
 			if actionWdg is not None:
 				actionWdg = actionWdg( self )
-				if isinstance( actionWdg, QtGui.QAction ):
+				if isinstance( actionWdg, QtWidgets.QAction ):
 					self.toolBar.addAction( actionWdg )
 					self.addAction( actionWdg )
 				else:

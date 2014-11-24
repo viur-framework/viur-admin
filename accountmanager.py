@@ -1,6 +1,6 @@
 from ui.accountmanagerUI import Ui_MainWindow
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from config import conf
 import json
@@ -9,7 +9,7 @@ import json
 	Allows editing the local accountlist.
 """
 
-class AccountItem(QtGui.QListWidgetItem):
+class AccountItem(QtWidgets.QListWidgetItem):
 	def __init__(self, account, *args, **kwargs ):
 		super(AccountItem,self).__init__( QtGui.QIcon("icons/profile.png"), account["name"], *args, **kwargs )
 		self.account = account
@@ -18,7 +18,7 @@ class AccountItem(QtGui.QListWidgetItem):
 		self.account = accountData
 		self.setText( self.account["name"] )
 
-class Accountmanager( QtGui.QMainWindow ):
+class Accountmanager( QtWidgets.QMainWindow ):
 
 	def __init__( self, *args, **kwargs ):
 		QtGui.QMainWindow.__init__(self, *args, **kwargs )

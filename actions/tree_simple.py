@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from network import NetworkService
 from event import event
 from config import conf
@@ -13,7 +13,7 @@ from widgets.edit import EditWidget
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
 
-class TreeSimpleEditAction( QtGui.QAction ):
+class TreeSimpleEditAction( QtWidgets.QAction ):
 	"""
 		Overriden edit-action which prevents editing Nodes
 	"""
@@ -59,7 +59,7 @@ class TreeSimpleEditAction( QtGui.QAction ):
 actionDelegateSelector.insert( 3, TreeSimpleEditAction.isSuitableFor, TreeSimpleEditAction )
 
 
-class TreeMkDirAction( QtGui.QAction ):
+class TreeMkDirAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( TreeMkDirAction, self ).__init__(  QtGui.QIcon("icons/actions/folder_add.svg"), QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -80,7 +80,7 @@ class TreeMkDirAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, TreeMkDirAction.isSuitableFor, TreeMkDirAction )
 
 
-class TreeSimpleRenameAction( QtGui.QAction ):
+class TreeSimpleRenameAction( QtWidgets.QAction ):
 	"""
 		Allow renaming directories
 	"""

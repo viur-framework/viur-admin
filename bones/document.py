@@ -1,5 +1,5 @@
 
-from PyQt4 import QtCore, QtGui,  QtWebKit
+from PyQt5 import QtCore, QtGui,  QtWebKit
 import sys
 from event import event
 from utils import RegisterQueue
@@ -9,7 +9,7 @@ from bones.text import TextViewBoneDelegate
 class DocumentViewBoneDelegate( TextViewBoneDelegate ):
 	pass
 
-class DocumentEditBone( QtGui.QWidget ):
+class DocumentEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( DocumentEditBone,  self ).__init__( *args, **kwargs )
 		self.skelStructure = skelStructure

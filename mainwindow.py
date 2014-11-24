@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ui.adminUI import Ui_MainWindow
 from ui.preloaderUI import Ui_Preloader
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets
 from event import event
 from config import conf
 import time, os, logging
@@ -12,7 +12,7 @@ from network import NetworkService, RemoteFile
 from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 
 
-class Preloader( QtGui.QWidget ):
+class Preloader( QtWidgets.QWidget ):
 	
 	finished = QtCore.pyqtSignal( ) 
 	
@@ -49,7 +49,7 @@ class Preloader( QtGui.QWidget ):
 			self.killTimer(self.timerID)
 			self.timerID = None
 
-class MainWindow( QtGui.QMainWindow ):
+class MainWindow( QtWidgets.QMainWindow ):
 	"""
 	The main window.
 	Holds the code for loading and processing the config (from the server) and
@@ -57,7 +57,7 @@ class MainWindow( QtGui.QMainWindow ):
 	"""
 	
 	def __init__( self, *args, **kwargs ):
-		QtGui.QMainWindow.__init__(self, *args, **kwargs )
+		QtWidgets.QMainWindow.__init__(self, *args, **kwargs )
 		self.logger = logging.getLogger( "MainWindow" )
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi( self )

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import urllib, urllib.request, urllib.error, urllib.parse
 from urllib.parse import quote_plus
 import sys, os, time
@@ -19,7 +19,7 @@ from config import conf
 	Otherwise, an ViUR splashscreen is displayed.
 """
 
-class GraphPlotter(QtGui.QWidget):
+class GraphPlotter(QtWidgets.QWidget):
 	bgColor = "#FFFFFF"
 	graphColor = "#000000"
 	txtColor = "#000000"
@@ -174,7 +174,7 @@ class AnalyticsTableModel( QtCore.QAbstractTableModel ):
 	def sort(self, colum, order ):
 		return
 
-class AnalytisWidget(QtGui.QWidget):
+class AnalytisWidget(QtWidgets.QWidget):
 
 	def __init__(self):
 		super(AnalytisWidget, self).__init__()

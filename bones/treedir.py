@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from utils import RegisterQueue, Overlay
 from ui.relationalselectionUI import Ui_relationalSelector
@@ -14,7 +14,7 @@ class TreeDirViewBoneDelegate( RelationalViewBoneDelegate ):
 
 
 
-class TreeDirEditBone( QtGui.QWidget ):
+class TreeDirEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", *args, **kwargs ):
 		super( TreeDirEditBone,  self ).__init__( *args, **kwargs )
 		self.modulName = modulName
@@ -108,7 +108,7 @@ class BaseTreeDirBoneSelector( TreeWidget ):
 		self.selection = selection
 		self.setSelection = setSelection
 		self.multiple = skelStructure[boneName]["multiple"]
-		QtGui.QWidget.__init__( self, *args, **kwargs )
+		QtWidgets.QWidget.__init__( self, *args, **kwargs )
 		self.ui = Ui_TreeSelector()
 		self.ui.setupUi( self )		
 		super( BaseTreeDirBoneSelector, self ).__init__( self.modul, {"name":self.boneName,"handler":"treeItem"}, *args, **kwargs )

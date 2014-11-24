@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from bones.base import BaseEditBone
 from bones.base import BaseViewBoneDelegate
@@ -11,7 +11,7 @@ from utils import wheelEventFilter
 from math import pow
 
 
-class FixedQSpinBox( QtGui.QSpinBox ):
+class FixedQSpinBox( QtWidgets.QSpinBox ):
 	"""
 		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
@@ -28,7 +28,7 @@ class FixedQSpinBox( QtGui.QSpinBox ):
 		self.setFocusPolicy( QtCore.Qt.StrongFocus )
 		super( FixedQSpinBox, self ).focusOutEvent( e )
 		
-class FixedQDoubleSpinBox( QtGui.QDoubleSpinBox ):
+class FixedQDoubleSpinBox( QtWidgets.QDoubleSpinBox ):
 	"""
 		Subclass of QDoubleSpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""

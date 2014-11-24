@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay
 from network import NetworkService
 from event import event
@@ -10,7 +10,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 from ui.hierarchyUI import Ui_Hierarchy
 from mainwindow import WidgetHandler
 
-class HierarchyAddAction( QtGui.QAction ):
+class HierarchyAddAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Add entry") , parent )
 		self.triggered.connect( self.onTriggered )
@@ -32,7 +32,7 @@ class HierarchyAddAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 1, HierarchyAddAction.isSuitableFor, HierarchyAddAction )
 
-class HierarchyEditAction( QtGui.QAction ):
+class HierarchyEditAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyEditAction, self ).__init__(  QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -55,7 +55,7 @@ class HierarchyEditAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 1, HierarchyEditAction.isSuitableFor, HierarchyEditAction )
 
-class HierarchyDeleteAction( QtGui.QAction ):
+class HierarchyDeleteAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( HierarchyDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"), parent )
 		self.triggered.connect( self.onTriggered )

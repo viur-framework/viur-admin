@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from network import NetworkService
 from event import event
 from collections import OrderedDict
 from utils import RegisterQueue, Overlay, formatString
 from config import conf
 from ui.editUI import Ui_Edit
-from ui.editpreviewUI import Ui_EditPreview
+from ui.editpreviewUI import Ui_BasePreview
 from priorityqueue import editBoneSelector
 from priorityqueue import protocolWrapperInstanceSelector
 
-class Preview( QtGui.QWidget ):
+class Preview( QtWidgets.QWidget ):
 	"""Livepreview for unsaved changes"""
 	def __init__( self, modul, data, *args, **kwargs ):
 		super( Preview, self).__init__( *args, **kwargs )
-		self.ui = Ui_EditPreview()
+		self.ui = Ui_BasePreview()
 		self.ui.setupUi( self )
 		self.modul = modul
 		self.data = data
@@ -40,7 +40,7 @@ class Preview( QtGui.QWidget ):
 
 
 
-class EditWidget( QtGui.QWidget ):
+class EditWidget( QtWidgets.QWidget ):
 	appList = "list"
 	appHierarchy = "hierarchy"
 	appTree = "tree"
@@ -259,7 +259,7 @@ class EditWidget( QtGui.QWidget ):
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
 			if not tabName in tabs.keys():
 				scrollArea = QtGui.QScrollArea()
-				containerWidget = QtGui.QWidget( scrollArea )
+				containerWidget = QtWidgets.QWidget( scrollArea )
 				scrollArea.setWidget( containerWidget )
 				tabs[tabName] = QtGui.QFormLayout( containerWidget )
 				containerWidget.setLayout( tabs[tabName] )
@@ -282,7 +282,7 @@ class EditWidget( QtGui.QWidget ):
 			wdgGen = editBoneSelector.select( self.modul, key, tmpDict )
 			widget = wdgGen.fromSkelStructure( self.modul, key, tmpDict )
 			if bone["error"] and not ignoreMissing:
-				dataWidget = QtGui.QWidget()
+				dataWidget = QtWidgets.QWidget()
 				layout = QtGui.QHBoxLayout(dataWidget)
 				dataWidget.setLayout( layout )
 				layout.addWidget( widget, stretch=1 )
@@ -301,7 +301,7 @@ class EditWidget( QtGui.QWidget ):
 				dataWidget.setMaximumWidth(500)
 				dataWidget.setMinimumWidth(500)
 			## Temporary MacOS Fix
-			lblWidget = QtGui.QWidget( self )
+			lblWidget = QtWidgets.QWidget( self )
 			layout = QtGui.QHBoxLayout(lblWidget)
 			if "params" in bone.keys() and isinstance( bone["params"], dict ) and "tooltip" in bone["params"].keys():
 				lblWidget.setToolTip( self.parseHelpText( bone["params"]["tooltip"] ) )

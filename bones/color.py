@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from event import event
 from bones.base import BaseEditBone
 from priorityqueue import editBoneSelector
@@ -10,7 +10,7 @@ from priorityqueue import editBoneSelector
 class ColorEditBone( BaseEditBone ):
 
 	def getLineEdit(self):
-		aWidget=QtGui.QWidget()
+		aWidget=QtWidgets.QWidget()
 		aWidget.layout = QtGui.QHBoxLayout( aWidget )
 		self.lineEdit1=QtGui.QLineEdit( self );
 		self.button = QtGui.QPushButton('Auswählen', self)

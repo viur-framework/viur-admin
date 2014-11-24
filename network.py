@@ -15,9 +15,9 @@ import http.cookiejar
 import base64
 from queue import Queue, Empty as QEmpty, Full as QFull
 from hashlib import sha1
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import QUrl, QObject
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import QUrl, QObject
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 import traceback
 import logging
 import weakref

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from event import event
 from priorityqueue import editBoneSelector, viewDelegateSelector
 
-class SelectMultiViewBoneDelegate(QtGui.QStyledItemDelegate):
+class SelectMultiViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs ):
 		super( SelectMultiViewBoneDelegate, self ).__init__()
 		self.skelStructure = skelStructure
@@ -17,7 +17,7 @@ class SelectMultiViewBoneDelegate(QtGui.QStyledItemDelegate):
 		resStr = ", ".join( [ boneValues[str(x)] for x in value if str(x) in boneValues.keys() ] )
 		return( super( SelectMultiViewBoneDelegate, self ).displayText( resStr, locale ) )
 
-class SelectMultiEditBone( QtGui.QWidget ):
+class SelectMultiEditBone( QtWidgets.QWidget ):
 	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs ):
 		super( SelectMultiEditBone,  self ).__init__(  *args, **kwargs )
 		self.modulName = modulName

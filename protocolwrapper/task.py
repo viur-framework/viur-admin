@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from network import NetworkService, RequestGroup, RequestWrapper
 from priorityqueue import protocolWrapperInstanceSelector
 

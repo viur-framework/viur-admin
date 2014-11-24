@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from widgets.file import FileWidget
 from bones.treeitem import TreeItemBone, TreeBoneSelector
 from priorityqueue import editBoneSelector, viewDelegateSelector
@@ -9,7 +9,7 @@ from priorityqueue import protocolWrapperInstanceSelector
 from network import RemoteFile 
 from utils import formatString
 
-class FileViewBoneDelegate(QtGui.QStyledItemDelegate):
+class FileViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 
 	cantSort = True
 	def __init__(self, modul, boneName, structure):

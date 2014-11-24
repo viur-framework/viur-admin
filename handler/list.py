@@ -1,9 +1,9 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from network import NetworkService
 from event import event
 import time
 import os, os.path
-from ui.editpreviewUI import Ui_EditPreview
+from ui.editpreviewUI import Ui_BasePreview
 from utils import RegisterQueue, Overlay, formatString, loadIcon
 from config import conf
 from mainwindow import WidgetHandler

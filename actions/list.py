@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay, RegisterQueue, formatString
 from network import NetworkService, RequestGroup
 from event import event
 from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
 from widgets.edit import EditWidget
 from mainwindow import WidgetHandler
-from ui.editpreviewUI import Ui_EditPreview
+from ui.editpreviewUI import Ui_BasePreview
 from config import conf
 
-class ListAddAction( QtGui.QAction ):
+class ListAddAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListAddAction, self ).__init__(  QtGui.QIcon("icons/actions/add.svg"), QtCore.QCoreApplication.translate("ListHandler", "Add entry"), parent )
 		#self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
@@ -34,7 +34,7 @@ class ListAddAction( QtGui.QAction ):
 		
 actionDelegateSelector.insert( 1, ListAddAction.isSuitableFor, ListAddAction )
 
-class ListEditAction( QtGui.QAction ):
+class ListEditAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListEditAction, self ).__init__( QtGui.QIcon("icons/actions/edit.svg"), QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -61,7 +61,7 @@ class ListEditAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 1, ListEditAction.isSuitableFor, ListEditAction )
 
-class ListCloneAction( QtGui.QAction ):
+class ListCloneAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListCloneAction, self ).__init__( QtGui.QIcon("icons/actions/clone.svg"), QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -80,7 +80,7 @@ class ListCloneAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 1, ListCloneAction.isSuitableFor, ListCloneAction )
 
-class ListDeleteAction( QtGui.QAction ):
+class ListDeleteAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListDeleteAction, self ).__init__(  QtGui.QIcon("icons/actions/delete.svg"), QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent )
 		self.triggered.connect( self.onTriggered )
@@ -105,7 +105,7 @@ class ListDeleteAction( QtGui.QAction ):
 
 actionDelegateSelector.insert( 1, ListDeleteAction.isSuitableFor, ListDeleteAction )
 	
-class Preview( QtGui.QWidget ):
+class Preview( QtWidgets.QWidget ):
 	def __init__( self, urls, modul, data, *args, **kwargs ):
 		super( Preview, self).__init__( *args, **kwargs )
 		self.ui = Ui_EditPreview()
@@ -154,7 +154,7 @@ class Preview( QtGui.QWidget ):
 		self.onCbUrlsCurrentIndexChanged( self.ui.cbUrls.currentIndex () )
 
 
-class ListPreviewAction( QtGui.QAction ):
+class ListPreviewAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		super( ListPreviewAction, self ).__init__( QtGui.QIcon("icons/actions/preview.svg"), QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent )
 		self.modul = self.parentWidget().list.modul

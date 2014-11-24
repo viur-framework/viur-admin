@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import Overlay
 from network import NetworkService
 from event import event
@@ -10,7 +10,7 @@ from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelecto
 from ui.hierarchyUI import Ui_Hierarchy
 import json
 
-class HierarchyItem(QtGui.QTreeWidgetItem):
+class HierarchyItem(QtWidgets.QTreeWidgetItem):
 	"""
 		Displayes one entry in a QTreeWidget.
 		Its comparison-methods have been overriden to reflect the sort-order on the server.
@@ -27,7 +27,7 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 		super( HierarchyItem, self ).__init__( [str( itemName )] )
 		self.loaded = False
 		self.entryData = data
-		self.setChildIndicatorPolicy( QtGui.QTreeWidgetItem.ShowIndicator )
+		self.setChildIndicatorPolicy( QtWidgets.QTreeWidgetItem.ShowIndicator )
 
 	def __gt__( self, other ):
 		if isinstance( other, HierarchyItem ) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
@@ -42,7 +42,7 @@ class HierarchyItem(QtGui.QTreeWidgetItem):
 			return( super( HierarchyItem, self ).__lt__( other ) )
 			
 
-class HierarchyTreeWidget( QtGui.QTreeWidget ):
+class HierarchyTreeWidget( QtWidgets.QTreeWidgetItem ):
 	"""
 		Provides an interface for Data structured as a hierarchy on the server.
 		
@@ -91,7 +91,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		#Well, seems to affect us, refresh our view
 		#First, save all expanded items
 		self.expandList = []
-		it = QtGui.QTreeWidgetItemIterator( self )
+		it = QtWidgets.QTreeWidgetItemIterator( self )
 		while( it.value() ):
 			if it.value().isExpanded():
 				self.expandList.append( it.value().entryData["id"] )
@@ -204,7 +204,7 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 			return
 		targetItem = self.itemAt( event.pos() )
 		event.setDropAction( QtCore.Qt.MoveAction )
-		QtGui.QTreeWidget.dropEvent( self, event )
+		QtWidgets.QTreeWidgetItem.dropEvent( self, event )
 		if not targetItem: #Moved to the end of the list
 			self.reparent( dragedItem.entryData["id"], self.rootNode )
 			if self.topLevelItemCount()>1:
@@ -278,10 +278,10 @@ class HierarchyTreeWidget( QtGui.QTreeWidget ):
 		
 
 
-class HierarchyWidget( QtGui.QWidget ):
+class HierarchyWidget( QtWidgets.QWidget ):
 
-	itemClicked = QtCore.pyqtSignal( (QtGui.QTreeWidgetItem, int) )
-	itemDoubleClicked = QtCore.pyqtSignal( (QtGui.QTreeWidgetItem, int) )
+	itemClicked = QtCore.pyqtSignal( (QtWidgets.QTreeWidgetItem, int) )
+	itemDoubleClicked = QtCore.pyqtSignal( (QtWidgets.QTreeWidgetItem, int) )
 
 	def __init__(self, modul, repoID=None, actions=None, editOnDoubleClick=True, *args, **kwargs ):
 		super( HierarchyWidget, self ).__init__( *args, **kwargs )
@@ -332,7 +332,7 @@ class HierarchyWidget( QtGui.QWidget ):
 			actionWdg = actionDelegateSelector.select( "hierarchy.%s" % self.modul, action )
 			if actionWdg is not None:
 				actionWdg = actionWdg( self )
-				if isinstance( actionWdg, QtGui.QAction ):
+				if isinstance( actionWdg, QtWidgets.QAction ):
 					self.toolBar.addAction( actionWdg )
 					self.addAction( actionWdg )
 				else:

@@ -34,7 +34,7 @@ from tempfile import NamedTemporaryFile
 
 
 
-class Updater( QtGui.QMainWindow ):
+class Updater( QtWidgets.QMainWindow ):
 	baseURL = "https://viur-site.appspot.com"
 	def __init__( self, *args, **kwargs ):
 		super( Updater, self ).__init__( *args, **kwargs )

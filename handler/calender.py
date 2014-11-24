@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from widgets.list import ListWidget

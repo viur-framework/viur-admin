@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from network import NetworkService, RequestGroup
 from event import event
 from config import conf
@@ -13,7 +13,7 @@ def askYesNo( question ):
 						QtGui.QMessageBox.No 
 					)==QtGui.QMessageBox.Yes )
 
-class ShopMarkPayedAction( QtGui.QAction ):
+class ShopMarkPayedAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		super( ShopMarkPayedAction, self ).__init__( QtGui.QIcon("icons/status/payed.png"), QtCore.QCoreApplication.translate("OrderHandler", "Payment recived"), parent )
@@ -38,7 +38,7 @@ class ShopMarkPayedAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, ShopMarkPayedAction.isSuitableFor, ShopMarkPayedAction )
 
 		
-class ShopMarkSendAction( QtGui.QAction ):
+class ShopMarkSendAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
@@ -71,7 +71,7 @@ class ShopMarkSendAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, ShopMarkSendAction.isSuitableFor, ShopMarkSendAction )
 
 		
-class ShopMarkCanceledAction( QtGui.QAction ):
+class ShopMarkCanceledAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
@@ -104,7 +104,7 @@ class ShopMarkCanceledAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, ShopMarkCanceledAction.isSuitableFor, ShopMarkCanceledAction )
 
 
-class ShopDownloadBillAction( QtGui.QAction ):
+class ShopDownloadBillAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
@@ -139,7 +139,7 @@ class ShopDownloadBillAction( QtGui.QAction ):
 actionDelegateSelector.insert( 1, ShopDownloadBillAction.isSuitableFor, ShopDownloadBillAction )
 
 
-class ShopDownloadDeliveryNoteAction( QtGui.QAction ):
+class ShopDownloadDeliveryNoteAction( QtWidgets.QAction ):
 	def __init__(self, parent, *args, **kwargs ):
 		parent = parent
 		self.request = None
