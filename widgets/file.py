@@ -10,7 +10,7 @@ from network import NetworkService, RemoteFile, RequestGroup
 from event import event
 from widgets.tree import TreeWidget, LeafItem, TreeListView
 from widgets.edit import EditWidget
-from mainwindow import WidgetHandler
+from utils import WidgetHandler
 from config import conf
 from priorityqueue import protocolWrapperInstanceSelector
 

@@ -24,7 +24,7 @@ class SelectMultiEditBone(QtWidgets.QWidget):
         super(SelectMultiEditBone, self).__init__(*args, **kwargs)
         self.modulName = modulName
         self.boneName = boneName
-        self.layout = QtGui.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.checkboxes = {}
         tmpList = values
         if sortBy == "keys":

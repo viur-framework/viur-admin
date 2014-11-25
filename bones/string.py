@@ -66,7 +66,7 @@ class Tag(QtWidgets.QWidget):
         super(Tag, self).__init__(*args, **kwargs)
         self.setLayout(QtGui.QHBoxLayout(self))
         self.tag = tag
-        self.lblDisplay = QtGui.QLabel(tag, self)
+        self.lblDisplay = QtWidgets.QLabel(tag, self)
         self.editField = QtGui.QLineEdit(tag, self)
         self.btnDelete = QtGui.QPushButton("Löschen", self)
         self.layout().addWidget(self.lblDisplay)
@@ -104,7 +104,7 @@ class StringEditBone(QtWidgets.QWidget):
         self.languages = languages
         self.boneName = boneName
         if self.languages and self.multiple:  # FIXME: Multiple and readOnly...
-            self.setLayout(QtGui.QVBoxLayout(self))
+            self.setLayout(QtWidgets.QVBoxLayout(self))
             self.tabWidget = QtGui.QTabWidget(self)
             self.tabWidget.blockSignals(True)
             self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
@@ -114,7 +114,7 @@ class StringEditBone(QtWidgets.QWidget):
             for lang in self.languages:
                 container = QtWidgets.QWidget()
                 self.langEdits[lang] = container
-                container.setLayout(QtGui.QVBoxLayout(container))
+                container.setLayout(QtWidgets.QVBoxLayout(container))
                 self.tabWidget.addTab(container, lang)
                 btnAdd = QtGui.QPushButton("Hinzufügen", self)
                 container.layout().addWidget(btnAdd)
@@ -126,7 +126,7 @@ class StringEditBone(QtWidgets.QWidget):
             self.tabWidget.blockSignals(False)
             self.tabWidget.show()
         elif self.languages and not self.multiple:
-            self.setLayout(QtGui.QVBoxLayout(self))
+            self.setLayout(QtWidgets.QVBoxLayout(self))
             self.tabWidget = QtGui.QTabWidget(self)
             self.tabWidget.blockSignals(True)
             self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
@@ -140,13 +140,13 @@ class StringEditBone(QtWidgets.QWidget):
                 self.tabWidget.addTab(edit, lang)
             self.tabWidget.blockSignals(False)
         elif not self.languages and self.multiple:
-            self.setLayout(QtGui.QVBoxLayout(self))
+            self.setLayout(QtWidgets.QVBoxLayout(self))
             self.btnAdd = QtGui.QPushButton("Hinzufügen", self)
             self.layout().addWidget(self.btnAdd)
             self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
             self.btnAdd.show()
         else:  # not languages and not multiple:
-            self.setLayout(QtGui.QVBoxLayout(self))
+            self.setLayout(QtWidgets.QVBoxLayout(self))
             self.lineEdit = QtGui.QLineEdit(self)
             self.layout().addWidget(self.lineEdit)
             self.lineEdit.show()

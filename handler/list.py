@@ -6,9 +6,9 @@ from PyQt5 import QtCore, QtGui
 from network import NetworkService
 from event import event
 from ui.editpreviewUI import Ui_BasePreview
-from utils import RegisterQueue, Overlay, formatString, loadIcon
+from utils import RegisterQueue, Overlay, formatString, loadIcon, WidgetHandler
 from config import conf
-from mainwindow import WidgetHandler
+# from mainwindow import WidgetHandler
 from widgets.list import ListWidget
 from priorityqueue import protocolWrapperInstanceSelector
 
@@ -65,11 +65,11 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 class ListHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
+        print("ListHandler event id", id(event))
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
-    # self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
-    #self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
-
+        # self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
+        #self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
 
     def requestModulHandler(self, queue, modulName):
         f = lambda: ListCoreHandler(modulName)

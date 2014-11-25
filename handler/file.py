@@ -17,7 +17,7 @@ from config import conf
 from widgets.edit import EditWidget
 from handler.list import ListCoreHandler
 from widgets.file import FileWidget
-from mainwindow import WidgetHandler
+from utils import WidgetHandler
 from utils import RegisterQueue, loadIcon
 from priorityqueue import protocolWrapperInstanceSelector
 
@@ -61,6 +61,7 @@ class FileBaseHandler(WidgetHandler):
 class FileHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
+        print("FileHandler event id", id(event))
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
 

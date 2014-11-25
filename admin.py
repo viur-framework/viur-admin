@@ -94,6 +94,7 @@ from config import conf
 conf.cmdLineOpts = sys.argv
 
 app = QtWidgets.QApplication(sys.argv)
+app.setStyleSheet(open("app.css", "r").read())
 
 from login import Login
 
@@ -106,7 +107,7 @@ for file in transFiles:
         if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
             app.installTranslator(translator)
 
-# app.setStyleSheet(open("app.css", "r").read())
+
 
 from mainwindow import MainWindow
 mw = MainWindow()

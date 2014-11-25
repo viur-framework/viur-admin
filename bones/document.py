@@ -16,7 +16,7 @@ class DocumentEditBone(QtWidgets.QWidget):
         super(DocumentEditBone, self).__init__(*args, **kwargs)
         self.skelStructure = skelStructure
         self.boneName = boneName
-        self.layout = QtGui.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.btn = QtGui.QPushButton(QtCore.QCoreApplication.translate("DocumentEditBone", "Open editor"), self)
         iconbtn = QtGui.QIcon()
         iconbtn.addPixmap(QtGui.QPixmap("icons/actions/document-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)

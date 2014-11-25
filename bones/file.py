@@ -66,7 +66,7 @@ class FileItemBone(TreeItemBone):
 
     def loadIconFromRequest(self, request):
         preview = QtGui.QIcon(request.getFileName())
-        label = QtGui.QLabel(self)
+        label = QtWidgets.QLabel(self)
         label.setPixmap(preview.pixmap(QtCore.QSize(16, 16)))
         self.layout.insertWidget(0, label)
 
@@ -89,7 +89,7 @@ class FileItemBone(TreeItemBone):
                 for item in self.selection:
                     print("format", self.format, structure, item)
                     previewIcon = QtGui.QIcon(item)
-                    lbl = QtGui.QLabel(self.previewWidget)
+                    lbl = QtWidgets.QLabel(self.previewWidget)
                     lbl.setText(formatString(self.format, structure, item))
                     self.previewLayout.addWidget(lbl)
                 self.addBtn.setText("blah Auswahl ändern")

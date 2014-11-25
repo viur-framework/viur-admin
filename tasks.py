@@ -81,9 +81,9 @@ class TaskViewer(QtWidgets.QWidget):
                 break
         if not task:
             return
-        nameLbl = QtGui.QLabel( task["name"], self )
+        nameLbl = QtWidgets.QLabel( task["name"], self )
         self.ui.verticalLayout.addWidget( nameLbl )
-        descrLbl = QtGui.QLabel( task["descr"], self )
+        descrLbl = QtWidgets.QLabel( task["descr"], self )
         self.ui.verticalLayout.addWidget( descrLbl )
         """
         from widgets.edit import EditWidget

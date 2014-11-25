@@ -6,7 +6,9 @@ import logging
 from ui.adminUI import Ui_MainWindow
 from ui.preloaderUI import Ui_Preloader
 from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets
-from event import event
+import event
+
+import handler
 from config import conf
 from utils import RegisterQueue, showAbout, Overlay, WidgetHandler, GroupHandler
 from tasks import TaskViewer, TaskEntryHandler
@@ -26,7 +28,7 @@ class Preloader(QtWidgets.QWidget):
         self.ui.progressBar.setMinimum(0)
         self.ui.progressBar.setMaximum(110)
         self.ui.progressBar.setValue(0)
-        event.connectWithPriority("configDownloaded", self.configDownloaded, event.lowPriority)
+        event.event.connectWithPriority("configDownloaded", self.configDownloaded, event.event.lowPriority)
 
 
     def configDownloaded(self):
@@ -46,7 +48,7 @@ class Preloader(QtWidgets.QWidget):
                 missing += 1
         self.ui.progressBar.setValue(10 + int(100.0 * ((total - missing) / total)))
         if not missing:
-            event.emit("preloadingFinished")
+            event.event.emit("preloadingFinished")
             self.finished.emit()
             self.killTimer(self.timerID)
             self.timerID = None
@@ -66,21 +68,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.ui.treeWidget.setColumnWidth(0, 266)
         self.ui.treeWidget.setColumnWidth(1, 25)
-        event.connectWithPriority('loginSucceeded', self.loadConfig, event.lowPriority)
-        # event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler,
-        # event.lowestPriority )
-        #event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler,
-        # event.lowestPriority )
-        #event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.lowPriority )
-        #event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler,
-        # event.lowPriority )
-        #event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler,
-        # event.lowPriority )
-        event.connectWithPriority('stackWidget', self.stackWidget, event.lowPriority)
-        event.connectWithPriority('popWidget', self.popWidget, event.lowPriority)
-        #event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.lowPriority )
-        #event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.lowPriority )
-        event.connectWithPriority('rebuildBreadCrumbs', self.rebuildBreadCrumbs, event.lowPriority)
+        event.event.connectWithPriority('loginSucceeded', self.loadConfig, event.event.lowPriority)
+        # event.event.connectWithPriority( QtCore.SIGNAL('addHandler(PyQt_PyObject,PyQt_PyObject)'), self.addHandler,
+        # event.event.lowestPriority )
+        #event.event.connectWithPriority( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), self.stackHandler,
+        # event.event.lowestPriority )
+        #event.event.connectWithPriority( QtCore.SIGNAL('focusHandler(PyQt_PyObject)'), self.focusHandler, event.event.lowPriority )
+        #event.event.connectWithPriority( QtCore.SIGNAL('unfocusHandler(PyQt_PyObject)'), self.unfocusHandler,
+        # event.event.lowPriority )
+        #event.event.connectWithPriority( QtCore.SIGNAL('removeHandler(PyQt_PyObject)'), self.removeHandler,
+        # event.event.lowPriority )
+        event.event.connectWithPriority('stackWidget', self.stackWidget, event.event.lowPriority)
+        event.event.connectWithPriority('popWidget', self.popWidget, event.event.lowPriority)
+        #event.event.connectWithPriority( QtCore.SIGNAL('addWidget(PyQt_PyObject)'), self.addWidget, event.event.lowPriority )
+        #event.event.connectWithPriority( QtCore.SIGNAL('removeWidget(PyQt_PyObject)'), self.removeWidget, event.event.lowPriority )
+        event.event.connectWithPriority('rebuildBreadCrumbs', self.rebuildBreadCrumbs, event.event.lowPriority)
         WidgetHandler.mainWindow = self
         self.ui.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
         self.ui.actionTasks.triggered.connect(self.onActionTasksTriggered)
@@ -110,10 +112,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.onError(msg="Unable to parse portalconfig!")
             return
-        event.emit("configDownloaded")
+        event.event.emit("configDownloaded")
         self.setup()
 
-    # event.emit( "loginSucceeded()" )
+    # event.event.emit( "loginSucceeded()" )
 
     def onError(self, msg=""):
         """
@@ -206,7 +208,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def addWidget(self, widget):
         assert self.ui.stackedWidget.indexOf(widget) == -1
-        event.emit("addWidget", widget)
+        event.event.emit("addWidget", widget)
         self.ui.stackedWidget.addWidget(widget)
 
     def removeWidget(self, widget):
@@ -306,12 +308,12 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Emits QtCore.SIGNAL('resetLoginWindow()')
         """
-        event.emit('resetLoginWindow')
+        event.event.emit('resetLoginWindow')
         self.hide()
 
     def setup(self):
         """
-        Initializes everything based on the config recived from the server.
+        Initializes everything based on the config received from the server.
         It
             - Resets the ui to sane defaults.
             - Selects a startPage for the application
@@ -342,8 +344,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if not "modules" in conf.portal.keys():
             conf.portal["modules"] = {}
         for modul, cfg in data["modules"].items():
+            print("module, cfg", modul, cfg)
             queue = RegisterQueue()
-            event.emit('requestModulHandler', queue, modul)
+            event.event.emit('requestModulHandler', queue, modul)
             handler = queue.getBest()()
             if "name" in cfg.keys() and groupHandlers:
                 parent = None
@@ -360,9 +363,9 @@ class MainWindow(QtWidgets.QMainWindow):
             wrapperClass = protocolWrapperClassSelector.select(modul, data["modules"])
             if wrapperClass is not None:
                 wrapperClass(modul)
-            event.emit('modulHandlerInitialized', modul)
+            event.event.emit('modulHandlerInitialized', modul)
         self.ui.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
-        event.emit('mainWindowInitialized')
+        event.event.emit('mainWindowInitialized')
         QtGui.QApplication.restoreOverrideCursor()
 
 

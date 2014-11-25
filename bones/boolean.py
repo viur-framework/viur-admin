@@ -21,7 +21,7 @@ class BooleanEditBone(QtWidgets.QWidget):
         self.modulName = modulName
         self.boneName = boneName
         self.readOnly = readOnly
-        self.layout = QtGui.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.comboBox = QtWidgets.QComboBox(self)
         self.layout.addWidget(self.comboBox)
         self.comboBox.addItems([QtCore.QCoreApplication.translate("BooleanEditBone", "No"),

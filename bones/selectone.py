@@ -43,7 +43,7 @@ class SelectOneEditBone(QtWidgets.QWidget):
         self.boneName = boneName
         self.readOnly = readOnly
         self.values = values
-        self.layout = QtGui.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.comboBox = FixedComboBox(self)
         self.layout.addWidget(self.comboBox)
         tmpList = values

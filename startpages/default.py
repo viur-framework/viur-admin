@@ -10,11 +10,11 @@ from PyQt5 import QtGui, QtWidgets
 class DefaultWidget(QtWidgets.QWidget):
     def __init__(self):
         super(DefaultWidget, self).__init__()
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
-        scrollArea = QtGui.QScrollArea(self)
+        scrollArea = QtWidgets.QScrollArea(self)
         self.layout().addWidget(scrollArea)
-        imgLbl = QtGui.QLabel(scrollArea)
+        imgLbl = QtWidgets.QLabel(scrollArea)
         imgLbl.setPixmap(QtGui.QPixmap("icons/viur_splash.png"))
         scrollArea.setWidget(imgLbl)
 

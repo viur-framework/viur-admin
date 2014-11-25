@@ -89,9 +89,9 @@ class RelationalEditBone(QtWidgets.QWidget):
         if not self.multiple:
             self.layout = QtGui.QHBoxLayout(self)
         else:
-            self.layout = QtGui.QVBoxLayout(self)
+            self.layout = QtWidgets.QVBoxLayout(self)
             self.previewWidget = QtWidgets.QWidget(self)
-            self.previewLayout = QtGui.QVBoxLayout(self.previewWidget)
+            self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
             self.layout.addWidget(self.previewWidget)
         self.addBtn = QtGui.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
                                         parent=self)
@@ -161,7 +161,7 @@ class RelationalEditBone(QtWidgets.QWidget):
                 widgetItem = self.previewLayout.takeAt(0)
             if self.selection and len(self.selection) > 0:
                 for item in self.selection:
-                    lbl = QtGui.QLabel(self.previewWidget)
+                    lbl = QtWidgets.QLabel(self.previewWidget)
                     lbl.setText(formatString(self.format, structure, item))
                     self.previewLayout.addWidget(lbl)
                 self.addBtn.setText("Auswahl ändern")

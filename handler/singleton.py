@@ -39,6 +39,7 @@ class SingletonHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
+        print("SingletonHandler event id", id(event))
 
     def requestModulHandler(self, queue, modulName):
         config = conf.serverConfig["modules"][modulName]

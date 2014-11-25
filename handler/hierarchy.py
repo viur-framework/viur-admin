@@ -60,6 +60,7 @@ class HierarchyHandler(QtCore.QObject):
         QtCore.QObject.__init__(self, *args, **kwargs)
         # self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'),
         # self.requestModulHandler )
+        print("FileHandler event id", id(event))
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
     def requestModulHandler(self, queue, modul):

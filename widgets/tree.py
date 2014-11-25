@@ -8,7 +8,7 @@ from event import event
 import utils
 from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from ui.treeUI import Ui_Tree
-from mainwindow import WidgetHandler
+from utils import WidgetHandler
 from widgets.edit import EditWidget
 from config import conf
 

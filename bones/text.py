@@ -64,7 +64,7 @@ class InsertImageDialog(QtWidgets.QDialog):
         super(InsertImageDialog, self).__init__()
         self.setModal(True)
         self.file = file
-        self.setLayout(QtGui.QVBoxLayout())
+        self.setLayout(QtWidgets.QVBoxLayout())
         self.cb = QtWidgets.QComboBox(self)
         self.layout().addWidget(self.cb)
         acceptButton = QtGui.QPushButton("Accept")
@@ -92,7 +92,7 @@ class TextEditor(QtWidgets.QWidget):
     def __init__(self, txt, validHtml, *args, **kwargs):
         super(TextEditor, self).__init__(*args, **kwargs)
         self.validHtml = validHtml
-        self.setLayout(QtGui.QVBoxLayout())
+        self.setLayout(QtWidgets.QVBoxLayout())
         btn = QtGui.QPushButton("Include file")
         btn.released.connect(self.click)
         self.layout().addWidget(btn)
@@ -145,7 +145,7 @@ class TextEditBone(QtWidgets.QWidget):
         self.modulName = modulName
         self.boneName = boneName
         self.readOnly = readOnly
-        self.setLayout(QtGui.QVBoxLayout(self))
+        self.setLayout(QtWidgets.QVBoxLayout(self))
         self.languages = languages
         self.plaintext = plaintext
         self.validHtml = validHtml
@@ -160,7 +160,7 @@ class TextEditBone(QtWidgets.QWidget):
             for lang in self.languages:
                 self.html[lang] = ""
                 container = QtWidgets.QWidget()
-                container.setLayout(QtGui.QVBoxLayout(container))
+                container.setLayout(QtWidgets.QVBoxLayout(container))
                 self.languageContainer[lang] = container
                 btn = QtGui.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
                 iconbtn = QtGui.QIcon()

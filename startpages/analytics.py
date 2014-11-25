@@ -201,9 +201,9 @@ class AnalytisWidget(QtWidgets.QWidget):
         for x in range(0, 8):
             tot = random.randrange(0, 10000)
             self.data[x] = {"total": 0}
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
-        self.imgLbl = QtGui.QLabel(self)
+        self.imgLbl = QtWidgets.QLabel(self)
         self.imgLbl.setPixmap(QtGui.QPixmap("icons/viur_splash.png"))
         self.layout.addWidget(self.imgLbl)
         self.plot = GraphPlotter()

@@ -270,7 +270,7 @@ class EditWidget(QtWidgets.QWidget):
             else:
                 tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
             if not tabName in tabs.keys():
-                scrollArea = QtGui.QScrollArea()
+                scrollArea = QtWidgets.QScrollArea()
                 containerWidget = QtWidgets.QWidget(scrollArea)
                 scrollArea.setWidget(containerWidget)
                 tabs[tabName] = QtGui.QFormLayout(containerWidget)
@@ -300,7 +300,7 @@ class EditWidget(QtWidgets.QWidget):
                 layout = QtGui.QHBoxLayout(dataWidget)
                 dataWidget.setLayout(layout)
                 layout.addWidget(widget, stretch=1)
-                iconLbl = QtGui.QLabel(dataWidget)
+                iconLbl = QtWidgets.QLabel(dataWidget)
                 if bone["required"]:
                     iconLbl.setPixmap(QtGui.QPixmap("icons/status/error.png"))
                 else:
@@ -320,7 +320,7 @@ class EditWidget(QtWidgets.QWidget):
             layout = QtGui.QHBoxLayout(lblWidget)
             if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
                 lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
-            descrLbl = QtGui.QLabel(bone["descr"], lblWidget)
+            descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
             descrLbl.setWordWrap(True)
             if bone["required"]:
                 font = descrLbl.font()

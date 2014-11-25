@@ -45,6 +45,7 @@ class TreeHandler(QtCore.QObject):
         """
         QtCore.QObject.__init__(self, *args, **kwargs)
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
+        print("TreeHandler event id", id(event))
 
 
     def requestModulHandler(self, queue, modul):

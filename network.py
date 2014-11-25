@@ -139,9 +139,10 @@ class SecurityTokenProvider(QObject):
             NetworkService.request("/skey", successHandler=self.onSkeyAvailable, failureHandler=self.onError)
 
     def onError(self, request, error):
+        self.logger.warning("Error fetching skey: %r", error)
         SecurityTokenProvider.errorCount += 1
-        self.logger.warning("Error fetching skey: %s", str(error))
         self.isRequesting = False
+        raise ValueError("onError")
 
     def onSkeyAvailable(self, request=None):
         """
@@ -150,7 +151,9 @@ class SecurityTokenProvider(QObject):
         self.isRequesting = False
         try:
             skey = NetworkService.decode(request)
-        except:
+        except Exception as err:
+            self.logger.error("cannot decode get skey response")
+            logging.exception(err)
             SecurityTokenProvider.errorCount += 1
             self.isRequesting = False
             return
@@ -199,7 +202,7 @@ class RequestWrapper(QtCore.QObject):
 
     def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
                  failSilent=False):
-        super(RequestWrapper, self).__init__()
+        super().__init__()
         self.logger = logging.getLogger("RequestWrapper")
         self.logger.debug("New network request: %s", str(self))
         self.request = request
@@ -249,8 +252,8 @@ class RequestWrapper(QtCore.QObject):
                                               "The request to \"%s\" failed with: %s" % (self.url, errorDescr))
             self.requestFailed.emit(self, self.request.error())
         self.finished.emit(self)
-        self.logger.debug("Request finished: %s", str(self))
-        self.logger.debug("Remaining requests: %s", len(NetworkService.currentRequests))
+        self.logger.debug("Request finished: %r", self)
+        self.logger.debug("Remaining requests: %d", len(NetworkService.currentRequests))
         self.request = None
         self.successHandler = None
         self.failureHandler = None
@@ -454,6 +457,7 @@ class RemoteFile(QtCore.QObject):
 class NetworkService():
     url = None
     currentRequests = []  #A list of currently running requests
+    logger = logging.getLogger("NetworkService")
 
     @staticmethod
     def genReqStr(params):
@@ -539,8 +543,10 @@ class NetworkService():
 
     @staticmethod
     def decode(req):
-        logging.debug(req.readAll().data().decode("UTF-8"))
-        return ( json.loads(req.readAll().data().decode("UTF-8")) )
+        data = req.readAll().data().decode("utf-8")
+        # print("data %r", type(data))
+        NetworkService.logger.debug("decoding request data %r", data)
+        return json.loads(data)
 
     @staticmethod
     def setup(url, *args, **kwargs):

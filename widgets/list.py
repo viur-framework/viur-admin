@@ -7,7 +7,7 @@ from network import NetworkService, RequestGroup
 from event import event
 from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
 from widgets.edit import EditWidget
-from mainwindow import WidgetHandler
+from utils import WidgetHandler
 from ui.listUI import Ui_List
 from config import conf
 

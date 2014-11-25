@@ -99,6 +99,7 @@ class CalenderCoreHandler(WidgetHandler):  # EntryHandler
 class CalenderHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         super(CalenderHandler, self).__init__(*args, **kwargs)
+        print()
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
 
