@@ -3,11 +3,12 @@
 # Form implementation generated from reading ui file 'docEditfileEdit.ui'
 #
 # Created: Mon Nov 24 18:30:24 2014
-#      by: PyQt5 UI code generator 5.3.2
+# by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -127,5 +128,6 @@ class Ui_Form(object):
         self.comboBoxHRef.setItemText(0, _translate("Form", "-Keine Verlinkung-"))
         self.comboBoxHRef.setItemText(1, _translate("Form", "Vergrößern"))
         self.checkboxHrefNewWindow.setText(_translate("Form", "In neuem Fenster öffnen"))
+
 
 from PyQt5 import QtWebKitWidgets

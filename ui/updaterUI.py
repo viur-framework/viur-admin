@@ -3,11 +3,12 @@
 # Form implementation generated from reading ui file 'updater.ui'
 #
 # Created: Mon Nov 24 18:30:25 2014
-#      by: PyQt5 UI code generator 5.3.2
+# by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Updater(object):
     def setupUi(self, Updater):

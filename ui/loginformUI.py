@@ -3,11 +3,12 @@
 # Form implementation generated from reading ui file 'loginform.ui'
 #
 # Created: Mon Nov 24 18:30:24 2014
-#      by: PyQt5 UI code generator 5.3.2
+# by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
@@ -31,23 +32,23 @@ class Ui_LoginWindow(object):
         self.lblImage.setText("")
         self.lblImage.setPixmap(QtGui.QPixmap("icons/login.png"))
         self.lblImage.setScaledContents(True)
-        self.lblImage.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.lblImage.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.lblImage.setObjectName("lblImage")
         self.horizontalLayout_2.addWidget(self.lblImage)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
-        self.formLayout.setFormAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
+        self.formLayout.setFormAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.formLayout.setContentsMargins(0, -1, -1, -1)
         self.formLayout.setObjectName("formLayout")
         self.lblPortal = QtWidgets.QLabel(self.logincentralwidget)
         self.lblPortal.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblPortal.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lblPortal.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblPortal.setObjectName("lblPortal")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.lblPortal)
         self.lblUrl = QtWidgets.QLabel(self.logincentralwidget)
         self.lblUrl.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblUrl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lblUrl.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblUrl.setObjectName("lblUrl")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.lblUrl)
         self.editUrl = QtWidgets.QLineEdit(self.logincentralwidget)
@@ -56,12 +57,12 @@ class Ui_LoginWindow(object):
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.editUrl)
         self.lblApikey = QtWidgets.QLabel(self.logincentralwidget)
         self.lblApikey.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblApikey.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lblApikey.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblApikey.setObjectName("lblApikey")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.lblApikey)
         self.lblUsername = QtWidgets.QLabel(self.logincentralwidget)
         self.lblUsername.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblUsername.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lblUsername.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblUsername.setObjectName("lblUsername")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.lblUsername)
         self.editUsername = QtWidgets.QLineEdit(self.logincentralwidget)
@@ -70,7 +71,7 @@ class Ui_LoginWindow(object):
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.editUsername)
         self.lblPassword = QtWidgets.QLabel(self.logincentralwidget)
         self.lblPassword.setMinimumSize(QtCore.QSize(60, 0))
-        self.lblPassword.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lblPassword.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblPassword.setObjectName("lblPassword")
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.lblPassword)
         self.editPassword = QtWidgets.QLineEdit(self.logincentralwidget)

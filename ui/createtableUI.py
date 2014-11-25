@@ -3,11 +3,12 @@
 # Form implementation generated from reading ui file 'createtable.ui'
 #
 # Created: Mon Nov 24 18:30:24 2014
-#      by: PyQt5 UI code generator 5.3.2
+# by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+
 
 class Ui_DialogCreateTable(object):
     def setupUi(self, DialogCreateTable):
@@ -39,7 +40,7 @@ class Ui_DialogCreateTable(object):
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.cbAlignment)
         self.buttonBox = QtWidgets.QDialogButtonBox(DialogCreateTable)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
 
