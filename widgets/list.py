@@ -237,7 +237,7 @@ class ListTableView(QtWidgets.QTableView):
 
     def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs):
         super(ListTableView, self).__init__(parent, *args, **kwargs)
-        self.missingImage = QtGui.QImage("icons/status/missing.png")
+        self.missingImage = QtGui.QImage(":icons/status/missing.png")
         self.modul = modul
         filter = filter or {}
         self.structureCache = None
@@ -304,7 +304,7 @@ class ListTableView(QtWidgets.QTableView):
             delegate = delegateFactory(self.modul, field, self.structureCache)
             self.setItemDelegateForColumn(colum, delegate)
             self.delegates.append(delegate)
-            delegate.repaintRequest.connect(self.repaint)
+            delegate.request_repaint.connect(self.repaint)
             colum += 1
 
     def keyPressEvent(self, e):
@@ -574,7 +574,7 @@ class ListWidget(QtWidgets.QWidget):
         myHandler = WidgetHandler.mainWindow.handlerForWidget(self)  #Always stack them as my child
         assert myHandler is not None
         if clone:
-            icon = QtGui.QIcon("icons/actions/clone.png")
+            icon = QtGui.QIcon(":icons/actions/clone.png")
             if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][
                 self.list.modul].keys():
                 descr = QtCore.QCoreApplication.translate("List", "Clone: %s") % \
@@ -582,7 +582,7 @@ class ListWidget(QtWidgets.QWidget):
             else:
                 descr = QtCore.QCoreApplication.translate("List", "Clone entry")
         else:
-            icon = QtGui.QIcon("icons/actions/edit.png")
+            icon = QtGui.QIcon(":icons/actions/edit.png")
             if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][
                 self.list.modul].keys():
                 descr = QtCore.QCoreApplication.translate("List", "Edit: %s") % \

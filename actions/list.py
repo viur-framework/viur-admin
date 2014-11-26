@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
-from utils import Overlay, RegisterQueue, formatString
-from network import NetworkService, RequestGroup
-from event import event
-from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
-from widgets.edit import EditWidget
-from mainwindow import WidgetHandler
-from ui.editpreviewUI import Ui_BasePreview
-from config import conf
+from viur_admin.utils import Overlay, RegisterQueue, formatString
+from viur_admin.network import NetworkService, RequestGroup
+from viur_admin.event import event
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.utils import WidgetHandler
+from viur_admin.ui.editpreviewUI import Ui_BasePreview
+from viur_admin.config import conf
 
 
 class ListAddAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(ListAddAction, self).__init__(QtGui.QIcon("icons/actions/add.svg"),
+        super(ListAddAction, self).__init__(QtGui.QIcon(":icons/actions/add.svg"),
                                             QtCore.QCoreApplication.translate("ListHandler", "Add entry"), parent)
 
         # self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
@@ -29,7 +29,7 @@ class ListAddAction(QtWidgets.QAction):
         descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
         modul = self.parentWidget().list.modul
         handler = WidgetHandler(lambda: EditWidget(modul, EditWidget.appList, 0), descr,
-                                QtGui.QIcon("icons/actions/add.svg"))
+                                QtGui.QIcon(":icons/actions/add.svg"))
         handler.stackHandler()
 
     # event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
@@ -44,7 +44,7 @@ actionDelegateSelector.insert(1, ListAddAction.isSuitableFor, ListAddAction)
 
 class ListEditAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(ListEditAction, self).__init__(QtGui.QIcon("icons/actions/edit.svg"),
+        super(ListEditAction, self).__init__(QtGui.QIcon(":icons/actions/edit.svg"),
                                              QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent)
         self.triggered.connect(self.onTriggered)
         self.setShortcut(QtGui.QKeySequence.Open)
@@ -76,7 +76,7 @@ actionDelegateSelector.insert(1, ListEditAction.isSuitableFor, ListEditAction)
 
 class ListCloneAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(ListCloneAction, self).__init__(QtGui.QIcon("icons/actions/clone.svg"),
+        super(ListCloneAction, self).__init__(QtGui.QIcon(":icons/actions/clone.svg"),
                                               QtCore.QCoreApplication.translate("ListHandler", "Clone entry"), parent)
         self.triggered.connect(self.onTriggered)
         self.setShortcut(QtGui.QKeySequence.SaveAs)
@@ -99,7 +99,7 @@ actionDelegateSelector.insert(1, ListCloneAction.isSuitableFor, ListCloneAction)
 
 class ListDeleteAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(ListDeleteAction, self).__init__(QtGui.QIcon("icons/actions/delete.svg"),
+        super(ListDeleteAction, self).__init__(QtGui.QIcon(":icons/actions/delete.svg"),
                                                QtCore.QCoreApplication.translate("ListHandler", "Delete"), parent)
         self.triggered.connect(self.onTriggered)
         self.setShortcut(QtGui.QKeySequence.Delete)
@@ -178,7 +178,7 @@ class Preview(QtWidgets.QWidget):
 
 class ListPreviewAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(ListPreviewAction, self).__init__(QtGui.QIcon("icons/actions/preview.svg"),
+        super(ListPreviewAction, self).__init__(QtGui.QIcon(":icons/actions/preview.svg"),
                                                 QtCore.QCoreApplication.translate("ListHandler", "Preview"), parent)
         self.modul = self.parentWidget().list.modul
         self.widget = None

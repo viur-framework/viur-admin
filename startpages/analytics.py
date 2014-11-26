@@ -204,7 +204,7 @@ class AnalytisWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
         self.imgLbl = QtWidgets.QLabel(self)
-        self.imgLbl.setPixmap(QtGui.QPixmap("icons/viur_splash.png"))
+        self.imgLbl.setPixmap(QtGui.QPixmap(":icons/viur_splash.png"))
         self.layout.addWidget(self.imgLbl)
         self.plot = GraphPlotter()
         self.plot.hide()
@@ -223,7 +223,7 @@ class AnalytisWidget(QtWidgets.QWidget):
             credStr = urllib.parse.urlencode(credDict)
             self.request = NetworkService.request("https://www.google.com/accounts/ClientLogin",
                                                   credStr.encode("UTF-8"))
-            self.connect(self.request, QtCore.SIGNAL("finished()"), self.onGoogleAuthSuccess)
+            self.request.finished.connect(self.onGoogleAuthSuccess)
             dtNow = datetime.now()
             for x in range(1, 8):
                 tdStart = timedelta(days=x + 1)
@@ -249,7 +249,7 @@ class AnalytisWidget(QtWidgets.QWidget):
             if len(self.queue) > 0:
                 self.request = NetworkService.request(self.queue[-1][1], extraHeaders={
                 "Authorization": "GoogleLogin auth=" + self.sessionID})
-                self.connect(self.request, QtCore.SIGNAL("finished()"), self.fetchNext)
+                self.request.finished.connect(self.fetchNext)
                 return
             return
         data = bytes(self.request.readAll()).decode("UTF-8")
@@ -271,7 +271,7 @@ class AnalytisWidget(QtWidgets.QWidget):
         if len(self.queue) > 0:
             self.request = NetworkService.request(self.queue[-1][1],
                                                   extraHeaders={"Authorization": "GoogleLogin auth=" + self.sessionID})
-            self.connect(self.request, QtCore.SIGNAL("finished()"), self.fetchNext)
+            self.request.finished.connect(self.fetchNext)
         if not self.isDisplayingStats:
             self.isDisplayingStats = True
             self.imgLbl.deleteLater()

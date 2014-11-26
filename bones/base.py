@@ -7,6 +7,8 @@ from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
+    request_repaint = QtCore.pyqtSignal()
+
     def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
         super().__init__(**kwargs)
         self.skelStructure = skelStructure

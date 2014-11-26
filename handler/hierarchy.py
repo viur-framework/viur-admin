@@ -36,7 +36,7 @@ class HierarchyCoreHandler(WidgetHandler):  # FIXME
             else:
                 icon = loadIcon(config["icon"])
         else:
-            icon = loadIcon("icons/modules/hierarchy.svg")
+            icon = loadIcon(":icons/modules/hierarchy.svg")
         super(HierarchyCoreHandler, self).__init__(lambda: HierarchyWidget(modul), icon=icon, vanishOnClose=False,
                                                    *args, **kwargs)
         self.setText(0, config["name"])

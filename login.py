@@ -315,7 +315,7 @@ class Login(QtWidgets.QMainWindow):
         self.helpBrowser = QtWebKit.QWebView()
         self.helpBrowser.setUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
         self.helpBrowser.setWindowTitle(QtCore.QCoreApplication.translate("Help", "Help"))
-        self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("icons/menu/help.png")))
+        self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(":icons/menu/help.png")))
         self.helpBrowser.show()
 
     def setCaptcha(self, token, url):

@@ -2,10 +2,10 @@ import os
 import os.path
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from network import NetworkService, RequestGroup
-from event import event
-from config import conf
-from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.network import NetworkService, RequestGroup
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
 
 def askYesNo(question):
@@ -20,10 +20,10 @@ def askYesNo(question):
 class ShopMarkPayedAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
-        super(ShopMarkPayedAction, self).__init__(QtGui.QIcon("icons/status/payed.png"),
+        super(ShopMarkPayedAction, self).__init__(QtGui.QIcon(":icons/status/payed.png"),
                                                   QtCore.QCoreApplication.translate("OrderHandler", "Payment recived"),
                                                   parent)
-        self.connect(self, QtCore.SIGNAL("triggered(bool)"), self.onTriggered)
+        self.triggered.connect(self.onTriggered)
 
     def onTriggered(self, e):
         protoWrap = protocolWrapperInstanceSelector.select(self.parent().getModul())
@@ -55,10 +55,10 @@ class ShopMarkSendAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopMarkSendAction, self).__init__(QtGui.QIcon("icons/status/send.png"),
+        super(ShopMarkSendAction, self).__init__(QtGui.QIcon(":icons/status/send.png"),
                                                  QtCore.QCoreApplication.translate("OrderHandler", "Order Shipped"),
                                                  parent)
-        self.connect(self, QtCore.SIGNAL("triggered(bool)"), self.onTriggered)
+        self.triggered.connect(self.onTriggered)
 
     def onTriggered(self, e):
         protoWrap = protocolWrapperInstanceSelector.select(self.parent().getModul())
@@ -98,10 +98,10 @@ class ShopMarkCanceledAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopMarkCanceledAction, self).__init__(QtGui.QIcon("icons/actions/cancel_small.png"),
+        super(ShopMarkCanceledAction, self).__init__(QtGui.QIcon(":icons/actions/cancel_small.png"),
                                                      QtCore.QCoreApplication.translate("OrderHandler",
                                                                                        "Order canceled"), parent)
-        self.connect(self, QtCore.SIGNAL("triggered(bool)"), self.onTriggered)
+        self.triggered.connect(self.onTriggered)
 
     def onTriggered(self, e):
         protoWrap = protocolWrapperInstanceSelector.select(self.parent().getModul())
@@ -140,10 +140,10 @@ class ShopDownloadBillAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopDownloadBillAction, self).__init__(QtGui.QIcon("icons/actions/download_small.png"),
+        super(ShopDownloadBillAction, self).__init__(QtGui.QIcon(":icons/actions/download_small.png"),
                                                      QtCore.QCoreApplication.translate("OrderHandler", "Download Bill"),
                                                      parent)
-        self.connect(self, QtCore.SIGNAL("triggered(bool)"), self.onTriggered)
+        self.triggered.connect(self.onTriggered)
 
     def onTriggered(self, e):
         protoWrap = protocolWrapperInstanceSelector.select(self.parent().getModul())
@@ -179,12 +179,11 @@ class ShopDownloadDeliveryNoteAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopDownloadDeliveryNoteAction, self).__init__(QtGui.QIcon("icons/actions/download_small.png"),
+        super(ShopDownloadDeliveryNoteAction, self).__init__(QtGui.QIcon(":icons/actions/download_small.png"),
                                                              QtCore.QCoreApplication.translate("OrderHandler",
                                                                                                "Download delivery note"),
                                                              parent)
-        self.connect(self, QtCore.SIGNAL("triggered(bool)"), self.onTriggered)
-
+        self.triggered.connect(self.onTriggered)
 
     def onTriggered(self, e):
         protoWrap = protocolWrapperInstanceSelector.select(self.parent().getModul())

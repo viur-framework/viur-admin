@@ -44,7 +44,7 @@ class Ui_Tree(object):
         self.horizontalLayout.addWidget(self.editSearch)
         self.btnSearch = QtWidgets.QPushButton(Tree)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSearch.setIcon(icon)
         self.btnSearch.setObjectName("btnSearch")
         self.horizontalLayout.addWidget(self.btnSearch)

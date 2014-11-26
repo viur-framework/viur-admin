@@ -415,7 +415,7 @@ class FileWrapper(TreeWrapper):
         downloader = RecursiveDownloader(targetDir, files, dirs, self.modul)
         # self.transferQueues.append( downloader )
         #self.ui.boxUpload.addWidget( downloader )
-        self.connect(downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.delayEmitEntriesChanged)
+        self.downloader.finished.connect(self.delayEmitEntriesChanged)
         #self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
         return ( downloader )
 

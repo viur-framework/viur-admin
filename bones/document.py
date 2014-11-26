@@ -19,7 +19,7 @@ class DocumentEditBone(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("DocumentEditBone", "Open editor"), self)
         iconbtn = QtGui.QIcon()
-        iconbtn.addPixmap(QtGui.QPixmap("icons/actions/document-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/document-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btn.setIcon(iconbtn)
         self.btn.connect(self.btn, QtCore.SIGNAL("released()"), self.openEditor)
         self.webView = QtWebKit.QWebView(self)

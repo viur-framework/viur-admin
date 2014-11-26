@@ -2,20 +2,19 @@
 
 # Form implementation generated from reading ui file 'admin.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created: Wed Nov 26 12:52:49 2014
+#      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(983, 707)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setIconSize(QtCore.QSize(32, 32))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -70,7 +69,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 983, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 983, 19))
         self.menubar.setObjectName("menubar")
         self.menuInfo = QtWidgets.QMenu(self.menubar)
         self.menuInfo.setObjectName("menuInfo")
@@ -135,3 +134,4 @@ class Ui_MainWindow(object):
         self.actionLogout.setText(_translate("MainWindow", "Ausloggen"))
         self.actionTasks.setText(_translate("MainWindow", "Tasks"))
 
+import viur_admin.ui.icons_rc

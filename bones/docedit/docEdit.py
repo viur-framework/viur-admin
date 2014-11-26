@@ -22,7 +22,7 @@ from viur_admin.network import NetworkService
 import json
 
 ##################### Rich Text Edit #########################
-rsrcPath = "icons/actions/text"
+rsrcPath = ":icons/actions/text"
 
 
 class TextEdit(QtWidgets.QMainWindow):
@@ -677,7 +677,7 @@ class FileEdit(QtWidgets.QWidget):
                 if k != "src":
                     newAttrs.append((k, v))
                 else:
-                    newAttrs.append((k, os.path.join(os.getcwd(), "icons/status/missing-image.png") ))
+                    newAttrs.append((k, os.path.join(os.getcwd(), ":icons/status/missing-image.png") ))
             res = "<html><head></head><body>%s</body></html>"
             body = "<img %s>" % (" ".join(["%s=\"%s\"" % (k, v) for (k, v) in newAttrs]) )
             body += "<br>" + self.loremIpsum
@@ -1561,5 +1561,5 @@ class DocEdit(QtWidgets.QWidget):
 
     def getBreadCrumb(self):
         return (QtCore.QCoreApplication.translate("DocumentEditBone", "Document editor"),
-                QtGui.QIcon(QtGui.QPixmap("icons/actions/text-edit.png")) )
+                QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")) )
 

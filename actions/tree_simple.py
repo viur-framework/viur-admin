@@ -5,15 +5,15 @@ import os
 import os.path
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from network import NetworkService
-from event import event
-from config import conf
-from utils import RegisterQueue, Overlay, loadIcon
-from handler.list import ListCoreHandler
-from mainwindow import WidgetHandler
-from widgets.tree import TreeWidget
-from widgets.edit import EditWidget
-from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.utils import RegisterQueue, Overlay, loadIcon
+from viur_admin.handler.list import ListCoreHandler
+from viur_admin.mainwindow import WidgetHandler
+from viur_admin.widgets.tree import TreeWidget
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
 
 class TreeSimpleEditAction(QtWidgets.QAction):
@@ -22,7 +22,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
     """
 
     def __init__(self, parent, *args, **kwargs):
-        super(TreeSimpleEditAction, self).__init__(QtGui.QIcon("icons/actions/edit.svg"),
+        super(TreeSimpleEditAction, self).__init__(QtGui.QIcon(":icons/actions/edit.svg"),
                                                    QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"),
                                                    parent)
         self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
@@ -55,7 +55,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
             modul = self.parent().modul
             key = entry["id"]
             widget = lambda: EditWidget(modul, EditWidget.appTree, key, skelType=skelType)
-            handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon("icons/actions/edit.svg"))
+            handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
             handler.stackHandler()
 
     @staticmethod
@@ -68,7 +68,7 @@ actionDelegateSelector.insert(3, TreeSimpleEditAction.isSuitableFor, TreeSimpleE
 
 class TreeMkDirAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(TreeMkDirAction, self).__init__(QtGui.QIcon("icons/actions/folder_add.svg"),
+        super(TreeMkDirAction, self).__init__(QtGui.QIcon(":icons/actions/folder_add.svg"),
                                               QtCore.QCoreApplication.translate("TreeHandler", "New directory"), parent)
         self.triggered.connect(self.onTriggered)
         self.setShortcut("SHIFT+Ctrl+N")
@@ -98,7 +98,7 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
     """
 
     def __init__(self, parent, *args, **kwargs):
-        super(TreeSimpleRenameAction, self).__init__(QtGui.QIcon("icons/actions/rename_small.png"),
+        super(TreeSimpleRenameAction, self).__init__(QtGui.QIcon(":icons/actions/rename_small.png"),
                                                      QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"),
                                                      parent)
         self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)

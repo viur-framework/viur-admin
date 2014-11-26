@@ -32,7 +32,7 @@ class Ui_List(object):
         self.layoutToolBar.addWidget(self.editSearch)
         self.btnPrefixSearch = QtWidgets.QPushButton(List)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPrefixSearch.setIcon(icon)
         self.btnPrefixSearch.setObjectName("btnPrefixSearch")
         self.layoutToolBar.addWidget(self.btnPrefixSearch)

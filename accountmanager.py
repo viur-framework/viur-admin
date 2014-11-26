@@ -14,7 +14,7 @@ from viur_admin.config import conf
 
 class AccountItem(QtWidgets.QListWidgetItem):
     def __init__(self, account, *args, **kwargs):
-        super(AccountItem, self).__init__(QtGui.QIcon("icons/profile.png"), account["name"], *args, **kwargs)
+        super(AccountItem, self).__init__(QtGui.QIcon(":icons/profile.png"), account["name"], *args, **kwargs)
         self.account = account
 
     def update(self, accountData):

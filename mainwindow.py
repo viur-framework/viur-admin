@@ -290,7 +290,7 @@ class MainWindow(QtWidgets.QMainWindow):
             stacks the path as children to its handler
         """
         self.ui.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
-        self.ui.iconLbl.setPixmap(QtGui.QPixmap("icons/viur_logo.png").scaled(64, 64, QtCore.Qt.IgnoreAspectRatio))
+        self.ui.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(64, 64, QtCore.Qt.IgnoreAspectRatio))
         currentHandler = self.handlerForWidget()
         if currentHandler:
             try:
@@ -379,7 +379,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.helpBrowser = QtWebKit.QWebView()
         self.helpBrowser.setUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
         self.helpBrowser.setWindowTitle(QtCore.QCoreApplication.translate("Help", "Help"))
-        self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("icons/menu/help.png")))
+        self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(":icons/menu/help.png")))
         self.helpBrowser.show()
 
     def onActionTasksTriggered(self, checked=None):

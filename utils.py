@@ -82,9 +82,9 @@ class Overlay(QtWidgets.QWidget):
         self.setPalette(palette)
         self.status = None
         animIdx = 0
-        self.okayImage = QtGui.QImage("icons/status/success_white.svg")
-        self.missingImage = QtGui.QImage("icons/status/missing_white.svg")
-        self.errorImage = QtGui.QImage("icons/status/error_transparent.svg")
+        self.okayImage = QtGui.QImage(":icons/status/success_white.svg")
+        self.missingImage = QtGui.QImage(":icons/status/missing_white.svg")
+        self.errorImage = QtGui.QImage(":icons/status/error_transparent.svg")
         self.timer = None
         self.resize(QtCore.QSize(1, 1))
         self.hide()
@@ -285,7 +285,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
             self.widgets.append(self.widgetGenerator())
             self.mainWindow.addWidget(self.widgets[-1])
             # event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
-            self.setIcon(1, QtGui.QIcon("icons/actions/exit_small.png"))
+            self.setIcon(1, QtGui.QIcon(":icons/actions/exit_small.png"))
         self.mainWindow.focusHandler(self)
 
     # event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )

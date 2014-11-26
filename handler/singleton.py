@@ -23,7 +23,7 @@ class SingletonEntryHandler(WidgetHandler):
                 else:
                     icon = loadIcon(config["icon"])
             else:
-                icon = loadIcon("icons/modules/singleton.svg")
+                icon = loadIcon(":icons/modules/singleton.svg")
             name = config["name"]
         super(SingletonEntryHandler, self).__init__(widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs)
         self.setText(0, name)

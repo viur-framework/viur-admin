@@ -24,7 +24,7 @@ class Ui_textEditWindow(object):
         self.verticalLayout.addWidget(self.textEdit)
         self.btnSave = QtWidgets.QPushButton(self.centralwidget)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/actions/accept.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/accept.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSave.setIcon(icon)
         self.btnSave.setObjectName("btnSave")
         self.verticalLayout.addWidget(self.btnSave)

@@ -32,7 +32,7 @@ class SelectMultiEditBone(QtWidgets.QWidget):
         else:
             tmpList.sort(key=lambda x: x[1])  # Values
         for key, descr in tmpList:
-            cb = QtGui.QCheckBox(descr, self)
+            cb = QtWidgets.QCheckBox(descr, self)
             self.layout.addWidget(cb)
             cb.show()
             self.checkboxes[key] = cb

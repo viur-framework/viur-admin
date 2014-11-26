@@ -174,7 +174,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
             delegate = delegateFactory(self.model().modul, field, structureCache)
             self.setItemDelegateForColumn(colum, delegate)
             self.delegates.append(delegate)
-            self.connect(delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint)
+            delegate.request_repaint.connect(self.repaint)
             colum += 1
 
     def onItemDoubleClicked(self, index):

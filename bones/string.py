@@ -105,7 +105,7 @@ class StringEditBone(QtWidgets.QWidget):
         self.boneName = boneName
         if self.languages and self.multiple:  # FIXME: Multiple and readOnly...
             self.setLayout(QtWidgets.QVBoxLayout(self))
-            self.tabWidget = QtGui.QTabWidget(self)
+            self.tabWidget = QtWidgets.QTabWidget(self)
             self.tabWidget.blockSignals(True)
             self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
             event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
@@ -127,7 +127,7 @@ class StringEditBone(QtWidgets.QWidget):
             self.tabWidget.show()
         elif self.languages and not self.multiple:
             self.setLayout(QtWidgets.QVBoxLayout(self))
-            self.tabWidget = QtGui.QTabWidget(self)
+            self.tabWidget = QtWidgets.QTabWidget(self)
             self.tabWidget.blockSignals(True)
             self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
             event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)

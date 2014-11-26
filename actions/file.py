@@ -9,20 +9,20 @@ from time import sleep, time
 import sys
 import os
 
-from ui.treeUI import Ui_Tree
+from viur_admin.ui.treeUI import Ui_Tree
 from PyQt5 import QtCore, QtGui, QtWidgets
-from network import NetworkService, RemoteFile
-from event import event
-from config import conf
-from widgets.file import FileWidget
-from handler.list import ListCoreHandler
-from utils import RegisterQueue, loadIcon
-from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.network import NetworkService, RemoteFile
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.widgets.file import FileWidget
+from viur_admin.handler.list import ListCoreHandler
+from viur_admin.utils import RegisterQueue, loadIcon
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 
 
 class FileUploadAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(FileUploadAction, self).__init__(QtGui.QIcon("icons/actions/upload_small.png"),
+        super(FileUploadAction, self).__init__(QtGui.QIcon(":icons/actions/upload_small.png"),
                                                QtCore.QCoreApplication.translate("FileHandler", "Upload files"), parent)
         self.triggered.connect(self.onTriggered)
         self.setShortcut(QtGui.QKeySequence.New)
@@ -42,7 +42,7 @@ actionDelegateSelector.insert(3, FileUploadAction.isSuitableFor, FileUploadActio
 
 class FileDownloadAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(FileDownloadAction, self).__init__(QtGui.QIcon("icons/actions/download_small.png"),
+        super(FileDownloadAction, self).__init__(QtGui.QIcon(":icons/actions/download_small.png"),
                                                  QtCore.QCoreApplication.translate("FileHandler", "Download files"),
                                                  parent)
         self.triggered.connect(self.onTriggered)

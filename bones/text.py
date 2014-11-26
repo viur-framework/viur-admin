@@ -15,7 +15,7 @@ from viur_admin.bones.string import chooseLang
 from viur_admin.network import RemoteFile
 from PyQt5.Qsci import QsciScintilla, QsciLexerHTML, QsciStyle
 
-rsrcPath = "icons/actions/text"
+rsrcPath = ":icons/actions/text"
 
 
 class HtmlStripper(html.parser.HTMLParser):
@@ -152,7 +152,7 @@ class TextEditBone(QtWidgets.QWidget):
         if self.languages:
             self.languageContainer = {}
             self.html = {}
-            self.tabWidget = QtGui.QTabWidget(self)
+            self.tabWidget = QtWidgets.QTabWidget(self)
             self.tabWidget.blockSignals(True)
             self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
             event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
@@ -164,7 +164,7 @@ class TextEditBone(QtWidgets.QWidget):
                 self.languageContainer[lang] = container
                 btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
                 iconbtn = QtGui.QIcon()
-                iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
                 btn.setIcon(iconbtn)
                 btn.released.connect(self.openEditor)
                 btn.lang = lang
@@ -179,7 +179,7 @@ class TextEditBone(QtWidgets.QWidget):
         else:
             btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
             iconbtn = QtGui.QIcon()
-            iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             btn.setIcon(iconbtn)
             btn.lang = None
             btn.released.connect(self.openEditor)

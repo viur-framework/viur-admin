@@ -150,17 +150,17 @@ class EditWidget(QtWidgets.QWidget):
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Clone: %s") % itemName
             else:
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
-            icon = QtGui.QIcon("icons/actions/clone.png")
+            icon = QtGui.QIcon(":icons/actions/clone.png")
         elif self.key or self.applicationType == EditWidget.appSingleton:  # Were editing
             if itemName:
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Edit: %s") % itemName
             else:
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
-            icon = QtGui.QIcon("icons/actions/edit.svg")
+            icon = QtGui.QIcon(":icons/actions/edit.svg")
         else:  # Were adding
             descr = QtCore.QCoreApplication.translate("EditWidget",
                                                       "Add entry")  #We know that we cant know the name yet
-            icon = QtGui.QIcon("icons/actions/add.svg")
+            icon = QtGui.QIcon(":icons/actions/add.svg")
         return ( descr, icon )
 
 
@@ -302,9 +302,9 @@ class EditWidget(QtWidgets.QWidget):
                 layout.addWidget(widget, stretch=1)
                 iconLbl = QtWidgets.QLabel(dataWidget)
                 if bone["required"]:
-                    iconLbl.setPixmap(QtGui.QPixmap("icons/status/error.png"))
+                    iconLbl.setPixmap(QtGui.QPixmap(":icons/status/error.png"))
                 else:
-                    iconLbl.setPixmap(QtGui.QPixmap("icons/status/incomplete.png"))
+                    iconLbl.setPixmap(QtGui.QPixmap(":icons/status/incomplete.png"))
                 layout.addWidget(iconLbl, stretch=0)
                 iconLbl.setToolTip(str(bone["error"]))
             else:

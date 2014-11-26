@@ -88,7 +88,7 @@ class Updater(QtWidgets.QMainWindow):
         self.overlay.inform(self.overlay.BUSY, "Prüfe")
         self.addLog(QtCore.QCoreApplication.translate("Updater", "Searching for updates"))
         self.req = NetworkService.request(self.baseURL + "/json/adminversion/list?orderby=version&orderdir=1&limit=5")
-        self.connect(self.req, QtCore.SIGNAL("finished()"), self.onCheckUpdate)
+        self.req.finished.connect(self.onCheckUpdate)
 
     def onCheckUpdate(self):
         data = NetworkService.decode(self.req)
@@ -120,8 +120,8 @@ class Updater(QtWidgets.QMainWindow):
         self.overlay.inform(self.overlay.BUSY, "Prüfe")
         self.addLog("Download...")
         self.req = NetworkService.request(self.baseURL + "/file/view/%s/admin.update" % ( self.targetDL ))
-        self.connect(self.req, QtCore.SIGNAL("downloadProgress(qint64,qint64)"), self.onDownloadProgress)
-        self.connect(self.req, QtCore.SIGNAL("finished()"), self.onDownloadComplete)
+        self.req.downloadProgress.connect(self.onDownloadProgress)
+        self.req.finished.connect(self.onDownloadComplete)
 
     def onDownloadComplete(self):
         tempfile = NamedTemporaryFile()

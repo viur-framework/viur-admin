@@ -24,10 +24,10 @@ class FileItem(LeafItem):
         super(FileItem, self).__init__(data)
         self.entryData = data
         extension = self.entryData["name"].split(".")[-1].lower()
-        if os.path.isfile("icons/filetypes/%s.png" % (extension)):
-            icon = QtGui.QIcon("icons/filetypes/%s.png" % (extension))
+        if os.path.isfile(":icons/filetypes/%s.png" % (extension)):
+            icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
         else:
-            icon = QtGui.QIcon("icons/filetypes/unknown.png")
+            icon = QtGui.QIcon(":icons/filetypes/unknown.png")
         if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
                     extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
             RemoteFile(data["dlkey"], successHandler=self.updateIcon)
@@ -38,10 +38,10 @@ class FileItem(LeafItem):
         pixmap.loadFromData(remoteFile.getFileContents())
         if ( pixmap.isNull() ):
             extension = self.entryData["name"].split(".")[-1].upper()
-            if os.path.isfile("icons/filetypes/%s.png" % (extension)):
-                icon = QtGui.QIcon("icons/filetypes/%s.png" % (extension))
+            if os.path.isfile(":icons/filetypes/%s.png" % (extension)):
+                icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
             else:
-                icon = QtGui.QIcon("icons/filetypes/unknown.png")
+                icon = QtGui.QIcon(":icons/filetypes/unknown.png")
         else:
             icon = QtGui.QIcon(pixmap.scaled(64, 64))
         self.setIcon(icon)

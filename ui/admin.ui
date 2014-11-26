@@ -14,8 +14,8 @@
    <string>ViUR Admin</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
+   <iconset resource="../icons/icons.qrc">
+    <normaloff>:/icons/viur_logo.png</normaloff>:/icons/viur_logo.png</iconset>
   </property>
   <property name="iconSize">
    <size>
@@ -107,7 +107,16 @@
          </size>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="margin">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
           <number>0</number>
          </property>
          <item>
@@ -167,7 +176,7 @@
      <x>0</x>
      <y>0</y>
      <width>983</width>
-     <height>22</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuInfo">
@@ -242,6 +251,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -8,19 +8,16 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 from viur_admin.network import RemoteFile
 from viur_admin.utils import formatString
+from viur_admin.bones.base import BaseViewBoneDelegate
 
-
-class FileViewBoneDelegate(QtWidgets.QStyledItemDelegate):
+class FileViewBoneDelegate(BaseViewBoneDelegate):
     cantSort = True
 
     def __init__(self, modul, boneName, structure):
-        super(FileViewBoneDelegate, self).__init__()
+        super(FileViewBoneDelegate, self).__init__(modul, boneName, structure)
         self.format = "$(name)"
         if "format" in structure[boneName].keys():
             self.format = structure[boneName]["format"]
-        self.modul = modul
-        self.structure = structure
-        self.boneName = boneName
 
     def setImage(self, remoteFile):
         fn = remoteFile.getFileName()
@@ -28,7 +25,7 @@ class FileViewBoneDelegate(QtWidgets.QStyledItemDelegate):
             self.cache[remoteFile.dlKey] = QtGui.QImage(fn)
         except:
             pass
-        self.emit(QtCore.SIGNAL('repaintRequest()'))
+        self.request_repaint[int, QObject].emit()
 
     def paint(self, painter, option, index):
         if not "cache" in dir(self):

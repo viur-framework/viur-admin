@@ -10,17 +10,18 @@ from viur_admin.network import NetworkService
 from viur_admin.config import conf
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.bones.base import BaseViewBoneDelegate
 
 
 class BaseBone:
     pass
 
 
-class RelationalViewBoneDelegate(QtWidgets.QStyledItemDelegate):
+class RelationalViewBoneDelegate(BaseViewBoneDelegate):
     cantSort = True
 
     def __init__(self, modul, boneName, structure):
-        super(RelationalViewBoneDelegate, self).__init__()
+        super(RelationalViewBoneDelegate, self).__init__(modul, boneName, structure)
         self.format = "$(name)"
         if "format" in structure[boneName].keys():
             self.format = structure[boneName]["format"]
@@ -96,7 +97,7 @@ class RelationalEditBone(QtWidgets.QWidget):
         self.addBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
                                         parent=self)
         iconadd = QtGui.QIcon()
-        iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.addBtn.setIcon(iconadd)
         self.addBtn.released.connect(self.onAddBtnReleased)
         if not self.multiple:
@@ -104,7 +105,7 @@ class RelationalEditBone(QtWidgets.QWidget):
             self.installAutoCompletion()
             self.layout.addWidget(self.entry)
             icon6 = QtGui.QIcon()
-            icon6.addPixmap(QtGui.QPixmap("icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.delBtn = QtWidgets.QPushButton("", parent=self)
             self.delBtn.setIcon(icon6)
             self.delBtn.released.connect(self.onDelBtnReleased)
@@ -274,7 +275,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
         assert skel is not None
         assert self.boneName in skel.keys()
         return (QtCore.QCoreApplication.translate("RelationalBoneSelector", "Select %s") % skel[self.boneName]["descr"],
-                QtGui.QIcon("icons/actions/change_selection.svg") )
+                QtGui.QIcon(":icons/actions/change_selection.svg") )
 
 
     def onSourceItemDoubleClicked(self, item):

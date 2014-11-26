@@ -26,7 +26,7 @@ class TreeBaseHandler(WidgetHandler):
             else:
                 icon = loadIcon(config["icon"])
         else:
-            icon = loadIcon("icons/modules/tree.svg")
+            icon = loadIcon(":icons/modules/tree.svg")
         super(TreeBaseHandler, self).__init__(lambda: TreeWidget(modul), icon=icon, vanishOnClose=False, *args,
                                               **kwargs)
         self.setText(0, config["name"])

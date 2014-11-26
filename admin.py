@@ -98,6 +98,7 @@ def main():
     import viur_admin.handler
     import viur_admin.widgets
     import viur_admin.bones
+    import viur_admin.actions
     conf.cmdLineOpts = sys.argv
 
     app = QtWidgets.QApplication(sys.argv)

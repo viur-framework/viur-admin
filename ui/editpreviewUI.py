@@ -16,7 +16,7 @@ class Ui_BasePreview(object):
         BasePreview.resize(701, 482)
         BasePreview.setWindowTitle("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/ViURadmin.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/ViURadmin.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         BasePreview.setWindowIcon(icon)
         self.verticalLayout = QtWidgets.QVBoxLayout(BasePreview)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)

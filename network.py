@@ -194,11 +194,11 @@ securityTokenProvider = SecurityTokenProvider()
 
 class RequestWrapper(QtCore.QObject):
     GarbargeTypeName = "RequestWrapper"
-    requestSucceeded = QtCore.pyqtSignal((QtCore.QObject,))
-    requestFailed = QtCore.pyqtSignal((QtCore.QObject, QNetworkReply.NetworkError))
-    finished = QtCore.pyqtSignal((QtCore.QObject,))
-    uploadProgress = QtCore.pyqtSignal((QtCore.QObject, int, int))
-    downloadProgress = QtCore.pyqtSignal((QtCore.QObject, int, int))
+    requestSucceeded = QtCore.pyqtSignal(QtCore.QObject)
+    requestFailed = QtCore.pyqtSignal(QtCore.QObject, QNetworkReply.NetworkError)
+    finished = QtCore.pyqtSignal(QtCore.QObject)
+    uploadProgress = QtCore.pyqtSignal(QtCore.QObject, int, int)
+    downloadProgress = QtCore.pyqtSignal(QtCore.QObject, int, int)
 
     def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
                  failSilent=False):
@@ -498,6 +498,19 @@ class NetworkService():
     @staticmethod
     def request(url, params=None, secure=False, extraHeaders=None, successHandler=None, failureHandler=None,
                 finishedHandler=None, parent=None, failSilent=False):
+        """
+
+        :param url:
+        :param params:
+        :param secure:
+        :param extraHeaders:
+        :param successHandler:
+        :param failureHandler:
+        :param finishedHandler:
+        :param parent:
+        :param failSilent:
+        :return: RequestWrapper
+        """
         global nam, _isSecureSSL
         if _isSecureSSL == False:  #Warn the user of a potential security risk
             msgRes = QtWidgets.QMessageBox.warning(None, QtCore.QCoreApplication.translate("NetworkService",
