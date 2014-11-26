@@ -2,17 +2,17 @@
 import os
 import sys
 
-from ui.fileUploadProgressUI import Ui_FileUploadProgress
-from ui.fileDownloadProgressUI import Ui_FileDownloadProgress
+from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
+from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from PyQt5 import QtCore, QtGui, QtWidgets
-from utils import Overlay
-from network import NetworkService, RemoteFile, RequestGroup
-from event import event
-from widgets.tree import TreeWidget, LeafItem, TreeListView
-from widgets.edit import EditWidget
-from utils import WidgetHandler
-from config import conf
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.utils import Overlay
+from viur_admin.network import NetworkService, RemoteFile, RequestGroup
+from viur_admin.event import event
+from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.utils import WidgetHandler
+from viur_admin.config import conf
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class FileItem(LeafItem):

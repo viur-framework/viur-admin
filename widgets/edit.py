@@ -2,14 +2,14 @@
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from network import NetworkService
-from event import event
-from utils import RegisterQueue, Overlay, formatString
-from config import conf
-from ui.editUI import Ui_Edit
-from ui.editpreviewUI import Ui_BasePreview
-from priorityqueue import editBoneSelector
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, Overlay, formatString
+from viur_admin.config import conf
+from viur_admin.ui.editUI import Ui_Edit
+from viur_admin.ui.editpreviewUI import Ui_BasePreview
+from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class Preview(QtWidgets.QWidget):
@@ -273,10 +273,10 @@ class EditWidget(QtWidgets.QWidget):
                 scrollArea = QtWidgets.QScrollArea()
                 containerWidget = QtWidgets.QWidget(scrollArea)
                 scrollArea.setWidget(containerWidget)
-                tabs[tabName] = QtGui.QFormLayout(containerWidget)
+                tabs[tabName] = QtWidgets.QFormLayout(containerWidget)
                 containerWidget.setLayout(tabs[tabName])
                 containerWidget.setSizePolicy(
-                    QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred))
+                    QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
                 tmpTabs.append((scrollArea, tabName))
                 scrollArea.setWidgetResizable(True)
         tmpTabs.sort(key=lambda x: x[1])
@@ -297,7 +297,7 @@ class EditWidget(QtWidgets.QWidget):
             widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict)
             if bone["error"] and not ignoreMissing:
                 dataWidget = QtWidgets.QWidget()
-                layout = QtGui.QHBoxLayout(dataWidget)
+                layout = QtWidgets.QHBoxLayout(dataWidget)
                 dataWidget.setLayout(layout)
                 layout.addWidget(widget, stretch=1)
                 iconLbl = QtWidgets.QLabel(dataWidget)
@@ -317,7 +317,7 @@ class EditWidget(QtWidgets.QWidget):
                 dataWidget.setMinimumWidth(500)
             ## Temporary MacOS Fix
             lblWidget = QtWidgets.QWidget(self)
-            layout = QtGui.QHBoxLayout(lblWidget)
+            layout = QtWidgets.QHBoxLayout(lblWidget)
             if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
                 lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
             descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)

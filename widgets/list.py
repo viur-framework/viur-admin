@@ -2,14 +2,14 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from utils import Overlay, RegisterQueue, formatString, urlForItem
-from network import NetworkService, RequestGroup
-from event import event
-from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
-from widgets.edit import EditWidget
-from utils import WidgetHandler
-from ui.listUI import Ui_List
-from config import conf
+from viur_admin.utils import Overlay, RegisterQueue, formatString, urlForItem
+from viur_admin.network import NetworkService, RequestGroup
+from viur_admin.event import event
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.utils import WidgetHandler
+from viur_admin.ui.listUI import Ui_List
+from viur_admin.config import conf
 
 
 class ListTableModel(QtCore.QAbstractTableModel):
@@ -68,11 +68,11 @@ class ListTableModel(QtCore.QAbstractTableModel):
         return ( self.modul )
 
     def reload(self):
-        self.emit(QtCore.SIGNAL("modelAboutToBeReset()"))
+        self.modelAboutToBeReset.emit()
         self.dataCache = []
         self.completeList = False
         self.cursor = False
-        self.emit(QtCore.SIGNAL("modelReset()"))
+        self.modelReset.emit()
         self.loadNext(True)
 
     def rowCount(self, parent):
@@ -304,7 +304,7 @@ class ListTableView(QtWidgets.QTableView):
             delegate = delegateFactory(self.modul, field, self.structureCache)
             self.setItemDelegateForColumn(colum, delegate)
             self.delegates.append(delegate)
-            self.connect(delegate, QtCore.SIGNAL('repaintRequest()'), self.repaint)
+            self.delegate.repaintRequest.connect(self.repaint)
             colum += 1
 
     def keyPressEvent(self, e):
@@ -333,7 +333,7 @@ class ListTableView(QtWidgets.QTableView):
                 self.name = name
                 self.setText(self.name)
 
-        menu = QtGui.QMenu(self)
+        menu = QtWidgets.QMenu(self)
         activeFields = self.model().fields
         actions = []
         if not self.structureCache:
@@ -441,12 +441,12 @@ class ListWidget(QtWidgets.QWidget):
         self.modul = modul
         self.ui = Ui_List()
         self.ui.setupUi(self)
-        layout = QtGui.QHBoxLayout(self.ui.tableWidget)
+        layout = QtWidgets.QHBoxLayout(self.ui.tableWidget)
         self.ui.tableWidget.setLayout(layout)
         self.list = ListTableView(self.ui.tableWidget, modul, fields, filter)
         layout.addWidget(self.list)
         self.list.show()
-        self.toolBar = QtGui.QToolBar(self)
+        self.toolBar = QtWidgets.QToolBar(self)
         self.toolBar.setIconSize(QtCore.QSize(32, 32))
         self.ui.boxActions.addWidget(self.toolBar)
         if filter is not None and "search" in filter.keys():

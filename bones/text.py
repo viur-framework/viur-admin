@@ -2,17 +2,17 @@
 from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets, QtWebKitWidgets
 # from PySide.Qsci import QsciScintilla, QsciLexerHTML
 import sys
-from event import event
-from utils import RegisterQueue
-from ui.texteditUI import Ui_textEditWindow
-from ui.rawtexteditUI import Ui_rawTextEditWindow
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue
+from viur_admin.ui.texteditUI import Ui_textEditWindow
+from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
 import html.parser
-from ui.docEditlinkEditUI import Ui_LinkEdit
+from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
-from priorityqueue import editBoneSelector, viewDelegateSelector
-from bones.file import FileBoneSelector
-from bones.string import chooseLang
-from network import RemoteFile
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.bones.file import FileBoneSelector
+from viur_admin.bones.string import chooseLang
+from viur_admin.network import RemoteFile
 from PyQt5.Qsci import QsciScintilla, QsciLexerHTML, QsciStyle
 
 rsrcPath = "icons/actions/text"
@@ -67,7 +67,7 @@ class InsertImageDialog(QtWidgets.QDialog):
         self.setLayout(QtWidgets.QVBoxLayout())
         self.cb = QtWidgets.QComboBox(self)
         self.layout().addWidget(self.cb)
-        acceptButton = QtGui.QPushButton("Accept")
+        acceptButton = QtWidgets.QPushButton("Accept")
         acceptButton.released.connect(self.accept)
         self.layout().addWidget(acceptButton)
         self.cb.addItem("Normal Link")
@@ -93,14 +93,14 @@ class TextEditor(QtWidgets.QWidget):
         super(TextEditor, self).__init__(*args, **kwargs)
         self.validHtml = validHtml
         self.setLayout(QtWidgets.QVBoxLayout())
-        btn = QtGui.QPushButton("Include file")
+        btn = QtWidgets.QPushButton("Include file")
         btn.released.connect(self.click)
         self.layout().addWidget(btn)
         self.editor = QsciScintilla()
         self.editor.setLexer(QsciLexerHTML())
         self.layout().addWidget(self.editor)
         self.setMinimumSize(600, 450)
-        btn = QtGui.QPushButton("Save")
+        btn = QtWidgets.QPushButton("Save")
         btn.released.connect(self.save)
         self.layout().addWidget(btn)
         self.setText(txt)
@@ -162,7 +162,7 @@ class TextEditBone(QtWidgets.QWidget):
                 container = QtWidgets.QWidget()
                 container.setLayout(QtWidgets.QVBoxLayout(container))
                 self.languageContainer[lang] = container
-                btn = QtGui.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
+                btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
                 iconbtn = QtGui.QIcon()
                 iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
                 btn.setIcon(iconbtn)
@@ -177,7 +177,7 @@ class TextEditBone(QtWidgets.QWidget):
             self.tabWidget.blockSignals(False)
             self.tabWidget.show()
         else:
-            btn = QtGui.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
+            btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
             iconbtn = QtGui.QIcon()
             iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             btn.setIcon(iconbtn)
@@ -188,7 +188,7 @@ class TextEditBone(QtWidgets.QWidget):
             self.layout().addWidget(self.webView)
             self.layout().addWidget(btn)
             self.html = ""
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred))
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
 
     @staticmethod
     def fromSkelStructure(modulName, boneName, skelStructure):

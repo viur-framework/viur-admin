@@ -6,13 +6,13 @@ import os.path
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from config import conf
-from network import NetworkService, RemoteFile
+from viur_admin.config import conf
+from viur_admin.network import NetworkService, RemoteFile
 
 
 class RegisterQueue():
     """
-    Propagates through the QT-Eventqeue and collects all Handlers able to scope with the current request
+    Propagates through the QT-Eventqueue and collects all Handlers able to scope with the current request
     """
 
     def __init__(self):

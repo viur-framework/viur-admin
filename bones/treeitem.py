@@ -2,14 +2,14 @@
 from os import path
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from utils import RegisterQueue, Overlay, formatString
-from ui.relationalselectionUI import Ui_relationalSelector
-from ui.treeselectorUI import Ui_TreeSelector
-from bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
-from widgets.tree import TreeWidget
-from widgets.selectedEntities import SelectedEntitiesWidget
-from priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, Overlay, formatString
+from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
+from viur_admin.ui.treeselectorUI import Ui_TreeSelector
+from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
+from viur_admin.widgets.tree import TreeWidget
+from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class TreeItemViewBoneDelegate(RelationalViewBoneDelegate):

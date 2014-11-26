@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from bones.base import BaseViewBoneDelegate
-from priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
-from utils import wheelEventFilter
+from viur_admin.event import event
+from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
+from viur_admin.utils import wheelEventFilter
 
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):

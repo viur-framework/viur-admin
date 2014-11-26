@@ -5,16 +5,16 @@ import sys
 import os
 import os.path
 
-from ui.treeUI import Ui_Tree
+from viur_admin.ui.treeUI import Ui_Tree
 from PyQt5 import QtCore, QtGui
-from network import NetworkService
-from event import event
-from config import conf
-from utils import RegisterQueue, Overlay, loadIcon
-from handler.list import ListCoreHandler
-from widgets.tree import TreeWidget
-from mainwindow import WidgetHandler
-from widgets.edit import EditWidget
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.utils import RegisterQueue, Overlay, loadIcon
+from viur_admin.handler.list import ListCoreHandler
+from viur_admin.widgets.tree import TreeWidget
+from viur_admin.mainwindow import WidgetHandler
+from viur_admin.widgets.edit import EditWidget
 
 
 class TreeBaseHandler(WidgetHandler):

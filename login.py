@@ -4,13 +4,13 @@ import re
 
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKit
 
-from ui.loginformUI import Ui_LoginWindow
-from accountmanager import Accountmanager
-from network import NetworkService, securityTokenProvider
-from event import event
-from config import conf
-from utils import Overlay, showAbout
-from locales import ISO639CODES
+from viur_admin.ui.loginformUI import Ui_LoginWindow
+from viur_admin.accountmanager import Accountmanager
+from viur_admin.network import NetworkService, securityTokenProvider
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.utils import Overlay, showAbout
+from viur_admin.locales import ISO639CODES
 
 
 class LoginTask(QtCore.QObject):

@@ -9,17 +9,19 @@ from time import sleep, time
 import sys
 import os
 
-from ui.treeUI import Ui_Tree
+from viur_admin.ui.treeUI import Ui_Tree
 from PyQt5 import QtCore, QtGui
-from network import NetworkService, RemoteFile
-from event import event
-from config import conf
-from widgets.edit import EditWidget
-from handler.list import ListCoreHandler
-from widgets.file import FileWidget
-from utils import WidgetHandler
-from utils import RegisterQueue, loadIcon
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.network import NetworkService, RemoteFile
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.handler.list import ListCoreHandler
+from viur_admin.widgets.file import FileWidget
+from viur_admin.utils import WidgetHandler
+from viur_admin.utils import RegisterQueue, loadIcon
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+
+print("protowrapper file", id(protocolWrapperInstanceSelector))
 
 
 class FileRepoHandler(WidgetHandler):
@@ -50,6 +52,7 @@ class FileBaseHandler(WidgetHandler):
             Check if there is more than one repository avaiable
             for us.
         """
+        print(protocolWrapperInstanceSelector)
         protoWrap = protocolWrapperInstanceSelector.select(self.modul)
         assert protoWrap is not None
         if len(protoWrap.rootNodes) > 1:

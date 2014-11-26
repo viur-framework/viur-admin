@@ -2,10 +2,10 @@
 from html.parser import HTMLParser
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from bones.base import BaseViewBoneDelegate
-from config import conf
-from priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.config import conf
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 def unescapeHtml(html):
@@ -64,11 +64,11 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 class Tag(QtWidgets.QWidget):
     def __init__(self, tag, editMode, *args, **kwargs):
         super(Tag, self).__init__(*args, **kwargs)
-        self.setLayout(QtGui.QHBoxLayout(self))
+        self.setLayout(QtWidgets.QHBoxLayout(self))
         self.tag = tag
         self.lblDisplay = QtWidgets.QLabel(tag, self)
-        self.editField = QtGui.QLineEdit(tag, self)
-        self.btnDelete = QtGui.QPushButton("Löschen", self)
+        self.editField = QtWidgets.QLineEdit(tag, self)
+        self.btnDelete = QtWidgets.QPushButton("Löschen", self)
         self.layout().addWidget(self.lblDisplay)
         self.layout().addWidget(self.editField)
         self.layout().addWidget(self.btnDelete)
@@ -116,7 +116,7 @@ class StringEditBone(QtWidgets.QWidget):
                 self.langEdits[lang] = container
                 container.setLayout(QtWidgets.QVBoxLayout(container))
                 self.tabWidget.addTab(container, lang)
-                btnAdd = QtGui.QPushButton("Hinzufügen", self)
+                btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
                 container.layout().addWidget(btnAdd)
 
                 def genLambda(lang):
@@ -134,20 +134,20 @@ class StringEditBone(QtWidgets.QWidget):
             self.layout().addWidget(self.tabWidget)
             self.langEdits = {}
             for lang in self.languages:
-                edit = QtGui.QLineEdit()
+                edit = QtWidgets.QLineEdit()
                 edit.setReadOnly(self.readOnly)
                 self.langEdits[lang] = edit
                 self.tabWidget.addTab(edit, lang)
             self.tabWidget.blockSignals(False)
         elif not self.languages and self.multiple:
             self.setLayout(QtWidgets.QVBoxLayout(self))
-            self.btnAdd = QtGui.QPushButton("Hinzufügen", self)
+            self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
             self.layout().addWidget(self.btnAdd)
             self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
             self.btnAdd.show()
         else:  # not languages and not multiple:
             self.setLayout(QtWidgets.QVBoxLayout(self))
-            self.lineEdit = QtGui.QLineEdit(self)
+            self.lineEdit = QtWidgets.QLineEdit(self)
             self.layout().addWidget(self.lineEdit)
             self.lineEdit.show()
             self.lineEdit.setReadOnly(self.readOnly)

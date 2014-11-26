@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # from handler import order
-from .calender import _calenderHandler
-from .file import _fileHandler
-# import admin.hierarchy
-# import admin.list
-# import admin.order
-# import admin.singleton
-# import admin.tree
+import viur_admin.handler.calender
+import viur_admin.handler.file
+import viur_admin.handler.hierarchy
+import viur_admin.handler.list
+import viur_admin.handler.order
+import viur_admin.handler.singleton
+import viur_admin.handler.tree

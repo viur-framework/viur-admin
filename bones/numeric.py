@@ -5,11 +5,11 @@ import sys
 from math import pow
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from bones.base import BaseEditBone
-from bones.base import BaseViewBoneDelegate
-from priorityqueue import editBoneSelector, viewDelegateSelector
-from utils import wheelEventFilter
+from viur_admin.event import event
+from viur_admin.bones.base import BaseEditBone
+from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.utils import wheelEventFilter
 
 
 class FixedQSpinBox(QtWidgets.QSpinBox):

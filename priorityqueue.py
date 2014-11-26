@@ -28,3 +28,5 @@ actionDelegateSelector = PriorityQueue()  # Locates an QAction for a given modul
 protocolWrapperClassSelector = PriorityQueue()  # Used during startup to select an Wrapper-Class
 protocolWrapperInstanceSelector = PriorityQueue()  # Used afterwards to get a specific instance
 
+print("protowrapper", id(protocolWrapperInstanceSelector))
+

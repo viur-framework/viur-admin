@@ -3,19 +3,19 @@
 
 import sys
 
-from PyQt5 import QtCore, QtGui
-from event import event
-from bones.base import BaseEditBone
-from priorityqueue import editBoneSelector
+from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.event import event
+from viur_admin.bones.base import BaseEditBone
+from viur_admin.priorityqueue import editBoneSelector
 
 
 class ColorEditBone(BaseEditBone):
     def getLineEdit(self):
         aWidget = QtWidgets.QWidget()
-        aWidget.layout = QtGui.QHBoxLayout(aWidget)
-        self.lineEdit1 = QtGui.QLineEdit(self);
-        self.button = QtGui.QPushButton('Auswählen', self)
-        self.colordisplay = QtGui.QLineEdit(self);
+        aWidget.layout = QtWidgets.QHBoxLayout(aWidget)
+        self.lineEdit1 = QtWidgets.QLineEdit(self);
+        self.button = QtWidgets.QPushButton('Auswählen', self)
+        self.colordisplay = QtWidgets.QLineEdit(self);
         self.colordisplay.setReadOnly(True)
         self.lineEdit1.editingFinished.connect(self.refreshColor)
         self.button.clicked.connect(self.showDialog)

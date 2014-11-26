@@ -23,6 +23,8 @@ class OrderHandler( QtCore.QObject ):
 _orderHandler = OrderHandler()
 """
 
+from viur_admin.widgets.tree import TreeWidget
+from viur_admin.widgets.file import FileListView
 
 class FileWidget(TreeWidget):
     """

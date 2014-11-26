@@ -1,10 +1,10 @@
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWebKit
-from event import event
-from utils import RegisterQueue
-from bones.docedit import DocEdit
-from bones.text import TextViewBoneDelegate
+from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue
+from viur_admin.bones.docedit import DocEdit
+from viur_admin.bones.text import TextViewBoneDelegate
 
 
 class DocumentViewBoneDelegate(TextViewBoneDelegate):
@@ -17,7 +17,7 @@ class DocumentEditBone(QtWidgets.QWidget):
         self.skelStructure = skelStructure
         self.boneName = boneName
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.btn = QtGui.QPushButton(QtCore.QCoreApplication.translate("DocumentEditBone", "Open editor"), self)
+        self.btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("DocumentEditBone", "Open editor"), self)
         iconbtn = QtGui.QIcon()
         iconbtn.addPixmap(QtGui.QPixmap("icons/actions/document-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btn.setIcon(iconbtn)
@@ -26,7 +26,7 @@ class DocumentEditBone(QtWidgets.QWidget):
         self.webView.mousePressEvent = self.openEditor
         self.layout.addWidget(self.webView)
         self.layout.addWidget(self.btn)
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred))
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
         self.html = ""
         self.editor = None
 
@@ -58,12 +58,12 @@ class DocumentEditBone(QtWidgets.QWidget):
 class DocumentHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
-        self.connect(event,
-                     QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
-                     self.onRequestBoneViewDelegate)  # RegisterObj, ModulName, BoneName, SkelStructure
-        self.connect(event,
-                     QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
-                     self.onRequestBoneEditWidget)
+        # self.connect(event,
+        #              QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
+        #              self.onRequestBoneViewDelegate)  # RegisterObj, ModulName, BoneName, SkelStructure
+        # self.connect(event,
+        #              QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
+        #              self.onRequestBoneEditWidget)
 
     def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
         if skelStucture[boneName]["type"] == "document":

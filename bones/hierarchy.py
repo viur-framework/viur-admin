@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from event import event
-from bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
-from widgets.hierarchy import HierarchyWidget
-from priorityqueue import editBoneSelector
+from viur_admin.event import event
+from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
+from viur_admin.widgets.hierarchy import HierarchyWidget
+from viur_admin.priorityqueue import editBoneSelector
 
 
 class HierarchyItemViewBoneDelegate(RelationalViewBoneDelegate):

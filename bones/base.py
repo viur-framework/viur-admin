@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class BaseViewBoneDelegate(QtWidgets.QTreeWidgetItem):
@@ -16,7 +16,7 @@ class BaseViewBoneDelegate(QtWidgets.QTreeWidgetItem):
 
 class BaseEditBone(QtWidgets.QWidget):
     def getLineEdit(self):
-        return (QtGui.QLineEdit(self))
+        return (QtWidgets.QLineEdit(self))
 
     def setParams(self):
         if self.readOnly:
@@ -28,7 +28,7 @@ class BaseEditBone(QtWidgets.QWidget):
         super(BaseEditBone, self).__init__(*args, **kwargs)
         self.boneName = boneName
         self.readOnly = readOnly
-        self.layout = QtGui.QHBoxLayout(self)
+        self.layout = QtWidgets.QHBoxLayout(self)
         self.lineEdit = self.getLineEdit()
         self.layout.addWidget(self.lineEdit)
         self.setParams()

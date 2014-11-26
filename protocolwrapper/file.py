@@ -6,10 +6,10 @@ import os
 import sys
 
 from PyQt5 import QtCore
-from network import NetworkService, RequestGroup, RequestWrapper
-from priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
-from protocolwrapper.tree import TreeWrapper
-from config import conf
+from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
+from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
+from viur_admin.protocolwrapper.tree import TreeWrapper
+from viur_admin.config import conf
 
 
 ignorePatterns = [  # List of patterns of filenames/directories, which wont get uploaded

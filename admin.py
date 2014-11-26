@@ -89,33 +89,42 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 # conf.cmdLineOpts = options  #Store the command-line options
 
-from config import conf
-
-conf.cmdLineOpts = sys.argv
-
-app = QtWidgets.QApplication(sys.argv)
-app.setStyleSheet(open("app.css", "r").read())
-
-from login import Login
-
-transFiles = os.listdir("./locales/")
-for file in transFiles:
-    if file.endswith(".qm"):
-        translator = QtCore.QTranslator()
-        translator.load(os.path.join(path, "locales", file))
-        conf.availableLanguages[file[: -3]] = translator
-        if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
-            app.installTranslator(translator)
 
 
+def main():
+    from pkg_resources import resource_filename, resource_listdir
+    from viur_admin.config import conf
+    import viur_admin.protocolwrapper
+    import viur_admin.handler
+    import viur_admin.widgets
+    import viur_admin.bones
+    conf.cmdLineOpts = sys.argv
 
-from mainwindow import MainWindow
-mw = MainWindow()
-l = Login()
-l.show()
-app.exec_()
+    app = QtWidgets.QApplication(sys.argv)
+    # app.setStyleSheet(open("app.css", "r").read())
 
-conf.savePortalConfig()
-conf.saveConfig()
+    from viur_admin.login import Login
+
+    transFiles = resource_listdir("viur_admin", "locales")
+    for file in transFiles:
+        if file.endswith(".qm"):
+            translator = QtCore.QTranslator()
+            filename = resource_filename("viur_admin", os.path.join("locales", file))
+
+            translator.load(filename)
+            conf.availableLanguages[file[: -3]] = translator
+            if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
+                app.installTranslator(translator)
+
+
+
+    from viur_admin.mainwindow import MainWindow
+    mw = MainWindow()
+    l = Login()
+    l.show()
+    app.exec_()
+
+    conf.savePortalConfig()
+    conf.saveConfig()
 
 

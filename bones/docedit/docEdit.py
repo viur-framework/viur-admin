@@ -5,36 +5,36 @@
 import html.parser
 import re
 
-from PySide import QtGui, QtCore, QtWebKit
-from ui.docEditUI import Ui_DocEdit
+from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets
+from viur_admin.ui.docEditUI import Ui_DocEdit
 import string
-from ui.docEditfileEditUI import Ui_Form
-from ui.docEditlinkEditUI import Ui_LinkEdit
-from ui.createtableUI import Ui_DialogCreateTable
-from event import event
-from utils import RegisterQueue, Overlay
-from event import event
+from viur_admin.ui.docEditfileEditUI import Ui_Form
+from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
+from viur_admin.ui.createtableUI import Ui_DialogCreateTable
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, Overlay
+from viur_admin.event import event
 
 # from handler.file import FileUploader
-from widgets.edit import EditWidget  #FIXME: !!
+from viur_admin.widgets.edit import EditWidget  #FIXME: !!
 import urllib.parse, os, os.path, sys
-from network import NetworkService
+from viur_admin.network import NetworkService
 import json
 
 ##################### Rich Text Edit #########################
 rsrcPath = "icons/actions/text"
 
 
-class TextEdit(QtGui.QMainWindow):
+class TextEdit(QtWidgets.QMainWindow):
     def __init__(self, saveCallback, parent=None):
         super(TextEdit, self).__init__(parent)
-        self.setWindowIcon(QtGui.QIcon('icons/actions/document-edit.png'))
+        self.setWindowIcon(QtWidgets.QIcon('icons/actions/document-edit.png'))
         self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
         self.setupEditActions()
         self.setupInsertActions()
         self.setupTextActions()
 
-        self.textEdit = QtGui.QTextEdit(self)
+        self.textEdit = QtWidgets.QTextEdit(self)
         self.textEdit.currentCharFormatChanged.connect(self.currentCharFormatChanged)
         self.textEdit.cursorPositionChanged.connect(self.cursorPositionChanged)
 
@@ -186,7 +186,7 @@ class TextEdit(QtGui.QMainWindow):
             menu.exec_(event.globalPos())
 
     def setupEditActions(self):
-        tb = QtGui.QToolBar(self)
+        tb = QtWidgets.QToolBar(self)
         tb.setWindowTitle("Edit Actions")
         self.addToolBar(tb)
 
@@ -214,7 +214,7 @@ class TextEdit(QtGui.QMainWindow):
         tb.addAction(self.actionPaste)
 
     def setupInsertActions(self):
-        tb = QtGui.QToolBar(self)
+        tb = QtWidgets.QToolBar(self)
         tb.setWindowTitle("Insert Actions")
         self.addToolBar(tb)
 
@@ -249,7 +249,7 @@ class TextEdit(QtGui.QMainWindow):
     #		tb.addAction(self.actionPaste)
 
     def setupTextActions(self):
-        tb = QtGui.QToolBar(self)
+        tb = QtWidgets.QToolBar(self)
         tb.setWindowTitle("Format Actions")
         self.addToolBar(tb)
 
@@ -746,7 +746,7 @@ class TableEdit(TextEdit):
         return ( header, body )
 
 
-class DocumentBlock(QtGui.QTreeWidgetItem):
+class DocumentBlock(QtWidgets.QTreeWidgetItem):
     def __init__(self, name, attrs=[], content="", parent=None, *args, **kwargs):
         super(DocumentBlock, self).__init__(parent, *args, **kwargs)
         self.attrs = attrs
@@ -754,7 +754,7 @@ class DocumentBlock(QtGui.QTreeWidgetItem):
         self.setText(0, name)
 
 
-class HtmlBlock(QtGui.QTreeWidgetItem):
+class HtmlBlock(QtWidgets.QTreeWidgetItem):
     def __init__(self, attrs=[], content="", parent=None, *args, **kwargs):
         super(HtmlBlock, self).__init__(*args, **kwargs)
         self.attrs = attrs
@@ -1423,8 +1423,8 @@ class DocEdit(QtWidgets.QWidget):
         self.overlay.clear()
 
     def btnImportPressed(self, e=None):
-        super(QtGui.QPushButton, self.ui.btnImport).mouseReleaseEvent(e)
-        menu = QtGui.QMenu(self)
+        super(QtWidgets.QPushButton, self.ui.btnImport).mouseReleaseEvent(e)
+        menu = QtWidgets.QMenu(self)
         importMenu = menu.addMenu("Import")
         exportMenu = menu.addMenu("Export")
         importHtml = importMenu.addAction("HTML")

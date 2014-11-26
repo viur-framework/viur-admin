@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui
-from network import NetworkService
-from event import event
-from widgets.list import ListWidget
-from utils import RegisterQueue, Overlay, formatString, WidgetHandler, loadIcon
-from config import conf
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.widgets.list import ListWidget
+from viur_admin.utils import RegisterQueue, Overlay, formatString, WidgetHandler, loadIcon
+from viur_admin.config import conf
 
 
 class CalenderWidget(ListWidget):
@@ -14,7 +14,7 @@ class CalenderWidget(ListWidget):
                             ("year", QtCore.QCoreApplication.translate("CalenderList", "Year")),
                             ("month", QtCore.QCoreApplication.translate("CalenderList", "Month")),
                             ("day", QtCore.QCoreApplication.translate("CalenderList", "Day"))]
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         self.layout().insertLayout(1, layout)
         self.cbFilterType = QtGui.QComboBox()
         layout.addWidget(self.cbFilterType)

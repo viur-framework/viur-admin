@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from utils import RegisterQueue, formatString, Overlay, WidgetHandler
-from ui.relationalselectionUI import Ui_relationalSelector
-from widgets.list import ListWidget
-from widgets.edit import EditWidget
-from widgets.selectedEntities import SelectedEntitiesWidget
-from network import NetworkService
-from config import conf
-from priorityqueue import editBoneSelector, viewDelegateSelector
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, formatString, Overlay, WidgetHandler
+from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
+from viur_admin.widgets.list import ListWidget
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
+from viur_admin.network import NetworkService
+from viur_admin.config import conf
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class BaseBone:
@@ -87,25 +87,25 @@ class RelationalEditBone(QtWidgets.QWidget):
         self.format = format
         self.overlay = Overlay(self)
         if not self.multiple:
-            self.layout = QtGui.QHBoxLayout(self)
+            self.layout = QtWidgets.QHBoxLayout(self)
         else:
             self.layout = QtWidgets.QVBoxLayout(self)
             self.previewWidget = QtWidgets.QWidget(self)
             self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
             self.layout.addWidget(self.previewWidget)
-        self.addBtn = QtGui.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
+        self.addBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
                                         parent=self)
         iconadd = QtGui.QIcon()
         iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.addBtn.setIcon(iconadd)
         self.addBtn.released.connect(self.onAddBtnReleased)
         if not self.multiple:
-            self.entry = QtGui.QLineEdit(self)
+            self.entry = QtWidgets.QLineEdit(self)
             self.installAutoCompletion()
             self.layout.addWidget(self.entry)
             icon6 = QtGui.QIcon()
             icon6.addPixmap(QtGui.QPixmap("icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.delBtn = QtGui.QPushButton("", parent=self)
+            self.delBtn = QtWidgets.QPushButton("", parent=self)
             self.delBtn.setIcon(icon6)
             self.delBtn.released.connect(self.onDelBtnReleased)
             self.layout.addWidget(self.addBtn)
@@ -136,7 +136,7 @@ class RelationalEditBone(QtWidgets.QWidget):
         if not self.multiple:
             self.autoCompletionModel = AutocompletionModel(self.toModul, format, {})  # FIXME: {} was
             # self.skelStructure
-            self.autoCompleter = QtGui.QCompleter(self.autoCompletionModel)
+            self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
             self.autoCompleter.setModel(self.autoCompletionModel)
             self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
             self.entry.setCompleter(self.autoCompleter)
@@ -232,12 +232,12 @@ class RelationalBoneSelector(QtWidgets.QWidget):
         self.selection = selection
         self.ui = Ui_relationalSelector()
         self.ui.setupUi(self)
-        layout = QtGui.QHBoxLayout(self.ui.tableWidget)
+        layout = QtWidgets.QHBoxLayout(self.ui.tableWidget)
         self.ui.tableWidget.setLayout(layout)
         self.list = self.displaySourceWidget(self.modul, editOnDoubleClick=False, parent=self)
         layout.addWidget(self.list)
         self.list.show()
-        layout = QtGui.QHBoxLayout(self.ui.listSelected)
+        layout = QtWidgets.QHBoxLayout(self.ui.listSelected)
         self.ui.listSelected.setLayout(layout)
         self.selection = self.displaySelectionWidget(self.modul, selection, parent=self)
         layout.addWidget(self.selection)

@@ -2,13 +2,13 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from utils import RegisterQueue, formatString, itemFromUrl
-from ui.relationalselectionUI import Ui_relationalSelector
-from widgets.list import ListWidget
-from network import NetworkService
-from config import conf
-from priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, formatString, itemFromUrl
+from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
+from viur_admin.widgets.list import ListWidget
+from viur_admin.network import NetworkService
+from viur_admin.config import conf
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
 
 
 class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):

@@ -4,15 +4,15 @@ import sys
 import os
 import os.path
 
-from ui.hierarchyUI import Ui_Hierarchy
-from PyQt5 import QtCore, QtGui
-from network import NetworkService
-from event import event
-from config import conf
-from utils import RegisterQueue, Overlay, formatString, loadIcon
-from mainwindow import WidgetHandler
-from widgets.hierarchy import HierarchyWidget
-from widgets.edit import EditWidget
+from viur_admin.ui.hierarchyUI import Ui_Hierarchy
+from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.config import conf
+from viur_admin.utils import RegisterQueue, Overlay, formatString, loadIcon
+from viur_admin.utils import WidgetHandler
+from viur_admin.widgets.hierarchy import HierarchyWidget
+from viur_admin.widgets.edit import EditWidget
 
 
 class HierarchyRepoHandler(WidgetHandler):  # FIXME
@@ -27,6 +27,7 @@ class HierarchyCoreHandler(WidgetHandler):  # FIXME
     """Class for holding the main (module) Entry within the modules-list"""
 
     def __init__(self, modul, *args, **kwargs):
+        super(WidgetHandler, self).__init__(*args, **kwargs)
         self.modul = modul
         config = conf.serverConfig["modules"][modul]
         if config["icon"]:
@@ -40,14 +41,16 @@ class HierarchyCoreHandler(WidgetHandler):  # FIXME
                                                    *args, **kwargs)
         self.setText(0, config["name"])
         self.repos = []
-        self.tmpObj = QtWidgets.QWidget()
-        fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj)
-        self.tmpObj.connect(fetchTask, QtCore.SIGNAL("finished()"), self.setRepos)
+        self.tmp_obj = QtCore.QObject()
+        self.fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmp_obj)
+        self.fetchTask.finished.connect(self.setRepos)
 
     def setRepos(self):
         data = NetworkService.decode(self.fetchTask)
-        self.tmpObj.deleteLater()
-        self.tmpObj = None
+        self.fetchTask.deleteLater()
+        self.fetchTask = None
+        self.tmp_obj.deleteLater()
+        self.tmp_obj = None
         self.repos = data
         if len(self.repos) > 1:
             for repo in self.repos:
@@ -71,5 +74,3 @@ class HierarchyHandler(QtCore.QObject):
 
 
 _hierarchyHandler = HierarchyHandler()
-
-

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore
-from network import NetworkService, RequestGroup, RequestWrapper
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class TaskWrapper(QtCore.QObject):

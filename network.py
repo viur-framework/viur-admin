@@ -25,9 +25,9 @@ import weakref
 
 import urllib
 
-from config import conf
+from viur_admin.config import conf
 import string
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QUrl, QObject
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 
@@ -202,7 +202,7 @@ class RequestWrapper(QtCore.QObject):
 
     def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
                  failSilent=False):
-        super().__init__()
+        super(QtCore.QObject, self).__init__()
         self.logger = logging.getLogger("RequestWrapper")
         self.logger.debug("New network request: %s", str(self))
         self.request = request
@@ -500,14 +500,12 @@ class NetworkService():
                 finishedHandler=None, parent=None, failSilent=False):
         global nam, _isSecureSSL
         if _isSecureSSL == False:  #Warn the user of a potential security risk
-            msgRes = QtGui.QMessageBox.warning(None, QtCore.QCoreApplication.translate("NetworkService",
+            msgRes = QtWidgets.QMessageBox.warning(None, QtCore.QCoreApplication.translate("NetworkService",
                                                                                        "Insecure connection"),
                                                QtCore.QCoreApplication.translate("Updater",
                                                                                  "The cacerts.pem file is missing or invalid. Your passwords and data will be send unsecured! Continue without encryption? If unsure, choose \"abort\"!"),
-                                               QtCore.QCoreApplication.translate("NetworkService",
-                                                                                 "Continue in unsecure mode"),
-                                               QtCore.QCoreApplication.translate("NetworkService", "Abort"))
-            if msgRes == 0:
+                                               QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Abort)
+            if msgRes == QtWidgets.QMessageBox.Ok:
                 _isSecureSSL = None
             else:
                 sys.exit(1)

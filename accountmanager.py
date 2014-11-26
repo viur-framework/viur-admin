@@ -1,10 +1,10 @@
 import sys
 import json
 
-from ui.accountmanagerUI import Ui_MainWindow
+from viur_admin.ui.accountmanagerUI import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from config import conf
+from viur_admin.event import event
+from viur_admin.config import conf
 
 
 """

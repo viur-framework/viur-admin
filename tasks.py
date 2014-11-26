@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from ui.taskUI import Ui_Task
-from network import NetworkService
-from utils import Overlay, WidgetHandler, loadIcon
-from event import event
+from viur_admin.ui.taskUI import Ui_Task
+from viur_admin.network import NetworkService
+from viur_admin.utils import Overlay, WidgetHandler, loadIcon
+from viur_admin.event import event
 
 
 class TaskEntryHandler(WidgetHandler):

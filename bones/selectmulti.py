@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class SelectMultiViewBoneDelegate(QtWidgets.QStyledItemDelegate):

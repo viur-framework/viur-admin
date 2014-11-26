@@ -2,14 +2,14 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from utils import Overlay
-from network import NetworkService
-from event import event
-import utils
-from config import conf
-from widgets.edit import EditWidget
-from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
-from ui.hierarchyUI import Ui_Hierarchy
+from viur_admin.utils import Overlay
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+import viur_admin.utils
+from viur_admin.config import conf
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.ui.hierarchyUI import Ui_Hierarchy
 
 
 class HierarchyItem(QtWidgets.QTreeWidgetItem):
@@ -68,7 +68,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidgetItem):
             one.
             @type rootNode: String or None
         """
-        super(HierarchyTreeWidget, self).__init__(parent, *args, **kwargs)
+        super().__init__()
         self.modul = modul
         self.rootNode = rootNode
         self.loadingKey = None
@@ -301,13 +301,13 @@ class HierarchyWidget(QtWidgets.QWidget):
         super(HierarchyWidget, self).__init__(*args, **kwargs)
         self.ui = Ui_Hierarchy()
         self.ui.setupUi(self)
-        layout = QtGui.QHBoxLayout(self.ui.treeWidget)
+        layout = QtWidgets.QHBoxLayout(self.ui.treeWidget)
         self.ui.treeWidget.setLayout(layout)
-        self.hierarchy = HierarchyTreeWidget(self.ui.treeWidget, modul)
+        self.hierarchy = HierarchyTreeWidget(self, modul)
         layout.addWidget(self.hierarchy)
         # self.ui.treeWidget.addChild( self.hierarchy )
         self.hierarchy.show()
-        self.toolBar = QtGui.QToolBar(self)
+        self.toolBar = QtWidgets.QToolBar(self)
         self.toolBar.setIconSize(QtCore.QSize(32, 32))
         self.ui.boxActions.addWidget(self.toolBar)
         self.modul = modul

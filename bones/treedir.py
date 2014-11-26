@@ -2,13 +2,13 @@
 from os import path
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from utils import RegisterQueue, Overlay
-from ui.relationalselectionUI import Ui_relationalSelector
-from widgets.tree import TreeWidget
-from ui.treeselectorUI import Ui_TreeSelector
-from bones.relational import RelationalViewBoneDelegate
-from priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.utils import RegisterQueue, Overlay
+from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
+from viur_admin.widgets.tree import TreeWidget
+from viur_admin.ui.treeselectorUI import Ui_TreeSelector
+from viur_admin.bones.relational import RelationalViewBoneDelegate
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class TreeDirViewBoneDelegate(RelationalViewBoneDelegate):
@@ -25,20 +25,20 @@ class TreeDirEditBone(QtWidgets.QWidget):
         self.multiple = multiple
         self.format = format
         self.targetModulStructure = None
-        self.layout = QtGui.QHBoxLayout(self)
-        self.addBtn = QtGui.QPushButton("Auswählen", parent=self)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.addBtn = QtWidgets.QPushButton("Auswählen", parent=self)
         iconadd = QtGui.QIcon()
         iconadd.addPixmap(QtGui.QPixmap("icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.addBtn.setIcon(iconadd)
         self.addBtn.released.connect(self.onAddBtnReleased)
         self.layout.addWidget(self.addBtn)
         if not self.multiple:
-            self.entry = QtGui.QLineEdit(self)
+            self.entry = QtWidgets.QLineEdit(self)
             self.entry.setReadOnly(True)
             self.layout.addWidget(self.entry)
             icon6 = QtGui.QIcon()
             icon6.addPixmap(QtGui.QPixmap("icons/actions/relationaldeselect.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.delBtn = QtGui.QPushButton("", parent=self)
+            self.delBtn = QtWidgets.QPushButton("", parent=self)
             self.delBtn.setIcon(icon6)
             self.layout.addWidget(self.delBtn)
             self.delBtn.released.connect(self.onDelBtnReleased)

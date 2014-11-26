@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
-from widgets.file import FileWidget
-from bones.treeitem import TreeItemBone, TreeBoneSelector
-from priorityqueue import editBoneSelector, viewDelegateSelector
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.widgets.file import FileWidget
+from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
-from network import RemoteFile
-from utils import formatString
+from viur_admin.network import RemoteFile
+from viur_admin.utils import formatString
 
 
 class FileViewBoneDelegate(QtWidgets.QStyledItemDelegate):

@@ -3,14 +3,14 @@ import os
 import os.path
 
 from PyQt5 import QtCore, QtGui
-from network import NetworkService
-from event import event
-from ui.editpreviewUI import Ui_BasePreview
-from utils import RegisterQueue, Overlay, formatString, loadIcon, WidgetHandler
-from config import conf
+from viur_admin.network import NetworkService
+from viur_admin.event import event
+from viur_admin.ui.editpreviewUI import Ui_BasePreview
+from viur_admin.utils import RegisterQueue, Overlay, formatString, loadIcon, WidgetHandler
+from viur_admin.config import conf
 # from mainwindow import WidgetHandler
-from widgets.list import ListWidget
-from priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.widgets.list import ListWidget
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler

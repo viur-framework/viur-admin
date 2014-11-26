@@ -4,9 +4,9 @@
 from datetime import datetime, date, time, tzinfo
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from event import event
-from priorityqueue import editBoneSelector
-from utils import wheelEventFilter
+from viur_admin.event import event
+from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.utils import wheelEventFilter
 
 
 try:
@@ -77,7 +77,7 @@ class DateEditBone(QtWidgets.QWidget):
         super(DateEditBone, self).__init__(*args, **kwargs)
 
         self.boneName = boneName
-        self.layout = QtGui.QHBoxLayout(self)
+        self.layout = QtWidgets.QHBoxLayout(self)
 
         self.time = hasTime
         self.date = hasDate

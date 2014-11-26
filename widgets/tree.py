@@ -2,15 +2,15 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from utils import Overlay
-from network import NetworkService, RequestGroup
-from event import event
-import utils
-from priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
-from ui.treeUI import Ui_Tree
-from utils import WidgetHandler
-from widgets.edit import EditWidget
-from config import conf
+from viur_admin.utils import Overlay
+from viur_admin.network import NetworkService, RequestGroup
+from viur_admin.event import event
+import viur_admin.utils
+from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.ui.treeUI import Ui_Tree
+from viur_admin.utils import WidgetHandler
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.config import conf
 
 
 class NodeItem(QtWidgets.QListWidgetItem):
@@ -349,7 +349,7 @@ class TreeListView(QtWidgets.QListWidget):
         self.sortItems()
 
     def onCustomContextMenuRequested(self, point):
-        menu = QtGui.QMenu(self)
+        menu = QtWidgets.QMenu(self)
         if self.itemAt(point):
             actionMove = menu.addAction(QtCore.QCoreApplication.translate("TreeWidget", "Cut"))
             actionMove.task = "move"
@@ -500,7 +500,7 @@ class TreeWidget(QtWidgets.QWidget):
         # self.connect( event, QtCore.SIGNAL("treeChanged(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"),
         # self.onTreeChanged )
 
-        self.toolBar = QtGui.QToolBar(self)
+        self.toolBar = QtWidgets.QToolBar(self)
         self.toolBar.setIconSize(QtCore.QSize(32, 32))
         self.ui.boxActions.addWidget(self.toolBar)
         self.setActions(
