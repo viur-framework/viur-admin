@@ -6,9 +6,9 @@ from viur_admin.event import event
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
-class BaseViewBoneDelegate(QtWidgets.QTreeWidgetItem):
+class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
-        super(BaseViewBoneDelegate, self).__init__()
+        super().__init__(**kwargs)
         self.skelStructure = skelStructure
         self.boneName = boneName
         self.modulName = modulName
@@ -37,17 +37,17 @@ class BaseEditBone(QtWidgets.QWidget):
     @staticmethod
     def fromSkelStructure(modulName, boneName, skelStructure):
         readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-        return ( BaseEditBone(modulName, boneName, readOnly) )
+        return BaseEditBone(modulName, boneName, readOnly)
 
     def unserialize(self, data):
         if self.boneName in data.keys():
             self.lineEdit.setText(str(data[self.boneName]) if data[self.boneName] else "")
 
     def serializeForPost(self):
-        return ( {self.boneName: self.lineEdit.displayText()} )
+        return {self.boneName: self.lineEdit.displayText()}
 
     def serializeForDocument(self):
-        return ( self.serialize() )
+        return self.serialize()
 
 
 # Register this Bone in the global queue

@@ -304,7 +304,7 @@ class ListTableView(QtWidgets.QTableView):
             delegate = delegateFactory(self.modul, field, self.structureCache)
             self.setItemDelegateForColumn(colum, delegate)
             self.delegates.append(delegate)
-            self.delegate.repaintRequest.connect(self.repaint)
+            delegate.repaintRequest.connect(self.repaint)
             colum += 1
 
     def keyPressEvent(self, e):

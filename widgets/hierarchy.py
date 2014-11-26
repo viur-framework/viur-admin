@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.utils import Overlay
 from viur_admin.network import NetworkService
 from viur_admin.event import event
-import viur_admin.utils
+from viur_admin import utils
 from viur_admin.config import conf
 from viur_admin.widgets.edit import EditWidget
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
@@ -47,7 +47,7 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
             return ( super(HierarchyItem, self).__lt__(other) )
 
 
-class HierarchyTreeWidget(QtWidgets.QTreeWidgetItem):
+class HierarchyTreeWidget(QtWidgets.QTreeWidget):
     """
         Provides an interface for Data structured as a hierarchy on the server.
 
@@ -68,7 +68,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidgetItem):
             one.
             @type rootNode: String or None
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.modul = modul
         self.rootNode = rootNode
         self.loadingKey = None

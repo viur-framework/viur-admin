@@ -248,7 +248,7 @@ class RequestWrapper(QtCore.QObject):
                 errorDescr = None
             if errorDescr:
                 if not self.failSilent:
-                    QtGui.QMessageBox.warning(None, "Networkrequest Failed",
+                    QtWidgets.QMessageBox.warning(None, "Networkrequest Failed",
                                               "The request to \"%s\" failed with: %s" % (self.url, errorDescr))
             self.requestFailed.emit(self, self.request.error())
         self.finished.emit(self)
