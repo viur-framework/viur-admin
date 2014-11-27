@@ -5,16 +5,18 @@ ScrollView {
     id: view
 
     property var model
-    property int rowHeight: 19
-    property int columnIndent: 22
+    property int rowHeight: 30
+    property int columnIndent: 5
     property var currentNode
     property var currentItem
 
-    property Component delegate: Label {
-        id: label
-        text: model.content ? model.content : 0
-        color: currentNode === model ? "white" : "black"
-    }
+    property Component delegate:
+        Text {
+            id: label
+            font.pixelSize: 22
+            text: model.content ? model.content : 0
+            color: "black"
+        }
 
     frameVisible: true
     implicitWidth: 200
@@ -27,17 +29,6 @@ ScrollView {
         sourceComponent: treeBranch
         property var elements: model
 
-        Column {
-            anchors.fill: parent
-            Repeater {
-                model: 1 + Math.max(view.contentItem.height, view.height) / rowHeight
-                Rectangle {
-                    objectName: "Faen"
-                    color: index % 2 ? "#eee" : "white"
-                    width: view.width ; height: rowHeight
-                }
-            }
-        }
         Component {
             id: treeBranch
             Item {
@@ -45,10 +36,12 @@ ScrollView {
                 property bool isRoot: false
                 implicitHeight: column.implicitHeight
                 implicitWidth: column.implicitWidth
+
                 Column {
                     id: column
                     x: 2
                     Item { height: isRoot ? 0 : rowHeight; width: 1}
+
                     Repeater {
                         model: elements
                         Item {
@@ -56,13 +49,19 @@ ScrollView {
                             width: Math.max(loader.width + columnIndent, row.width)
                             height: Math.max(row.height, loader.height)
                             property var _model: model
+
                             Rectangle {
                                 id: rowfill
                                 x: view.mapToItem(rowfill, 0, 0).x
                                 width: view.width
                                 height: rowHeight
                                 visible: currentNode === model
-                                color: "#37f"
+                                color: "#ff0000"
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "red" }
+                                    GradientStop { position: 0.55; color: "#ff5555" }
+                                    GradientStop { position: 1.0; color: "gray" }
+                                }
                             }
                             MouseArea {
                                 anchors.fill: rowfill
@@ -70,10 +69,12 @@ ScrollView {
                                     currentNode = model
                                     currentItem = loader
                                     forceActiveFocus()
+                                    loader.expanded = true
                                 }
                             }
                             Row {
                                 id: row
+
                                 Item {
                                     width: rowHeight
                                     height: rowHeight
@@ -108,6 +109,16 @@ ScrollView {
                                 property var elements: model.children
                                 property var text: model.text
                                 sourceComponent: (expanded && model.children.length > 0) ? treeBranch : undefined
+                            }
+
+                            Rectangle {
+                                id: colfill
+                                x: view.mapToItem(colfill, 0, 0).x
+                                width: view.width
+                                height: loader.expanded ? loader.implicitHeight : 0
+                                border.color: "#000000"
+                                border.width: 1
+                                color: '#00000000'
                             }
                         }
                     }

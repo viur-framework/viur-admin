@@ -1,7 +1,8 @@
-import sys, time
+import sys, time, random
 
 from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QUrl, QModelIndex
 from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtQuick import QQuickView
 from qmltreeitem import TreeItem
@@ -18,31 +19,18 @@ tree_model = TreeModel()
 
 rootItem = tree_model.rootItem
 
-t1 = TreeItem("t1")
-t1.set_is_open = True
+count = 0
 
 
-t3 = TreeItem("t3")
-t4 = TreeItem("t4")
-t5 = TreeItem("t5")
+def populate(node, level=0):
+    for i in range(10):
+        item = TreeItem("T: %s" % random.randint(0, 10000))
+        node.add_child(item)
+        if level < 3:
+            populate(item, level + 1)
 
-t1.add_child(t3)
-t3.add_child(t4)
-t1.add_child(t5)
 
-t2 = TreeItem("t2")
-t5 = TreeItem("t5")
-t6 = TreeItem("t6")
-t7 = TreeItem("t7")
-t8 = TreeItem("t8")
-
-t2.add_child(t5)
-t5.add_child(t6)
-t6.add_child(t7)
-t7.add_child(t8)
-rootItem.add_child(t1)
-rootItem.add_child(t2)
-
+populate(rootItem, 0)
 
 # view = QQuickView()
 # view.setResizeMode(QQuickView.SizeRootObjectToView)
@@ -55,9 +43,10 @@ print(1)
 component = QQmlComponent(engine, QUrl.fromLocalFile('qml/main_window.qml'))
 
 while not component.isReady():
-	time.sleep(1)
+    time.sleep(1)
 
 main_window = component.create()
+main_window.setIcon(QIcon("old_foo/icons/viur_logo.png"));
 print(1)
 # view.show()
 sys.exit(app.exec_())

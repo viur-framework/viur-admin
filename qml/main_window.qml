@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.1
 
 ApplicationWindow {
     id: mainWindow
-    title: "My MainWindow"
+    title: "Viur Admin"
     width: 640
     height: 480
     visible: true
