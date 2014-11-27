@@ -12,7 +12,7 @@ ScrollView {
 
     property Component delegate: Label {
         id: label
-        text: model.text ? model.text : 0
+        text: model.content ? model.content : 0
         color: currentNode === model ? "white" : "black"
     }
 
@@ -77,7 +77,7 @@ ScrollView {
                                 Item {
                                     width: rowHeight
                                     height: rowHeight
-                                    opacity: !!model.elements ? 1 : 0
+                                    opacity: model.children.length > 0 ? 1 : 0
                                     Image {
                                         id: expander
                                         source: "expander.png"
@@ -105,9 +105,9 @@ ScrollView {
                                 height: expanded ? implicitHeight : 0
                                 property var node: model
                                 property bool expanded: false
-                                property var elements: model.elements
+                                property var elements: model.children
                                 property var text: model.text
-                                sourceComponent: (expanded && !!model.elements) ? treeBranch : undefined
+                                sourceComponent: (expanded && model.children.length > 0) ? treeBranch : undefined
                             }
                         }
                     }

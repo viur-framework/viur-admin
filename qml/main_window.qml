@@ -1,31 +1,69 @@
-import QtQuick 2.1
+﻿import QtQuick 2.3
 import QtQuick.Window 2.0
-import QtQuick.Layouts 1.1
 import QtQuick.Controls 1.2
-import QtQuick.Dialogs 1.2
-import QtQuick.Controls.Styles 1.2
-import QtMultimedia 5.0
-
-// import com.mausbrand.ModuleModel 1.0
-// import com.mausbrand.Module 1.0
-
-
-
-import TreeView
-import programModel.tree
+import QtQuick.Layouts 1.1
 
 
 ApplicationWindow {
-    id: window
-    title: "Viur Admin"
+    id: mainWindow
+    title: "My MainWindow"
+    width: 640
+    height: 480
     visible: true
-    width: 960
-    height: 600
-    color: "#aeaeae"
 
-    ListView{
+    menuBar: MenuBar {
+        id: menuBar
+        Menu {
+            title: "File"
+            MenuItem {
+                 text: "Quit"
+                 shortcut: "Ctrl+Q"
+                 onTriggered: Qt.quit()
+            }
+        }
+        Menu {
+            title: "Advanced"
+            MenuItem {
+                text: "Tasks"
+                shortcut: "Ctrl+T"
+            }
+        }
+        Menu {
+            title: "Help"
+            MenuItem {
+                 text: "Viur-Admin Help"
+                 shortcut: "Ctrl+H"
+            }
+            MenuItem {
+                 text: "About"
+                 shortcut: "F1"
+            }
+        }
+    }
+    RowLayout {
+        id: layout
         anchors.fill: parent
-        model: programModel.tree
-        delegate: ItemView{}
+        spacing: 6
+
+        Rectangle {
+            border.color: '#888888'
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            TreeView {
+                anchors.fill: parent
+                model: tree_model.root_node
+            }
+
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Text {
+                anchors.centerIn: parent
+                text: parent.width + 'x' + parent.height
+            }
+        }
     }
 }

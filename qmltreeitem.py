@@ -1,14 +1,11 @@
 import sys
 
-from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QCoreApplication, QUrl
-from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine
-from PyQt5.QtGui import QApplication
-
+from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QCoreApplication, QUrl, QVariant
+from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine, QQmlListProperty
 
 class TreeItem(QObject):
     content_changed = pyqtSignal()
     children_changed = pyqtSignal()
-    is_open_changed = pyqtSignal()
     has_child_changed = pyqtSignal()
 
     def __init__(self, content, parent=None, **kwargs):
@@ -17,63 +14,53 @@ class TreeItem(QObject):
         self._childs = list()
         self._is_open = False
 
-        @pyqtProperty("QString")
-        def content(self):
-            return self._content
+    @pyqtProperty(QVariant, notify=content_changed)
+    def content(self):
+        return self._content
 
-        @content.setter
-        def set_content(self, content):
-            self._content = content
-            self.content_changed.emit()
+    @content.setter
+    def content(self, content):
+        self._content = content
+        self.content_changed.emit()
 
-        @pyqtProperty("QList<QObject*>")
-        def children(self):
-            return self._childs
+    @pyqtProperty(QQmlListProperty, notify=children_changed)
+    def children(self):
+        return QQmlListProperty(TreeItem, self, self._childs)
 
-        @children.setter
-        def set_children(self, children):
-            self._childs = children
+    @children.setter
+    def children(self, children):
+        self._childs = children
 
-        def add_child(self, child):
-            self._childs.append(child)
-            self.children_changed.emit()
+    def add_child(self, child):
+        self._childs.append(child)
+        self.children_changed.emit()
 
-        @pyqtProperty("bool")
-        def is_open(self):
-            return self._is_open
+    isOpenChanged = pyqtSignal()
 
-        @is_open.setter
-        def set_is_open(self, value):
-            self._is_open = value
-            self.is_open_changed.emit()
+    @pyqtProperty(bool, notify=isOpenChanged)
+    def isOpen(self):
+        return self._is_open
 
-        @pyqtProperty("bool")
-        def has_child(self):
-            return self._childs
+    @isOpen.setter
+    def isOpen(self, value):
+        self._is_open = value
+        self.isOpenChanged.emit()
 
+    @pyqtProperty(bool, notify=has_child_changed)
+    def has_child(self):
+        return len(self._childs) > 0
 
-# Create the application instance.
-app = QApplication(sys.argv)
+    def data(self, index):
+        if index == 0:
+            return self.content
+        return None
 
-# Register the Python type.  Its URI is 'People', it's v1.0 and the type
-# will be called 'Person' in QML.
-qmlRegisterType(TreeItem, 'TreeItem', 1, 0, 'Person')
+    def columnCount(self):
+        return 1
 
-# Create a QML engine.
-engine = QQmlEngine()
+    def childCount(self):
+        return len(self._childs)
 
-# Create a component factory and load the QML script.
-component = QQmlComponent(engine)
-component.loadUrl(QUrl('example.qml'))
-
-# Create an instance of the component.
-person = component.create()
-
-if person is not None:
-    # Print the value of the properties.
-    print("The person's name is %s." % person.name)
-    print("They wear a size %d shoe." % person.shoeSize)
-else:
-    # Print all errors that occurred.
-    for error in component.errors():
-        print(error.toString())
+    def child(self, ix):
+        print("child", ix, self._childs)
+        return self._childs[ix]
