@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QVariant
+from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QVariant, pyqtSlot
 from PyQt5.QtQml import QQmlListProperty
 
 
@@ -46,6 +46,11 @@ class TreeItem(QObject):
     def add_child(self, child):
         self._childs.append(child)
         self.children_changed.emit()
+
+    @pyqtSlot(TreeItem)
+    def remove_child(self, child):
+        self._childs.remove(child)
+        child.deleteLater()
 
     isOpenChanged = pyqtSignal()
 
