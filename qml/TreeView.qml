@@ -6,20 +6,30 @@ ScrollView {
 
     property var model
     property int rowHeight: 30
-    property int columnIndent: 5
+    property int columnIndent: 10
     property var currentNode
     property var currentItem
 
     property Component delegate:
-        Text {
-            id: label
-            font.pixelSize: 22
-            text: model.content ? model.content : 0
-            color: "black"
+        Row {
+            spacing: 15
+            Image {
+                id: expander
+                visible : model.icon ? 1 : 0
+                source: model.icon ? model.icon : "list.svg"
+                height: rowHeight
+                width: model.icon ? height : 0
+            }
+            Label {
+                id: label
+                font.pixelSize: rowHeight
+                text: model.content ? model.content : 0
+                color: "black"
+            }
         }
 
     frameVisible: true
-    implicitWidth: 200
+    implicitWidth: content.implicitWidth + 40
     implicitHeight: 160
 
     contentItem: Loader {
@@ -39,7 +49,7 @@ ScrollView {
 
                 Column {
                     id: column
-                    x: 2
+                    x: 0
                     Item { height: isRoot ? 0 : rowHeight; width: 1}
 
                     Repeater {
@@ -56,12 +66,21 @@ ScrollView {
                                 width: view.width
                                 height: rowHeight
                                 visible: currentNode === model
-                                color: "#ff0000"
                                 gradient: Gradient {
                                     GradientStop { position: 0.0; color: "red" }
                                     GradientStop { position: 0.55; color: "#ff5555" }
                                     GradientStop { position: 1.0; color: "gray" }
                                 }
+                            }
+
+                            Rectangle {
+                                id: colfill
+                                x: view.mapToItem(colfill, 0, 0).x
+                                width: view.width
+                                height: loader.expanded ? loader.implicitHeight : 0
+                                border.color: "#000000"
+                                border.width: 1
+                                color: '#00000000'
                             }
                             MouseArea {
                                 anchors.fill: rowfill
@@ -76,7 +95,7 @@ ScrollView {
                                 id: row
 
                                 Item {
-                                    width: rowHeight
+                                    width: 15
                                     height: rowHeight
                                     opacity: model.children.length > 0 ? 1 : 0
                                     Image {
@@ -102,7 +121,7 @@ ScrollView {
                             }
                             Loader {
                                 id: loader
-                                x: columnIndent
+                                x: model.children.length > 0 ? columnIndent : 0
                                 height: expanded ? implicitHeight : 0
                                 property var node: model
                                 property bool expanded: false
@@ -111,15 +130,6 @@ ScrollView {
                                 sourceComponent: (expanded && model.children.length > 0) ? treeBranch : undefined
                             }
 
-                            Rectangle {
-                                id: colfill
-                                x: view.mapToItem(colfill, 0, 0).x
-                                width: view.width
-                                height: loader.expanded ? loader.implicitHeight : 0
-                                border.color: "#000000"
-                                border.width: 1
-                                color: '#00000000'
-                            }
                         }
                     }
                 }

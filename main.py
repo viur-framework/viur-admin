@@ -5,7 +5,7 @@ from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtQuick import QQuickView
-from qmltreeitem import TreeItem
+from tree_item import TreeItem
 from tree_model import TreeModel
 # Create the application instance.
 app = QApplication(sys.argv)
@@ -21,10 +21,11 @@ rootItem = tree_model.rootItem
 
 count = 0
 
+icons = ["list.svg", "hierarchy.svg", "singleton.svg", "my_files.svg", "news.svg", None]
 
 def populate(node, level=0):
-    for i in range(10):
-        item = TreeItem("T: %s" % random.randint(0, 10000))
+    for i in range(random.randint(1, 7)):
+        item = TreeItem("T: %s" % random.randint(0, 10000), icon=random.sample(icons, 1)[0])
         node.add_child(item)
         if level < 3:
             populate(item, level + 1)

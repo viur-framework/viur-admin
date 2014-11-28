@@ -40,17 +40,20 @@ ApplicationWindow {
             }
         }
     }
-    RowLayout {
+    SplitView {
         id: layout
         anchors.fill: parent
-        spacing: 6
+        orientation: Qt.Horizontal
 
         Rectangle {
             border.color: '#888888'
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            // minimumWidth: tree_view.implicitWidth
+            //Layout.fillWidth: true
+            //Layout.fillHeight: true
+            Layout.minimumWidth: tree_view.implicitWidth
 
             TreeView {
+                id: tree_view
                 anchors.fill: parent
                 model: tree_model.root_node
             }
@@ -58,8 +61,6 @@ ApplicationWindow {
         }
 
         Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             Text {
                 anchors.centerIn: parent
                 text: parent.width + 'x' + parent.height

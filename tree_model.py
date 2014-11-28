@@ -1,5 +1,5 @@
 
-from qmltreeitem import TreeItem
+from tree_item import TreeItem
 from PyQt5.QtCore import QObject, pyqtSignal, QAbstractItemModel, QModelIndex, Qt, pyqtProperty
 from PyQt5.QtQml import QQmlListProperty
 

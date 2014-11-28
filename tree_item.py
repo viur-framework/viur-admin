@@ -1,27 +1,39 @@
-import sys
+from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QVariant
+from PyQt5.QtQml import QQmlListProperty
 
-from PyQt5.QtCore import pyqtProperty, pyqtSignal, QObject, QCoreApplication, QUrl, QVariant
-from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlEngine, QQmlListProperty
 
 class TreeItem(QObject):
     content_changed = pyqtSignal()
     children_changed = pyqtSignal()
     has_child_changed = pyqtSignal()
+    icon_changed = pyqtSignal()
 
-    def __init__(self, content, parent=None, **kwargs):
+    def __init__(self, content, icon=None, parent=None, **kwargs):
         super().__init__(parent)
+        self._icon = icon
         self._content = content
         self._childs = list()
         self._is_open = False
 
     @pyqtProperty(QVariant, notify=content_changed)
     def content(self):
+        print("get content", self._content)
         return self._content
 
     @content.setter
     def content(self, content):
         self._content = content
         self.content_changed.emit()
+
+    @pyqtProperty(QVariant, notify=icon_changed)
+    def icon(self):
+        print("icon", self._icon)
+        return self._icon
+
+    @icon.setter
+    def icon(self, icon):
+        self._icon = icon
+        self.icon_changed.emit()
 
     @pyqtProperty(QQmlListProperty, notify=children_changed)
     def children(self):
