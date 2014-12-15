@@ -339,8 +339,14 @@ class EditWidget(QtWidgets.QWidget):
     #	self.overlay.clear()
 
     def unserialize(self, data):
-        for bone in self.bones.values():
-            bone.unserialize(data)
+        try:
+            for bone in self.bones.values():
+                bone.unserialize(data)
+        except AssertionError as err:
+            # self.parent().parent().logger.error(err)
+            self.overlay.inform(self.overlay.ERROR, str(err))
+            self.ui.btnSaveClose.setDisabled(True)
+            self.ui.btnSaveContinue.setDisabled(True)
 
     def onBtnSaveContinueReleased(self, *args, **kwargs):
         self.closeOnSuccess = False

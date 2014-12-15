@@ -129,3 +129,5 @@ def main():
     conf.saveConfig()
 
 
+if __name__ == '__main__':
+    main()
