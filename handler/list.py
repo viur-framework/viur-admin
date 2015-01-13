@@ -47,7 +47,7 @@ class ListCoreHandler( WidgetHandler ): #EntryHandler
 				widgetGen = lambda: ListWidget( modul, config["columns"] )
 		else:
 			widgetGen = lambda: ListWidget( modul)
-		if config["icon"]:
+		if "icon" in config.keys() and config["icon"]:
 			if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
 				icon = config["icon"]
 			else:
