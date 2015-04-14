@@ -59,7 +59,7 @@ class SelectMultiEditBone( QtGui.QWidget ):
 
 
 def CheckForSelectMultiBone(  modulName, boneName, skelStucture ):
-	return( skelStucture[boneName]["type"]=="selectmulti" )
+	return( skelStucture[boneName]["type"]=="selectmulti" or skelStucture[boneName]["type"].startswith("selectmulti.") )
 
 #Register this Bone in the global queue
 editBoneSelector.insert( 2, CheckForSelectMultiBone, SelectMultiEditBone)
