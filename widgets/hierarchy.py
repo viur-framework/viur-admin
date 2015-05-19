@@ -289,7 +289,7 @@ class HierarchyWidget( QtGui.QWidget ):
 		self.ui.setupUi( self )
 		layout = QtGui.QHBoxLayout( self.ui.treeWidget )
 		self.ui.treeWidget.setLayout( layout )
-		self.hierarchy =  HierarchyTreeWidget( self.ui.treeWidget, modul )
+		self.hierarchy =  HierarchyTreeWidget( self.ui.treeWidget, modul, rootNode=repoID )
 		layout.addWidget( self.hierarchy )
 		#self.ui.treeWidget.addChild( self.hierarchy )
 		self.hierarchy.show()
