@@ -6,3 +6,4 @@
 /ui/*.bat
 /cacert.pem_
 .idea
+*.egg-info
