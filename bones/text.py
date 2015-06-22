@@ -10,6 +10,7 @@ from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.bones.file import FileBoneSelector
 from viur_admin.bones.string import chooseLang
+from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.network import RemoteFile
 
 rsrcPath = "icons/actions/text"
@@ -33,11 +34,11 @@ class HtmlStripper(html.parser.HTMLParser):
 		return (s.getData())
 
 
-class TextViewBoneDelegate(QtWidgets.QStyledItemDelegate):
+class TextViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
-		super(QtGui.QStyledItemDelegate, self).__init__()
+		super(TextViewBoneDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName = modulName

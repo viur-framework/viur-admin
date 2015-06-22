@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets
-
+from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
-class SelectMultiViewBoneDelegate(QtWidgets.QStyledItemDelegate):
+class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
-		super(SelectMultiViewBoneDelegate, self).__init__()
+		super(SelectMultiViewBoneDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName = modulName
