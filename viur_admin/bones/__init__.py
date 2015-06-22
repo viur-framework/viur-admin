@@ -1,4 +1,3 @@
-
 import viur_admin.bones.base
 import viur_admin.bones.boolean
 import viur_admin.bones.color

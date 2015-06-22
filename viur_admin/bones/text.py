@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import html.parser
+
 from html.entities import entitydefs
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
@@ -12,9 +13,6 @@ from viur_admin.bones.file import FileBoneSelector
 from viur_admin.bones.string import chooseLang
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.network import RemoteFile
-
-rsrcPath = "icons/actions/text"
-
 
 class HtmlStripper(html.parser.HTMLParser):
 	def __init__(self):
@@ -405,8 +403,8 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.ui.textEdit = ExtendedTextEdit(self.ui.centralWidget)
 		self.ui.centralWidget.layout().addWidget(self.ui.textEdit)
 		self.ui.btnSave = QtWidgets.QPushButton(QtGui.QIcon(":icons/actions/accept.svg"),
-		                                    QtCore.QCoreApplication.translate("TextEdit", "Apply"),
-		                                    self.ui.centralWidget)
+		                                        QtCore.QCoreApplication.translate("TextEdit", "Apply"),
+		                                        self.ui.centralWidget)
 		self.ui.centralWidget.layout().addWidget(self.ui.btnSave)
 		self.linkEditor = None
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
@@ -512,26 +510,26 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.addToolBar(tb)
 
 		self.actionUndo = QtWidgets.QAction(QtGui.QIcon(":icons/actions/undo.svg"), "&Undo", self,
-		                                shortcut=QtGui.QKeySequence.Undo)
+		                                    shortcut=QtGui.QKeySequence.Undo)
 		tb.addAction(self.actionUndo)
 		self.actionRedo = QtWidgets.QAction(QtGui.QIcon(":icons/actions/redo.svg"),
-		                                "&Redo", self, priority=QtWidgets.QAction.LowPriority,
-		                                shortcut=QtGui.QKeySequence.Redo)
+		                                    "&Redo", self, priority=QtWidgets.QAction.LowPriority,
+		                                    shortcut=QtGui.QKeySequence.Redo)
 		tb.addAction(self.actionRedo)
 
-		self.actionCut = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
-		                               "Cu&t", self, priority=QtWidgets.QAction.LowPriority,
-		                               shortcut=QtGui.QKeySequence.Cut)
+		self.actionCut = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/cut.png"),
+		                                   "Cu&t", self, priority=QtWidgets.QAction.LowPriority,
+		                                   shortcut=QtGui.QKeySequence.Cut)
 		tb.addAction(self.actionCut)
 
-		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
-		                                "&Copy", self, priority=QtWidgets.QAction.LowPriority,
-		                                shortcut=QtGui.QKeySequence.Copy)
+		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/copy.png"),
+		                                    "&Copy", self, priority=QtWidgets.QAction.LowPriority,
+		                                    shortcut=QtGui.QKeySequence.Copy)
 		tb.addAction(self.actionCopy)
-		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
-		                                 "&Paste", self, priority=QtWidgets.QAction.LowPriority,
-		                                 shortcut=QtGui.QKeySequence.Paste,
-		                                 enabled=(len(QtWidgets.QApplication.clipboard().text()) != 0))
+		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/paste.png"),
+		                                     "&Paste", self, priority=QtWidgets.QAction.LowPriority,
+		                                     shortcut=QtGui.QKeySequence.Paste,
+		                                     enabled=(len(QtWidgets.QApplication.clipboard().text()) != 0))
 		tb.addAction(self.actionPaste)
 
 	def setupInsertActions(self):
@@ -583,9 +581,9 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.addToolBar(tb)
 		if "b" in self.validHtml["validTags"]:
 			self.actionTextBold = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/bold.png"),
-			                                    "&Bold", self, priority=QtWidgets.QAction.LowPriority,
-			                                    shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
-			                                    triggered=self.textBold, checkable=True)
+			                                        "&Bold", self, priority=QtWidgets.QAction.LowPriority,
+			                                        shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
+			                                        triggered=self.textBold, checkable=True)
 			bold = QtGui.QFont()
 			bold.setBold(True)
 			self.actionTextBold.setFont(bold)
@@ -593,9 +591,9 @@ class TextEdit(QtWidgets.QMainWindow):
 
 		if "i" in self.validHtml["validTags"]:
 			self.actionTextItalic = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/italic.png"),
-			                                      "&Italic", self, priority=QtWidgets.QAction.LowPriority,
-			                                      shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
-			                                      triggered=self.textItalic, checkable=True)
+			                                          "&Italic", self, priority=QtWidgets.QAction.LowPriority,
+			                                          shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
+			                                          triggered=self.textItalic, checkable=True)
 			italic = QtGui.QFont()
 			italic.setItalic(True)
 			self.actionTextItalic.setFont(italic)
@@ -603,9 +601,9 @@ class TextEdit(QtWidgets.QMainWindow):
 
 		if "u" in self.validHtml["validTags"]:
 			self.actionTextUnderline = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/underline.png"),
-			                                         "&Underline", self, priority=QtWidgets.QAction.LowPriority,
-			                                         shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
-			                                         triggered=self.textUnderline, checkable=True)
+			                                             "&Underline", self, priority=QtWidgets.QAction.LowPriority,
+			                                             shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
+			                                             triggered=self.textUnderline, checkable=True)
 			underline = QtGui.QFont()
 			underline.setUnderline(True)
 			self.actionTextUnderline.setFont(underline)
@@ -617,18 +615,18 @@ class TextEdit(QtWidgets.QMainWindow):
 			# Make sure the alignLeft is always left of the alignRight.
 			if QtWidgets.QApplication.isLeftToRight():
 				self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/alignleft.png"),
-				                                     "&Left", grp)
+				                                         "&Left", grp)
 				self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/aligncenter.png"),
-				                                       "C&enter", grp)
+				                                           "C&enter", grp)
 				self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/alignright.png"),
-				                                      "&Right", grp)
+				                                          "&Right", grp)
 			else:
 				self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/alignright.png"),
-				                                      "&Right", grp)
+				                                          "&Right", grp)
 				self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/aligncenter.png"),
-				                                       "C&enter", grp)
+				                                           "C&enter", grp)
 				self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/alignleft.png"),
-				                                     "&Left", grp)
+				                                         "&Left", grp)
 
 			self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
 			self.actionAlignLeft.setCheckable(True)
@@ -648,19 +646,19 @@ class TextEdit(QtWidgets.QMainWindow):
 			pix = QtGui.QPixmap(16, 16)
 			pix.fill(QtCore.Qt.black)
 			self.actionTextColor = QtWidgets.QAction(QtGui.QIcon(pix), "&Color...",
-			                                     self, triggered=self.textColor)
+			                                         self, triggered=self.textColor)
 			tb.addAction(self.actionTextColor)
 
 		if "ul" in self.validHtml["validTags"]:
 			self.actionBulletList = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/bullet.png"), "Bullet",
-			                                      self,
-			                                      triggered=self.onBulletList)
+			                                          self,
+			                                          triggered=self.onBulletList)
 			tb.addAction(self.actionBulletList)
 
 		if "ol" in self.validHtml["validTags"]:
 			self.actionNumberedList = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/numbered.png"), "Numbered",
-			                                        self,
-			                                        triggered=self.onNumberedList)
+			                                            self,
+			                                            triggered=self.onNumberedList)
 			tb.addAction(self.actionNumberedList)
 
 	def save(self, *args, **kwargs):
@@ -792,7 +790,7 @@ class TextEdit(QtWidgets.QMainWindow):
 				pass
 			cursor = self.ui.textEdit.textCursor()  # width=\"75\" height=\"50\"
 			cursor.insertHtml("<img src=\"/file/download/%s\" width=\"%s\" height=\"%s\" >" % (
-			selection[0]["dlkey"], w, h))  # selection[0]["id"],
+				selection[0]["dlkey"], w, h))  # selection[0]["id"],
 
 	def textAlign(self, action):
 		if action == self.actionAlignLeft:
@@ -918,7 +916,7 @@ _defaultTags = {
 	               "td": ["cellspan", "rowspan", "width", "heigt"] + _attrsMargins + _attrsSpacing
 	               },
 	"validStyles": ["font-weight", "font-style", "text-decoration", "color", "display"],
-# List of CSS-Directives we allow
+	# List of CSS-Directives we allow
 	"singleTags": ["br", "img", "hr"]  # List of tags, which dont have a corresponding end tag
 }
 del _attrsDescr, _attrsSpacing, _attrsMargins
@@ -1050,7 +1048,8 @@ class TextEditBone(QtWidgets.QWidget):
 			self.layout().addWidget(self.webView)
 			self.layout().addWidget(btn)
 			self.html = ""
-		self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
+		self.setSizePolicy(
+			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
 
 	@staticmethod
 	def fromSkelStructure(modulName, boneName, skelStructure):
@@ -1069,7 +1068,7 @@ class TextEditBone(QtWidgets.QWidget):
 			else:
 				validHtml = None
 		return (
-		TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml))
+			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml))
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.languageContainer.keys():
@@ -1130,7 +1129,7 @@ class TextEditBone(QtWidgets.QWidget):
 				self.languageContainer[lang].webView.setHtml(self.html[lang])
 		elif not self.languages:
 			self.html = str(data[self.boneName]).replace("target=\"_blank\" href=\"", "href=\"!") if (
-			data and data.get(self.boneName)) else ""
+				data and data.get(self.boneName)) else ""
 			self.webView.setHtml(self.html)
 
 	def serializeForPost(self):
