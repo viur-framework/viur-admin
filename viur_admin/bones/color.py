@@ -20,7 +20,7 @@ class ColorEditBone(BaseEditBone):
 		aWidget.layout.addWidget(self.lineEdit1)
 		aWidget.layout.addWidget(self.colordisplay)
 		aWidget.layout.addWidget(self.button)
-		return (aWidget)
+		return aWidget
 
 	def setParams(self):
 		if self.readOnly:
@@ -29,8 +29,8 @@ class ColorEditBone(BaseEditBone):
 			self.setEnabled(True)
 
 	def showDialog(self):
-		acolor = QtGui.QColorDialog.getColor(QtGui.QColor(self.lineEdit1.displayText()), self.lineEdit1,
-		                                     self.boneStructure["descr"])
+		acolor = QtWidgets.QColorDialog.getColor(QtGui.QColor(self.lineEdit1.displayText()), self.lineEdit1,
+		                                         self.boneStructure["descr"])
 		if acolor.isValid():
 			self.lineEdit1.setText(acolor.name())
 			self.refreshColor()
@@ -39,18 +39,18 @@ class ColorEditBone(BaseEditBone):
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % str(self.lineEdit1.displayText()))
 
 	def unserialize(self, data):
-		if not self.boneName in data.keys():
+		if self.boneName not in data.keys():
 			return
 		data = str(data[self.boneName]) if data[self.boneName] else ""
 		self.lineEdit1.setText(data)
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)
 
 	def serializeForPost(self):
-		return ({self.boneName: str(self.lineEdit1.displayText())})
+		return {self.boneName: str(self.lineEdit1.displayText())}
 
 
 def CheckForColorBone(modulName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "color")
+	return skelStucture[boneName]["type"] == "color"
 
 
 editBoneSelector.insert(2, CheckForColorBone, ColorEditBone)

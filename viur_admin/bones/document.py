@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWebKitWidgets, QtWidgets
 
 from viur_admin.bones.docedit import DocEdit
 from viur_admin.bones.text import TextViewBoneDelegate
@@ -18,8 +18,8 @@ class DocumentEditBone(QtWidgets.QWidget):
 		iconbtn = QtGui.QIcon()
 		iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/document-edit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.btn.setIcon(iconbtn)
-		self.btn.connect(self.btn, QtCore.SIGNAL("released()"), self.openEditor)
-		self.webView = QtWebKit.QWebView(self)
+		self.btn.released.connect(self.openEditor)
+		self.webView = QtWebKitWidgets.QWebView(self)
 		self.webView.mousePressEvent = self.openEditor
 		self.layout.addWidget(self.webView)
 		self.layout.addWidget(self.btn)
@@ -29,7 +29,7 @@ class DocumentEditBone(QtWidgets.QWidget):
 		self.editor = None
 
 	def sizeHint(self):
-		return (QtCore.QSize(150, 150))
+		return QtCore.QSize(150, 150)
 
 	def openEditor(self, *args, **kwargs):
 		ext = []
@@ -47,10 +47,10 @@ class DocumentEditBone(QtWidgets.QWidget):
 		self.webView.setHtml(self.html)
 
 	def serializeForPost(self):
-		return ({self.boneName: self.html})
+		return {self.boneName: self.html}
 
 	def serializeForDocument(self):
-		return (self.serialize())
+		return self.serialize()
 
 
 class DocumentHandler(QtCore.QObject):

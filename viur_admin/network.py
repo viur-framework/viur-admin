@@ -394,7 +394,6 @@ class RemoteFile(QtCore.QObject):
         self.successHandler = None
         self.failureHandler = None
 
-
     def onTimerEvent(self):
         self.logger.debug("Checkpoint: onTimerEvent")
         if "successHandlerSelf" in dir(self):
@@ -402,11 +401,10 @@ class RemoteFile(QtCore.QObject):
             if s:
                 try:
                     getattr(s, self.successHandlerName)(self)
-                except e:
-                    self.logger.exception(e)
+                except Exception as err:
+                    logging.exception(err)
         self._delayTimer = QtCore.QTimer(self)
         self._delayTimer.singleShot(250, self.remove)
-
 
     def loadFile(self):
         dlKey = self.dlKey
@@ -429,8 +427,8 @@ class RemoteFile(QtCore.QObject):
         if s:
             try:
                 getattr(s, self.successHandlerName)(self)
-            except e:
-                self.logger.exception(e)
+            except Exception as err:
+                self.logger.exception(err)
         self._delayTimer = QtCore.QTimer(
             self)  # Queue our deletion, sothat our child (networkReply) has a chance to finnish
         self._delayTimer.singleShot(250, self.remove)
@@ -556,7 +554,7 @@ class NetworkService():
     def decode(req):
         data = req.readAll().data().decode("utf-8")
         # print("data %r", type(data))
-        NetworkService.logger.debug("decoding request data %r", data)
+        # NetworkService.logger.debug("decoding request data %r", data)
         return json.loads(data)
 
     @staticmethod
