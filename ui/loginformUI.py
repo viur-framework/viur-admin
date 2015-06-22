@@ -175,3 +175,4 @@ class Ui_LoginWindow(object):
         self.actionSettings.setText(_translate("LoginWindow", "Generel settigs"))
         self.actionAccountmanager.setText(_translate("LoginWindow", "Accountmanager"))
 
+# import viur_admin.ui.icons_rc

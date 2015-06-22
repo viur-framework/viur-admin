@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
-import urllib.request
-import urllib.parse
-import urllib.error
-import urllib.request
-import urllib.error
-import urllib.parse
-from time import sleep, time
-import sys
-import os
 
-from viur_admin.ui.treeUI import Ui_Tree
-from PyQt5 import QtCore, QtGui
-from viur_admin.network import NetworkService, RemoteFile
+from PyQt5 import QtCore
+
 from viur_admin.event import event
 from viur_admin.config import conf
-from viur_admin.widgets.edit import EditWidget
-from viur_admin.handler.list import ListCoreHandler
 from viur_admin.widgets.file import FileWidget
 from viur_admin.utils import WidgetHandler
-from viur_admin.utils import RegisterQueue, loadIcon
+from viur_admin.utils import loadIcon
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 print("protowrapper file", id(protocolWrapperInstanceSelector))
@@ -42,9 +30,9 @@ class FileBaseHandler(WidgetHandler):
         self.setText(0, config["name"])
         event.connectWithPriority("preloadingFinished", self.setRepos, event.lowPriority)
 
-    # self.tmpObj = QtWidgets.QWidget()
-    #fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
-    #self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos)
+        # self.tmpObj = QtCore.QObject()
+        # fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
+        # self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos)
 
     def setRepos(self):
         """
@@ -66,7 +54,6 @@ class FileHandler(QtCore.QObject):
         QtCore.QObject.__init__(self, *args, **kwargs)
         print("FileHandler event id", id(event))
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
-
 
     def requestModulHandler(self, queue, modul):
         config = conf.serverConfig["modules"][modul]

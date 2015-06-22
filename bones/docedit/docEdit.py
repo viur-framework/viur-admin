@@ -447,7 +447,7 @@ class TextEdit(QtWidgets.QMainWindow):
         self.widget = CreateTableDialog(self.textEdit.textCursor())
 
     def insertLink(self, *args, **kwargs):
-        (dest, okay) = QtGui.QInputDialog.getText(self, "Ziel eingeben", "Bitte das Verknüpfungsziel eigeben")
+        (dest, okay) = QtWidgets.QInputDialog.getText(self, "Ziel eingeben", "Bitte das Verknüpfungsziel eigeben")
         if not okay or not dest:
             return
         cursor = self.textEdit.textCursor()
@@ -909,7 +909,7 @@ class HeaderBlock(HtmlBlock):
         return ( currentEditor )
 
     def doubleClicked(self):
-        txt, okay = QtGui.QInputDialog.getText(None,
+        txt, okay = QtWidgets.QInputDialog.getText(None,
                                                QtCore.QCoreApplication.translate("DocumentEditBone", "Change caption"),
                                                QtCore.QCoreApplication.translate("DocumentEditBone",
                                                                                  "Insert new caption"),
@@ -1515,7 +1515,7 @@ class DocEdit(QtWidgets.QWidget):
         self.processDocument()
 
     def on_btnNewHeading_released(self, *args, **kwargs):
-        txt, okay = QtGui.QInputDialog.getText(self,
+        txt, okay = QtWidgets.QInputDialog.getText(self,
                                                QtCore.QCoreApplication.translate("DocumentEditBone", "New caption"),
                                                QtCore.QCoreApplication.translate("DocumentEditBone",
                                                                                  "Insert new caption"))

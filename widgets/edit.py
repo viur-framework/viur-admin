@@ -150,7 +150,7 @@ class EditWidget(QtWidgets.QWidget):
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Clone: %s") % itemName
             else:
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
-            icon = QtGui.QIcon(":icons/actions/clone.png")
+            icon = QtGui.QIcon(":icons/actions/clone.svg")
         elif self.key or self.applicationType == EditWidget.appSingleton:  # Were editing
             if itemName:
                 descr = QtCore.QCoreApplication.translate("EditWidget", "Edit: %s") % itemName
@@ -200,13 +200,13 @@ class EditWidget(QtWidgets.QWidget):
             raise NotImplementedError()  # Should never reach this
 
     def onBtnResetReleased(self, *args, **kwargs):
-        res = QtGui.QMessageBox.question(self,
+        res = QtWidgets.QMessageBox.question(self,
                                          QtCore.QCoreApplication.translate("EditWidget", "Confirm reset"),
                                          QtCore.QCoreApplication.translate("EditWidget",
                                                                            "Discard all unsaved changes?"),
-                                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No
+                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
         )
-        if res == QtGui.QMessageBox.Yes:
+        if res == QtWidgets.QMessageBox.Yes:
             self.setData(data=self.dataCache)
 
     def parseHelpText(self, txt):
@@ -403,7 +403,7 @@ class EditWidget(QtWidgets.QWidget):
 
 
     def taskAdded(self):
-        QtGui.QMessageBox.information(self,
+        QtWidgets.QMessageBox.information(self,
                                       QtCore.QCoreApplication.translate("EditWidget", "Task created"),
                                       QtCore.QCoreApplication.translate("EditWidget",
                                                                         "The task was sucessfully created."),

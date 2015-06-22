@@ -349,12 +349,12 @@ class ListTableView(QtWidgets.QTableView):
             self.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
 
     def requestDelete(self, ids):
-        if QtGui.QMessageBox.question(self,
+        if QtWidgets.QMessageBox.question(self,
                                       QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
                                       QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(
                                               ids),
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
         assert protoWrap is not None
@@ -430,7 +430,7 @@ class ListWidget(QtWidgets.QWidget):
     itemDoubleClicked = QtCore.pyqtSignal((object,))
     itemActivated = QtCore.pyqtSignal((object,))
 
-    defaultActions = {"list": ["add", "edit", "clone", "preview", "delete"],
+    defaultActions = {"list": ["add", "edit", "clone", "preview", "delete", "reload"],
                       "list.order": ["add", "edit", "delete", "markpayed", "marksend", "markcanceled", "downloadbill",
                                      "downloaddeliverynote"]
 
@@ -499,6 +499,7 @@ class ListWidget(QtWidgets.QWidget):
             return
         self._currentActions = actions[:]
         for action in actions:
+            print("action", action)
             if action == "|":
                 self.toolBar.addSeparator()
             else:
@@ -574,7 +575,7 @@ class ListWidget(QtWidgets.QWidget):
         myHandler = WidgetHandler.mainWindow.handlerForWidget(self)  #Always stack them as my child
         assert myHandler is not None
         if clone:
-            icon = QtGui.QIcon(":icons/actions/clone.png")
+            icon = QtGui.QIcon(":icons/actions/clone.svg")
             if self.list.modul in conf.serverConfig["modules"].keys() and "name" in conf.serverConfig["modules"][
                 self.list.modul].keys():
                 descr = QtCore.QCoreApplication.translate("List", "Clone: %s") % \

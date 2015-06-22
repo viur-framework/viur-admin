@@ -9,18 +9,18 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDele
 
 
 def askYesNo(question):
-    return ( QtGui.QMessageBox.question(None,
+    return ( QtWidgets.QMessageBox.question(None,
                                         QtCore.QCoreApplication.translate("OrderHandler", "Please confirm"),
                                         question,
-                                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                        QtGui.QMessageBox.No
-    ) == QtGui.QMessageBox.Yes )
+                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                        QtWidgets.QMessageBox.No
+    ) == QtWidgets.QMessageBox.Yes )
 
 
 class ShopMarkPayedAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
-        super(ShopMarkPayedAction, self).__init__(QtGui.QIcon(":icons/status/payed.png"),
+        super(ShopMarkPayedAction, self).__init__(QtGui.QIcon(":icons/status/order_paid.svg"),
                                                   QtCore.QCoreApplication.translate("OrderHandler", "Payment recived"),
                                                   parent)
         self.triggered.connect(self.onTriggered)
@@ -33,12 +33,12 @@ class ShopMarkPayedAction(QtWidgets.QAction):
             if not row in itemIndexes:
                 itemIndexes.append(row)
         items = [self.parentWidget().list.model().getData()[x] for x in itemIndexes]
-        if QtGui.QMessageBox.question(self.parentWidget(),
+        if QtWidgets.QMessageBox.question(self.parentWidget(),
                                       QtCore.QCoreApplication.translate("OrderHandler", "Mark as payed"),
                                       QtCore.QCoreApplication.translate("OrderHandler",
                                                                         "Mark %s orders as payed?") % len(items),
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         for item in items:
             protoWrap.execNetworkAction("/%s/markPayed" % self.parent().modul, {"id": item["id"]}, secure=True)
@@ -55,7 +55,7 @@ class ShopMarkSendAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopMarkSendAction, self).__init__(QtGui.QIcon(":icons/status/send.png"),
+        super(ShopMarkSendAction, self).__init__(QtGui.QIcon(":icons/status/order_shipped.svg"),
                                                  QtCore.QCoreApplication.translate("OrderHandler", "Order Shipped"),
                                                  parent)
         self.triggered.connect(self.onTriggered)
@@ -67,12 +67,12 @@ class ShopMarkSendAction(QtWidgets.QAction):
             if not row in itemIndexes:
                 itemIndexes.append(row)
         items = [self.parentWidget().list.model().getData()[x] for x in itemIndexes]
-        if QtGui.QMessageBox.question(self.parentWidget(),
+        if QtWidgets.QMessageBox.question(self.parentWidget(),
                                       QtCore.QCoreApplication.translate("OrderHandler", 'Mark shipped'),
                                       QtCore.QCoreApplication.translate("OrderHandler",
                                                                         "Mark %s orders as shipped?") % len(items),
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         for item in items:
             if "state_send" in item.keys() and str(item["state_send"]) == "1":
@@ -98,7 +98,7 @@ class ShopMarkCanceledAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopMarkCanceledAction, self).__init__(QtGui.QIcon(":icons/actions/cancel_small.png"),
+        super(ShopMarkCanceledAction, self).__init__(QtGui.QIcon(":icons/actions/order_cancelled.svg"),
                                                      QtCore.QCoreApplication.translate("OrderHandler",
                                                                                        "Order canceled"), parent)
         self.triggered.connect(self.onTriggered)
@@ -110,11 +110,11 @@ class ShopMarkCanceledAction(QtWidgets.QAction):
             if not row in itemIndexes:
                 itemIndexes.append(row)
         items = [self.parentWidget().list.model().getData()[x] for x in itemIndexes]
-        if QtGui.QMessageBox.question(self.parentWidget(),
+        if QtWidgets.QMessageBox.question(self.parentWidget(),
                                       QtCore.QCoreApplication.translate("OrderHandler", 'Mark shipped'),
                                       QtCore.QCoreApplication.translate("OrderHandler", "Cancel %s orders?") % len(
-                                              items), QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                              items), QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         for item in items:
             if "state_canceled" in item.keys() and str(item["state_canceled"]) == "1":
@@ -140,7 +140,7 @@ class ShopDownloadBillAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopDownloadBillAction, self).__init__(QtGui.QIcon(":icons/actions/download_small.png"),
+        super(ShopDownloadBillAction, self).__init__(QtGui.QIcon(":icons/actions/download_bill.svg"),
                                                      QtCore.QCoreApplication.translate("OrderHandler", "Download Bill"),
                                                      parent)
         self.triggered.connect(self.onTriggered)
@@ -179,7 +179,7 @@ class ShopDownloadDeliveryNoteAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         parent = parent
         self.request = None
-        super(ShopDownloadDeliveryNoteAction, self).__init__(QtGui.QIcon(":icons/actions/download_small.png"),
+        super(ShopDownloadDeliveryNoteAction, self).__init__(QtGui.QIcon(":icons/actions/download_delivery_note.svg"),
                                                              QtCore.QCoreApplication.translate("OrderHandler",
                                                                                                "Download delivery note"),
                                                              parent)

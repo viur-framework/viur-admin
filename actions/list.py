@@ -42,6 +42,28 @@ class ListAddAction(QtWidgets.QAction):
 actionDelegateSelector.insert(1, ListAddAction.isSuitableFor, ListAddAction)
 
 
+
+class ListReloadAction(QtWidgets.QAction):
+    def __init__(self, parent, *args, **kwargs):
+        super(ListReloadAction, self).__init__(QtGui.QIcon(":icons/actions/refresh.svg"),
+                                            QtCore.QCoreApplication.translate("ListHandler", "Reload"), parent)
+
+        # self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
+        self.triggered.connect(self.onTriggered)
+        self.setShortcut(QtGui.QKeySequence.New)
+        self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+
+    def onTriggered(self, e=None):
+        self.parentWidget().list.model().reload()
+
+    @staticmethod
+    def isSuitableFor(modul, actionName):
+        return ( (modul == "list" or modul.startswith("list.") and actionName == "reload") )
+
+
+actionDelegateSelector.insert(1, ListReloadAction.isSuitableFor, ListReloadAction)
+
+
 class ListEditAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
         super(ListEditAction, self).__init__(QtGui.QIcon(":icons/actions/edit.svg"),
@@ -55,13 +77,13 @@ class ListEditAction(QtWidgets.QAction):
         if numAccounts == 0:
             return
         if numAccounts > 1:
-            reply = QtGui.QMessageBox.question(self.parent(),
+            reply = QtWidgets.QMessageBox.question(self.parent(),
                                                QtCore.QCoreApplication.translate("ListHandler",
                                                                                  "Edit multiple Entries"),
                                                QtCore.QCoreApplication.translate("ListHandler",
                                                                                  "Edit all %s accounts?") % numAccounts,
-                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-            if reply != QtGui.QMessageBox.Yes:
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply != QtWidgets.QMessageBox.Yes:
                 return
         for data in self.parent().getSelection():
             self.parentWidget().openEditor(data, clone=False)

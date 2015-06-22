@@ -75,7 +75,7 @@ class TreeMkDirAction(QtWidgets.QAction):
         self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
     def onTriggered(self, e):
-        (dirName, okay) = QtGui.QInputDialog.getText(self.parent(), QtCore.QCoreApplication.translate("TreeHandler",
+        (dirName, okay) = QtWidgets.QInputDialog.getText(self.parent(), QtCore.QCoreApplication.translate("TreeHandler",
                                                                                                       "Create "
                                                                                                       "directory"),
                                                      QtCore.QCoreApplication.translate("TreeHandler", "Directory name"))
@@ -98,7 +98,7 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
     """
 
     def __init__(self, parent, *args, **kwargs):
-        super(TreeSimpleRenameAction, self).__init__(QtGui.QIcon(":icons/actions/rename_small.png"),
+        super(TreeSimpleRenameAction, self).__init__(QtGui.QIcon(":icons/actions/rename.svg"),
                                                      QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"),
                                                      parent)
         self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
@@ -125,7 +125,7 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
         entry = entries[0]
         if not isinstance(entry, self.parent().getNodeItemClass()):  # Cant rename an leaf
             return
-        name, res = QtGui.QInputDialog.getText(self.parent(),
+        name, res = QtWidgets.QInputDialog.getText(self.parent(),
                                                QtCore.QCoreApplication.translate("TreeSimpleRenameAction",
                                                                                  "Rename directory"),
                                                QtCore.QCoreApplication.translate("TreeSimpleRenameAction", "New name:"),

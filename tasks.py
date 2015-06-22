@@ -8,7 +8,7 @@ from viur_admin.event import event
 class TaskEntryHandler(WidgetHandler):
     def __init__(self, widgetFactory, *args, **kwargs):
         name = QtCore.QCoreApplication.translate("tasks", "Tasks")
-        super(TaskEntryHandler, self).__init__(widgetFactory, icon=loadIcon(":icons/modules/tasks.png"),
+        super(TaskEntryHandler, self).__init__(widgetFactory, icon=loadIcon(":icons/menu/tasks.png"),
                                                vanishOnClose=True, *args, **kwargs)
         self.setText(0, name)
 

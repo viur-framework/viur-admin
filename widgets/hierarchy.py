@@ -280,12 +280,12 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
         """
             Delete the entity with the given id
         """
-        if QtGui.QMessageBox.question(self,
+        if QtWidgets.QMessageBox.question(self,
                                       QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
                                       QtCore.QCoreApplication.translate("HierarchyTreeWidget",
                                                                         "Delete %s entries and everything below?") % 1,
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         protoWrap = protocolWrapperInstanceSelector.select(self.modul)
         assert protoWrap is not None
@@ -303,7 +303,7 @@ class HierarchyWidget(QtWidgets.QWidget):
         self.ui.setupUi(self)
         layout = QtWidgets.QHBoxLayout(self.ui.treeWidget)
         self.ui.treeWidget.setLayout(layout)
-        self.hierarchy = HierarchyTreeWidget(self, modul)
+        self.hierarchy = HierarchyTreeWidget(self, modul, rootNode=repoID)
         layout.addWidget(self.hierarchy)
         # self.ui.treeWidget.addChild( self.hierarchy )
         self.hierarchy.show()

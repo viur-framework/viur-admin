@@ -9,7 +9,7 @@ class PriorityQueue(object):
 
     def insert(self, priority, validateFunc, generator):
         priority = int(priority)
-        if not priority in self._q.keys():
+        if priority not in self._q.keys():
             self._q[priority] = []
         self._q[priority].append((validateFunc, generator))
 

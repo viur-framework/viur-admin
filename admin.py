@@ -15,7 +15,7 @@ import sys
 import os
 from argparse import ArgumentParser
 try:
-    from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets
+    from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg
 except ImportError:
     print("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
     sys.exit(1)
@@ -26,6 +26,7 @@ if sys.version_info < min_version:
     sys.exit(1)
 
 
+app = QtWidgets.QApplication(sys.argv)
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -43,8 +44,8 @@ parser = ArgumentParser(usage="usage: %prog [options]")
 # parser.add_argument('-r', '--report', dest='report', default='auto',
 #                   help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type="choice",
 #                   choices=["yes", "no", "auto"])
-# parser.add_argument('-i', '--no-ignore', dest='noignore', default=False,
-#                   help="Disable automatic exclusion of temporary files on upload", action="store_true")
+parser.add_argument('-i', '--no-ignore', dest='noignore', default=False,
+                      help="Disable automatic exclusion of temporary files on upload", action="store_true")
 
 args = parser.parse_args()
 
@@ -99,9 +100,8 @@ def main():
     import viur_admin.widgets
     import viur_admin.bones
     import viur_admin.actions
-    conf.cmdLineOpts = sys.argv
+    conf.cmdLineOpts = args
 
-    app = QtWidgets.QApplication(sys.argv)
     # app.setStyleSheet(open("app.css", "r").read())
 
     from viur_admin.login import Login

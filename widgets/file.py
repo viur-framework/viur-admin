@@ -94,12 +94,12 @@ class UploadStatusWidget(QtWidgets.QWidget):
         self.ui.pbarFile.setValue(stats["bytesDone"])
 
     def askOverwriteFile(self, title, text):
-        res = QtGui.QMessageBox.question(self, title, text,
-                                         buttons=QtGui.QMessageBox.Yes | QtGui.QMessageBox.No |
-                                                 QtGui.QMessageBox.Cancel)
-        if res == QtGui.QMessageBox.Yes:
+        res = QtWidgets.QMessageBox.question(self, title, text,
+                                         buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
+                                                 QtWidgets.QMessageBox.Cancel)
+        if res == QtWidgets.QMessageBox.Yes:
             return (True)
-        elif res == QtGui.QMessageBox.Cancel:
+        elif res == QtWidgets.QMessageBox.Cancel:
             return ( False )
         return ( None )
 

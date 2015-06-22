@@ -75,7 +75,7 @@ actionDelegateSelector.insert(1, TreeEditAction.isSuitableFor, TreeEditAction)
 
 class TreeDirUpAction(QtWidgets.QAction):
     def __init__(self, parent, *args, **kwargs):
-        super(TreeDirUpAction, self).__init__(QtGui.QIcon(":icons/actions/folder_back_small.png"),
+        super(TreeDirUpAction, self).__init__(QtGui.QIcon(":icons/actions/folder_back.svg"),
                                               QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent)
         self.parent().nodeChanged.connect(self.onNodeChanged)
         reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
@@ -155,7 +155,7 @@ class TreeSwitchViewAction(QtWidgets.QAction):
         self.triggered.connect(self.onTriggered)
         self.setShortcut("F8")
         if not self.parent().isIconMode():
-            self.setIcon(QtGui.QIcon(":icons/actions/switch_icon.png"))
+            self.setIcon(QtGui.QIcon(":icons/actions/switch_icon.svg"))
         self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
     def onTriggered(self, e):

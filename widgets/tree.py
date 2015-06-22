@@ -11,6 +11,7 @@ from viur_admin.ui.treeUI import Ui_Tree
 from viur_admin.utils import WidgetHandler
 from viur_admin.widgets.edit import EditWidget
 from viur_admin.config import conf
+from viur_admin import utils
 
 
 class NodeItem(QtWidgets.QListWidgetItem):
@@ -19,7 +20,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
     """
 
     def __init__(self, data):
-        super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.png"), str(data["name"]))
+        super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]))
         self.entryData = data
 
     def __gt__(self, other):
@@ -355,7 +356,7 @@ class TreeListView(QtWidgets.QListWidget):
             actionMove.task = "move"
             actionDelete = menu.addAction(QtCore.QCoreApplication.translate("TreeWidget", "Delete"))
             actionDelete.task = "delete"
-        elif QtGui.QApplication.clipboard().mimeData().hasFormat("viur/treeDragData"):
+        elif QtWidgets.QApplication.clipboard().mimeData().hasFormat("viur/treeDragData"):
             actionPaste = menu.addAction(QtCore.QCoreApplication.translate("TreeWidget", "Insert"))
             actionPaste.task = "paste"
         menu.triggered.connect(self.onContextMenuTriggered)
@@ -396,13 +397,13 @@ class TreeListView(QtWidgets.QListWidget):
         # self.copy( self.clipboard, self.rootNode, self.getPath() )
 
     def requestDelete(self, nodes, leafs):
-        if QtGui.QMessageBox.question(self,
+        if QtWidgets.QMessageBox.question(self,
                                       QtCore.QCoreApplication.translate("TreeListView", "Confirm delete"),
                                       QtCore.QCoreApplication.translate("TreeListView",
                                                                         "Delete %s nodes and %s leafs?") % (
                                       len(nodes), len(leafs) ),
-                                      QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                      QtGui.QMessageBox.No) == QtGui.QMessageBox.No:
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                      QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return ( False )
         protoWrap = protocolWrapperInstanceSelector.select(self.modul)
         assert protoWrap is not None

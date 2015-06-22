@@ -73,13 +73,13 @@ class Accountmanager(QtWidgets.QMainWindow):
         item = self.ui.acclistWidget.currentItem()
         if not item:
             return
-        reply = QtGui.QMessageBox.question(self,
+        reply = QtWidgets.QMessageBox.question(self,
                                            QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
                                            QtCore.QCoreApplication.translate("Accountmanager",
                                                                              "Really delete the account \"%s\"?") %
-                                           item.account["name"], QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                           QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.No:
+                                           item.account["name"], QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                           QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.No:
             return
         self.ui.acclistWidget.takeItem(self.ui.acclistWidget.row(item))
         self.updateUI()

@@ -48,7 +48,7 @@ class Ui_Updater(object):
         self.verticalLayout.addWidget(self.btnUpdate)
         self.btnExit = QtWidgets.QPushButton(self.centralwidget)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":icons/actions/exit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnExit.setIcon(icon3)
         self.btnExit.setObjectName("btnExit")
         self.verticalLayout.addWidget(self.btnExit)
