@@ -22,6 +22,7 @@ class TreeWrapper(QtCore.QObject):
     updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
     updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
     updatingDataAvaiable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
+    onModulStructureAvaiable = QtCore.pyqtSignal()
 
     def __init__(self, modul, *args, **kwargs):
         super(TreeWrapper, self).__init__()
@@ -94,7 +95,7 @@ class TreeWrapper(QtCore.QObject):
                 self.addNodeStructure = structure
             elif stype == "addLeafSkel":
                 self.addLeafStructure = structure
-        self.emit(QtCore.SIGNAL("onModulStructureAvaiable()"))
+        self.onModulStructureAvaiable.emit()
         self.checkBusyStatus()
 
     def onRootNodesAvaiable(self, req):

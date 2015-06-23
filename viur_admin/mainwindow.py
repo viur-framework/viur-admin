@@ -334,12 +334,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		groupHandlers = {}
 		if "configuration" in data.keys() and "modulGroups" in data["configuration"].keys():
 			for group in data["configuration"]["modulGroups"]:
+				print("griup", group)
 				if not all([x in group.keys() for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
 				groupHandlers[group["prefix"]] = GroupHandler(None, group["name"], group["icon"])
 				self.ui.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
-		if not "modules" in conf.portal.keys():
+		if "modules" not in conf.portal.keys():
 			conf.portal["modules"] = {}
 		for modul, cfg in data["modules"].items():
 			print("module, cfg", modul, cfg)

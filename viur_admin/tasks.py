@@ -86,7 +86,7 @@ class TaskViewer(QtWidgets.QWidget):
         descrLbl = QtWidgets.QLabel( task["descr"], self )
         self.ui.verticalLayout.addWidget( descrLbl )
         """
-        from widgets.edit import EditWidget
+        from viur_admin.widgets.edit import EditWidget
 
         event.emit("stackWidget", EditWidget("_tasks", EditWidget.appSingleton, taskID))
 
