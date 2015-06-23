@@ -20,6 +20,17 @@ except ImportError:
     print("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
     sys.exit(1)
 
+from pkg_resources import resource_filename, resource_listdir
+from viur_admin.config import conf
+import viur_admin.protocolwrapper
+import viur_admin.handler
+import viur_admin.widgets
+import viur_admin.bones
+import viur_admin.actions
+from viur_admin.login import Login
+from viur_admin.mainwindow import MainWindow
+
+
 min_version = (3, 2)
 if sys.version_info < min_version:
     print("You need python3.2 or newer!")
@@ -27,6 +38,8 @@ if sys.version_info < min_version:
 
 
 app = QtWidgets.QApplication(sys.argv)
+# app.setStyle("plastique")
+# app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -37,7 +50,7 @@ else:
     path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
 os.chdir(path)
 
-parser = ArgumentParser(usage="usage: %prog [options]")
+parser = ArgumentParser()
 # parser.add_argument('-d', '--debug', dest='debug', default='warning',
 #                   help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice",
 #                   choices=["debug", "info", "warning", "critical"])
@@ -48,6 +61,7 @@ parser.add_argument('-i', '--no-ignore', dest='noignore', default=False,
                       help="Disable automatic exclusion of temporary files on upload", action="store_true")
 
 args = parser.parse_args()
+conf.cmdLineOpts = args
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -93,19 +107,6 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 def main():
-    from pkg_resources import resource_filename, resource_listdir
-    from viur_admin.config import conf
-    import viur_admin.protocolwrapper
-    import viur_admin.handler
-    import viur_admin.widgets
-    import viur_admin.bones
-    import viur_admin.actions
-    conf.cmdLineOpts = args
-
-    # app.setStyleSheet(open("app.css", "r").read())
-
-    from viur_admin.login import Login
-
     transFiles = resource_listdir("viur_admin", "locales")
     for file in transFiles:
         if file.endswith(".qm"):
@@ -117,9 +118,6 @@ def main():
             if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
                 app.installTranslator(translator)
 
-
-
-    from viur_admin.mainwindow import MainWindow
     mw = MainWindow()
     l = Login()
     l.show()

@@ -190,24 +190,24 @@ class TextEdit(QtWidgets.QMainWindow):
         tb.setWindowTitle("Edit Actions")
         self.addToolBar(tb)
 
-        self.actionUndo = QtWidgets.QAction(QtGui.QIcon('icons/actions/undo_small.png'), "&Undo", self,
+        self.actionUndo = QtWidgets.QAction(QtGui.QIcon(':icons/actions/undo.svg'), "&Undo", self,
                                             shortcut=QtGui.QKeySequence.Undo)
         tb.addAction(self.actionUndo)
-        self.actionRedo = QtWidgets.QAction(QtGui.QIcon('icons/actions/redo_small.png'),
+        self.actionRedo = QtWidgets.QAction(QtGui.QIcon(':icons/actions/redo.svg'),
                                             "&Redo", self, priority=QtWidgets.QAction.LowPriority,
                                             shortcut=QtGui.QKeySequence.Redo)
         tb.addAction(self.actionRedo)
 
-        self.actionCut = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
+        self.actionCut = QtWidgets.QAction(QtGui.QIcon(":icons/actions/text/cut.png"),
                                            "Cu&t", self, priority=QtWidgets.QAction.LowPriority,
                                            shortcut=QtGui.QKeySequence.Cut)
         tb.addAction(self.actionCut)
 
-        self.actionCopy = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
+        self.actionCopy = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/copy.png'),
                                             "&Copy", self, priority=QtWidgets.QAction.LowPriority,
                                             shortcut=QtGui.QKeySequence.Copy)
         tb.addAction(self.actionCopy)
-        self.actionPaste = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
+        self.actionPaste = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/paste.png'),
                                              "&Paste", self, priority=QtWidgets.QAction.LowPriority,
                                              shortcut=QtGui.QKeySequence.Paste,
                                              enabled=(len(QtGui.QApplication.clipboard().text()) != 0))
@@ -219,30 +219,30 @@ class TextEdit(QtWidgets.QMainWindow):
         self.addToolBar(tb)
 
 
-        #self.actionInsertImage = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/image.png'),"&Image", self)
+        #self.actionInsertImage = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/image.png'),"&Image", self)
         #tb.addAction(self.actionInsertImage)
 
-        #self.actionInsertTable = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/table-add.png'),"&Table", self)
+        #self.actionInsertTable = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/table-add.png'),"&Table", self)
         #tb.addAction(self.actionInsertTable)
 
-        self.actionInsertLink = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/link.png'), "&Link", self)
+        self.actionInsertLink = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/link.png'), "&Link", self)
         tb.addAction(self.actionInsertLink)
 
-    #		self.actionRedo = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/redo.png'),
+    #		self.actionRedo = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/redo.png'),
     #				"&Redo", self, priority=QtWidgets.QAction.LowPriority,
     #				shortcut=QtGui.QKeySequence.Redo)
     #		tb.addAction(self.actionRedo)
     #
-    #		self.actionCut = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/cut.png'),
+    #		self.actionCut = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/cut.png'),
     #				"Cu&t", self, priority=QtWidgets.QAction.LowPriority,
     #				shortcut=QtGui.QKeySequence.Cut)
     #		tb.addAction(self.actionCut)
     #
-    #		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/copy.png'),
+    #		self.actionCopy = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/copy.png'),
     #				"&Copy", self, priority=QtWidgets.QAction.LowPriority,
     #				shortcut=QtGui.QKeySequence.Copy)
     #		tb.addAction(self.actionCopy)
-    #		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/paste.png'),
+    #		self.actionPaste = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/paste.png'),
     #				"&Paste", self, priority=QtWidgets.QAction.LowPriority,
     #				shortcut=QtGui.QKeySequence.Paste,
     #				enabled=(len(QtGui.QApplication.clipboard().text()) != 0))
@@ -253,7 +253,7 @@ class TextEdit(QtWidgets.QMainWindow):
         tb.setWindowTitle("Format Actions")
         self.addToolBar(tb)
 
-        self.actionTextBold = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/bold.png'),
+        self.actionTextBold = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/bold.png'),
                                                 "&Bold", self, priority=QtWidgets.QAction.LowPriority,
                                                 shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_B,
                                                 triggered=self.textBold, checkable=True)
@@ -262,7 +262,7 @@ class TextEdit(QtWidgets.QMainWindow):
         self.actionTextBold.setFont(bold)
         tb.addAction(self.actionTextBold)
 
-        self.actionTextItalic = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/italic.png'),
+        self.actionTextItalic = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/italic.png'),
                                                   "&Italic", self, priority=QtWidgets.QAction.LowPriority,
                                                   shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_I,
                                                   triggered=self.textItalic, checkable=True)
@@ -271,7 +271,7 @@ class TextEdit(QtWidgets.QMainWindow):
         self.actionTextItalic.setFont(italic)
         tb.addAction(self.actionTextItalic)
 
-        self.actionTextUnderline = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/underline.png'),
+        self.actionTextUnderline = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/underline.png'),
                                                      "&Underline", self, priority=QtWidgets.QAction.LowPriority,
                                                      shortcut=QtCore.Qt.CTRL + QtCore.Qt.Key_U,
                                                      triggered=self.textUnderline, checkable=True)
@@ -284,21 +284,21 @@ class TextEdit(QtWidgets.QMainWindow):
 
         # Make sure the alignLeft is always left of the alignRight.
         if QtGui.QApplication.isLeftToRight():
-            self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+            self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/alignleft.png'),
                                                      "&Left", grp)
-            self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+            self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/aligncenter.png'),
                                                        "C&enter", grp)
-            self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+            self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/alignright.png'),
                                                       "&Right", grp)
         else:
-            self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignright.png'),
+            self.actionAlignRight = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/alignright.png'),
                                                       "&Right", grp)
-            self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/aligncenter.png'),
+            self.actionAlignCenter = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/aligncenter.png'),
                                                        "C&enter", grp)
-            self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignleft.png'),
+            self.actionAlignLeft = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/alignleft.png'),
                                                      "&Left", grp)
 
-        self.actionAlignJustify = QtWidgets.QAction(QtGui.QIcon(rsrcPath + '/alignjustify.png'),
+        self.actionAlignJustify = QtWidgets.QAction(QtGui.QIcon(':icons/actions/text/alignjustify.png'),
                                                     "&Justify", grp)
 
         self.actionAlignLeft.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
@@ -795,7 +795,7 @@ class TableBlock(HtmlBlock):
     def __init__(self, attrs=[], *args, **kwargs):
         super(TableBlock, self).__init__(attrs, *args, **kwargs)
         self.setText(0, QtCore.QCoreApplication.translate("DocumentEditBone", "Table"))
-        self.setIcon(0, QtGui.QIcon(rsrcPath + "/texttypes/table.png"))
+        self.setIcon(0, QtGui.QIcon(":icons/actions/text/texttypes/table.png"))
 
     def feed(self, txt):
         #print("Table FEED", txt)
@@ -826,7 +826,7 @@ class TextBlock(HtmlBlock):
     def __init__(self, *args, **kwargs):
         super(TextBlock, self).__init__(*args, **kwargs)
         self.setText(0, QtCore.QCoreApplication.translate("DocumentEditBone", "Text"))
-        self.setIcon(0, QtGui.QIcon(rsrcPath + "/texttypes/text.png"))
+        self.setIcon(0, QtGui.QIcon(":icons/actions/text/texttypes/text.png"))
 
     def getEditor(self, parent):
         currentEditor = TextEdit(self.saveChanges)
@@ -859,7 +859,7 @@ class ImageBlock(HtmlBlock):
         super(ImageBlock, self).__init__(attrs, *args, **kwargs)
         self.href = href
         self.setText(0, QtCore.QCoreApplication.translate("DocumentEditBone", "Image"))
-        self.setIcon(0, QtGui.QIcon(rsrcPath + "/texttypes/image.png"))
+        self.setIcon(0, QtGui.QIcon(":icons/actions/text/texttypes/image.png"))
         attrDict = dict([(k.lower(), v) for (k, v) in attrs])
         if "title" in attrDict and HtmlStripper.strip(attrDict["title"]).strip().replace("\n", " ")[:25]:
             self.setText(0, HtmlStripper.strip(attrDict["title"]).strip().replace("\n", " ")[:25])
@@ -891,7 +891,7 @@ class HeaderBlock(HtmlBlock):
         if not caption:
             caption = QtCore.QCoreApplication.translate("DocumentEditBone", "(empty caption)")
         super(HeaderBlock, self).__init__(*args, **kwargs)
-        self.setIcon(0, QtGui.QIcon(rsrcPath + "/texttypes/headline.png"))
+        self.setIcon(0, QtGui.QIcon(":icons/actions/text/texttypes/headline.png"))
 
     def feed(self, txt):
         self.content += HtmlStripper.strip(txt)
@@ -947,7 +947,7 @@ class ExtensionBlock(HtmlBlock):
         super(ExtensionBlock, self).__init__(*args, **kwargs)
         self.data = data or {}
         self.ext = ext
-        self.setIcon(0, QtGui.QIcon(rsrcPath + "/../extension.png"))
+        self.setIcon(0, QtGui.QIcon(":icons/actions/text/../extension.png"))
         self.setText(0, ext["descr"])
 
     def feed(self, txt):

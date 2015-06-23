@@ -264,8 +264,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				self.setIcon(0, icon)
 			elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(
 					"https://") and not icon.startswith("http://"):
-				if os.path.isfile(os.path.join(os.getcwd(), icon)):
-					self.setIcon(0, QtGui.QIcon(os.path.join(os.getcwd(), icon)))
+				self.setIcon(0, QtGui.QIcon(":{0}".format(icon)))
 			elif isinstance(icon, str):
 				RemoteFile(icon, successHandler=self.loadIconFromRequest)
 		else:

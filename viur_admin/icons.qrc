@@ -91,9 +91,7 @@
         <file>actions/text/texttypes/image.png</file>
         <file>actions/text/texttypes/table.png</file>
         <file>actions/text/texttypes/text.png</file>
-        <file>actions/text/texttypes</file>
         <file>actions/text/underline.png</file>
-        <file>actions/text</file>
         <file>actions/translate.svg</file>
         <file>actions/undo.svg</file>
         <file>actions/upload.svg</file>
