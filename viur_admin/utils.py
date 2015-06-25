@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-
+import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
@@ -259,7 +259,8 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		self.setText(0, descr)
-		if icon is not None:
+		logging.debug("icon test %r", icon)
+		if icon:
 			if isinstance(icon, QtGui.QIcon):
 				self.setIcon(0, icon)
 			elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(
@@ -267,14 +268,14 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				self.setIcon(0, QtGui.QIcon(":{0}".format(icon)))
 			elif isinstance(icon, str):
 				RemoteFile(icon, successHandler=self.loadIconFromRequest)
-		else:
-			cwd = os.getcwd()
-			print("cwd", cwd)
-		# self.setIcon(0, QtGui.QIcon(os.path.join(os.getcwd(), "icons/modules/list.svg")))
+			else:
+				self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
+		self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
 		self.vanishOnClose = vanishOnClose
 
 	def loadIconFromRequest(self, request):
 		icon = QtGui.QIcon(request.getFileName())
+		logging.debug("loadIconFromRequest %r", icon)
 		self.setIcon(0, icon)
 
 	def focus(self):
