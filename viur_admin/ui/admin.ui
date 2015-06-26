@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="../icons/icons.qrc">
-    <normaloff>:/icons/viur_logo.png</normaloff>:/icons/viur_logo.png</iconset>
+    <normaloff>:/icons/viur.ico</normaloff>:/icons/viur.ico</iconset>
   </property>
   <property name="iconSize">
    <size>
@@ -40,50 +40,6 @@
     <property name="bottomMargin">
      <number>20</number>
     </property>
-    <item>
-     <widget class="QTreeWidget" name="treeWidget">
-      <property name="minimumSize">
-       <size>
-        <width>300</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>300</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarAsNeeded</enum>
-      </property>
-      <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarAsNeeded</enum>
-      </property>
-      <property name="editTriggers">
-       <set>QAbstractItemView::NoEditTriggers</set>
-      </property>
-      <property name="sortingEnabled">
-       <bool>false</bool>
-      </property>
-      <property name="columnCount">
-       <number>2</number>
-      </property>
-      <attribute name="headerVisible">
-       <bool>false</bool>
-      </attribute>
-      <column>
-       <property name="text">
-        <string>Module</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string notr="true">2</string>
-       </property>
-      </column>
-     </widget>
-    </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -197,10 +153,78 @@
    <addaction name="menuErweitert"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="minimumSize">
+    <size>
+     <width>200</width>
+     <height>35</height>
+    </size>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Modules</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <widget class="QTreeWidget" name="treeWidget">
+     <property name="geometry">
+      <rect>
+       <x>-80</x>
+       <y>-40</y>
+       <width>300</width>
+       <height>701</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>300</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="sortingEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="columnCount">
+      <number>2</number>
+     </property>
+     <attribute name="headerVisible">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>Module</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">2</string>
+      </property>
+     </column>
+    </widget>
+   </widget>
+  </widget>
   <action name="actionQuit">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/onebiticonset/onebit_35.png</normaloff>icons/onebiticonset/onebit_35.png</iconset>
+    <iconset theme="application-exit"/>
    </property>
    <property name="text">
     <string>Beenden</string>
@@ -208,8 +232,7 @@
   </action>
   <action name="actionErste_Schritte">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/onebiticonset/021.png</normaloff>icons/onebiticonset/021.png</iconset>
+    <iconset theme="help-contents"/>
    </property>
    <property name="text">
     <string>Erste Schritte</string>
@@ -217,8 +240,9 @@
   </action>
   <action name="actionHelp">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/onebiticonset/022.png</normaloff>icons/onebiticonset/022.png</iconset>
+    <iconset theme="help-contents">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Help</string>
@@ -229,8 +253,9 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/viur_win.ico</normaloff>icons/viur_win.ico</iconset>
+    <iconset theme="help-about">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>About</string>
@@ -238,14 +263,17 @@
   </action>
   <action name="actionLogout">
    <property name="icon">
-    <iconset>
-     <normaloff>icons/onebiticonset/onebit_24.png</normaloff>icons/onebiticonset/onebit_24.png</iconset>
+    <iconset theme="system-log-out"/>
    </property>
    <property name="text">
     <string>Ausloggen</string>
    </property>
   </action>
   <action name="actionTasks">
+   <property name="icon">
+    <iconset resource="../icons/icons.qrc">
+     <normaloff>:/icons/settings.svg</normaloff>:/icons/settings.svg</iconset>
+   </property>
    <property name="text">
     <string>Tasks</string>
    </property>

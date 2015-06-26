@@ -350,6 +350,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None
 				for groupName in groupHandlers.keys():
+					logging.info("groupName %r, %r", groupName, cfg["name"])
 					if cfg["name"].startswith(groupName):
 						parent = groupHandlers[groupName]
 				if parent:
