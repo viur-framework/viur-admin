@@ -245,7 +245,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 	"""
 	mainWindow = None
 
-	def __init__(self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, *args, **kwargs):
+	def __init__(self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, sortIndex=0, *args, **kwargs):
 		"""
 		@type modul: string
 		@param modul: Name of the modul handled
@@ -259,7 +259,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		self.setText(0, descr)
-		logging.debug("icon test %r", icon)
+		self.setText(1, str(sortIndex))
 		if icon:
 			if isinstance(icon, QtGui.QIcon):
 				self.setIcon(0, icon)
@@ -345,6 +345,15 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			Adds this handler as a top-level one
 		"""
 		self.mainWindow.addHandler(self)
+
+	def __lt__(self, other):
+		column = self.treeWidget().sortColumn()
+		key1 = self.text(column)
+		key2 = other.text(column)
+		try:
+			return float(key1) < float(key2)
+		except ValueError:
+			return key1 < key2
 
 
 class GroupHandler(WidgetHandler):

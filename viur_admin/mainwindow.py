@@ -338,7 +338,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				if not all([x in group.keys() for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
-				groupHandlers[group["prefix"]] = GroupHandler(None, group["name"], group["icon"])
+				groupHandlers[group["prefix"]] = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
 				self.ui.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
 		if "modules" not in conf.portal.keys():
 			conf.portal["modules"] = {}
@@ -365,7 +365,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			if wrapperClass is not None:
 				wrapperClass(modul)
 			event.emit('modulHandlerInitialized', modul)
-		self.ui.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
+		self.ui.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 

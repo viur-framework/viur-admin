@@ -22,6 +22,10 @@ except ImportError:
 
 from pkg_resources import resource_filename, resource_listdir
 from viur_admin.config import conf
+
+
+app = QtWidgets.QApplication(sys.argv)
+
 import viur_admin.protocolwrapper
 import viur_admin.handler
 import viur_admin.widgets
@@ -29,7 +33,7 @@ import viur_admin.bones
 import viur_admin.actions
 from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
-
+import viur_admin.ui.icons_rc
 
 min_version = (3, 2)
 if sys.version_info < min_version:
@@ -37,8 +41,14 @@ if sys.version_info < min_version:
     sys.exit(1)
 
 
-app = QtWidgets.QApplication(sys.argv)
 # app.setStyle("plastique")
+css = QtCore.QFile(":icons/app.css")
+css.open(QtCore.QFile.ReadOnly)
+data = str(css.readAll(), encoding='ascii')
+print()
+print(data)
+print()
+app.setStyleSheet(data)
 app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
