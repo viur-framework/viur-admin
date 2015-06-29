@@ -39,7 +39,7 @@ if sys.version_info < min_version:
 
 app = QtWidgets.QApplication(sys.argv)
 # app.setStyle("plastique")
-# app.setStyleSheet(open("app.css", "r").read())
+app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
 prgc = sys.argv[0]

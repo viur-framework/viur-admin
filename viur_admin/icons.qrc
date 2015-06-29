@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="icons">
+        <file>app.css</file>
         <file>ViURadmin.ico</file>
         <file>accounts.svg</file>
         <file>actions/accept.svg</file>

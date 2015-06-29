@@ -358,6 +358,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				else:
 					self.ui.treeWidget.addTopLevelItem(handler)
 			else:
+				print("tli", handler.data(0))
 				self.ui.treeWidget.addTopLevelItem(handler)
 			handlers.append(handler)
 			wrapperClass = protocolWrapperClassSelector.select(modul, data["modules"])
