@@ -258,8 +258,13 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				"You either have to create the mainwindow before using this class or specifiy an replacement.")
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
+		try:
+			prefix, descr =descr.split(": ", 1)
+		except ValueError:
+			pass
 		self.setText(0, descr)
-		self.setText(1, str(sortIndex))
+		# self.setText(1, str(sortIndex))
+		self.sortIndex = sortIndex
 		if icon:
 			if isinstance(icon, QtGui.QIcon):
 				self.setIcon(0, icon)
@@ -347,9 +352,9 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.mainWindow.addHandler(self)
 
 	def __lt__(self, other):
-		column = self.treeWidget().sortColumn()
-		key1 = self.text(column)
-		key2 = other.text(column)
+		# column = self.treeWidget().sortColumn()
+		key1 = self.sortIndex
+		key2 = other.sortIndex
 		try:
 			return float(key1) < float(key2)
 		except ValueError:

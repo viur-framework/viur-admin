@@ -40,7 +40,6 @@ class HierarchyWrapper(QtCore.QObject):
         print("Initializing HierarchyWrapper for modul %s" % self.modul)
         protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 
-
     def checkBusyStatus(self):
         busy = False
         for child in self.children():

@@ -6,10 +6,7 @@ from viur_admin.event import event
 from viur_admin.config import conf
 from viur_admin.widgets.file import FileWidget
 from viur_admin.utils import WidgetHandler
-from viur_admin.utils import loadIcon
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-
-print("protowrapper file", id(protocolWrapperInstanceSelector))
 
 
 class FileRepoHandler(WidgetHandler):
@@ -22,12 +19,9 @@ class FileRepoHandler(WidgetHandler):
 
 class FileBaseHandler(WidgetHandler):
     def __init__(self, modul, *args, **kwargs):
-        super(FileBaseHandler, self).__init__(lambda: FileWidget(modul), vanishOnClose=False, *args, **kwargs)
         self.modul = modul
         config = conf.serverConfig["modules"][modul]
-        if config["icon"]:
-            self.setIcon(0, loadIcon(config["icon"]))
-        self.setText(0, config["name"])
+        super(FileBaseHandler, self).__init__(lambda: FileWidget(modul), descr=config.get("name", ""), icon=config.get("icon"), sortIndex=config.get("sortIndex"), vanishOnClose=False, *args, **kwargs)
         event.connectWithPriority("preloadingFinished", self.setRepos, event.lowPriority)
 
         # self.tmpObj = QtCore.QObject()

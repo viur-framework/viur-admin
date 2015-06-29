@@ -346,7 +346,9 @@ class MainWindow(QtWidgets.QMainWindow):
 			print("module, cfg", modul, cfg)
 			queue = RegisterQueue()
 			event.emit('requestModulHandler', queue, modul)
+			print("event emit")
 			handler = queue.getBest()()
+			print("handler", handler)
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None
 				for groupName in groupHandlers.keys():

@@ -55,7 +55,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
                 icon = loadIcon(config["icon"])
         else:
             icon = loadIcon(":icons/modules/list.svg")
-        super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, vanishOnClose=False, *args,
+        super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, sortIndex=config.get("sortIndex", 0), vanishOnClose=False, *args,
                                               **kwargs)
         if "views" in config.keys():
             for view in config["views"]:

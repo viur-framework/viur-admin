@@ -13,6 +13,7 @@ class SingletonEntryHandler(WidgetHandler):
 	def __init__(self, modul, *args, **kwargs):
 		widgetFactory = lambda: EditWidget(modul, EditWidget.appSingleton, "singleton")
 		name = ""
+		sortIndex = 0
 		if modul in conf.serverConfig["modules"].keys():
 			config = conf.serverConfig["modules"][modul]
 			if config["icon"]:
@@ -23,8 +24,9 @@ class SingletonEntryHandler(WidgetHandler):
 			else:
 				icon = loadIcon(":icons/modules/singleton.svg")
 			name = config["name"]
-		super(SingletonEntryHandler, self).__init__(widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs)
-		self.setText(0, name)
+			sortIndex = config.get("sortIndex", 0)
+		super(SingletonEntryHandler, self).__init__(widgetFactory, descr=name, icon=icon, sortIndex=sortIndex, vanishOnClose=False, *args, **kwargs)
+		# self.setText(0, name)
 
 	def getBreadCrumb(self):
 		"""

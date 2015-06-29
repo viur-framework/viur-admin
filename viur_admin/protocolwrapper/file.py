@@ -26,15 +26,14 @@ def x_startswith_tilde(x):
 	# print(repr(x))
 	return x.startswith("~") or x.endswith("~")
 
-
 # List of patterns of filenames/directories, which wont get uploaded
 ignorePatterns = [
 	# x_startswith_dot,
 	# x_lower,
 	# x_startswith_tilde,
-	lambda x: x.startswith("."),  #All files/dirs starting with a dot (".")
-	lambda x: x.lower() == "thumbs.db",  #Thumbs.DB,
-	lambda x: x.startswith("~") or x.endswith("~")  #Temp files (ususally starts/ends with ~)
+	lambda x: x.startswith("."),  # All files/dirs starting with a dot (".")
+	lambda x: x.lower() == "thumbs.db",  # Thumbs.DB,
+	lambda x: x.startswith("~") or x.endswith("~")  # Temp files (ususally starts/ends with ~)
 ]
 
 
@@ -75,7 +74,6 @@ class FileUploader(QtCore.QObject):
 		req.uploadProgress.connect(self.onProgress)
 
 	# self.connect( req, QtCore.SIGNAL("uploadProgress (qint64,qint64)"), self.onProgress )
-
 
 	def onFinished(self, req):
 		try:
@@ -434,8 +432,8 @@ class FileWrapper(TreeWrapper):
 		# self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
 		return (downloader)
 
-		# def removeFromTransferQueue( self, obj ):
-		#	self.transferQueues.remove( obj )
+	# def removeFromTransferQueue( self, obj ):
+	#	self.transferQueues.remove( obj )
 
 
 def CheckForFileModul(modulName, modulList):

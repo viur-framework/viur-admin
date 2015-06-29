@@ -19,7 +19,8 @@ class PriorityQueue(object):
         for p in prios:
             for validateFunc, generator in self._q[p]:
                 if validateFunc(*args, **kwargs):
-                    return ( generator )
+                    print("select generator", generator)
+                    return generator
 
 
 editBoneSelector = PriorityQueue()  # Queried by editWidget to locate its bones
