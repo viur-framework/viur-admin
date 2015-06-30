@@ -49,12 +49,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
         else:
             widgetGen = lambda: ListWidget(modul)
         if "icon" in config.keys() and config["icon"]:
-            if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
-                icon = config["icon"]
-            else:
-                icon = loadIcon(config["icon"])
-        else:
-            icon = loadIcon(":icons/modules/list.svg")
+            icon = loadIcon(config["icon"])
         super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, sortIndex=config.get("sortIndex", 0), vanishOnClose=False, *args,
                                               **kwargs)
         if "views" in config.keys():

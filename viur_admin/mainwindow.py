@@ -86,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.ui.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.ui.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
 		self.ui.actionTasks.triggered.connect(self.onActionTasksTriggered)
+		self.ui.menuErweitert.addAction(self.ui.dockWidget.toggleViewAction())
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
@@ -367,7 +368,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			if wrapperClass is not None:
 				wrapperClass(modul)
 			event.emit('modulHandlerInitialized', modul)
-		self.ui.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
+		self.ui.treeWidget.sortItems(1, QtCore.Qt.AscendingOrder)
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 

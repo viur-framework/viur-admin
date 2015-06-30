@@ -85,7 +85,6 @@ class ListWrapper(QtCore.QObject):
         return ( "&".join(["%s=%s" % (k, v) for (k, v) in tmpList]) )
 
     def queryData(self, **kwargs):
-        print("Querying data")
         key = self.cacheKeyFromFilter(kwargs)
         if key in self.dataCache.keys():
             if self.dataCache[key] is None:
@@ -101,8 +100,9 @@ class ListWrapper(QtCore.QObject):
         self.dataCache[key] = None
         r = NetworkService.request("/%s/list" % self.modul, kwargs, successHandler=self.addCacheData)
         r.wrapperCbCacheKey = key
+        print("request cache key", self, r, r.wrapperCbCacheKey)
         self.checkBusyStatus()
-        return ( key )
+        return key
 
     def queryEntry(self, key):
         if key in self.dataCache.keys():
@@ -130,7 +130,9 @@ class ListWrapper(QtCore.QObject):
         elif data["action"] == "view":
             self.dataCache[data["values"]["id"]] = data["values"]
             self.entityAvailable.emit(data["values"])
-        self.queryResultAvaiable.emit(req.wrapperCbCacheKey)
+        print("addcache", self, req)
+        if hasattr(req, "wrapperCbCacheKey"):
+            self.queryResultAvaiable.emit(req.wrapperCbCacheKey)
         self.checkBusyStatus()
 
     def add(self, **kwargs):

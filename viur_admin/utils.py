@@ -275,7 +275,8 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				RemoteFile(icon, successHandler=self.loadIconFromRequest)
 			else:
 				self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
-		self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
+		else:
+			self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
 		self.vanishOnClose = vanishOnClose
 
 	def loadIconFromRequest(self, request):
@@ -531,28 +532,21 @@ def formatString(format, skelStructure, data, prefix=None):
 	return (res)
 
 
-def loadIcon(iconFile):
+def loadIcon(icon):
 	"""
 		Tries to create an icon from the given filename.
 		If that image exists in different sizes, all of them are loaded.
 	"""
-	icon = QtGui.QIcon()
-	if not iconFile:
+	print("loadIcon", icon)
+	if isinstance(icon, QtGui.QIcon):
 		return icon
-	if os.path.isfile(iconFile):
-		icon.addFile(iconFile)
-	baseName = os.path.basename(iconFile)  # Strip the path
-	baseName = baseName[: baseName.rfind(".")]  # Strip the file-ext
-	try:  # This may fail if iconFile points to a wrong directory
-		for f in os.listdir(os.path.dirname(iconFile)):
-			if f.startswith(baseName):
-				res = f.replace(baseName, "")
-				res = res[: res.rfind(".")]
-				if res.lower().strip("-").replace("x", "", 1).isdigit():
-					icon.addFile(os.path.join(os.path.dirname(iconFile), f))
-	except Exception:
-		pass
-	return icon
+	elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(
+			"https://") and not icon.startswith("http://"):
+		return QtGui.QIcon(":{0}".format(icon))
+	elif isinstance(icon, str):
+		return icon
+	else:
+		return QtGui.QIcon(":icons/modules/list.svg")
 
 
 def showAbout(parent=None):
