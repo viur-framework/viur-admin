@@ -31,9 +31,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QUrl, QObject
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
 
+import viur_admin.ui.icons_rc
+
+
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
-    certs = open("cacert.pem", "r").read()
+	css = QtCore.QFile(":icons/cacert.pem")
+	css.open(QtCore.QFile.ReadOnly)
+	certs = css.readAll()
+	print(type(certs), certs)
+	# certs = open(":icons/cacert.pem", "r").read()
 except:
     certs = None
 if certs:
@@ -183,7 +190,7 @@ class SecurityTokenProvider(QObject):
                     skey = None
                     raise QEmpty()
             except QEmpty:
-                self.logger.debug("Empty cache! Please wait...")
+                # self.logger.debug("Empty cache! Please wait...")
                 QtCore.QCoreApplication.processEvents()
         self.logger.debug("Using skey: %s", skey)
         return ( skey )
@@ -203,8 +210,8 @@ class RequestWrapper(QtCore.QObject):
     def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
                  failSilent=False):
         super(QtCore.QObject, self).__init__()
-        self.logger = logging.getLogger("RequestWrapper")
-        self.logger.debug("New network request: %s", str(self))
+        # self.logger = logging.getLogger("RequestWrapper")
+        # self.logger.debug("New network request: %s", str(self))
         self.request = request
         self.url = url
         self.failSilent = failSilent
@@ -252,8 +259,8 @@ class RequestWrapper(QtCore.QObject):
                                               "The request to \"%s\" failed with: %s" % (self.url, errorDescr))
             self.requestFailed.emit(self, self.request.error())
         self.finished.emit(self)
-        self.logger.debug("Request finished: %r", self)
-        self.logger.debug("Remaining requests: %d", len(NetworkService.currentRequests))
+        # self.logger.debug("Request finished: %r", self)
+        # self.logger.debug("Remaining requests: %d", len(NetworkService.currentRequests))
         self.request = None
         self.successHandler = None
         self.failureHandler = None
@@ -388,14 +395,14 @@ class RemoteFile(QtCore.QObject):
         """
             Unregister this object, so it gets garbarge collected
         """
-        self.logger.debug("Checkpoint: remove")
+        # self.logger.debug("Checkpoint: remove")
         self._delayTimer = None
         NetworkService.currentRequests.remove(self)
         self.successHandler = None
         self.failureHandler = None
 
     def onTimerEvent(self):
-        self.logger.debug("Checkpoint: onTimerEvent")
+        # self.logger.debug("Checkpoint: onTimerEvent")
         if "successHandlerSelf" in dir(self):
             s = self.successHandlerSelf()
             if s:
@@ -419,7 +426,7 @@ class RemoteFile(QtCore.QObject):
         req = NetworkService.request(dlKey, successHandler=self.onFileAvaiable, failSilent=True)
 
     def onFileAvaiable(self, request):
-        self.logger.debug("Checkpoint: onFileAvaiable")
+        # self.logger.debug("Checkpoint: onFileAvaiable")
         fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(self.dlKey.encode("UTF-8")).hexdigest())
         data = request.readAll()
         open(fileName, "w+b").write(data.data())
@@ -536,9 +543,9 @@ class NetworkService():
         if params:
             if isinstance(params, dict):
                 multipart, boundary = NetworkService.genReqStr(params)
-                req.setRawHeader("Content-Type", b'multipart/form-data; boundary=' + boundary + b'; charset=utf-8')
+                req.setRawHeader(b"Content-Type", b'multipart/form-data; boundary=' + boundary + b'; charset=utf-8')
             elif isinstance(params, bytes):
-                req.setRawHeader("Content-Type", b'application/x-www-form-urlencoded')
+                req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
                 multipart = params
             else:
                 print(params)

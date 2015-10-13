@@ -41,13 +41,16 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
     def __init__(self, modul, *args, **kwargs):
         # Config parsen
         config = conf.serverConfig["modules"][modul]
+        actions = config.get("actions")
+        # print("actions", actions)
         if "columns" in config.keys():
             if "filter" in config.keys():
-                widgetGen = lambda: ListWidget(modul, config["columns"], config["filter"])
+                widgetGen = lambda: ListWidget(modul, fields=config["columns"], filter=config["filter"], actions=actions)
             else:
-                widgetGen = lambda: ListWidget(modul, config["columns"])
+                widgetGen = lambda: ListWidget(modul, fields=config["columns"], actions=actions)
         else:
             widgetGen = lambda: ListWidget(modul)
+        icon = None
         if "icon" in config.keys() and config["icon"]:
             icon = loadIcon(config["icon"])
         super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, sortIndex=config.get("sortIndex", 0), vanishOnClose=False, *args,
@@ -60,7 +63,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 class ListHandler(QtCore.QObject):
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
-        print("ListHandler event id", id(event))
+        # print("ListHandler event id", id(event))
         event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
         # self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )

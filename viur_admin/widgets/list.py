@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
+import csv
+import logging
+import os.path
+from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -9,6 +13,7 @@ from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstan
 from viur_admin.widgets.edit import EditWidget
 from viur_admin.utils import WidgetHandler
 from viur_admin.ui.listUI import Ui_List
+from viur_admin.ui.csvexportUI import Ui_CsvExport
 from viur_admin.config import conf
 
 
@@ -18,6 +23,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	_chunkSize = 25
 
 	rebuildDelegates = QtCore.pyqtSignal((object,))
+	listIsComplete = QtCore.pyqtSignal()
 
 	def __init__(self, modul, fields=None, filter=None, parent=None, *args):
 		QtCore.QAbstractTableModel.__init__(self, parent, *args)
@@ -68,6 +74,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return (self.modul)
 
 	def reload(self):
+		# print("reload()")
 		self.modelAboutToBeReset.emit()
 		self.dataCache = []
 		self.completeList = False
@@ -76,18 +83,21 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadNext(True)
 
 	def rowCount(self, parent):
+		# print("rowCount")
 		if self.completeList:
 			return (len(self.dataCache))
 		else:
 			return (len(self.dataCache) + 1)
 
 	def columnCount(self, parent):
+		# print("columnCount")
 		try:
 			return len(self.headers)
 		except:
 			return (0)
 
 	def data(self, index, role):
+		# print("data")
 		if not index.isValid():
 			return None
 		elif role != QtCore.Qt.DisplayRole:
@@ -108,7 +118,9 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return None
 
 	def loadNext(self, forceLoading=False):
+		# print("loadNext")
 		if self.isLoading and not forceLoading:
+			# print("stopped loadNext")
 			return
 		self.isLoading += 1
 		filter = self.filter.copy() or {}
@@ -129,6 +141,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadingKey = protoWrap.queryData(**filter)
 
 	def addData(self, queryKey):
+		# print("addData")
 		self.isLoading -= 1
 		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
 			return
@@ -137,8 +150,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
 		self.layoutAboutToBeChanged.emit()
 		self.rebuildDelegates.emit(protoWrap.viewStructure)
-		# self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		# self.emit( QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), protoWrap.structure )
 		# Rebuild our local cache of valid fields
 		bones = {}
 		for key, bone in protoWrap.viewStructure.items():
@@ -152,15 +163,11 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.layoutChanged.emit()
 		self.loadingKey = None
 
-		# self.emit(QtCore.SIGNAL("layoutChanged()"))
 		# self.emit(QtCore.SIGNAL("dataRecived()"))
 
 	def repaint(self):  # Currently an ugly hack to redraw the table
 		self.layoutAboutToBeChanged.emit()
 		self.layoutChanged.emit()
-
-		# self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		# self.emit(QtCore.SIGNAL("layoutChanged()"))
 
 	def getData(self):
 		return self.dataCache
@@ -451,13 +458,24 @@ class ListWidget(QtWidgets.QWidget):
 		if filter is not None and "search" in filter.keys():
 			self.ui.editSearch.setText(filter["search"])
 		config = conf.serverConfig["modules"][modul]
-		if not actions:
-			handler = config["handler"]
-			if handler in self.defaultActions.keys():
-				actions = self.defaultActions[handler]
-		if actions is None:  # Still None
-			actions = self.defaultActions["list"]
-		self.setActions(actions)
+		handler = config["handler"]
+		try:
+			handler = handler.split(".", 1)[0]
+		except ValueError:
+			pass
+		all_actions = list()
+		print("handler", handler)
+		if handler in self.defaultActions.keys():
+			all_actions.extend(self.defaultActions[handler])
+		print("all_actions 1", all_actions)
+		print("actions", actions)
+		if actions is not None:
+			all_actions.extend(actions)
+		print("all_actions 2", all_actions)
+		if not all_actions:  # Still None
+			all_actions = self.defaultActions["list"]
+		print("all_actions 3", all_actions)
+		self.setActions(all_actions)
 		if editOnDoubleClick:
 			self.list.itemDoubleClicked.connect(self.openEditor)
 		self.list.itemClicked.connect(self.itemClicked)
@@ -599,3 +617,158 @@ class ListWidget(QtWidgets.QWidget):
 
 	def getSelection(self):
 		return (self.list.getSelection())
+
+
+class CsvExportWidget(QtWidgets.QWidget):
+	appList = "list"
+	appHierarchy = "hierarchy"
+	appTree = "tree"
+	appSingleton = "singleton"
+
+	def __init__(self, module, model, *args, **kwargs):
+		"""
+			Initialize a new Edit or Add-Widget for the given modul.
+			@param modul: Name of the modul
+			@type modul: String
+			@param model: The ListTableModel instance
+			@type model: ListTableModel
+		"""
+		super(CsvExportWidget, self).__init__(*args, **kwargs)
+		self.module = module
+		self.model = model
+		self.ui = Ui_CsvExport()
+		self.ui.setupUi(self)
+		_translate = QtCore.QCoreApplication.translate
+		oldlang = conf.adminConfig["language"]
+		active = 0
+		for ix, (key, lang) in enumerate(conf.serverConfig["viur.defaultlangsvalues"].items()):
+			logging.debug("lang %r %r", key, lang)
+			if key == oldlang:
+				active = ix
+			self.ui.langComboBox.addItem(lang, key)
+		self.ui.langComboBox.setCurrentIndex(active)
+
+		protoWrap = protocolWrapperInstanceSelector.select(module)
+		assert protoWrap is not None
+
+		self.bones = {}
+		self.closeOnSuccess = False
+		self._lastData = {}  # Dict of structure and values recived
+		self.isLoading = 0
+		self.cursor = None
+		self.completeList = False
+		self.dataCache = list()
+		okButton = self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok)
+		okButton.released.connect(self.onTriggered)
+		cancelButton = self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel)
+		cancelButton.released.connect(self.onBtnCloseReleased)
+		self.ui.filenameName.setText(os.path.expanduser("~/export-{0}-{1}.csv".format(self.module, datetime.now().strftime("%Y%m%d%H%M"))))
+		self.fileAction = QtWidgets.QAction(self)
+		self.ui.filenameDialogAction.setDefaultAction(self.fileAction)
+		self.ui.filenameDialogAction.setText(_translate("CsvExport", "..."))
+		self.ui.filenameDialogAction.triggered.connect(self.onChooseOutputFile)
+		self.logger = logging.getLogger("List Widget")
+
+	def onTriggered(self):
+		# self.overlay = Overlay(self)
+		# self.overlay.inform(self.overlay.BUSY)
+		path = self.ui.filenameName.text()
+		self.logger.debug("path: %r", path)
+		if not path:
+			return
+
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		assert protoWrap is not None
+		protoWrap.queryResultAvaiable.connect(self.addData)
+		self.loadNext()
+
+	def loadNext(self):
+		if self.isLoading:
+			self.logger.debug("stopped loadNext")
+			return
+		self.isLoading += 1
+		filter = self.model.filter.copy() or {}
+		if self.cursor:
+			filter["cursor"] = self.cursor
+		elif self.dataCache:
+			invertedOrderDir = False
+			if "orderdir" in filter.keys() and str(filter["orderdir"]) == "1":
+				invertedOrderDir = True
+			if filter["orderby"] in self.dataCache[-1].keys():
+				if invertedOrderDir:
+					filter[filter["orderby"] + "$lt"] = self.dataCache[-1][filter["orderby"]]
+				else:
+					filter[filter["orderby"] + "$gt"] = self.dataCache[-1][filter["orderby"]]
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		assert protoWrap is not None
+		filter["amount"] = 20
+		self.loadingKey = protoWrap.queryData(**filter)
+
+	def addData(self, queryKey):
+		# print("addData")
+		self.isLoading -= 1
+		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
+			return
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		assert protoWrap is not None
+		cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
+		for item in skellist:  # Insert the new Data at the coresponding Position
+			self.dataCache.append(item)
+		self.cursor = cursor
+		self.loadingKey = None
+		if len(skellist) < 20:
+			self.completeList = True
+			self.serializeToCsv(self.dataCache, protoWrap.viewStructure)
+			self.model.dataCache = self.dataCache
+			self.model.layoutChanged.emit()
+			event.emit('popWidget', self)
+		else:
+			self.loadNext()
+
+	def onChooseOutputFile(self, action=None):
+		self.logger.debug("onChooseOutputFile %r", action)
+		dialog = QtWidgets.QFileDialog(self, directory=os.path.expanduser("~"))
+		dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+		dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+		dialog.setDefaultSuffix("csv")
+		if dialog.exec():
+			try:
+				self.ui.filenameName.setText(dialog.selectedFiles()[0])
+			except Exception as err:
+				self.logger.exception(err)
+
+	def serializeToCsv(self, data, bones):
+		f = open(self.ui.filenameName.text(), "w")
+		writer = csv.writer(f, delimiter=";", quoting=csv.QUOTE_ALL)
+
+		delegates = []
+		fields = bones.keys()
+		headers = list()
+		oldlang = conf.adminConfig["language"]
+		newlang = self.ui.langComboBox.currentData()
+		try:
+			conf.adminConfig["language"] = newlang
+			for field in fields:
+				# Locate the best ViewDeleate for this column
+				delegateFactory = viewDelegateSelector.select(self.modul, field, bones)
+				delegate = delegateFactory(self.modul, field, bones)
+				delegates.append(delegate)
+				headers.append(bones[field]["descr"])
+
+			writer.writerow(headers)
+			for row in data:
+				result = list()
+				for column, field in enumerate(fields):
+					delegate = delegates[column]
+					value = row[field]
+					result.append(delegate.displayText(value, QtCore.QLocale()))
+				writer.writerow(result)
+			for i in delegates:
+				i.deleteLater()
+		except Exception as err:
+			self.logger.exception(err)
+		finally:
+			conf.adminConfig["language"] = oldlang
+
+	def onBtnCloseReleased(self, *args, **kwargs):
+		event.emit("popWidget", self)

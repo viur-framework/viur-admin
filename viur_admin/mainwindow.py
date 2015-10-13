@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.preloader = Preloader()
 		self.preloader.show()
 		self.preloader.finished.connect(self.onPreloaderFinished)
-		self.logger.debug("Checkpoint: loadConfig")
+		# self.logger.debug("Checkpoint: loadConfig")
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError)
 
 	def onPreloaderFinished(self):
@@ -106,7 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.show()
 
 	def onLoadConfig(self, request):
-		self.logger.debug("Checkpoint: onLoadConfig")
+		# self.logger.debug("Checkpoint: onLoadConfig")
 		try:
 			conf.serverConfig = NetworkService.decode(request)
 		except:
@@ -368,7 +368,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			if wrapperClass is not None:
 				wrapperClass(modul)
 			event.emit('modulHandlerInitialized', modul)
-		self.ui.treeWidget.sortItems(1, QtCore.Qt.AscendingOrder)
+		self.ui.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 

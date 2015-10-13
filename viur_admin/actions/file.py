@@ -15,7 +15,7 @@ class FileUploadAction(QtWidgets.QAction):
 
 	def onTriggered(self, e):
 		files, other = QtWidgets.QFileDialog.getOpenFileNames()
-		print("file on triggered", files, repr(other))
+		# print("file on triggered", files, repr(other))
 		self.parent().doUpload(files, self.parent().getNode())
 
 	@staticmethod

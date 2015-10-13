@@ -281,7 +281,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 
 	def loadIconFromRequest(self, request):
 		icon = QtGui.QIcon(request.getFileName())
-		logging.debug("loadIconFromRequest %r", icon)
+		# logging.debug("loadIconFromRequest %r", icon)
 		self.setIcon(0, icon)
 
 	def focus(self):

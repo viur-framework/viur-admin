@@ -98,7 +98,7 @@ class TreeDirUpAction(QtWidgets.QAction):
         assert reqWrap is not None
         node = reqWrap.getNode(self.parent().getNode())
         if node:
-            print(node)
+            # print(node)
             if node["parentdir"]:
                 self.parent().setNode(node["parentdir"], isInitialCall=True)
 

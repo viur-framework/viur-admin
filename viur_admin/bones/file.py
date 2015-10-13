@@ -16,6 +16,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 	def __init__(self, modul, boneName, structure):
 		super(FileViewBoneDelegate, self).__init__(modul, boneName, structure)
 		self.format = "$(name)"
+		self.structure = structure
 		if "format" in structure[boneName].keys():
 			self.format = structure[boneName]["format"]
 
@@ -84,7 +85,7 @@ class FileItemBone(TreeItemBone):
 				widgetItem = self.previewLayout.takeAt(0)
 			if self.selection and len(self.selection) > 0:
 				for item in self.selection:
-					print("format", self.format, structure, item)
+					# print("format", self.format, structure, item)
 					previewIcon = QtGui.QIcon(item)
 					lbl = QtWidgets.QLabel(self.previewWidget)
 					lbl.setText(formatString(self.format, structure, item))
@@ -94,7 +95,7 @@ class FileItemBone(TreeItemBone):
 				self.addBtn.setText("blub Auswählen")
 		else:
 			if self.selection:
-				print("format", self.format, structure, self.selection)
+				# print("format", self.format, structure, self.selection)
 				if self.selection["mimetype"].startswith("image/"):
 					RemoteFile(self.selection["dlkey"], successHandler=self.loadIconFromRequest)
 				self.entry.setText(formatString(self.format, structure, self.selection))

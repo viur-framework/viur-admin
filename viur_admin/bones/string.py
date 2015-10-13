@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from html.parser import HTMLParser
 
 from PyQt5 import QtWidgets
@@ -19,22 +21,22 @@ def unescapeHtml(html):
 def chooseLang(value, prefs):
 	"""
 		Tries to select the best language for the current user.
-		Value is the dictionary of lang -> text recived from the server,
+		Value is the dictionary of lang -> text received from the server,
 		prefs the list of languages (in order of preference) for that bone.
 	"""
 	if not isinstance(value, dict):
-		return (value)
+		return value
 	try:
 		lang = conf.adminConfig["language"]
-	except:
+	except KeyError:
 		lang = ""
 	if lang in value.keys() and value[lang]:
 		return (value[lang])
 	for lang in prefs:
 		if lang in value.keys():
 			if value[lang]:
-				return (value[lang])
-	return (None)
+				return value[lang]
+	return None
 
 
 class StringViewBoneDelegate(BaseViewBoneDelegate):

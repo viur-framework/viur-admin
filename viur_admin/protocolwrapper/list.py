@@ -31,7 +31,7 @@ class ListWrapper(QtCore.QObject):
         self.editStructure = None
         self.busy = True
         req = NetworkService.request("/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable)
-        print("Initializing ListWrapper for modul %s" % self.modul)
+        # print("Initializing ListWrapper for modul %s" % self.modul)
         protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
         self.deferedTaskQueue = []
         self.checkBusyStatus()
@@ -100,7 +100,7 @@ class ListWrapper(QtCore.QObject):
         self.dataCache[key] = None
         r = NetworkService.request("/%s/list" % self.modul, kwargs, successHandler=self.addCacheData)
         r.wrapperCbCacheKey = key
-        print("request cache key", self, r, r.wrapperCbCacheKey)
+        # print("request cache key", self, r, r.wrapperCbCacheKey)
         self.checkBusyStatus()
         return key
 
@@ -130,7 +130,7 @@ class ListWrapper(QtCore.QObject):
         elif data["action"] == "view":
             self.dataCache[data["values"]["id"]] = data["values"]
             self.entityAvailable.emit(data["values"])
-        print("addcache", self, req)
+        # print("addcache", self, req)
         if hasattr(req, "wrapperCbCacheKey"):
             self.queryResultAvaiable.emit(req.wrapperCbCacheKey)
         self.checkBusyStatus()
@@ -161,7 +161,7 @@ class ListWrapper(QtCore.QObject):
         if isinstance(ids, list):
             req = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
             for id in ids:
-                print(id)
+                # print(id)
                 r = NetworkService.request("/%s/delete" % self.modul, {"id": id}, secure=True, parent=req)
                 req.addQuery(r)
         else:  # We just delete one

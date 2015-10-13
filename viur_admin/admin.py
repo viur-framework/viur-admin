@@ -49,7 +49,7 @@ print()
 print(data)
 print()
 app.setStyleSheet(data)
-app.setStyleSheet(open("app.css", "r").read())
+# app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
 prgc = sys.argv[0]

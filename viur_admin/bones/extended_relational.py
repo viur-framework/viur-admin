@@ -32,7 +32,7 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 
 	def displayText(self, value, locale):
 		tmp = formatString(self.format, self.structure, value)
-		print("text", tmp)
+		# print("text", tmp)
 		return tmp
 
 
@@ -73,7 +73,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache = []
 		for skel in data["skellist"]:
-			print("addCompletionData", skel)
+			# print("addCompletionData", skel)
 			self.dataCache.append(skel)
 		self.layoutChanged.emit()
 
@@ -144,6 +144,12 @@ class InternalEdit(QtWidgets.QWidget):
 			# self.ui.btnSaveClose.setDisabled(True)
 			# self.ui.btnSaveContinue.setDisabled(True)
 
+	def serializeForPost(self):
+		res = {}
+		for key, bone in self.bones.items():
+			res.update(bone.serializeForPost())
+		return res
+
 
 class ExtendedRelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "ExtendedRelationalEditBone"
@@ -159,6 +165,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		self.using = using
 		self.format = format
 		self.overlay = Overlay(self)
+		self.internalEdits = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
 		else:
@@ -238,7 +245,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 					# lbl.setText(formatString(self.format, structure, item) + " foo ")
 					item = InternalEdit(self, self.using, formatString(self.format, structure, item), item["rel"], {})
 					self.previewLayout.addWidget(item)
-
+					self.internalEdits.append(item)
 				self.addBtn.setText("Auswahl ändern")
 			else:
 				self.addBtn.setText("Auswählen")
@@ -285,6 +292,9 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		if not self.selection:
 			return {self.boneName: None}
 		if self.multiple:
+			res = dict()
+			for item in self.internalEdits:
+				res.update(item.serializeForPost())
 			return {self.boneName: [str(x["id"]) for x in self.selection]}
 		elif self.selection:
 			return {self.boneName: str(self.selection["id"])}
