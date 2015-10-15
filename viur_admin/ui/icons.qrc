@@ -374,5 +374,6 @@
         <file>viur_splash.png</file>
         <file>viur_updater_win.ico</file>
         <file>viur_win.ico</file>
+        <file>cacert.pem</file>
     </qresource>
 </RCC>

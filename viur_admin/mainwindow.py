@@ -91,6 +91,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs()
+		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
+		try:
+			self.restoreGeometry(settings.value("geometry"))
+			self.restoreState(settings.value("windowState"))
+		except Exception as err:
+			print(err)
+			pass
 
 	def loadConfig(self, request=None):
 		# self.show()
@@ -335,7 +342,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		groupHandlers = {}
 		if "configuration" in data.keys() and "modulGroups" in data["configuration"].keys():
 			for group in data["configuration"]["modulGroups"]:
-				print("griup", group)
 				if not all([x in group.keys() for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
@@ -344,16 +350,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		if "modules" not in conf.portal.keys():
 			conf.portal["modules"] = {}
 		for modul, cfg in data["modules"].items():
-			print("module, cfg", modul, cfg)
 			queue = RegisterQueue()
 			event.emit('requestModulHandler', queue, modul)
-			print("event emit")
 			handler = queue.getBest()()
-			print("handler", handler)
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None
 				for groupName in groupHandlers.keys():
-					logging.info("groupName %r, %r", groupName, cfg["name"])
+					# logging.info("groupName %r, %r", groupName, cfg["name"])
 					if cfg["name"].startswith(groupName):
 						parent = groupHandlers[groupName]
 				if parent:
@@ -361,7 +364,6 @@ class MainWindow(QtWidgets.QMainWindow):
 				else:
 					self.ui.treeWidget.addTopLevelItem(handler)
 			else:
-				print("tli", handler.data(0))
 				self.ui.treeWidget.addTopLevelItem(handler)
 			handlers.append(handler)
 			wrapperClass = protocolWrapperClassSelector.select(modul, data["modules"])
@@ -393,3 +395,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		taskHandler = TaskEntryHandler(lambda *args, **kwargs: TaskViewer())
 		self.addHandler(taskHandler)
 		taskHandler.focus()
+
+	def closeEvent(self, event):
+		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
+		settings.setValue("geometry", self.saveGeometry())
+		settings.setValue("windowState", self.saveState())
+		super(MainWindow, self).closeEvent(event)

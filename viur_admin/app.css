@@ -68,28 +68,28 @@ QTreeView::item:hover {
 /*roter gradient {background-color: qlineargradient(spread:pad, x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e20614, stop: 1 #c31520);}*/
 
 QTreeView::branch:hover,
-QTreeView::branch:open:has-children:! has-siblings:hover,
+QTreeView::branch:open:has-children:!has-siblings:hover,
 QTreeView::branch:open:has-children:has-siblings:hover,
-QTreeView::branch:closed:has-children:! has-siblings:hover,
+QTreeView::branch:closed:has-children:!has-siblings:hover,
 QTreeView::branch:closed:has-children:has-siblings:hover,
 QTreeView::branch:has-siblings:adjoins-item:hover,
-QTreeView::branch:has-siblings:! adjoins-item:hover,
-QTreeView::branch:! has-children:! has-siblings:adjoins-item:hover {
+QTreeView::branch:has-siblings:!adjoins-item:hover,
+QTreeView::branch:!has-children:!has-siblings:adjoins-item:hover {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #bbb, stop : 1 #999);
 }
 
 QTreeView::branch:selected,
 QTreeView::item:selected:active,
 QTreeView::item:selected,
-QTreeView::item:selected:! active,
-QTreeView::branch:open:has-children:! has-siblings:selected,
+QTreeView::item:selected:!active,
+QTreeView::branch:open:has-children:!has-siblings:selected,
 QTreeView::branch:open:has-children:has-siblings:selected,
-QTreeView::branch:closed:has-children:! has-siblings:selected,
+QTreeView::branch:closed:has-children:!has-siblings:selected,
 QTreeView::branch:closed:has-children:has-siblings:selected,
 QTreeView::branch:has-siblings:adjoins-item:selected,
-QTreeView::branch:has-siblings:! adjoins-item:selected,
-QTreeView::branch:! has-children:! has-siblings:adjoins-item:selected {
-    /*background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #666, stop : 1 #777);*/
+QTreeView::branch:has-siblings:!adjoins-item:selected,
+QTreeView::branch:!has-children:!has-siblings:adjoins-item:selected {
+    background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #666, stop : 1 #777);
     background-color: rgba(255,0,0,255);
 }
 
@@ -99,27 +99,27 @@ QTreeView::item:focus {
 }
 
 QTreeView::branch,
-QTreeView::branch:has-siblings:! adjoins-item {
+QTreeView::branch:has-siblings:!adjoins-item {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eeeeee, stop : 1 #f7f7f7);
     border-bottom: 1px solid #ddd;
-    /*image: url(:/icons/menu/vline.png) 0;*/
+    image: url(:/icons/menu/vline.png) 0;
 }
 
 QTreeView::branch:has-siblings:adjoins-item {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eeeeee, stop : 1 #f7f7f7);
     border-bottom: 1px solid #ddd;
     border-image: none;
-    /*image: url(:/icons/menu/branch-more.png) 0;*/
+    image: url(:/icons/menu/branch-more.png) 0;
 }
 
-QTreeView::branch:! has-children:! has-siblings:adjoins-item {
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eeeeee, stop : 1 #f7f7f7);
     border-bottom: 1px solid #ddd;
     border-image: none;
-    /*image: url(:/icons/menu/branch-end.png) 0;*/
+    image: url(:/icons/menu/branch-end.png) 0;
 }
 
-QTreeView::branch:has-children:! has-siblings:closed,
+QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eeeeee, stop : 1 #f7f7f7);
     border-bottom: 1px solid #ddd;
@@ -127,7 +127,7 @@ QTreeView::branch:closed:has-children:has-siblings {
     image: url(:/icons/menu/branch-closed.png);
 }
 
-QTreeView::branch:open:has-children:! has-siblings,
+QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eeeeee, stop : 1 #f7f7f7);
     border-bottom: 1px solid #ddd;
@@ -335,13 +335,13 @@ QLineEdit:focus {
 QComboBox:editable {
 }
 
-QComboBox:! editable {
+QComboBox:!editable {
 }
 
 QComboBox::drop-down:editable {
 }
 
-QComboBox:! editable:on {
+QComboBox:!editable:on {
 }
 
 QComboBox::drop-down:editable:on {
@@ -430,7 +430,7 @@ QTabBar::tab {
     margin-bottom: -1px;
 }
 
-QTabBar::tab:! selected {
+QTabBar::tab:!selected {
     margin-top: 2px; /* make non-selected tabs look smaller */
 }
 

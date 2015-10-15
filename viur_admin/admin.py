@@ -41,15 +41,12 @@ if sys.version_info < min_version:
     sys.exit(1)
 
 
-# app.setStyle("plastique")
-css = QtCore.QFile(":icons/app.css")
-css.open(QtCore.QFile.ReadOnly)
-data = str(css.readAll(), encoding='ascii')
-print()
-print(data)
-print()
-app.setStyleSheet(data)
-# app.setStyleSheet(open("app.css", "r").read())
+app.setStyle("cleanlooks")
+# css = QtCore.QFile(":icons/app.css")
+# css.open(QtCore.QFile.ReadOnly)
+# data = str(css.readAll(), encoding='ascii')
+# app.setStyleSheet(data)
+app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -76,7 +73,7 @@ conf.cmdLineOpts = args
 logging.getLogger().setLevel(logging.DEBUG)
 
 # from bugsnag import Notification
-
+#
 # def reportError(type, value, tb):
 #     print("*" * 40)
 #     print(type)
@@ -108,12 +105,9 @@ logging.getLogger().setLevel(logging.DEBUG)
 #     n.deliver()
 #
 #
-# if (options.report == "auto" and not os.path.exists(
-#         ".git")) or options.report == "yes":  #Report errors only if not beeing a local development instance
+# if (args.report == "auto" and not os.path.exists(
+#         ".git")) or args.report == "yes":  #Report errors only if not beeing a local development instance
 #     sys.excepthook = reportError
-
-# conf.cmdLineOpts = options  #Store the command-line options
-
 
 
 def main():

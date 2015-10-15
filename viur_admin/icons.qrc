@@ -123,6 +123,7 @@
         <file>filetypes/gzip.png</file>
         <file>filetypes/html.png</file>
         <file>filetypes/image.svg</file>
+        <file>filetypes/jpg.png</file>
         <file>filetypes/jpg.svg</file>
         <file>filetypes/js.png</file>
         <file>filetypes/mov.png</file>
@@ -132,6 +133,7 @@
         <file>filetypes/mpeg.png</file>
         <file>filetypes/mpeg4.png</file>
         <file>filetypes/ogg.png</file>
+        <file>filetypes/pdf.png</file>
         <file>filetypes/pdf.svg</file>
         <file>filetypes/php.png</file>
         <file>filetypes/pl.png</file>

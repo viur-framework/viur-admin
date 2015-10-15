@@ -67,7 +67,7 @@ class TaskViewer(QtWidgets.QWidget):
         if not item:
             return
         taskID = item.task["id"]
-        """
+
         for i in range(self.ui.horizontalLayout.count()):
             if self.ui.horizontalLayout.itemAt(i).widget():
                 self.ui.horizontalLayout.itemAt(i).widget().close()
@@ -85,7 +85,7 @@ class TaskViewer(QtWidgets.QWidget):
         self.ui.verticalLayout.addWidget( nameLbl )
         descrLbl = QtWidgets.QLabel( task["descr"], self )
         self.ui.verticalLayout.addWidget( descrLbl )
-        """
+
         from viur_admin.widgets.edit import EditWidget
 
         event.emit("stackWidget", EditWidget("_tasks", EditWidget.appSingleton, taskID))

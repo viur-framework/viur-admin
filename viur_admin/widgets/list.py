@@ -387,9 +387,9 @@ class ListTableView(QtWidgets.QTableView):
 			tmpList = []
 			for itemIndex in self.selectionModel().selection().indexes():
 				tmpList.append(self.model().getData()[itemIndex.row()])
-			event.mimeData().setData("viur/listDragData", json.dumps({"entities": tmpList}))
+			event.mimeData().setData("viur/listDragData", json.dumps({"entities": tmpList}).encode("utf-8"))
 			event.mimeData().setUrls([urlForItem(self.model().modul, x) for x in tmpList])
-		return (super(ListTableView, self).dragEnterEvent(event))
+		return super(ListTableView, self).dragEnterEvent(event)
 
 	def dragMoveEvent(self, event):
 		"""
@@ -399,13 +399,13 @@ class ListTableView(QtWidgets.QTableView):
 		event.ignore()
 
 	def getFilter(self):
-		return (self.model().getFilter())
+		return self.model().getFilter()
 
 	def setFilter(self, filter):
 		self.model().setFilter(filter)
 
 	def getModul(self):
-		return (self.model().getModul())
+		return self.model().getModul()
 
 	def getSelection(self):
 		"""
@@ -417,7 +417,6 @@ class ListTableView(QtWidgets.QTableView):
 	def paintEvent(self, event):
 		super(ListTableView, self).paintEvent(event)
 		if not len(self.model().getData()):
-			print("xxxx")
 			painter = QtGui.QPainter(self.viewport())
 			painter.setRenderHint(QtGui.QPainter.Antialiasing)
 			painter.drawImage((self.width() / 2 - self.missingImage.width() / 2),
@@ -464,17 +463,12 @@ class ListWidget(QtWidgets.QWidget):
 		except ValueError:
 			pass
 		all_actions = list()
-		print("handler", handler)
 		if handler in self.defaultActions.keys():
 			all_actions.extend(self.defaultActions[handler])
-		print("all_actions 1", all_actions)
-		print("actions", actions)
 		if actions is not None:
 			all_actions.extend(actions)
-		print("all_actions 2", all_actions)
 		if not all_actions:  # Still None
 			all_actions = self.defaultActions["list"]
-		print("all_actions 3", all_actions)
 		self.setActions(all_actions)
 		if editOnDoubleClick:
 			self.list.itemDoubleClicked.connect(self.openEditor)
@@ -516,7 +510,6 @@ class ListWidget(QtWidgets.QWidget):
 			return
 		self._currentActions = actions[:]
 		for action in actions:
-			print("action", action)
 			if action == "|":
 				self.toolBar.addSeparator()
 			else:
@@ -705,7 +698,6 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.loadingKey = protoWrap.queryData(**filter)
 
 	def addData(self, queryKey):
-		# print("addData")
 		self.isLoading -= 1
 		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
 			return

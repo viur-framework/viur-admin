@@ -202,7 +202,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		if "modul" in skelStructure[boneName].keys():
 			destModul = skelStructure[boneName]["modul"]
 		else:
-			destModul = skelStructure[boneName]["type"].split(".")[1]
+			destModul = skelStructure[boneName]["type"].split(".", 1)
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
@@ -241,9 +241,11 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 				widgetItem = self.previewLayout.takeAt(0)
 			if self.selection and len(self.selection) > 0:
 				for item in self.selection:
+					print("update item", item)
 					# lbl = QtWidgets.QLabel(self.previewWidget)
 					# lbl.setText(formatString(self.format, structure, item) + " foo ")
 					item = InternalEdit(self, self.using, formatString(self.format, structure, item), item["rel"], {})
+					item.show()
 					self.previewLayout.addWidget(item)
 					self.internalEdits.append(item)
 				self.addBtn.setText("Auswahl ändern")
@@ -265,6 +267,8 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			self.setSelection([res])
 
 	def setSelection(self, selection):
+		print("setSelection", selection)
+		selection = [{"dest": item, "rel": {}} for item in selection]
 		if self.multiple:
 			self.selection = selection
 		elif len(selection) > 0:
@@ -274,6 +278,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		self.updateVisiblePreview()
 
 	def onAddBtnReleased(self, *args, **kwargs):
+		print("onAddBtnReleased")
 		editWidget = ExtendedRelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
@@ -285,7 +290,9 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		self.updateVisiblePreview()
 
 	def unserialize(self, data):
+		print("unserialize", data)
 		self.selection = data[self.boneName]
+		print("new selection", data[self.boneName])
 		self.updateVisiblePreview()
 
 	def serializeForPost(self):
@@ -366,7 +373,7 @@ class ExtendedRelationalBoneSelector(QtWidgets.QWidget):
 				An item has been doubleClicked in our listWidget.
 				Read its properties and add them to our selection.
 		"""
-		data = item
+		data = {"dest": item, "rel": {}}
 		if self.multiple:
 			self.selection.extend([data])
 		else:

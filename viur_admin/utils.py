@@ -35,7 +35,6 @@ class RegisterQueue():
 
 		@return: Object
 		"""
-		print("getBest %r" % self.queue)
 		prios = [x for x in self.queue.keys()]
 		prios.sort()
 		return (self.queue[prios[-1]][0])

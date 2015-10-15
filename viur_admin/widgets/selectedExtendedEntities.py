@@ -35,9 +35,10 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		structureCache = protoWrap.editStructure
-		print("model init structure", structureCache)
+		# print("model init structure", structureCache)
 		protoWrap.entityAvailable.connect(self.onItemDataAvaiable)
 		for item in (selection or []):
+			print("item in selection", item)
 			self.addItem(item)
 
 	def addItem(self, item):

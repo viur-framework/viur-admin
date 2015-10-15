@@ -21,10 +21,10 @@ class BooleanEditBone(QtWidgets.QWidget):
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.layout = QtWidgets.QVBoxLayout(self)
-		self.comboBox = QtWidgets.QComboBox(self)
-		self.layout.addWidget(self.comboBox)
-		self.comboBox.addItems([QtCore.QCoreApplication.translate("BooleanEditBone", "No"),
-		                        QtCore.QCoreApplication.translate("BooleanEditBone", "Yes")])
+		self.checkBox = QtWidgets.QCheckBox(self)
+		if readOnly:
+			self.checkBox.setDisabled(True)
+		self.layout.addWidget(self.checkBox)
 
 	@classmethod
 	def fromSkelStructure(cls, modulName, boneName, skelStructure):
@@ -35,16 +35,10 @@ class BooleanEditBone(QtWidgets.QWidget):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
 		assert protoWrap is not None
 		if self.boneName in data.keys() and data[self.boneName]:
-			self.comboBox.setCurrentIndex(1)  # Yes is 2nd element
-		elif self.boneName in data.keys() and not data[self.boneName]:
-			self.comboBox.setCurrentIndex(0)
-		else:
-			self.comboBox.setCurrentIndex(-1)
+			self.checkBox.setChecked(True)
 
 	def serializeForPost(self):
-		if self.comboBox.currentIndex() != -1:
-			return ({self.boneName: str(self.comboBox.currentIndex())})
-		return ({self.boneName: None})
+		return {self.boneName: self.checkBox.isChecked()}
 
 	def serializeForDocument(self):
 		return (self.serialize())
