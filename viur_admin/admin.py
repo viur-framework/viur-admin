@@ -42,11 +42,11 @@ if sys.version_info < min_version:
 
 
 app.setStyle("cleanlooks")
-# css = QtCore.QFile(":icons/app.css")
-# css.open(QtCore.QFile.ReadOnly)
-# data = str(css.readAll(), encoding='ascii')
-# app.setStyleSheet(data)
-app.setStyleSheet(open("app.css", "r").read())
+css = QtCore.QFile(":icons/app.css")
+css.open(QtCore.QFile.ReadOnly)
+data = str(css.readAll(), encoding='ascii')
+app.setStyleSheet(data)
+# app.setStyleSheet(open("app.css", "r").read())
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
