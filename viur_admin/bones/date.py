@@ -81,16 +81,16 @@ class DateEditBone(QtWidgets.QWidget):
 		# builds inputspecific Widgets
 		if (self.time and self.date):  # (...skelStructure ...) #date AND time
 			self.lineEdit = FixedDateTimeEdit(self)
-			self.lineEdit.setGeometry(QtCore.QRect(170, 50, 173, 20))
+			# self.lineEdit.setGeometry(QtCore.QRect(170, 50, 173, 20))
 			self.lineEdit.setAccelerated(False)
 			self.lineEdit.setCalendarPopup(True)
 		elif (self.date):  # date only
 			self.lineEdit = FixedDateEdit(self)
-			self.lineEdit.setGeometry(QtCore.QRect(190, 90, 110, 22))
+			# self.lineEdit.setGeometry(QtCore.QRect(190, 90, 110, 22))
 			self.lineEdit.setCalendarPopup(True)
 		else:  # time only
 			self.lineEdit = FixedTimeEdit(self)
-			self.lineEdit.setGeometry(QtCore.QRect(190, 190, 118, 22))
+			# self.lineEdit.setGeometry(QtCore.QRect(190, 190, 118, 22))
 
 		self.lineEdit.setObjectName(_fromUtf8(boneName))
 		self.layout.addWidget(self.lineEdit)

@@ -3,6 +3,7 @@ from viur_admin.ui.taskUI import Ui_Task
 from viur_admin.network import NetworkService
 from viur_admin.utils import Overlay, WidgetHandler, loadIcon
 from viur_admin.event import event
+from viur_admin.widgets.edit import EditWidget
 
 
 class TaskEntryHandler(WidgetHandler):
@@ -86,7 +87,4 @@ class TaskViewer(QtWidgets.QWidget):
         descrLbl = QtWidgets.QLabel( task["descr"], self )
         self.ui.verticalLayout.addWidget( descrLbl )
 
-        from viur_admin.widgets.edit import EditWidget
-
         event.emit("stackWidget", EditWidget("_tasks", EditWidget.appSingleton, taskID))
-

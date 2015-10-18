@@ -96,7 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.restoreGeometry(settings.value("geometry"))
 			self.restoreState(settings.value("windowState"))
 		except Exception as err:
-			print(err)
+			# print(err)
 			pass
 
 	def loadConfig(self, request=None):
@@ -350,6 +350,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		if "modules" not in conf.portal.keys():
 			conf.portal["modules"] = {}
 		for modul, cfg in data["modules"].items():
+			# print("module, cfg", modul, cfg)
 			queue = RegisterQueue()
 			event.emit('requestModulHandler', queue, modul)
 			handler = queue.getBest()()

@@ -8,12 +8,13 @@ from viur_admin.config import conf
 from viur_admin.network import NetworkService, RemoteFile
 
 
-class RegisterQueue():
+class RegisterQueue:
 	"""
 	Propagates through the QT-Eventqueue and collects all Handlers able to scope with the current request
 	"""
 
 	def __init__(self):
+		super().__init__()
 		self.queue = {}
 
 	def registerHandler(self, priority, handler):
@@ -24,7 +25,7 @@ class RegisterQueue():
 		@param priority: Priority of the handler. The higest one wins.
 		@type handler: Object
 		"""
-		if not priority in self.queue.keys():
+		if priority not in self.queue.keys():
 			self.queue[priority] = []
 		self.queue[priority].append(handler)
 
@@ -37,7 +38,7 @@ class RegisterQueue():
 		"""
 		prios = [x for x in self.queue.keys()]
 		prios.sort()
-		return (self.queue[prios[-1]][0])
+		return self.queue[prios[-1]][0]
 
 	def getAll(self):
 		"""
@@ -51,7 +52,7 @@ class RegisterQueue():
 		for p in prios:
 			for item in self.queue[p]:
 				res.append(item)
-		return (res)
+		return res
 
 
 class Overlay(QtWidgets.QWidget):
@@ -322,15 +323,16 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 					icon = QtGui.QIcon(icon)
 				self.setIcon(0, icon)
 				self.setText(0, txt)
-				return (txt, icon)
+				return txt, icon
 			except:
 				continue
-		return (self.text(0), self.icon(0))
+		return self.text(0), self.icon(0)
 
 	def clicked(self):
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
+		self.setExpanded(not self.isExpanded())
 		self.focus()
 
 	def contextMenu(self):
@@ -370,7 +372,7 @@ class GroupHandler(WidgetHandler):
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
-		pass
+		self.setExpanded(not self.isExpanded())
 
 	def contextMenu(self):
 		"""
@@ -386,10 +388,10 @@ class WheelEventFilter(QtCore.QObject):
 	"""
 
 	def eventFilter(self, obj, event):
-		if (event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus):
+		if event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus:
 			event.ignore()
-			return (True)
-		return (False)
+			return True
+		return False
 
 
 wheelEventFilter = WheelEventFilter()
@@ -410,14 +412,13 @@ def urlForItem(modul, item):
 			return (QtCore.QUrl("%s/%s/download/%s/%s" % (
 				NetworkService.url.replace("/admin", ""), modul, item["dlkey"], item["name"])))
 		else:  # Return a URL without a name appended
-			return (
-				QtCore.QUrl("%s/%s/download/%s" % (NetworkService.url.replace("/admin", ""), modul, item["dlkey"])))
+			return QtCore.QUrl("%s/%s/download/%s" % (NetworkService.url.replace("/admin", ""), modul, item["dlkey"]))
 	else:
 		if "name" in item.keys():
-			return (QtCore.QUrl(
-				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"], item["name"])))
+			return QtCore.QUrl(
+				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"], item["name"]))
 		else:  # Return a URL without a name appended
-			return (QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"])))
+			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"]))
 
 
 def itemFromUrl(url):
@@ -436,16 +437,16 @@ def itemFromUrl(url):
 		url = url[: url.find("?")]
 	parts = [x for x in url.split("/") if x]
 	if len(parts) < 3:
-		return (None)
+		return None
 	if parts[1].lower() != "view":
-		return (None)
+		return None
 	modul = parts[0]
-	if not modul in conf.serverConfig["modules"].keys():  # Unknown modul
-		return (None)
+	if modul not in conf.serverConfig["modules"].keys():  # Unknown modul
+		return None
 	if len(parts) > 3:
-		return (modul, parts[2], parts[3])
+		return modul, parts[2], parts[3]
 	else:
-		return (modul, parts[2], "")
+		return modul, parts[2], ""
 
 
 def formatString(format, skelStructure, data, prefix=None):
@@ -473,18 +474,18 @@ def formatString(format, skelStructure, data, prefix=None):
 			prefs the list of languages (in order of preference) for that bone.
 		"""
 		if not isinstance(value, dict):
-			return (str(value))
+			return str(value)
 		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
 			lang = "%s.%s" % (key, conf.adminConfig["language"])
 		except:
 			lang = ""
 		if lang in value.keys() and value[lang]:
-			return (value[lang])
+			return value[lang]
 		for lang in prefs:
 			if "%s.%s" % (key, lang) in value.keys():
 				if value["%s.%s" % (key, lang)]:
-					return (value["%s.%s" % (key, lang)])
+					return value["%s.%s" % (key, lang)]
 		# Normal edit format ( name : { lang: xx } ) format
 		if key in value.keys() and isinstance(value[key], dict):
 			langDict = value[key]
@@ -493,12 +494,12 @@ def formatString(format, skelStructure, data, prefix=None):
 			except:
 				lang = ""
 			if lang in langDict.keys():
-				return (langDict[lang])
+				return langDict[lang]
 			for lang in prefs:
 				if lang in langDict.keys():
 					if langDict[lang]:
-						return (langDict[lang])
-		return ("")
+						return langDict[lang]
+		return ""
 
 	if isinstance(skelStructure, list):
 		# The server sends the information as list; but the first thing
@@ -510,12 +511,12 @@ def formatString(format, skelStructure, data, prefix=None):
 		skelStructure = tmpDict
 	prefix = prefix or []
 	if isinstance(data, list):
-		return (", ".join([formatString(format, skelStructure, x, prefix) for x in data]))
+		return ", ".join([formatString(format, skelStructure, x, prefix) for x in data])
 	res = format
 	if isinstance(data, str):
-		return (data)
+		return data
 	if not data:
-		return (res)
+		return res
 	for key in data.keys():
 		if isinstance(data[key], dict):
 			res = formatString(res, skelStructure, data[key], prefix + [key])
@@ -528,7 +529,7 @@ def formatString(format, skelStructure, data, prefix=None):
 		for key, bone in skelStructure.items():
 			if "languages" in bone.keys() and bone["languages"]:
 				res = res.replace("$(%s)" % key, str(chooseLang(data, bone["languages"], key)))
-	return (res)
+	return res
 
 
 def loadIcon(icon):
@@ -536,7 +537,7 @@ def loadIcon(icon):
 		Tries to create an icon from the given filename.
 		If that image exists in different sizes, all of them are loaded.
 	"""
-	print("loadIcon", icon)
+	# print("loadIcon", icon)
 	if isinstance(icon, QtGui.QIcon):
 		return icon
 	elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(

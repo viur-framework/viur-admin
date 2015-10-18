@@ -33,6 +33,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
         super(PredefinedViewHandler, self).__init__(widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs)
         self.viewName = viewName
         self.setText(0, myview["name"])
+        # print("PredefinedViewHandler.init", modul, viewName)
 
 
 class ListCoreHandler(WidgetHandler):  # EntryHandler
@@ -55,6 +56,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
             icon = loadIcon(config["icon"])
         super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, sortIndex=config.get("sortIndex", 0), vanishOnClose=False, *args,
                                               **kwargs)
+        # print("ListCoreHandler.init views", modul, config.keys())
         if "views" in config.keys():
             for view in config["views"]:
                 self.addChild(PredefinedViewHandler(modul, view["name"]))

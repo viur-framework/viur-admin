@@ -41,6 +41,7 @@ def chooseLang(value, prefs):
 
 class StringViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale):
+		# print("StringViewBoneDelegate.displayText:", value, locale)
 		if self.boneName in self.skelStructure.keys():
 			if "multiple" in self.skelStructure[self.boneName].keys():
 				multiple = self.skelStructure[self.boneName]["multiple"]
@@ -61,11 +62,12 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 				value = chooseLang(value, languages)
 			else:  # Not multiple nor languages
 				pass
-		return (super(StringViewBoneDelegate, self).displayText(str(value), locale))
+		return super(StringViewBoneDelegate, self).displayText(str(value), locale)
 
 
 class Tag(QtWidgets.QWidget):
 	def __init__(self, tag, editMode, *args, **kwargs):
+		# print("Tag.init", tag, editMode)
 		super(Tag, self).__init__(*args, **kwargs)
 		self.setLayout(QtWidgets.QHBoxLayout(self))
 		self.tag = tag
@@ -184,7 +186,8 @@ class StringEditBone(QtWidgets.QWidget):
 				return
 
 	def unserialize(self, data):
-		if not self.boneName in data.keys():
+		# print("StringEditBone", data)
+		if self.boneName not in data.keys():
 			return
 		data = data[self.boneName]
 		if not data:

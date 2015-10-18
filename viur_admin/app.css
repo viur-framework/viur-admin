@@ -204,6 +204,16 @@ QToolButton:pressed {
     color: #222;
 }
 
+QGroupBox QPushButton, QGroupBox QPushButton:unchecked, QGroupBox QPushButton:focus:unchecked {
+    border: 1px solid red;
+    background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #ddd, stop : 1 #ccc);
+}
+
+QGroupBox QPushButton:checked {
+    border: 1px solid darkgreen;
+    background-color: greenyellow;
+}
+
 QPushButton:disabled,
 QToolButton:disabled {
     border: 1px solid #ddd;
@@ -301,6 +311,21 @@ QRadioButton:focus {
 QComboBox, Line Edit, Listen
 =======================================
 */
+
+QGroupBox {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eaeaea, stop : 1 #fafafa);
+    padding: 20px 5px 5px;
+}
+
+QGroupBox::title {
+    /*subcontrol-origin: content;*/
+    subcontrol-position: top left; /* position at the top center */
+    top: 5px;
+    left: 5px;
+    /*background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eaeaea, stop : 1 #fafafa);*/
+}
 
 QLineEdit,
 QComboBox,

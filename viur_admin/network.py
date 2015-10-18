@@ -39,7 +39,7 @@ try:
 	css = QtCore.QFile(":icons/cacert.pem")
 	css.open(QtCore.QFile.ReadOnly)
 	certs = css.readAll()
-	print(type(certs), certs)
+	# print(type(certs), certs)
 	# certs = open(":icons/cacert.pem", "r").read()
 except:
     certs = None
@@ -548,8 +548,9 @@ class NetworkService():
                 req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
                 multipart = params
             else:
-                print(params)
-                print(type(params))
+                raise ValueError("cannot diffentiate headers to that param type")
+                # print(params)
+                # print(type(params))
             return (
             RequestWrapper(nam.post(req, multipart), successHandler, failureHandler, finishedHandler, parent, url=url,
                            failSilent=failSilent) )

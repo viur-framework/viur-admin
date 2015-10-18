@@ -36,21 +36,20 @@ class LoginTask(QtCore.QObject):
 			logging.debug("Assuming local development Server")
 			self.isLocalServer = True
 			NetworkService.request(
-				"http://%s:%s/_ah/login" % ( self.hostName, urllib.parse.urlparse(NetworkService.url).port, ),
+				"http://%s:%s/_ah/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port),
 				successHandler=self.onWarmup, failureHandler=self.onError)
 		else:
 			self.onWarmup()
-
 
 	def onWarmup(self, request=None):  # Warmup request has finished
 		self.logger.debug("Checkpoint: onWarmup")
 		if self.isLocalServer:
 			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % (
-				self.hostName, urllib.parse.urlparse(NetworkService.url).port, ),
-								   finishedHandler=self.onAuthMethodKnown)
+				self.hostName, urllib.parse.urlparse(NetworkService.url).port,),
+			                       finishedHandler=self.onAuthMethodKnown)
 		else:
-			NetworkService.request("https://%s/admin/user/getAuthMethod" % ( self.hostName, ),
-								   finishedHandler=self.onAuthMethodKnown)
+			NetworkService.request("https://%s/admin/user/getAuthMethod" % (self.hostName,),
+			                       finishedHandler=self.onAuthMethodKnown)
 
 	def onAuthMethodKnown(self, request):
 		self.logger.debug("Checkpoint: onAuthMethodKnown")
@@ -58,25 +57,25 @@ class LoginTask(QtCore.QObject):
 		if method == "x-viur-internal":
 			logging.debug("LoginTask using method x-viur-internal")
 			NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True,
-								   successHandler=self.onViurAuth, failureHandler=self.onError)
+			                       successHandler=self.onViurAuth, failureHandler=self.onError)
 		else:  # Fallback to google account auth
 			logging.debug("LoginTask using method x-google-account")
 			if self.isLocalServer:
 				NetworkService.request("http://%s:%s/_ah/login?email=%s&admin=True&action=login" % (
-					self.hostName, urllib.parse.urlparse(NetworkService.url).port, self.username ), None,
-									   finishedHandler=self.onLocalAuth)
+					self.hostName, urllib.parse.urlparse(NetworkService.url).port, self.username), None,
+				                       finishedHandler=self.onLocalAuth)
 			else:
 				credDict = {"Email": self.username,
-							"Passwd": self.password,
-							"source": "ViUR-Admin",
-							"accountType": "HOSTED_OR_GOOGLE",
-							"service": "ah"}
+				            "Passwd": self.password,
+				            "source": "ViUR-Admin",
+				            "accountType": "HOSTED_OR_GOOGLE",
+				            "service": "ah"}
 				if self.captcha and self.captchaToken:
 					credDict["logintoken"] = self.captchaToken
 					credDict["logincaptcha"] = self.captcha
 				credStr = urllib.parse.urlencode(credDict)
 				NetworkService.request("https://www.google.com/accounts/ClientLogin", credStr.encode("UTF-8"),
-									   successHandler=self.onGoogleAuthSuccess, failureHandler=self.onError)
+				                       successHandler=self.onGoogleAuthSuccess, failureHandler=self.onError)
 
 	def onViurAuth(self, request):  # We recived an response to our auth request
 		self.logger.debug("Checkpoint: onViurAuth")
@@ -89,14 +88,13 @@ class LoginTask(QtCore.QObject):
 			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
 			self.onLoginSucceeded(request)
 		else:
-			self.onError(msg="Recived response!=\"okay\"!")
+			self.onError(msg='Received response != "okay"!')
 
 	def onLocalAuth(self, request):
 		self.logger.debug("Checkpoint: onLocalAuth")
 		NetworkService.request(
-			"http://%s:%s/admin/user/login" % ( self.hostName, urllib.parse.urlparse(NetworkService.url).port ), None,
+			"http://%s:%s/admin/user/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port), None,
 			successHandler=self.onLoginSucceeded, failureHandler=self.onError)
-
 
 	def onGoogleAuthSuccess(self, request):
 		self.logger.debug("Checkpoint: onGoogleAuthSuccess")
@@ -135,9 +133,10 @@ class LoginTask(QtCore.QObject):
 					url = "https://" + url[7:]  # Dont use insecure protocol on live server
 			else:
 				url = "https://" + url
-		argsStr = urllib.parse.urlencode({"continue": url + "/user/login", "auth": authToken})
-		NetworkService.request("https://%s/_ah/login?%s" % ( self.hostName, argsStr ), successHandler=self.onGAEAuth,
-							   failureHandler=self.onError)
+		argsStr = urllib.parse.urlencode({"continue": "{0}/user/login".format(url), "auth": authToken})
+		NetworkService.request("https://{0}/_ah/login?{1}".format(self.hostName, argsStr),
+		                       successHandler=self.onGAEAuth,
+		                       failureHandler=self.onError)
 
 	def onGAEAuth(self, request=None):
 		self.logger.debug("Checkpoint: onGAEAuth")
@@ -158,13 +157,12 @@ class LoginTask(QtCore.QObject):
 			lang = "en"
 		print("onloginsuccess")
 		NetworkService.request("/setLanguage/%s" % lang, secure=True, successHandler=self.onLanguageSet,
-							   failureHandler=self.onError)
+		                       failureHandler=self.onError)
 
 	def onLanguageSet(self, req):
 		"""
 			The language has been set, we are done with this task
 		"""
-		print("onlanguageset")
 		self.loginSucceeded.emit()
 		self.deleteLater()
 
@@ -224,7 +222,7 @@ class Login(QtWidgets.QMainWindow):
 	def onCbPortalCurrentIndexChanged(self, index):
 		if isinstance(index, str):
 			return
-		if ( self.ui.cbPortal.currentIndex() == -1 ):
+		if self.ui.cbPortal.currentIndex() == -1:
 			activeaccount = {"name": "", "user": "", "password": "", "url": ""}
 		else:
 			activeaccount = conf.accounts[self.ui.cbPortal.currentIndex()]
@@ -252,31 +250,31 @@ class Login(QtWidgets.QMainWindow):
 		password = self.ui.editPassword.text()
 		cb = self.ui.cbPortal
 		if (cb.currentIndex() == -1):
-			reply = QtWidgets.QMessageBox.question(self, QtCore.QCoreApplication.translate("Login", "Save this account"),
-											   QtCore.QCoreApplication.translate("Login",
-																				 "Save this account permanently?"),
-											   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+			reply = QtWidgets.QMessageBox.question(
+				self,
+				QtCore.QCoreApplication.translate("Login", "Save this account"),
+				QtCore.QCoreApplication.translate("Login", "Save this account permanently?"),
+				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 			if reply == QtWidgets.QMessageBox.Yes:
 				pw = password
-				accname, okaypressed = QtWidgets.QInputDialog.getText(self, QtCore.QCoreApplication.translate("Login",
-																										  "Save this "
-																										  "account"),
-																  QtCore.QCoreApplication.translate("Login",
-																									"Enter a name for "
-																									"this account"))
+				accname, okaypressed = QtWidgets.QInputDialog.getText(
+					self,
+					QtCore.QCoreApplication.translate("Login", "Save this account"),
+					QtCore.QCoreApplication.translate("Login", "Enter a name for this account"))
 				if okaypressed:
-					reply = QtWidgets.QMessageBox.question(self,
-													   QtCore.QCoreApplication.translate("Login", "Save this account"),
-													   QtCore.QCoreApplication.translate("Login",
-																						 "Save the password, too?"),
-													   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-													   QtWidgets.QMessageBox.No)
+					reply = QtWidgets.QMessageBox.question(
+						self,
+						QtCore.QCoreApplication.translate("Login", "Save this account"),
+						QtCore.QCoreApplication.translate("Login", "Save the password, too?"),
+						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+						QtWidgets.QMessageBox.No)
 					if reply == QtWidgets.QMessageBox.No:
 						pw = ""
-					saveacc = {"name": accname,
-							   "user": username,
-							   "password": pw,
-							   "url": url
+					saveacc = {
+						"name": accname,
+						"user": username,
+						"password": pw,
+						"url": url
 					}
 					conf.accounts.append(saveacc)
 		elif cb.currentIndex() != 0:  # Move this account to the beginning, so it will be selected on the next start
@@ -309,7 +307,6 @@ class Login(QtWidgets.QMainWindow):
 		self.onStartAccManagerBTNReleased()
 
 	def onActionAboutTriggered(self, checked=None):
-		print("about", checked)
 		if checked is None:
 			return
 		showAbout(self)
@@ -325,8 +322,9 @@ class Login(QtWidgets.QMainWindow):
 
 	def setCaptcha(self, token, url):
 		self.captchaToken = token
-		self.captchaReq = NetworkService.request("https://www.google.com/accounts/" + url,
-												 finishedHandler=self.onCaptchaAvaiable)
+		self.captchaReq = NetworkService.request(
+			"https://www.google.com/accounts/{0}".format(url),
+			finishedHandler=self.onCaptchaAvaiable)
 
 	def onCaptchaAvaiable(self):
 		pixmap = QtGui.QPixmap()
@@ -371,7 +369,7 @@ class Login(QtWidgets.QMainWindow):
 	def onCbLanguagesCurrentIndexChanged(self, index):
 		if not isinstance(index, int):
 			return
-		for v in conf.availableLanguages.values():  #Fixme: Removes all (even unloaded) translations
+		for v in conf.availableLanguages.values():  # Fixme: Removes all (even unloaded) translations
 			QtCore.QCoreApplication.removeTranslator(v)
 		newLanguage = self.langKeys[index]
 		QtCore.QCoreApplication.installTranslator(conf.availableLanguages[newLanguage])
@@ -393,5 +391,3 @@ class Login(QtWidgets.QMainWindow):
 			palette.setColor(palette.Active, palette.Text, QtGui.QColor(255, 0, 0))
 			self.ui.editUsername.setToolTip(QtCore.QCoreApplication.translate("Login", "This Email address is invalid"))
 		self.ui.editUsername.setPalette(palette)
-
-		

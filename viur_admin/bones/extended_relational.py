@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+import logging
 from collections import OrderedDict
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from viur_admin.event import event
 from viur_admin.utils import formatString, Overlay, WidgetHandler
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
@@ -29,11 +32,25 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.modul = modul
 		self.structure = structure
 		self.boneName = boneName
+		# print("ExtendedRelationalViewBoneDelegate.init", boneName)
 
 	def displayText(self, value, locale):
-		tmp = formatString(self.format, self.structure, value)
-		# print("text", tmp)
-		return tmp
+		# print("ExtendedRelationalViewBoneDelegate.displayText", value)
+		relStructList = self.structure[self.boneName]["using"]
+		relStructDict = {k: v for k, v in relStructList}
+		try:
+			if isinstance(value, list):
+				value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
+				                               relStructDict, x["rel"], prefix=["rel"]) or x["id"]) for x in value])
+			elif isinstance(value, dict):
+				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
+				                   relStructDict, value["rel"], prefix=["rel"]) or value["id"]
+		except Exception as err:
+			logging.exception(err)
+			# We probably received some garbage
+			value = ""
+		# print("formatString result", value)
+		return value
 
 
 class AutocompletionModel(QtCore.QAbstractTableModel):
@@ -92,6 +109,7 @@ class InternalEdit(QtWidgets.QWidget):
 		self.layout.addWidget(self.dest)
 		self.bones = OrderedDict()
 		self.modul = "poll"
+		self.values = values
 		ignoreMissing = True
 		tmpDict = dict()
 		for key, bone in using:
@@ -131,7 +149,7 @@ class InternalEdit(QtWidgets.QWidget):
 			layout.addWidget(dataWidget)
 			self.layout.addWidget(lblWidget)
 			self.bones[key] = widget
-		self.unserialize(values)
+		self.unserialize(values["rel"])
 
 	def unserialize(self, data):
 		try:
@@ -140,14 +158,18 @@ class InternalEdit(QtWidgets.QWidget):
 		except AssertionError as err:
 			pass
 			self.parent().parent().logger.error(err)
-			# self.overlay.inform(self.overlay.ERROR, str(err))
-			# self.ui.btnSaveClose.setDisabled(True)
-			# self.ui.btnSaveContinue.setDisabled(True)
+		# self.overlay.inform(self.overlay.ERROR, str(err))
+		# self.ui.btnSaveClose.setDisabled(True)
+		# self.ui.btnSaveContinue.setDisabled(True)
 
 	def serializeForPost(self):
 		res = {}
 		for key, bone in self.bones.items():
-			res.update(bone.serializeForPost())
+			data = bone.serializeForPost()
+			# print("InternalEdit.serializeForPost: key, value", key, data)
+			res.update(data)
+		# print("InternalEdit.serializeForPost: values", self.values)
+		res["id"] = self.values["dest"]["id"]
 		return res
 
 
@@ -155,7 +177,8 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "ExtendedRelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)", *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)", *args,
+	             **kwargs):
 		super(ExtendedRelationalEditBone, self).__init__(*args, **kwargs)
 		self.modulName = modulName
 		self.boneName = boneName
@@ -241,10 +264,8 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 				widgetItem = self.previewLayout.takeAt(0)
 			if self.selection and len(self.selection) > 0:
 				for item in self.selection:
-					print("update item", item)
-					# lbl = QtWidgets.QLabel(self.previewWidget)
-					# lbl.setText(formatString(self.format, structure, item) + " foo ")
-					item = InternalEdit(self, self.using, formatString(self.format, structure, item), item["rel"], {})
+					# print("update item", item)
+					item = InternalEdit(self, self.using, formatString(self.format, structure, item), item, {})
 					item.show()
 					self.previewLayout.addWidget(item)
 					self.internalEdits.append(item)
@@ -267,7 +288,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			self.setSelection([res])
 
 	def setSelection(self, selection):
-		print("setSelection", selection)
+		# print("setSelection", selection)
 		selection = [{"dest": item, "rel": {}} for item in selection]
 		if self.multiple:
 			self.selection = selection
@@ -278,8 +299,9 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		self.updateVisiblePreview()
 
 	def onAddBtnReleased(self, *args, **kwargs):
-		print("onAddBtnReleased")
-		editWidget = ExtendedRelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection)
+		# print("onAddBtnReleased")
+		editWidget = ExtendedRelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul,
+		                                            self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def onDelBtnReleased(self, *args, **kwargs):
@@ -290,9 +312,9 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		self.updateVisiblePreview()
 
 	def unserialize(self, data):
-		print("unserialize", data)
+		# print("unserialize", data)
 		self.selection = data[self.boneName]
-		print("new selection", data[self.boneName])
+		# print("new selection", data[self.boneName])
 		self.updateVisiblePreview()
 
 	def serializeForPost(self):
@@ -300,11 +322,22 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			return {self.boneName: None}
 		if self.multiple:
 			res = dict()
-			for item in self.internalEdits:
-				res.update(item.serializeForPost())
-			return {self.boneName: [str(x["id"]) for x in self.selection]}
+			for ix, item in enumerate(self.internalEdits):
+				entry = item.serializeForPost()
+				if isinstance(entry, dict):
+					for k, v in entry.items():
+						res["{0}{1}.{2}".format(self.boneName, ix, k)] = v
+				else:
+					res["{0}{1}.id".format(self.boneName, ix)] = entry
+			return res
 		elif self.selection:
-			return {self.boneName: str(self.selection["id"])}
+			res = dict()
+			if isinstance(self.selection, dict):
+				for k, v in self.selection.iteritems():
+					res["{0}0.{1}".format(self.boneName, k)] = v
+			else:
+				res["{0}0.id".formatQtWidgets.QStyledItemDelegate(self.boneName)] = self.selection
+			return res
 		else:
 			return {self.boneName: None}
 
@@ -399,6 +432,7 @@ class ExtendedRelationalBoneSelector(QtWidgets.QWidget):
 
 def CheckForRelationalicBone(modulName, boneName, skelStucture):
 	return skelStucture[boneName]["type"].startswith("extendedrelational.")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForRelationalicBone, ExtendedRelationalEditBone)

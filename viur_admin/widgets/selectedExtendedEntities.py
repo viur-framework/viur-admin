@@ -36,7 +36,7 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 		assert protoWrap is not None
 		structureCache = protoWrap.editStructure
 		# print("model init structure", structureCache)
-		protoWrap.entityAvailable.connect(self.onItemDataAvaiable)
+		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
 			print("item in selection", item)
 			self.addItem(item)
@@ -73,7 +73,7 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 			# self.entryFetches.append( protoWrap.queryEntry( id ) )
 			#NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
 
-	def onItemDataAvaiable(self, item):
+	def onItemDataAvailable(self, item):
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.
