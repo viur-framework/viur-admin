@@ -340,6 +340,7 @@ QTextEdit {
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eaeaea, stop : 1 #fafafa);
     margin: 0;
     margin-right: 6px;
+    min-width: 100px;
 }
 
 QWebView,
@@ -553,6 +554,7 @@ QSpinBox, QDoubleSpinBox {
     border-bottom: 1px solid #BE1622;
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eaeaea, stop : 1 #fafafa);
     padding: 7px;
+    width: 200px;
 }
 
 QSpinBox::up-button,

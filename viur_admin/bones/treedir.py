@@ -13,8 +13,9 @@ class TreeDirViewBoneDelegate(RelationalViewBoneDelegate):
 
 
 class TreeDirEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", editWidget=None, *args, **kwargs):
 		super(TreeDirEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -48,14 +49,14 @@ class TreeDirEditBone(QtWidgets.QWidget):
 	#  #Fetch the structure of our referenced modul
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
 		destModul = skelStructure[boneName]["type"].split(".")[1]
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
-		return (TreeDirEditBone(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format))
+		return (TreeDirEditBone(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs))
 
 	def setSelection(self, selection):
 		if self.multiple:

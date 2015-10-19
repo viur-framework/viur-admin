@@ -36,8 +36,9 @@ class FixedComboBox(QtWidgets.QComboBox):
 
 
 class SelectOneEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
 		super(SelectOneEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -53,14 +54,14 @@ class SelectOneEditBone(QtWidgets.QWidget):
 		self.comboBox.addItems([x[1] for x in tmpList])
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure):
+	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if "sortBy" in skelStructure[boneName].keys():
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return (cls(modulName, boneName, readOnly, values=values, sortBy=sortBy))
+		return (cls(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs))
 
 	def unserialize(self, data):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)

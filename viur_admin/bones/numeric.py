@@ -68,7 +68,7 @@ class NumericEditBone(BaseEditBone):
 		super(NumericEditBone, self).__init__(modulName, boneName, readOnly)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		precision = int(skelStructure[boneName]["precision"]) if "precision" in skelStructure[boneName].keys() else 0
 		if "min" in skelStructure[boneName].keys() and "max" in skelStructure[boneName].keys():
@@ -77,7 +77,7 @@ class NumericEditBone(BaseEditBone):
 		else:
 			minVal = -pow(2, 30)
 			maxVal = pow(2, 30)
-		return (NumericEditBone(modulName, boneName, readOnly, precision=precision, min=minVal, max=maxVal))
+		return (NumericEditBone(modulName, boneName, readOnly, precision=precision, min=minVal, max=maxVal, **kwargs))
 
 	def getLineEdit(self):
 		if self.precision:

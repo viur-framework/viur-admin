@@ -16,6 +16,11 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class BaseEditBone(QtWidgets.QWidget):
+
+	def __init__(self, parent=None, editWiget=None, **kwargs):
+		super().__init__(parent)
+		self.editWidget = editWiget
+
 	def getLineEdit(self):
 		return (QtWidgets.QLineEdit(self))
 
@@ -25,8 +30,9 @@ class BaseEditBone(QtWidgets.QWidget):
 		else:
 			self.lineEdit.setReadOnly(False)
 
-	def __init__(self, modulName, boneName, readOnly, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, editWidget=None, *args, **kwargs):
 		super(BaseEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.layout = QtWidgets.QHBoxLayout(self)
@@ -36,9 +42,9 @@ class BaseEditBone(QtWidgets.QWidget):
 		self.lineEdit.show()
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		return BaseEditBone(modulName, boneName, readOnly)
+		return BaseEditBone(modulName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data):
 		if self.boneName in data.keys():

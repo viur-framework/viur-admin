@@ -9,7 +9,7 @@ class DocumentViewBoneDelegate(TextViewBoneDelegate):
 
 
 class DocumentEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
+	def __init__(self, modulName, boneName, skelStructure, editWidget=None, *args, **kwargs):
 		super(DocumentEditBone, self).__init__(*args, **kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName

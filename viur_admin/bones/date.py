@@ -69,9 +69,10 @@ class FixedTimeEdit(QtWidgets.QTimeEdit):
 
 
 class DateEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, editWidget=None, *args, **kwargs):
 		super(DateEditBone, self).__init__(*args, **kwargs)
 
+		self.editWidget = editWidget
 		self.boneName = boneName
 		self.layout = QtWidgets.QHBoxLayout(self)
 
@@ -79,29 +80,29 @@ class DateEditBone(QtWidgets.QWidget):
 		self.date = hasDate
 
 		# builds inputspecific Widgets
-		if (self.time and self.date):  # (...skelStructure ...) #date AND time
+		if self.time and self.date:
 			self.lineEdit = FixedDateTimeEdit(self)
-			# self.lineEdit.setGeometry(QtCore.QRect(170, 50, 173, 20))
+			self.lineEdit.setGeometry(QtCore.QRect(170, 50, 250, 20))
 			self.lineEdit.setAccelerated(False)
 			self.lineEdit.setCalendarPopup(True)
-		elif (self.date):  # date only
+		elif self.date:
 			self.lineEdit = FixedDateEdit(self)
-			# self.lineEdit.setGeometry(QtCore.QRect(190, 90, 110, 22))
+			self.lineEdit.setGeometry(QtCore.QRect(190, 90, 250, 22))
 			self.lineEdit.setCalendarPopup(True)
-		else:  # time only
+		else:
 			self.lineEdit = FixedTimeEdit(self)
-			# self.lineEdit.setGeometry(QtCore.QRect(190, 190, 118, 22))
+			self.lineEdit.setGeometry(QtCore.QRect(190, 190, 250, 22))
 
 		self.lineEdit.setObjectName(_fromUtf8(boneName))
 		self.layout.addWidget(self.lineEdit)
 		self.lineEdit.show()
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		hasDate = skelStructure[boneName]["date"]
 		hasTime = skelStructure[boneName]["time"]
-		return (DateEditBone(modulName, boneName, readOnly, hasDate, hasTime))
+		return DateEditBone(modulName, boneName, readOnly, hasDate, hasTime, **kwargs)
 
 	def unserialize(self, data):
 		value = None

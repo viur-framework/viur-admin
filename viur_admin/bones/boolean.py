@@ -15,8 +15,9 @@ class BooleanViewBoneDelegate(BaseViewBoneDelegate):
 
 
 class BooleanEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, editWidget=None, *args, **kwargs):
 		super(BooleanEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -27,9 +28,9 @@ class BooleanEditBone(QtWidgets.QWidget):
 		self.layout.addWidget(self.checkBox)
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure):
+	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		return (cls(modulName, boneName, readOnly))
+		return cls(modulName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)

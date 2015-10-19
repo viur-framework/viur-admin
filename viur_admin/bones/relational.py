@@ -79,8 +79,9 @@ class RelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "RelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", editWidget=None, *args, **kwargs):
 		super(RelationalEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -118,7 +119,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 			self.layout.addWidget(self.addBtn)
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure):
+	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
 		if "modul" in skelStructure[boneName].keys():
@@ -128,7 +129,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
-		return cls(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format)
+		return cls(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs)
 
 	def installAutoCompletion(self):
 		"""

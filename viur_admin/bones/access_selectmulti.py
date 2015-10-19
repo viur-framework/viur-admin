@@ -49,8 +49,9 @@ class AccessCheckBox(QtWidgets.QCheckBox):
 class AccessSelectMultiEditBone(QtWidgets.QWidget):
 	states = ["view", "edit", "add", "delete"]
 
-	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
 		super(AccessSelectMultiEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.layout = QtWidgets.QVBoxLayout(self)
@@ -139,14 +140,14 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 			self.moduleBoxes[module].setCheckState(QtCore.Qt.PartiallyChecked)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if "sortBy" in skelStructure[boneName].keys():
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return AccessSelectMultiEditBone(modulName, boneName, readOnly, values=values, sortBy=sortBy)
+		return AccessSelectMultiEditBone(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
 		if self.boneName not in data.keys():
@@ -166,7 +167,7 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 
 		for module in self.modules.keys():
 			for state in self.states:
-				if self.modules[module][state][1] == True:
+				if self.modules[module][state][0].isChecked():
 					ret.append("%s-%s" % (module, state))
 
 		return {self.boneName: ret}

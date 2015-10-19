@@ -177,7 +177,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "ExtendedRelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)", *args,
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)", editWidget=None, *args,
 	             **kwargs):
 		super(ExtendedRelationalEditBone, self).__init__(*args, **kwargs)
 		self.modulName = modulName
@@ -219,7 +219,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			self.layout.addWidget(self.addBtn)
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure):
+	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
 		if "modul" in skelStructure[boneName].keys():

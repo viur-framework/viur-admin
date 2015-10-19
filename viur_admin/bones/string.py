@@ -100,8 +100,9 @@ class Tag(QtWidgets.QWidget):
 
 
 class StringEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, multiple=False, languages=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, multiple=False, languages=None, editWidget=None, *args, **kwargs):
 		super(StringEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -158,7 +159,7 @@ class StringEditBone(QtWidgets.QWidget):
 			self.lineEdit.setReadOnly(self.readOnly)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if boneName in skelStructure.keys():
 			if "multiple" in skelStructure[boneName].keys():
@@ -169,7 +170,7 @@ class StringEditBone(QtWidgets.QWidget):
 				languages = skelStructure[boneName]["languages"]
 			else:
 				languages = None
-		return (StringEditBone(modulName, boneName, readOnly, multiple=multiple, languages=languages))
+		return (StringEditBone(modulName, boneName, readOnly, multiple=multiple, languages=languages, **kwargs))
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.langEdits.keys():

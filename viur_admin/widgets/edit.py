@@ -270,7 +270,7 @@ class EditWidget(QtWidgets.QWidget):
 				tabName = bone["params"]["category"]
 			else:
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
-			if not tabName in tabs.keys():
+			if tabName not in tabs.keys():
 				scrollArea = QtWidgets.QScrollArea()
 				containerWidget = QtWidgets.QWidget(scrollArea)
 				scrollArea.setWidget(containerWidget)
@@ -295,7 +295,8 @@ class EditWidget(QtWidgets.QWidget):
 			# PyQt_PyObject)'),queue, self.modul, key, tmpDict )
 			# widget = queue.getBest()
 			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict)
+			print("wdgGen", wdgGen)
+			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict, editWidget=self)
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)

@@ -1000,8 +1000,9 @@ class ClickableWebView(QtWebKitWidgets.QWebView):
 
 
 class TextEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, editWidget=None, *args, **kwargs):
 		super(TextEditBone, self).__init__(*args, **kwargs)
+		self.editWidget = editWidget
 		self.modulName = modulName
 		self.boneName = boneName
 		self.readOnly = readOnly
@@ -1052,7 +1053,7 @@ class TextEditBone(QtWidgets.QWidget):
 			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure):
+	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if boneName in skelStructure.keys():
 			if "languages" in skelStructure[boneName].keys():
@@ -1068,7 +1069,7 @@ class TextEditBone(QtWidgets.QWidget):
 			else:
 				validHtml = None
 		return (
-			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml))
+			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml, **kwargs))
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.languageContainer.keys():
