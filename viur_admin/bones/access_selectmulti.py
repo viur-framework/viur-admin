@@ -64,7 +64,7 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 		else:
 			tmpList.sort(key=lambda x: x[1])  # Values
 
-		defaultValues = dict(tmpList)
+		self.values = defaultValues = dict(tmpList)
 		for key, value in tmpList:
 			module = self.parseskelaccess(key)
 			if not module:
@@ -158,7 +158,18 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 			self.checkmodulesbox(module)
 
 	def serializeForPost(self):
-		return {self.boneName: [key for key, checkbox in self.checkboxes.items() if checkbox.isChecked()]}
+		ret = []
+
+		for name in self.flags.keys():
+			if self.checkboxes[name].isChecked():
+				ret.append(name)
+
+		for module in self.modules.keys():
+			for state in self.states:
+				if self.modules[module][state][1] == True:
+					ret.append("%s-%s" % (module, state))
+
+		return {self.boneName: ret}
 
 	def serializeForDocument(self):
 		return self.serialize()
