@@ -25,8 +25,10 @@ class SingletonEntryHandler(WidgetHandler):
 				icon = loadIcon(":icons/modules/singleton.svg")
 			name = config["name"]
 			sortIndex = config.get("sortIndex", 0)
-		super(SingletonEntryHandler, self).__init__(widgetFactory, descr=name, icon=icon, sortIndex=sortIndex, vanishOnClose=False, *args, **kwargs)
-		# self.setText(0, name)
+		super(SingletonEntryHandler, self).__init__(widgetFactory, descr=name, icon=icon, sortIndex=sortIndex,
+		                                            vanishOnClose=False, *args, **kwargs)
+
+	# self.setText(0, name)
 
 	def getBreadCrumb(self):
 		"""
@@ -39,7 +41,8 @@ class SingletonHandler(QtCore.QObject):
 	def __init__(self, *args, **kwargs):
 		QtCore.QObject.__init__(self, *args, **kwargs)
 		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
-		# print("SingletonHandler event id", id(event))
+
+	# print("SingletonHandler event id", id(event))
 
 	def requestModulHandler(self, queue, modulName):
 		config = conf.serverConfig["modules"][modulName]
