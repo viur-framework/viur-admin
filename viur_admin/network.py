@@ -428,8 +428,8 @@ class RemoteFile(QtCore.QObject):
 			except Exception as err:
 				pass
 				# self.logger.exception(err)
-		self._delayTimer = QtCore.QTimer(
-			self)  # Queue our deletion, sothat our child (networkReply) has a chance to finnish
+		self._delayTimer = QtCore.QTimer(self)
+		# Queue our deletion giving our child (networkReply) chance to finish
 		self._delayTimer.singleShot(250, self.remove)
 
 	def getFileName(self):
