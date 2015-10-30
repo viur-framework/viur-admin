@@ -13,7 +13,8 @@ class TreeDirViewBoneDelegate(RelationalViewBoneDelegate):
 
 
 class TreeDirEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", editWidget=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", editWidget=None,
+	             *args, **kwargs):
 		super(TreeDirEditBone, self).__init__(*args, **kwargs)
 		self.editWidget = editWidget
 		self.modulName = modulName
@@ -56,7 +57,8 @@ class TreeDirEditBone(QtWidgets.QWidget):
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
-		return (TreeDirEditBone(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs))
+		return (
+		TreeDirEditBone(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs))
 
 	def setSelection(self, selection):
 		if self.multiple:
@@ -175,6 +177,7 @@ class BaseTreeDirBoneSelector(TreeWidget):
 
 def CheckForTreeDirBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("treedir."))
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForTreeDirBone, TreeDirEditBone)

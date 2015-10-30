@@ -79,7 +79,8 @@ class RelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "RelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None,
+	             *args, **kwargs):
 		super(RelationalEditBone, self).__init__(*args, **kwargs)
 		self.editWidget = editWidget
 		self.modulName = modulName
@@ -311,6 +312,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 
 def CheckForRelationalicBone(modulName, boneName, skelStucture):
 	return skelStucture[boneName]["type"].startswith("relational.")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForRelationalicBone, RelationalEditBone)

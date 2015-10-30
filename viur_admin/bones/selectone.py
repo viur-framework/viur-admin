@@ -88,6 +88,7 @@ class SelectOneEditBone(QtWidgets.QWidget):
 def CheckForSelectOneBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "selectone")
 
+
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForSelectOneBone, SelectOneEditBone)
 viewDelegateSelector.insert(2, CheckForSelectOneBone, SelectOneViewBoneDelegate)

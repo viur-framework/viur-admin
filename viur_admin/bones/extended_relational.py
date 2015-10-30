@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
 
-import logging
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -32,7 +31,8 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.modul = modul
 		self.structure = structure
 		self.boneName = boneName
-		# print("ExtendedRelationalViewBoneDelegate.init", boneName)
+
+	# print("ExtendedRelationalViewBoneDelegate.init", boneName)
 
 	def displayText(self, value, locale):
 		# print("ExtendedRelationalViewBoneDelegate.displayText", value)
@@ -41,10 +41,10 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 		try:
 			if isinstance(value, list):
 				value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
-				                               relStructDict, x["rel"], prefix=["rel"]) or x["id"]) for x in value])
+				                                 relStructDict, x["rel"], prefix=["rel"]) or x["id"]) for x in value])
 			elif isinstance(value, dict):
 				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
-				                   relStructDict, value["rel"], prefix=["rel"]) or value["id"]
+				                     relStructDict, value["rel"], prefix=["rel"]) or value["id"]
 		except Exception as err:
 			# logging.exception(err)
 			# We probably received some garbage
@@ -157,7 +157,7 @@ class InternalEdit(QtWidgets.QWidget):
 				bone.unserialize(data)
 		except AssertionError as err:
 			pass
-			# self.parent().parent().logger.error(err)
+		# self.parent().parent().logger.error(err)
 		# self.overlay.inform(self.overlay.ERROR, str(err))
 		# self.ui.btnSaveClose.setDisabled(True)
 		# self.ui.btnSaveContinue.setDisabled(True)
@@ -177,7 +177,8 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "ExtendedRelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)", editWidget=None, *args,
+	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)",
+	             editWidget=None, *args,
 	             **kwargs):
 		super(ExtendedRelationalEditBone, self).__init__(*args, **kwargs)
 		self.modulName = modulName

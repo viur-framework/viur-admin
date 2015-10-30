@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets
+
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
@@ -65,6 +66,7 @@ class SelectMultiEditBone(QtWidgets.QWidget):
 
 def CheckForSelectMultiBone(modulName, boneName, skelStucture):
 	return skelStucture[boneName]["type"] == "selectmulti" or skelStucture[boneName]["type"].startswith("selectmulti.")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForSelectMultiBone, SelectMultiEditBone)

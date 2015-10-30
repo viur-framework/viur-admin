@@ -48,6 +48,7 @@ class BooleanEditBone(QtWidgets.QWidget):
 def CheckForBooleanBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "bool")
 
+
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForBooleanBone, BooleanEditBone)
 viewDelegateSelector.insert(2, CheckForBooleanBone, BooleanViewBoneDelegate)

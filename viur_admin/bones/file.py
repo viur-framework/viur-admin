@@ -110,6 +110,7 @@ class FileBoneSelector(TreeBoneSelector):
 def CheckForFileBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("treeitem.file"))
 
+
 # Register this Bone in the global queue
 editBoneSelector.insert(4, CheckForFileBone, FileItemBone)
 viewDelegateSelector.insert(4, CheckForFileBone, FileViewBoneDelegate)

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import html.parser
-
 from html.entities import entitydefs
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
@@ -13,6 +12,7 @@ from viur_admin.bones.file import FileBoneSelector
 from viur_admin.bones.string import chooseLang
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.network import RemoteFile
+
 
 class HtmlStripper(html.parser.HTMLParser):
 	def __init__(self):
@@ -894,6 +894,7 @@ class TextEdit(QtWidgets.QMainWindow):
 		print(self.ui.textEdit.toHtml())
 		self.save()
 
+
 ### Copy&Paste from server/bones/textBone.py
 
 _attrsMargins = ["margin", "margin-left", "margin-right", "margin-top", "margin-bottom"]
@@ -999,7 +1000,8 @@ class ClickableWebView(QtWebKitWidgets.QWebView):
 
 
 class TextEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, editWidget=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, editWidget=None,
+	             *args, **kwargs):
 		super(TextEditBone, self).__init__(*args, **kwargs)
 		self.editWidget = editWidget
 		self.modulName = modulName
@@ -1068,7 +1070,8 @@ class TextEditBone(QtWidgets.QWidget):
 			else:
 				validHtml = None
 		return (
-			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml, **kwargs))
+			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext, validHtml=validHtml,
+			             **kwargs))
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.languageContainer.keys():
@@ -1150,6 +1153,7 @@ class TextEditBone(QtWidgets.QWidget):
 
 def CheckForTextBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "text")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForTextBone, TextEditBone)

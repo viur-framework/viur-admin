@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from math import pow
-
 from PyQt5 import QtCore, QtWidgets
 
+from math import pow
 from viur_admin.bones.base import BaseEditBone
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
@@ -108,6 +107,7 @@ class NumericEditBone(BaseEditBone):
 
 def CheckForNumericBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "numeric")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForNumericBone, NumericEditBone)

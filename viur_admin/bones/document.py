@@ -56,12 +56,13 @@ class DocumentEditBone(QtWidgets.QWidget):
 class DocumentHandler(QtCore.QObject):
 	def __init__(self, *args, **kwargs):
 		QtCore.QObject.__init__(self, *args, **kwargs)
-		# self.connect(event,
-		#              QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
-		#              self.onRequestBoneViewDelegate)  # RegisterObj, ModulName, BoneName, SkelStructure
-		# self.connect(event,
-		#              QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
-		#              self.onRequestBoneEditWidget)
+
+	# self.connect(event,
+	#              QtCore.SIGNAL('requestBoneViewDelegate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
+	#              self.onRequestBoneViewDelegate)  # RegisterObj, ModulName, BoneName, SkelStructure
+	# self.connect(event,
+	#              QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
+	#              self.onRequestBoneEditWidget)
 
 	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
 		if skelStucture[boneName]["type"] == "document":

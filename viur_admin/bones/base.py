@@ -16,7 +16,6 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class BaseEditBone(QtWidgets.QWidget):
-
 	def __init__(self, parent=None, editWiget=None, **kwargs):
 		super().__init__(parent)
 		self.editWidget = editWiget
@@ -55,6 +54,7 @@ class BaseEditBone(QtWidgets.QWidget):
 
 	def serializeForDocument(self):
 		return self.serialize()
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(0, lambda *args, **kwargs: True, BaseEditBone)

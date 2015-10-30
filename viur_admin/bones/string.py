@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 
 from html.parser import HTMLParser
 
@@ -253,6 +252,7 @@ class StringEditBone(QtWidgets.QWidget):
 
 def CheckForStringBone(modulName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "str")
+
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForStringBone, StringEditBone)
