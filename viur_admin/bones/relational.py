@@ -79,7 +79,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 	GarbargeTypeName = "RelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple, format="$(name)", editWidget=None, *args, **kwargs):
+	def __init__(self, modulName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None, *args, **kwargs):
 		super(RelationalEditBone, self).__init__(*args, **kwargs)
 		self.editWidget = editWidget
 		self.modulName = modulName
@@ -89,6 +89,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 		self.multiple = multiple
 		self.format = format
 		self.overlay = Overlay(self)
+		self.kind = kind
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
 		else:
@@ -122,14 +123,15 @@ class RelationalEditBone(QtWidgets.QWidget):
 	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
+		kind = skelStructure[boneName]["type"].split(".")[1]
 		if "modul" in skelStructure[boneName].keys():
 			destModul = skelStructure[boneName]["modul"]
 		else:
-			destModul = skelStructure[boneName]["type"].split(".")[1]
+			destModul = kind
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
-		return cls(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs)
+		return cls(modulName, boneName, readOnly, kind, destModul, multiple, format, **kwargs)
 
 	def installAutoCompletion(self):
 		"""

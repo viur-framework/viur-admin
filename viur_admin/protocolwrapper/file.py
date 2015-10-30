@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 
 from PyQt5 import QtCore
 
+import sys
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector
 from viur_admin.protocolwrapper.tree import TreeWrapper
@@ -25,6 +25,7 @@ def x_lower(x):
 def x_startswith_tilde(x):
 	# print(repr(x))
 	return x.startswith("~") or x.endswith("~")
+
 
 # List of patterns of filenames/directories, which wont get uploaded
 ignorePatterns = [
@@ -400,7 +401,6 @@ class FileWrapper(TreeWrapper):
 		"""
 		if not files:
 			return
-		print("upload", files, node)
 		uploader = RecursiveUploader(files, node, self.modul, parent=self)
 		# self.transferQueues.append( uploader )
 		# self.ui.boxUpload.addWidget( uploader )

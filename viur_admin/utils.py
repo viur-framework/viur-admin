@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
@@ -84,6 +82,9 @@ class Overlay(QtWidgets.QWidget):
 		self.missingImage = QtGui.QImage(":icons/status/missing_white.svg")
 		self.errorImage = QtGui.QImage(":icons/status/error_transparent.svg")
 		self.timer = None
+		self.counter = 0
+		self.first = False
+		self.message = None
 		self.resize(QtCore.QSize(1, 1))
 		self.hide()
 
@@ -230,8 +231,8 @@ class Overlay(QtWidgets.QWidget):
 			self.first = False
 			return
 		self.counter += 1
-		if self.counter > max([self.ERROR_DURATION, self.INFO_DURATION, self.WARNING_DURATION]) \
-				and self.status != self.BUSY:
+		if (self.counter > max(
+				[self.ERROR_DURATION, self.INFO_DURATION, self.WARNING_DURATION]) and self.status != self.BUSY):
 			self.clear(True)
 			return
 		self.update()
@@ -245,7 +246,8 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 	"""
 	mainWindow = None
 
-	def __init__(self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, sortIndex=0, *args, **kwargs):
+	def __init__(self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, sortIndex=0, *args,
+	             **kwargs):
 		"""
 		@type modul: string
 		@param modul: Name of the modul handled
@@ -259,7 +261,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		try:
-			prefix, descr =descr.split(": ", 1)
+			prefix, descr = descr.split(": ", 1)
 		except ValueError:
 			pass
 		self.setText(0, descr)
@@ -537,7 +539,6 @@ def loadIcon(icon):
 		Tries to create an icon from the given filename.
 		If that image exists in different sizes, all of them are loaded.
 	"""
-	# print("loadIcon", icon)
 	if isinstance(icon, QtGui.QIcon):
 		return icon
 	elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(

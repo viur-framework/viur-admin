@@ -124,7 +124,6 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 		on = 0
 		all = 0
 
-		print("checkmodulesbox", module)
 		for item, isEnabled in self.modules[module].values():
 			if isEnabled:
 				all += 1
@@ -132,9 +131,7 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 			if item.isChecked():
 				on += 1
 
-		print("checkmodulesbox on all", on, all)
 		if on == 0 or on == all:
-			print("set state to unckecked or checked")
 			self.moduleBoxes[module].setCheckState(on == all and QtCore.Qt.Checked or QtCore.Qt.Unchecked)
 		else:
 			self.moduleBoxes[module].setCheckState(QtCore.Qt.PartiallyChecked)

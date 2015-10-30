@@ -227,6 +227,7 @@ class Login(QtWidgets.QMainWindow):
 		else:
 			activeaccount = conf.accounts[self.ui.cbPortal.currentIndex()]
 		self.ui.editUsername.setText(activeaccount["user"])
+		print("password", activeaccount["password"])
 		self.ui.editPassword.setText(activeaccount["password"])
 		self.ui.editUrl.setText(activeaccount["url"])
 

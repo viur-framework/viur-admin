@@ -40,7 +40,6 @@ class FileDownloadAction(QtWidgets.QAction):
 		files = []
 		for item in self.parent().selectedItems():
 			if isinstance(item, self.parent().getNodeItemClass()):
-				print(self.parent().getNodeItemClass())
 				dirs.append(item.entryData)
 			else:
 				files.append(item.entryData)

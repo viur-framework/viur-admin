@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# import logging
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -82,9 +83,9 @@ class EditWidget(QtWidgets.QWidget):
 		assert applicationType in [EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree,
 		                           EditWidget.appSingleton]  # Invalid Application-Type?
 		if applicationType == EditWidget.appHierarchy or applicationType == EditWidget.appTree:
-			assert id or node  # Need either an id or an node
+			assert key or node  # Need either an id or an node
 		if clone:
-			assert id  # Need an id if we should clone an entry
+			assert key  # Need an id if we should clone an entry
 			assert not applicationType == EditWidget.appSingleton  # We cant clone a singleton
 			if applicationType == EditWidget.appHierarchy or applicationType == EditWidget.appTree:
 				assert rootNode  # We still need a rootNode for cloning
@@ -211,7 +212,7 @@ class EditWidget(QtWidgets.QWidget):
 			self.setData(data=self.dataCache)
 
 	def parseHelpText(self, txt):
-		"""Parses the HTML-Text txt and returns it with remote Images replaced with their local copys
+		"""Parses the HTML-Text txt and returns it with remote Images replaced with their local copies
 
 		@type txt: String
 		@param txt: HTML-Text
@@ -241,10 +242,10 @@ class EditWidget(QtWidgets.QWidget):
 
 	def setData(self, request=None, data=None, ignoreMissing=False):
 		"""
-		Rebuilds the UI according to the skeleton recived from server
+		Rebuilds the UI according to the skeleton received from server
 
 		@type data: dict
-		@param data: The data recived
+		@param data: The data received
 		"""
 		assert (request or data)
 		if request:
@@ -295,7 +296,6 @@ class EditWidget(QtWidgets.QWidget):
 			# PyQt_PyObject)'),queue, self.modul, key, tmpDict )
 			# widget = queue.getBest()
 			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
-			print("wdgGen", wdgGen)
 			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict, editWidget=self)
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
@@ -345,7 +345,7 @@ class EditWidget(QtWidgets.QWidget):
 			for bone in self.bones.values():
 				bone.unserialize(data)
 		except AssertionError as err:
-			# self.parent().parent().logger.error(err)
+			# logging.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))
 			self.ui.btnSaveClose.setDisabled(True)
 			self.ui.btnSaveContinue.setDisabled(True)

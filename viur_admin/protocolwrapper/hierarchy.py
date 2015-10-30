@@ -37,7 +37,6 @@ class HierarchyWrapper(QtCore.QObject):
         self.deferedTaskQueue = []
         NetworkService.request("/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable)
         req = NetworkService.request("/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable)
-        print("Initializing HierarchyWrapper for modul %s" % self.modul)
         protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 
     def checkBusyStatus(self):

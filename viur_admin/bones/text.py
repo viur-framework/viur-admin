@@ -98,7 +98,6 @@ class DocumentToHtml:
 		self.openTags = []
 		block = doc.firstBlock()
 		while (block.isValid()):
-			print("Processing block %s" % block.blockNumber())
 			self.processBlock(block, doc)
 			block = block.next()
 		# Close any tag thats still open

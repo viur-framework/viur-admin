@@ -40,7 +40,6 @@ class TreeWrapper(QtCore.QObject):
         self.busy = True
         req = NetworkService.request("/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable)
         NetworkService.request("/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable)
-        print("Initializing TreeWrapper for modul %s" % self.modul)
         protocolWrapperInstanceSelector.insert(self.protocolWrapperInstancePriority, self.checkForOurModul, self)
         self.deferedTaskQueue = []
 
@@ -319,7 +318,6 @@ class TreeWrapper(QtCore.QObject):
             except:
                 print("error decoding response")
         QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
-
 
     def onSaveResult(self, req):
         try:

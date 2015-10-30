@@ -22,12 +22,12 @@ class FileItem(LeafItem):
 		print("extension", extension)
 		fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 		fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
-		if fileInfo.exists():
-			print("found png filetype image")
-			icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
-		elif fileInfo2.exists():
+		if fileInfo2.exists():
 			print("found svg filetype image")
 			icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
+		elif fileInfo.exists():
+			print("found png filetype image")
+			icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
 		else:
 			print("unknown filetype image")
 			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
@@ -45,17 +45,17 @@ class FileItem(LeafItem):
 			print("update extension", extension)
 			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 			fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
-			if fileInfo.exists():
-				print("found png filetype image")
-				icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
-			elif fileInfo2.exists():
+			if fileInfo2.exists():
 				print("found svg filetype image")
 				icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
+			elif fileInfo.exists():
+				print("found png filetype image")
+				icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension)).re
 			else:
 				print("unknown filetype image")
 				icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		else:
-			icon = QtGui.QIcon(pixmap.scaled(64, 64))
+			icon = QtGui.QIcon(pixmap.scaled(128, 128))
 		self.setIcon(icon)
 		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % (
 			remoteFile.getFileName(), str(self.entryData["name"])))
@@ -70,7 +70,7 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		If downloading has finished, finished(PyQt_PyObject=self) is emited.
 	"""
 
-	directorySize = 15  # Letz count an directory as 15 Bytes
+	directorySize = 15  # Let's count an directory as 15 Bytes
 
 	def __init__(self, uploader, *args, **kwargs):
 		"""

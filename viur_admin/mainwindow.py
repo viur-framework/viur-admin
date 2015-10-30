@@ -283,10 +283,11 @@ class MainWindow(QtWidgets.QMainWindow):
 				self.focusHandler(currentHandler)
 		self.rebuildBreadCrumbs()
 
-	def onTreeWidgetItemClicked(self, item, colum):
-		if colum == 0:
+	def onTreeWidgetItemClicked(self, item, column):
+		if column == 0:
 			item.clicked()
-		elif colum == 1:  # Close
+		elif column == 1 and not isinstance(item, GroupHandler):
+			# Close only if we don't clicked on column 2 of a group
 			item.close()
 
 	def rebuildBreadCrumbs(self):
@@ -347,17 +348,16 @@ class MainWindow(QtWidgets.QMainWindow):
 					continue
 				groupHandlers[group["prefix"]] = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
 				self.ui.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
-		if "modules" not in conf.portal.keys():
+		if "modules" not in conf.portal:
 			conf.portal["modules"] = {}
+
 		for modul, cfg in data["modules"].items():
-			# print("module, cfg", modul, cfg)
 			queue = RegisterQueue()
 			event.emit('requestModulHandler', queue, modul)
 			handler = queue.getBest()()
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None
 				for groupName in groupHandlers.keys():
-					# logging.info("groupName %r, %r", groupName, cfg["name"])
 					if cfg["name"].startswith(groupName):
 						parent = groupHandlers[groupName]
 				if parent:

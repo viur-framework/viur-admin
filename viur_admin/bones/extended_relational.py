@@ -46,7 +46,7 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
 				                   relStructDict, value["rel"], prefix=["rel"]) or value["id"]
 		except Exception as err:
-			logging.exception(err)
+			# logging.exception(err)
 			# We probably received some garbage
 			value = ""
 		# print("formatString result", value)
@@ -157,7 +157,7 @@ class InternalEdit(QtWidgets.QWidget):
 				bone.unserialize(data)
 		except AssertionError as err:
 			pass
-			self.parent().parent().logger.error(err)
+			# self.parent().parent().logger.error(err)
 		# self.overlay.inform(self.overlay.ERROR, str(err))
 		# self.ui.btnSaveClose.setDisabled(True)
 		# self.ui.btnSaveContinue.setDisabled(True)
@@ -225,7 +225,7 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 		if "modul" in skelStructure[boneName].keys():
 			destModul = skelStructure[boneName]["modul"]
 		else:
-			destModul = skelStructure[boneName]["type"].split(".", 1)
+			destModul = skelStructure[boneName]["type"].split(".")[1]
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]

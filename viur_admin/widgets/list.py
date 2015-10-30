@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import csv
-import logging
+# import logging
 import os.path
 from datetime import datetime
 
@@ -264,7 +264,11 @@ class ListTableView(QtWidgets.QTableView):
 		self.doubleClicked.connect(self.onItemDoubleClicked)
 
 	def onItemClicked(self, index):
-		self.itemClicked.emit(self.model().getData()[index.row()])
+		try:
+			self.itemClicked.emit(self.model().getData()[index.row()])
+		except IndexError:
+			# someone probably clicked on the 'loading more' row - but why the the row stays so long
+			pass
 
 	def onItemDoubleClicked(self, index):
 		self.itemDoubleClicked.emit(self.model().getData()[index.row()])
@@ -635,7 +639,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		oldlang = conf.adminConfig["language"]
 		active = 0
 		for ix, (key, lang) in enumerate(conf.serverConfig["viur.defaultlangsvalues"].items()):
-			logging.debug("lang %r %r", key, lang)
+			# logging.debug("lang %r %r", key, lang)
 			if key == oldlang:
 				active = ix
 			self.ui.langComboBox.addItem(lang, key)
@@ -660,13 +664,13 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.ui.filenameDialogAction.setDefaultAction(self.fileAction)
 		self.ui.filenameDialogAction.setText(_translate("CsvExport", "..."))
 		self.ui.filenameDialogAction.triggered.connect(self.onChooseOutputFile)
-		self.logger = logging.getLogger("List Widget")
+		# self.logger = logging.getLogger("List Widget")
 
 	def onTriggered(self):
 		# self.overlay = Overlay(self)
 		# self.overlay.inform(self.overlay.BUSY)
 		path = self.ui.filenameName.text()
-		self.logger.debug("path: %r", path)
+		# self.logger.debug("path: %r", path)
 		if not path:
 			return
 
@@ -677,7 +681,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 	def loadNext(self):
 		if self.isLoading:
-			self.logger.debug("stopped loadNext")
+			# self.logger.debug("stopped loadNext")
 			return
 		self.isLoading += 1
 		filter = self.model.filter.copy() or {}
@@ -718,7 +722,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			self.loadNext()
 
 	def onChooseOutputFile(self, action=None):
-		self.logger.debug("onChooseOutputFile %r", action)
+		# self.logger.debug("onChooseOutputFile %r", action)
 		dialog = QtWidgets.QFileDialog(self, directory=os.path.expanduser("~"))
 		dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
 		dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -727,7 +731,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 			try:
 				self.ui.filenameName.setText(dialog.selectedFiles()[0])
 			except Exception as err:
-				self.logger.exception(err)
+				pass
+				# self.logger.exception(err)
 
 	def serializeToCsv(self, data, bones):
 		f = open(self.ui.filenameName.text(), "w")
@@ -758,7 +763,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 			for i in delegates:
 				i.deleteLater()
 		except Exception as err:
-			self.logger.exception(err)
+			pass
+			# self.logger.exception(err)
 		finally:
 			conf.adminConfig["language"] = oldlang
 
