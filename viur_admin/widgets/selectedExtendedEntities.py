@@ -2,13 +2,8 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from viur_admin.event import event
-from viur_admin.utils import RegisterQueue, formatString, itemFromUrl
-from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
-from viur_admin.widgets.list import ListWidget
-from viur_admin.network import NetworkService
-from viur_admin.config import conf
-from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector
 
 
 class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
@@ -70,8 +65,8 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 				self.entryFetches.append(protoWrap.queryEntry(item))
 		else:
 			raise NotImplementedError()
-			# self.entryFetches.append( protoWrap.queryEntry( id ) )
-			#NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
+		# self.entryFetches.append( protoWrap.queryEntry( id ) )
+		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
 
 	def onItemDataAvailable(self, item):
 		"""
@@ -89,19 +84,19 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 
 	def rowCount(self, parent):
 		if not self.dataCache:
-			return ( 0 )
-		return ( len(self.dataCache) )
+			return (0)
+		return (len(self.dataCache))
 
 	def columnCount(self, parent):
-		return ( len(self.headers) )
+		return (len(self.headers))
 
 	def data(self, index, role):
 		if not index.isValid():
 			return None
 		elif role != QtCore.Qt.DisplayRole:
 			return None
-		if ( index.row() >= 0 and index.row() < len(self.dataCache)  ):
-			return ( self.dataCache[index.row()][self.fields[index.column()]] )
+		if (index.row() >= 0 and index.row() < len(self.dataCache)):
+			return (self.dataCache[index.row()][self.fields[index.column()]])
 
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -143,7 +138,7 @@ class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):
 		super(SelectedExtendedEntitiesWidget, self).__init__(*args, **kwargs)
 		self.selection = selection or []
 		# self.skelType = skelType
-		if selection and not isinstance(self.selection, list):  #This was a singleSelection before
+		if selection and not isinstance(self.selection, list):  # This was a singleSelection before
 			self.selection = [self.selection]
 		self.setModel(SelectedExtendedEntitiesTableModel(self, modul, self.selection, self.skelType))
 		self.setAcceptDrops(True)
@@ -151,7 +146,7 @@ class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):
 		self.rebuildDelegates()
 
 	# self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
-	#self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
+	# self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 
 
 	def rebuildDelegates(self):
@@ -174,7 +169,7 @@ class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):
 		fields = [x for x in self.model().fields if x in structureCache.keys()]
 		for field in fields:
 			self.model().headers.append(structureCache[field]["descr"])
-			#Locate the best ViewDeleate for this colum
+			# Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select(self.model().modul, field, structureCache)
 			delegate = delegateFactory(self.model().modul, field, structureCache)
 			self.setItemDelegateForColumn(colum, delegate)
@@ -188,7 +183,6 @@ class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):
 			Remove it from the selection
 		"""
 		self.model().removeItemAtIndex(index)
-
 
 	def set(self, selection):
 		"""
@@ -214,7 +208,7 @@ class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):
 			Returns the currently selected items.
 			@returns: List or None
 		"""
-		return ( self.model().getData() )
+		return (self.model().getData())
 
 	def dropEvent(self, event):
 		"""

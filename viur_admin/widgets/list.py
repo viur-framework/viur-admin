@@ -163,7 +163,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.layoutChanged.emit()
 		self.loadingKey = None
 
-		# self.emit(QtCore.SIGNAL("dataRecived()"))
+	# self.emit(QtCore.SIGNAL("dataRecived()"))
 
 	def repaint(self):  # Currently an ugly hack to redraw the table
 		self.layoutAboutToBeChanged.emit()
@@ -659,12 +659,14 @@ class CsvExportWidget(QtWidgets.QWidget):
 		okButton.released.connect(self.onTriggered)
 		cancelButton = self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel)
 		cancelButton.released.connect(self.onBtnCloseReleased)
-		self.ui.filenameName.setText(os.path.expanduser("~/export-{0}-{1}.csv".format(self.module, datetime.now().strftime("%Y%m%d%H%M"))))
+		self.ui.filenameName.setText(
+			os.path.expanduser("~/export-{0}-{1}.csv".format(self.module, datetime.now().strftime("%Y%m%d%H%M"))))
 		self.fileAction = QtWidgets.QAction(self)
 		self.ui.filenameDialogAction.setDefaultAction(self.fileAction)
 		self.ui.filenameDialogAction.setText(_translate("CsvExport", "..."))
 		self.ui.filenameDialogAction.triggered.connect(self.onChooseOutputFile)
-		# self.logger = logging.getLogger("List Widget")
+
+	# self.logger = logging.getLogger("List Widget")
 
 	def onTriggered(self):
 		# self.overlay = Overlay(self)
@@ -732,7 +734,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 				self.ui.filenameName.setText(dialog.selectedFiles()[0])
 			except Exception as err:
 				pass
-				# self.logger.exception(err)
+			# self.logger.exception(err)
 
 	def serializeToCsv(self, data, bones):
 		f = open(self.ui.filenameName.text(), "w")
@@ -764,7 +766,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 				i.deleteLater()
 		except Exception as err:
 			pass
-			# self.logger.exception(err)
+		# self.logger.exception(err)
 		finally:
 			conf.adminConfig["language"] = oldlang
 

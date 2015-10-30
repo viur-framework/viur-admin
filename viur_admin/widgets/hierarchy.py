@@ -2,9 +2,9 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 from viur_admin.utils import Overlay
 from viur_admin.network import NetworkService
-from viur_admin.event import event
 from viur_admin import utils
 from viur_admin.config import conf
 from viur_admin.widgets.edit import EditWidget
@@ -34,17 +34,17 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
 
 	def __gt__(self, other):
 		if isinstance(other,
-					  HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
-			return ( self.entryData["sortindex"] > other.entryData["sortindex"] )
+		              HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
+			return (self.entryData["sortindex"] > other.entryData["sortindex"])
 		else:
-			return ( super(HierarchyItem, self).__gt__(other) )
+			return (super(HierarchyItem, self).__gt__(other))
 
 	def __lt__(self, other):
 		if isinstance(other,
-					  HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
-			return ( self.entryData["sortindex"] < other.entryData["sortindex"] )
+		              HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
+			return (self.entryData["sortindex"] < other.entryData["sortindex"])
 		else:
-			return ( super(HierarchyItem, self).__lt__(other) )
+			return (super(HierarchyItem, self).__lt__(other))
 
 
 class HierarchyTreeWidget(QtWidgets.QTreeWidget):
@@ -86,7 +86,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		protoWrap.entitiesChanged.connect(self.onHierarchyChanged)
 		protoWrap.childrenAvailable.connect(self.setData)
 		# self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onHierarchyChanged )
-		#self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
+		# self.connect( self, QtCore.SIGNAL("itemExpanded(QTreeWidgetItem *)"), self.onItemExpanded )
 		self.itemExpanded.connect(self.onItemExpanded)
 		if self.rootNode:
 			self.loadData()
@@ -96,14 +96,14 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			Respond to changed Data - refresh our view
 		"""
 		# Well, seems to affect us, refresh our view
-		#First, save all expanded items
+		# First, save all expanded items
 		self.expandList = []
 		it = QtWidgets.QTreeWidgetItemIterator(self)
-		while ( it.value() ):
+		while (it.value()):
 			if it.value().isExpanded():
 				self.expandList.append(it.value().entryData["id"])
 			it += 1
-		#Now clear the treeview and reload data
+		# Now clear the treeview and reload data
 		self.clear()
 		self.loadData()
 
@@ -121,7 +121,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		self.loadData()
 
 	def getRootNode(self):
-		return ( self.rootNode )
+		return (self.rootNode)
 
 	def onItemExpanded(self, item, *args, **kwargs):
 		"""
@@ -129,10 +129,9 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			Check, if we allready have information about the elements beneath, otherwhise load them.
 		"""
 		if not item.loaded:
-			while ( item.takeChild(0) ):
+			while (item.takeChild(0)):
 				pass
 			self.loadData(item.entryData["id"])
-
 
 	def loadData(self, parent=None):
 		self.overlay.inform(self.overlay.BUSY)
@@ -150,7 +149,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			self.clear()
 		for itemData in protoWrap.childrenForNode(node):
 			tvItem = HierarchyItem(self.modul, itemData)
-			if ( itemData["parententry"] == self.rootNode ):
+			if (itemData["parententry"] == self.rootNode):
 				self.addTopLevelItem(tvItem)
 			else:
 				self.insertItem(tvItem)
@@ -198,7 +197,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 				urls.append(utils.urlForItem(self.modul, item.entryData))
 			mimeData.setUrls(urls)
 			event.mimeData().setData("viur/hierarchyDragData",
-									 json.dumps({"entities": [x.entryData for x in self.selectedItems()]}))
+			                         json.dumps({"entities": [x.entryData for x in self.selectedItems()]}))
 		# event.accept()
 		# event.acceptProposedAction()
 		# self.emitDataChanged.emit(event.mimeData)
@@ -224,7 +223,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			if self.topLevelItemCount() > 1:
 				print("no target item + updatesortindex")
 				self.updateSortIndex(draggedItem.entryData["id"],
-									 self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1)
+				                     self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1)
 		else:
 			if draggedItem.parent() is targetItem:  # Moved to subitem
 				print("moved to subitem")
@@ -238,13 +237,13 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 							self.reparent(draggedItem.entryData["id"], targetItem.entryData["id"])
 							if childIndex == 0 and targetItem.childCount() > 1:  # is now 1st item
 								self.updateSortIndex(draggedItem.entryData["id"],
-													targetItem.child(1).entryData["sortindex"] - 1)
+								                     targetItem.child(1).entryData["sortindex"] - 1)
 							elif childIndex == (targetItem.childCount() - 1) and childIndex > 0:  # is now lastitem
 								self.updateSortIndex(draggedItem.entryData["id"],
-													targetItem.child(childIndex - 1).entryData["sortindex"] + 1)
+								                     targetItem.child(childIndex - 1).entryData["sortindex"] + 1)
 							elif childIndex > 0 and childIndex < (targetItem.childCount() - 1):  # in between
 								newSortIndex = (targetItem.child(childIndex - 1).entryData["sortindex"] +
-												targetItem.child(childIndex + 1).entryData["sortindex"]) / 2.0
+								                targetItem.child(childIndex + 1).entryData["sortindex"]) / 2.0
 								self.updateSortIndex(draggedItem.entryData["id"], newSortIndex)
 							else:  # We are the only one in this layer
 								pass
@@ -258,13 +257,13 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 						self.reparent(draggedItem.entryData["id"], self.rootNode)
 						if childIndex == 0 and self.topLevelItemCount() > 1:  # is now 1st item
 							self.updateSortIndex(draggedItem.entryData["id"],
-												 self.topLevelItem(1).entryData["sortindex"] - 1)
+							                     self.topLevelItem(1).entryData["sortindex"] - 1)
 						elif childIndex == (self.topLevelItemCount() - 1) and childIndex > 0:  # is now lastitem
 							self.updateSortIndex(draggedItem.entryData["id"],
-												 self.topLevelItem(childIndex - 1).entryData["sortindex"] + 1)
+							                     self.topLevelItem(childIndex - 1).entryData["sortindex"] + 1)
 						elif childIndex > 0 and childIndex < (self.topLevelItemCount() - 1):  # in between
 							newSortIndex = (self.topLevelItem(childIndex - 1).entryData["sortindex"] +
-											self.topLevelItem(childIndex + 1).entryData["sortindex"] ) / 2.0
+							                self.topLevelItem(childIndex + 1).entryData["sortindex"]) / 2.0
 							self.updateSortIndex(draggedItem.entryData["id"], newSortIndex)
 						else:  # We are the only one in this layer
 							pass
@@ -289,11 +288,11 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			Delete the entity with the given id
 		"""
 		if QtWidgets.QMessageBox.question(self,
-									  QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
-									  QtCore.QCoreApplication.translate("HierarchyTreeWidget",
-																		"Delete %s entries and everything below?") % 1,
-									  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-									  QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
+		                                  QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
+		                                  QtCore.QCoreApplication.translate("HierarchyTreeWidget",
+		                                                                    "Delete %s entries and everything below?") % 1,
+		                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+		                                  QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
@@ -364,7 +363,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 			Returns a list of the currently activated actions on this widget.
 		"""
-		return ( self._currentActions )
+		return (self._currentActions)
 
 	def onItemClicked(self, item, col):
 		"""
@@ -383,7 +382,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"])
 		handler = utils.WidgetHandler(widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
-									  icon=QtGui.QIcon(":icons/actions/edit.svg"))
+		                              icon=QtGui.QIcon(":icons/actions/edit.svg"))
 		handler.stackHandler()
 
 	def loadPreview(self, url):
@@ -398,7 +397,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		self.ui.webView.show()
 
 	def getModul(self):
-		return ( self.modul )
+		return (self.modul)
 
 	def getRootNode(self):
-		return ( self.hierarchy.getRootNode() )
+		return (self.hierarchy.getRootNode())
