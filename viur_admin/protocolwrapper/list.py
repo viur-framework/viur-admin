@@ -205,7 +205,7 @@ class ListWrapper(QtCore.QObject):
 		self.entitiesChanged.emit()
 		self.checkBusyStatus()
 
-		# self.emit( QtCore.SIGNAL("entitiesChanged()") )
+	# self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 
 def CheckForListModul(modulName, modulList):
