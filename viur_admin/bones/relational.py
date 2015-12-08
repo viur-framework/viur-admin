@@ -2,16 +2,16 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.event import event
-from viur_admin.utils import formatString, Overlay, WidgetHandler
-from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
-from viur_admin.widgets.list import ListWidget
-from viur_admin.widgets.edit import EditWidget
-from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
+from viur_admin.utils import formatString, Overlay, WidgetHandler
+from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.list import ListWidget
+from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 
 
 class BaseBone:
@@ -98,8 +98,9 @@ class RelationalEditBone(QtWidgets.QWidget):
 			self.previewWidget = QtWidgets.QWidget(self)
 			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
 			self.layout.addWidget(self.previewWidget)
-		self.addBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
-		                                    parent=self)
+		self.addBtn = QtWidgets.QPushButton(
+			QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
+			parent=self)
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
@@ -152,6 +153,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 	def updateVisiblePreview(self):
 		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)
 		assert protoWrap is not None
+		structure = None
 		if self.skelType is None:
 			structure = protoWrap.viewStructure
 		elif self.skelType == "leaf":
@@ -260,9 +262,10 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
 		assert protoWrap is not None
 		# FIXME: Bad hack to get the editWidget we belong to
+		skel = None
 		for widget in WidgetHandler.mainWindow.handlerForWidget(self).widgets:
 			if isinstance(widget, EditWidget):
-				if (not widget.key) or widget.clone:  # We're adding a new entry
+				if not widget.key or widget.clone:  # We're adding a new entry
 					if widget.skelType == "leaf":
 						skel = protoWrap.addLeafStructure
 					elif widget.skelType == "node":

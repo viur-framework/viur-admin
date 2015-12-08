@@ -292,13 +292,13 @@ class TreeWrapper(QtCore.QObject):
 			                                                                  "skelType": "node",
 			                                                                  "destNode": destNode
 			                                                                  }
-			                                        , parent=self))
+			                                        , parent=self, secure=True))
 		for leaf in leafs:
 			request.addQuery(NetworkService.request("/%s/move" % self.modul, {"id": leaf,
 			                                                                  "skelType": "leaf",
 			                                                                  "destNode": destNode
 			                                                                  }
-			                                        , parent=self))
+			                                        , parent=self, secure=True))
 		request.queryType = "move"
 		self.checkBusyStatus()
 		return (str(id(request)))
@@ -312,7 +312,8 @@ class TreeWrapper(QtCore.QObject):
 			try:
 				print(NetworkService.decode(req))
 			except:
-				print("error decoding response")
+				pass
+				# print("error decoding response")
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 
 	def onSaveResult(self, req):

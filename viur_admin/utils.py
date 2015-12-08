@@ -518,7 +518,7 @@ def formatString(format, skelStructure, data, prefix=None):
 	if isinstance(data, str):
 		return data
 	if not data:
-		return res
+		return "" # FIXME: testing if this is better than return the format string as provided
 	for key in data.keys():
 		if isinstance(data[key], dict):
 			res = formatString(res, skelStructure, data[key], prefix + [key])

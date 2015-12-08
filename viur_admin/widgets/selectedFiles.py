@@ -74,6 +74,7 @@ class SelectedFilesWidget(QtGui.QListWidget):
 			@param selection: The new selection
 			@type selection: List-of-Dict, Dict or None
 		"""
+		print("selectedFiles", selection)
 		self.clear()
 		self.selection = selection
 		if isinstance(self.selection, dict):

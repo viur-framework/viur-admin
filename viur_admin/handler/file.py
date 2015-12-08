@@ -2,12 +2,11 @@
 
 from PyQt5 import QtCore
 
-from viur_admin.event import event
 from viur_admin.config import conf
-from viur_admin.widgets.file import FileWidget
-from viur_admin.utils import WidgetHandler
-from viur_admin.utils import loadIcon
+from viur_admin.event import event
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.utils import WidgetHandler
+from viur_admin.widgets.file import FileWidget
 
 
 class FileRepoHandler(WidgetHandler):
@@ -23,10 +22,12 @@ class FileBaseHandler(WidgetHandler):
 		self.modul = modul
 		config = conf.serverConfig["modules"][modul]
 		descr = config.get("name", "")
-		super(FileBaseHandler, self).__init__(lambda: FileWidget(modul), descr=descr, vanishOnClose=False, *args,
-		                                      **kwargs)
 		if config["icon"]:
-			self.setIcon(0, loadIcon(config["icon"]))
+			kwargs["icon"] = config["icon"]
+		super(FileBaseHandler, self).__init__(
+			lambda: FileWidget(modul), descr=descr, vanishOnClose=False,
+			*args, **kwargs)
+
 		event.connectWithPriority("preloadingFinished", self.setRepos, event.lowPriority)
 
 	# self.tmpObj = QtCore.QObject()

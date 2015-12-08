@@ -369,6 +369,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 			A item has been selected. If we have a previewURL -> show it
 		"""
+		print("HierarchyWidget.onItemClicked", item, col)
 		config = conf.serverConfig["modules"][self.modul]
 		if "previewURL" in config.keys() and config["previewURL"]:
 			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])

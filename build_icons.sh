@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pushd viur_admin/icons
 cp ../cacert.pem .

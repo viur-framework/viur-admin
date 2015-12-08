@@ -106,17 +106,17 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 	def removeItemAtIndex(self, index):
 		if not index.isValid() or index.row() >= len(self.dataCache):
 			return
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+		self.layoutAboutToBeChanged.emit()
 		self.dataCache.pop(index.row())
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutChanged.emit()
 
 	def getData(self):
 		return self.dataCache
 
 	def clear(self):
-		self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
-		self.dataCache = []
-		self.emit(QtCore.SIGNAL("layoutChanged()"))
+		self.layoutAboutToBeChanged.emit()
+		self.dataCache.clear()
+		self.layoutChanged.emit()
 
 
 class SelectedExtendedEntitiesWidget(QtWidgets.QTableView):

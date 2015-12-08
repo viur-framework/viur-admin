@@ -18,8 +18,8 @@ class NodeItem(QtWidgets.QListWidgetItem):
 		Displayes one subfolder inside a QListWidget
 	"""
 
-	def __init__(self, data):
-		super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]))
+	def __init__(self, data, parent):
+		super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent)
 		self.entryData = data
 
 	def __gt__(self, other):
@@ -45,12 +45,12 @@ class LeafItem(QtWidgets.QListWidgetItem):
 		Can be overriden for a more accurate representation of the element.
 	"""
 
-	def __init__(self, data):
+	def __init__(self, data, parent):
 		if isinstance(data, dict) and "name" in data:
 			name = str(data["name"])
 		else:
 			name = " - "
-		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name))
+		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name), parent=parent)
 		self.entryData = data
 
 	def __gt__(self, other):
@@ -98,14 +98,14 @@ class PathListView(QtWidgets.QListWidget):
 		node = self.node
 		revList = []
 		while node:
-			if not node in protoWrap.dataCache.keys():
+			if node  not in protoWrap.dataCache.keys():
 				protoWrap.queryData(node)
 				return
 			node = protoWrap.dataCache[node].copy()
 			revList.append(node)
 			node = node["parentdir"]
 		for node in revList[:: -1]:
-			aitem = NodeItem(node)
+			aitem = NodeItem(node, self)
 			self.addItem(aitem)
 
 	def dragEnterEvent(self, event):
@@ -143,6 +143,7 @@ class PathListView(QtWidgets.QListWidget):
 		self.rebuild()
 
 	def pathListItemClicked(self, item):
+		print("PathListView.pathListItemClicked", item)
 		self.setNode(item.entryData["id"], isInitialCall=True)
 
 	# self.setPath( self.path[ : clickeditem.i ] )
@@ -181,7 +182,7 @@ class TreeListView(QtWidgets.QListWidget):
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect(self.onTreeChanged)
 		protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
-		# self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.onTreeChanged )
+		protoWrap.entitiesChanged.connect(self.onTreeChanged)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 		self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -195,6 +196,9 @@ class TreeListView(QtWidgets.QListWidget):
 		if self.rootNode is not None:
 			print("hAVING ROOTNODE", self.rootNode)
 			self.loadData()
+		sizePol = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+		self.setSizePolicy(sizePol)
+		self.setResizeMode(QtWidgets.QListWidget.Adjust)
 
 	## Getters & Setters
 
@@ -267,7 +271,7 @@ class TreeListView(QtWidgets.QListWidget):
 				else:
 					leafs.append(item.entryData)
 			event.mimeData().setData("viur/treeDragData", json.dumps({"nodes": [x["id"] for x in nodes],
-			                                                          "leafs": [x["id"] for x in leafs]}))
+			                                                          "leafs": [x["id"] for x in leafs]}).encode("utf-8"))
 			event.mimeData().setUrls(
 				[utils.urlForItem(self.getModul(), x) for x in nodes] + [utils.urlForItem(self.getModul(), x) for x in
 				                                                         leafs])
@@ -337,9 +341,9 @@ class TreeListView(QtWidgets.QListWidget):
 		self.clear()
 		for entry in nodes:
 			if entry["_type"] == "node":
-				self.addItem(self.nodeItem(entry))
+				self.addItem(self.nodeItem(entry, self))
 			elif entry["_type"] == "leaf":
-				self.addItem(self.leafItem(entry))
+				self.addItem(self.leafItem(entry, self))
 			else:
 				raise NotImplementedError()
 		self.sortItems()
@@ -372,8 +376,8 @@ class TreeListView(QtWidgets.QListWidget):
 			mimeData = QtCore.QMimeData()
 			mimeData.setData("viur/treeDragData", json.dumps({"nodes": nodes,
 			                                                  "leafs": leafs,
-			                                                  "domove": doMove}))
-			QtGui.QApplication.clipboard().setMimeData(mimeData)
+			                                                  "domove": doMove}).encode("utf-8"))
+			QtWidgets.QApplication.clipboard().setMimeData(mimeData)
 		elif action.task == "delete":
 			nodes = []
 			leafs = []
@@ -386,7 +390,7 @@ class TreeListView(QtWidgets.QListWidget):
 		elif action.task == "paste":
 			# self.currentItem() ):
 			data = json.loads(
-				QtGui.QApplication.clipboard().mimeData().data("viur/treeDragData").data().decode("UTF-8"))
+				QtWidgets.QApplication.clipboard().mimeData().data("viur/treeDragData").data().decode("UTF-8"))
 			# srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove ):
 			protoWrap.move(data["nodes"], data["leafs"], self.getNode())
 		# self.copy( self.clipboard, self.rootNode, self.getPath() )
@@ -465,7 +469,7 @@ class TreeWidget(QtWidgets.QWidget):
 		self.ui.setupUi(self)
 		self.modul = modul
 		self.editOnDoubleClick = editOnDoubleClick
-		self.tree = self.treeWidget(modul, rootNode, node)
+		self.tree = self.treeWidget(modul, rootNode, node, parent=self)
 		self.ui.listWidgetBox.layout().addWidget(self.tree)
 		self.pathList = PathListView(modul, rootNode, [])
 		self.ui.pathListBox.layout().addWidget(self.pathList)

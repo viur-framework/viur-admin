@@ -14,8 +14,8 @@ class FileItem(LeafItem):
 		Displayes a file (including its preview if possible) inside a QListWidget.
 	"""
 
-	def __init__(self, data):
-		super(FileItem, self).__init__(data)
+	def __init__(self, data, parent):
+		super(FileItem, self).__init__(data, parent)
 		self.entryData = data
 		extension = self.entryData["name"].split(".")[-1].lower()
 		print("extension", extension)

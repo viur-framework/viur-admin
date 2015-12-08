@@ -425,17 +425,21 @@ QComboBox QAbstractItemView::item:selected {
     outline: none;
 }
 
-QListWidget:item {
-    padding: 2px;
-}
+/*
+FIXME: why this is breaking single file selection on a click event?
+*/
 
-QListWidget:item:selected {
-    background: #ccc;
-}
+/*QListWidget:item {*/
+    /*padding: 2px;*/
+/*}*/
 
-QListWidget:item:focus {
-    border-right: 4px solid #BE1622;
-}
+/*QListWidget:item:selected {*/
+    /*background: #ccc;*/
+/*}*/
+
+/*QListWidget:item:focus {*/
+    /*border-right: 4px solid #BE1622;*/
+/*}*/
 
 /*
  =======================================

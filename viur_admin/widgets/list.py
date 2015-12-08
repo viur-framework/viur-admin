@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-import json
 import csv
+import json
 # import logging
 import os.path
 from datetime import datetime
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 from viur_admin.utils import Overlay, urlForItem
 from viur_admin.event import event
 from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
@@ -65,16 +63,15 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.reload()
 
 	def getFilter(self):
-		return (self.filter)
+		return self.filter
 
 	def getFields(self):
-		return (self.fields)
+		return self.fields
 
 	def getModul(self):
-		return (self.modul)
+		return self.modul
 
 	def reload(self):
-		# print("reload()")
 		self.modelAboutToBeReset.emit()
 		self.dataCache = []
 		self.completeList = False
@@ -83,34 +80,31 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadNext(True)
 
 	def rowCount(self, parent):
-		# print("rowCount")
 		if self.completeList:
-			return (len(self.dataCache))
+			return len(self.dataCache)
 		else:
-			return (len(self.dataCache) + 1)
+			return len(self.dataCache) + 1
 
 	def columnCount(self, parent):
-		# print("columnCount")
 		try:
 			return len(self.headers)
 		except:
-			return (0)
+			return 0
 
 	def data(self, index, role):
-		# print("data")
 		if not index.isValid():
 			return None
 		elif role != QtCore.Qt.DisplayRole:
 			return None
 		if index.row() >= 0 and (index.row() < len(self.dataCache)):
 			try:
-				return (self.dataCache[index.row()][self._validFields[index.column()]])
+				return self.dataCache[index.row()][self._validFields[index.column()]]
 			except:
-				return ("")
+				return ""
 		else:
 			if not self.completeList:
 				self.loadNext()
-			return ("-Lade-")
+			return "-Lade-"
 
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -123,22 +117,22 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			# print("stopped loadNext")
 			return
 		self.isLoading += 1
-		filter = self.filter.copy() or {}
+		rawFilter = self.filter.copy() or {}
 		if self.cursor:
-			filter["cursor"] = self.cursor
+			rawFilter["cursor"] = self.cursor
 		elif self.dataCache:
 			invertedOrderDir = False
-			if "orderdir" in filter.keys() and str(filter["orderdir"]) == "1":
+			if "orderdir" in rawFilter.keys() and str(rawFilter["orderdir"]) == "1":
 				invertedOrderDir = True
-			if filter["orderby"] in self.dataCache[-1].keys():
+			if rawFilter["orderby"] in self.dataCache[-1].keys():
 				if invertedOrderDir:
-					filter[filter["orderby"] + "$lt"] = self.dataCache[-1][filter["orderby"]]
+					rawFilter[rawFilter["orderby"] + "$lt"] = self.dataCache[-1][rawFilter["orderby"]]
 				else:
-					filter[filter["orderby"] + "$gt"] = self.dataCache[-1][filter["orderby"]]
+					rawFilter[rawFilter["orderby"] + "$gt"] = self.dataCache[-1][rawFilter["orderby"]]
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
-		filter["amount"] = self._chunkSize
-		self.loadingKey = protoWrap.queryData(**filter)
+		rawFilter["amount"] = self._chunkSize
+		self.loadingKey = protoWrap.queryData(**rawFilter)
 
 	def addData(self, queryKey):
 		# print("addData")
@@ -207,7 +201,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			Merge the prefix search in our filter dict if possible.
 			Does noting if the list isn't sorted by name.
 		"""
-		if not "orderby" in self.filter.keys() or not self.filter["orderby"] == "name":
+		if "orderby" not in self.filter.keys() or not self.filter["orderby"] == "name":
 			return
 		if "search" in self.filter.keys():
 			del self.filter["search"]
@@ -219,8 +213,8 @@ class ListTableModel(QtCore.QAbstractTableModel):
 
 	def flags(self, index):
 		if not index.isValid():
-			return (QtCore.Qt.NoItemFlags)
-		return (QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled)
+			return QtCore.Qt.NoItemFlags
+		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled
 
 
 class ListTableView(QtWidgets.QTableView):
@@ -264,6 +258,7 @@ class ListTableView(QtWidgets.QTableView):
 		self.doubleClicked.connect(self.onItemDoubleClicked)
 
 	def onItemClicked(self, index):
+		print("ListTableView.onItemClicked", index)
 		try:
 			self.itemClicked.emit(self.model().getData()[index.row()])
 		except IndexError:
@@ -358,13 +353,12 @@ class ListTableView(QtWidgets.QTableView):
 			self.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
 
 	def requestDelete(self, ids):
-		if QtWidgets.QMessageBox.question(self,
-		                                  QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
-		                                  QtCore.QCoreApplication.translate("ListTableView",
-		                                                                    "Delete %s entries?") % len(
-			                                  ids),
-		                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-		                                  QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
+		if QtWidgets.QMessageBox.question(
+				self,
+				QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+						QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(ids),
+						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
 		assert protoWrap is not None
@@ -439,11 +433,24 @@ class ListWidget(QtWidgets.QWidget):
 	itemDoubleClicked = QtCore.pyqtSignal((object,))
 	itemActivated = QtCore.pyqtSignal((object,))
 
-	defaultActions = {"list": ["add", "edit", "clone", "preview", "delete", "reload"],
-	                  "list.order": ["add", "edit", "delete", "markpayed", "marksend", "markcanceled", "downloadbill",
-	                                 "downloaddeliverynote"]
-
-	                  }
+	defaultActions = {
+		"list": [
+			"add",
+			"edit",
+			"clone",
+			"preview",
+			"delete",
+			"reload"],
+		"list.order": [
+			"add",
+			"edit",
+			"delete",
+			"markpayed",
+			"marksend",
+			"markcanceled"
+			"downloadbill",
+			"downloaddeliverynote"]
+	}
 
 	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs):
 		super(ListWidget, self).__init__(*args, **kwargs)
@@ -530,7 +537,7 @@ class ListWidget(QtWidgets.QWidget):
 		"""
 			Returns a list of the currently activated actions on this list.
 		"""
-		return (self._currentActions)
+		return self._currentActions
 
 	def search(self, *args, **kwargs):
 		"""
@@ -569,13 +576,13 @@ class ListWidget(QtWidgets.QWidget):
 		self.list.model().prefixSearch(self.ui.editSearch.text())
 
 	def getFilter(self):
-		return (self.list.getFilter())
+		return self.list.getFilter()
 
 	def setFilter(self, filter):
 		self.list.setFilter(filter)
 
 	def getModul(self):
-		return (self.list.getModul())
+		return self.list.getModul()
 
 	def openEditor(self, item, clone=False):
 		"""
@@ -610,10 +617,10 @@ class ListWidget(QtWidgets.QWidget):
 		handler.focus()
 
 	def requestDelete(self, ids):
-		return (self.list.requestDelete(ids))
+		return self.list.requestDelete(ids)
 
 	def getSelection(self):
-		return (self.list.getSelection())
+		return self.list.getSelection()
 
 
 class CsvExportWidget(QtWidgets.QWidget):
@@ -625,8 +632,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 	def __init__(self, module, model, *args, **kwargs):
 		"""
 			Initialize a new Edit or Add-Widget for the given modul.
-			@param modul: Name of the modul
-			@type modul: String
+			@param module: Name of the modul
+			@type module: str
 			@param model: The ListTableModel instance
 			@type model: ListTableModel
 		"""
@@ -639,7 +646,6 @@ class CsvExportWidget(QtWidgets.QWidget):
 		oldlang = conf.adminConfig["language"]
 		active = 0
 		for ix, (key, lang) in enumerate(conf.serverConfig["viur.defaultlangsvalues"].items()):
-			# logging.debug("lang %r %r", key, lang)
 			if key == oldlang:
 				active = ix
 			self.ui.langComboBox.addItem(lang, key)
@@ -672,45 +678,45 @@ class CsvExportWidget(QtWidgets.QWidget):
 		# self.overlay = Overlay(self)
 		# self.overlay.inform(self.overlay.BUSY)
 		path = self.ui.filenameName.text()
-		# self.logger.debug("path: %r", path)
+		self.logger.debug("path: %r", path)
 		if not path:
 			return
 
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		protoWrap.queryResultAvaiable.connect(self.addData)
 		self.loadNext()
 
 	def loadNext(self):
 		if self.isLoading:
-			# self.logger.debug("stopped loadNext")
+			self.logger.debug("stopping loadNext since it's already loading")
 			return
 		self.isLoading += 1
-		filter = self.model.filter.copy() or {}
+		rawFilter = self.model.filter.copy() or {}
 		if self.cursor:
-			filter["cursor"] = self.cursor
+			rawFilter["cursor"] = self.cursor
 		elif self.dataCache:
 			invertedOrderDir = False
-			if "orderdir" in filter.keys() and str(filter["orderdir"]) == "1":
+			if "orderdir" in rawFilter.keys() and str(rawFilter["orderdir"]) == "1":
 				invertedOrderDir = True
-			if filter["orderby"] in self.dataCache[-1].keys():
+			if rawFilter["orderby"] in self.dataCache[-1].keys():
 				if invertedOrderDir:
-					filter[filter["orderby"] + "$lt"] = self.dataCache[-1][filter["orderby"]]
+					rawFilter[rawFilter["orderby"] + "$lt"] = self.dataCache[-1][rawFilter["orderby"]]
 				else:
-					filter[filter["orderby"] + "$gt"] = self.dataCache[-1][filter["orderby"]]
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+					rawFilter[rawFilter["orderby"] + "$gt"] = self.dataCache[-1][rawFilter["orderby"]]
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
-		filter["amount"] = 20
-		self.loadingKey = protoWrap.queryData(**filter)
+		rawFilter["amount"] = 20
+		self.loadingKey = protoWrap.queryData(**rawFilter)
 
 	def addData(self, queryKey):
 		self.isLoading -= 1
-		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
+		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we don't display anymore
 			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
-		for item in skellist:  # Insert the new Data at the coresponding Position
+		for item in skellist:  # Insert the new Data at the corresponding Position
 			self.dataCache.append(item)
 		self.cursor = cursor
 		self.loadingKey = None
@@ -724,7 +730,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			self.loadNext()
 
 	def onChooseOutputFile(self, action=None):
-		# self.logger.debug("onChooseOutputFile %r", action)
+		self.logger.debug("onChooseOutputFile %r", action)
 		dialog = QtWidgets.QFileDialog(self, directory=os.path.expanduser("~"))
 		dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
 		dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -733,8 +739,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			try:
 				self.ui.filenameName.setText(dialog.selectedFiles()[0])
 			except Exception as err:
-				pass
-			# self.logger.exception(err)
+				self.logger.exception(err)
 
 	def serializeToCsv(self, data, bones):
 		f = open(self.ui.filenameName.text(), "w")
@@ -749,8 +754,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 			conf.adminConfig["language"] = newlang
 			for field in fields:
 				# Locate the best ViewDeleate for this column
-				delegateFactory = viewDelegateSelector.select(self.modul, field, bones)
-				delegate = delegateFactory(self.modul, field, bones)
+				delegateFactory = viewDelegateSelector.select(self.module, field, bones)
+				delegate = delegateFactory(self.module, field, bones)
 				delegates.append(delegate)
 				headers.append(bones[field]["descr"])
 
@@ -765,8 +770,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			for i in delegates:
 				i.deleteLater()
 		except Exception as err:
-			pass
-		# self.logger.exception(err)
+			self.logger.exception(err)
 		finally:
 			conf.adminConfig["language"] = oldlang
 

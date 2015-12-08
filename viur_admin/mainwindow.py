@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWebKitWidgets, QtWidgets
 
@@ -324,7 +325,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		It
 			- Resets the ui to sane defaults.
 			- Selects a startPage for the application
-			- Selects Protocollwrapper and Module-Handler for each modul
+			- Selects Protocolwrapper and Module-Handler for each modul
 			- Requests a toplevel handler for each modul
 			- Finnaly emits modulHandlerInitialized and mainWindowInitialized
 		"""
@@ -341,15 +342,24 @@ class MainWindow(QtWidgets.QMainWindow):
 		data = conf.serverConfig
 		handlers = []
 		groupHandlers = {}
+		by_group = dict()
 		if "configuration" in data.keys() and "modulGroups" in data["configuration"].keys():
 			for group in data["configuration"]["modulGroups"]:
 				if not all([x in group.keys() for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
-				groupHandlers[group["prefix"]] = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
+				group_handler = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
+				group_prefix = group["prefix"]
+				groupHandlers[group_prefix] = group_handler
+				by_group[group_prefix] = list()
 				self.ui.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
 		if "modules" not in conf.portal:
 			conf.portal["modules"] = {}
+
+		def sortItemHandlers(pair):
+			return pair[1].sortIndex
+
+		groupHandlers = OrderedDict(sorted(groupHandlers.items(), key=sortItemHandlers))
 
 		for modul, cfg in data["modules"].items():
 			queue = RegisterQueue()
@@ -360,8 +370,10 @@ class MainWindow(QtWidgets.QMainWindow):
 				for groupName in groupHandlers.keys():
 					if cfg["name"].startswith(groupName):
 						parent = groupHandlers[groupName]
+						break
 				if parent:
-					parent.addChild(handler)
+					# parent.addChild(handler)
+					by_group[groupName].append(handler)
 				else:
 					self.ui.treeWidget.addTopLevelItem(handler)
 			else:
@@ -371,7 +383,15 @@ class MainWindow(QtWidgets.QMainWindow):
 			if wrapperClass is not None:
 				wrapperClass(modul)
 			event.emit('modulHandlerInitialized', modul)
-		self.ui.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
+		# self.ui.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
+
+		def subhandlerSorter(x):
+			return x.sortIndex
+
+		for group, handlers in by_group.items():
+			handlers.sort(key=subhandlerSorter)
+			for handler in handlers:
+				groupHandlers[group].addChild(handler)
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 
