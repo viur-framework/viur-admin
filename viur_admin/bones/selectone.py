@@ -11,9 +11,9 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale):
 		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"].items()])
 		if str(value) in items.keys():
-			return (items[str(value)])
+			return items[str(value)]
 		else:
-			return (value)
+			return value
 
 
 class FixedComboBox(QtWidgets.QComboBox):
@@ -61,7 +61,7 @@ class SelectOneEditBone(QtWidgets.QWidget):
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return (cls(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs))
+		return cls(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
@@ -76,17 +76,18 @@ class SelectOneEditBone(QtWidgets.QWidget):
 			self.comboBox.setCurrentIndex(-1)
 
 	def serializeForPost(self):
+		currentValue = str(self.comboBox.currentText())
 		for key, value in self.values:
-			if str(value) == str(self.comboBox.currentText()):
-				return ({self.boneName: str(key)})
-		return ({self.boneName: None})
+			if str(value) == currentValue:
+				return {self.boneName: str(key)}
+		return {self.boneName: None}
 
 	def serializeForDocument(self):
-		return (self.serialize())
+		return self.serialize()
 
 
 def CheckForSelectOneBone(modulName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "selectone")
+	return skelStucture[boneName]["type"] == "selectone"
 
 
 # Register this Bone in the global queue

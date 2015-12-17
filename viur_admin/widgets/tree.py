@@ -50,7 +50,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 			name = str(data["name"])
 		else:
 			name = " - "
-		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name), parent=parent)
+		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name))
 		self.entryData = data
 
 	def __gt__(self, other):
@@ -188,17 +188,18 @@ class TreeListView(QtWidgets.QListWidget):
 		self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)
-		self.setViewMode(self.IconMode)
 		self.setSortingEnabled(True)
 		self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
 		self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
 		self.setSelectionMode(self.ExtendedSelection)
 		if self.rootNode is not None:
-			print("hAVING ROOTNODE", self.rootNode)
+			print("Having rootnode", self.rootNode)
 			self.loadData()
 		sizePol = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 		self.setSizePolicy(sizePol)
 		self.setResizeMode(QtWidgets.QListWidget.Adjust)
+		self.setViewMode(0)
+		self.setViewMode(1)
 
 	## Getters & Setters
 

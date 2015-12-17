@@ -22,13 +22,10 @@ class FileItem(LeafItem):
 		fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 		fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
 		if fileInfo2.exists():
-			print("found svg filetype image")
 			icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
 		elif fileInfo.exists():
-			print("found png filetype image")
 			icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
 		else:
-			print("unknown filetype image")
 			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		self.setIcon(icon)
 		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
@@ -45,13 +42,10 @@ class FileItem(LeafItem):
 			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 			fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
 			if fileInfo2.exists():
-				print("found svg filetype image")
 				icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
 			elif fileInfo.exists():
-				print("found png filetype image")
 				icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension)).re
 			else:
-				print("unknown filetype image")
 				icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		else:
 			icon = QtGui.QIcon(pixmap.scaled(128, 128))

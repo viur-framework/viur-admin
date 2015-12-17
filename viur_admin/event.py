@@ -1,5 +1,4 @@
 import weakref
-import logging
 
 from PyQt5 import QtCore
 
@@ -8,7 +7,7 @@ from PyQt5 import QtCore
 """
 
 
-class WeakFuncWrapper():
+class WeakFuncWrapper:
 	def __init__(self, targetFunc):
 		super(WeakFuncWrapper, self).__init__()
 		if "__self__" in dir(targetFunc):
@@ -32,35 +31,9 @@ class WeakFuncWrapper():
 
 	def isDead(self):
 		if self.targetFuncName is not None:  # Bound function
-			return (self.targetFuncSelf() is None)
+			return self.targetFuncSelf() is None
 		else:
-			return (self.targetFunc() is None)
-
-
-class EventWrapper(QtCore.QObject):  ### REPLACED BY WEAK FUNC WRAPPER
-	"""
-		This is the actual class getting added to the queues.
-		It monitors that its parent object stayes alive and removes
-		and destroyes itself if its parent gets destroyed.
-	"""
-
-	def __init__(self, signal, targetFunc):
-		super(EventWrapper, self).__init__()
-		self.logger = logging.getLogger("EventWrapper")
-		self.signal = signal
-		self.targetFunc = WeakFuncWrapper(targetFunc)
-
-	def emitUsingParams(self, *args):
-		"""
-			Emits the stored event using the given params
-		"""
-
-		s = self.targetFuncSelf()
-		if s:
-			getattr(s, self.targetFuncName)(*args)
-
-	def isDead(self):
-		return (self.targetFuncSelf() is None)
+			return self.targetFunc() is None
 
 
 class EventDispatcher(QtCore.QObject):
@@ -79,14 +52,19 @@ class EventDispatcher(QtCore.QObject):
 	eventMap = {}
 
 	def connectWithPriority(self, signal, func, priority):
+		""" Connects the given function to the given event, using priority=#.
+
+		:param signal:
+		:param func:
+		:param priority:
+		:return:
 		"""
-			Connects the given function to the given event, using priority=#.
-		"""
-		if not signal in EventDispatcher.eventMap.keys():
-			EventDispatcher.eventMap[signal] = {"high": [],
-			                                    "normal": [],
-			                                    "low": []
-			                                    }
+		if signal not in EventDispatcher.eventMap.keys():
+			EventDispatcher.eventMap[signal] = {
+				"high": [],
+				"normal": [],
+				"low": []
+			}
 		obj = WeakFuncWrapper(func)
 		if priority == self.highestPriority:  # Put this one first
 			EventDispatcher.eventMap[signal]["high"].insert(0, obj)
