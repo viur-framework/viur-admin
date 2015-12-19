@@ -19,7 +19,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 	"""
 
 	def __init__(self, data, parent):
-		super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent)
+		super(NodeItem, self).__init__(QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent, type=1200)
 		self.entryData = data
 
 	def __gt__(self, other):
@@ -50,7 +50,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 			name = str(data["name"])
 		else:
 			name = " - "
-		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name))
+		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name), parent=parent, type=1100)
 		self.entryData = data
 
 	def __gt__(self, other):

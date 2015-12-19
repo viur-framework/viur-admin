@@ -36,22 +36,13 @@ class FileItem(LeafItem):
 	def updateIcon(self, remoteFile):
 		pixmap = QtGui.QPixmap()
 		pixmap.loadFromData(remoteFile.getFileContents())
-		if (pixmap.isNull()):
-			extension = self.entryData["name"].split(".")[-1].lower()
-			print("update extension", extension)
-			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
-			fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
-			if fileInfo2.exists():
-				icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
-			elif fileInfo.exists():
-				icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension)).re
-			else:
-				icon = QtGui.QIcon(":icons/filetypes/unknown.png")
-		else:
-			icon = QtGui.QIcon(pixmap.scaled(128, 128))
-		self.setIcon(icon)
-		self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % (
-			remoteFile.getFileName(), str(self.entryData["name"])))
+		if not pixmap.isNull():
+			icon = QtGui.QIcon(pixmap.scaled(104, 104))
+			self.setIcon(icon)
+			self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % (
+				remoteFile.getFileName(), str(self.entryData["name"])))
+			self.listWidget().setViewMode(0)
+			self.listWidget().setViewMode(1)
 
 
 class UploadStatusWidget(QtWidgets.QWidget):
