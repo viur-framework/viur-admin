@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# from handler import order
 import viur_admin.handler.calender
 import viur_admin.handler.file
 import viur_admin.handler.hierarchy

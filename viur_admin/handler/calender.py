@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.event import event
-from viur_admin.widgets.list import ListWidget
-from viur_admin.utils import WidgetHandler, loadIcon
 from viur_admin.config import conf
+from viur_admin.event import event
+from viur_admin.handler.list import PredefinedViewHandler
+from viur_admin.utils import WidgetHandler, loadIcon
+from viur_admin.widgets.list import ListWidget
 
 
 class CalenderWidget(ListWidget):
@@ -62,7 +63,7 @@ class CalenderWidget(ListWidget):
 			filter["startdate$gt"] = self.deFilter.date().toString("01.MM.yyyy")
 			# Calculate enddate: set Day of Month to 01; add 33 Days, read Year+Month
 			filter["startdate$lt"] = QtCore.QDate(self.deFilter.date().year(), self.deFilter.date().month(), 1).addDays(
-				33).toString("01.MM.yyyy")
+					33).toString("01.MM.yyyy")
 		elif self.currentFilterMode == "day":
 			filter["startdate$gt"] = self.deFilter.date().toString("dd.MM.yyyy")
 			filter["startdate$lt"] = self.deFilter.date().addDays(1).toString("dd.MM.yyyy")

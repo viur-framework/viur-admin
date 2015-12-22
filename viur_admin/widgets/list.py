@@ -17,7 +17,7 @@ from viur_admin.config import conf
 
 class ListTableModel(QtCore.QAbstractTableModel):
 	"""Model for displaying data within a listView"""
-	GarbargeTypeName = "ListTableModel"
+	GarbageTypeName = "ListTableModel"
 	_chunkSize = 25
 
 	rebuildDelegates = QtCore.pyqtSignal((object,))
@@ -228,7 +228,7 @@ class ListTableView(QtWidgets.QTableView):
 		@emits onItemActivated(PyQt_PyObject=item.data)
 
 	"""
-	GarbargeTypeName = "ListTableView"
+	GarbageTypeName = "ListTableView"
 
 	itemClicked = QtCore.pyqtSignal((object,))
 	itemDoubleClicked = QtCore.pyqtSignal((object,))
@@ -258,7 +258,6 @@ class ListTableView(QtWidgets.QTableView):
 		self.doubleClicked.connect(self.onItemDoubleClicked)
 
 	def onItemClicked(self, index):
-		print("ListTableView.onItemClicked", index)
 		try:
 			self.itemClicked.emit(self.model().getData()[index.row()])
 		except IndexError:
@@ -316,7 +315,7 @@ class ListTableView(QtWidgets.QTableView):
 			rows = []
 			for index in self.selectedIndexes():
 				row = index.row()
-				if not row in rows:
+				if row not in rows:
 					rows.append(row)
 			idList = []
 			for row in rows:

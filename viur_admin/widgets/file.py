@@ -18,7 +18,6 @@ class FileItem(LeafItem):
 		super(FileItem, self).__init__(data, parent)
 		self.entryData = data
 		extension = self.entryData["name"].split(".")[-1].lower()
-		print("extension", extension)
 		fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 		fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
 		if fileInfo2.exists():
@@ -38,11 +37,11 @@ class FileItem(LeafItem):
 		pixmap.loadFromData(remoteFile.getFileContents())
 		if not pixmap.isNull():
 			icon = QtGui.QIcon(pixmap.scaled(104, 104))
-			self.setIcon(icon)
-			self.setToolTip("<img src=\"%s\" width=\"200\" height=\"200\"><br>%s" % (
+			# self.setIcon(icon)
+			self.setToolTip("<img src=\"%s\" width=\"400\" height=\"400\"><br>%s" % (
 				remoteFile.getFileName(), str(self.entryData["name"])))
-			self.listWidget().setViewMode(0)
-			self.listWidget().setViewMode(1)
+		self.listWidget().setViewMode(0)
+		self.listWidget().setViewMode(1)
 
 
 class UploadStatusWidget(QtWidgets.QWidget):

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from PyQt5 import QtCore
 
-from viur_admin.network import NetworkService
-from viur_admin.event import event
 from viur_admin.config import conf
-from viur_admin.utils import loadIcon
+from viur_admin.event import event
+from viur_admin.network import NetworkService
 from viur_admin.utils import WidgetHandler
+from viur_admin.utils import loadIcon
 from viur_admin.widgets.hierarchy import HierarchyWidget
 
 
@@ -32,9 +33,8 @@ class HierarchyCoreHandler(WidgetHandler):  # FIXME
 				icon = loadIcon(config["icon"])
 		else:
 			icon = loadIcon(":icons/modules/hierarchy.svg")
-		super(HierarchyCoreHandler, self).__init__(lambda: HierarchyWidget(modul), icon=icon, vanishOnClose=False,
+		super(HierarchyCoreHandler, self).__init__(lambda: HierarchyWidget(modul), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False,
 		                                           *args, **kwargs)
-		self.setText(0, config["name"])
 		self.repos = []
 		self.tmp_obj = QtCore.QObject()
 		fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmp_obj)

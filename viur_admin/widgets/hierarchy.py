@@ -27,6 +27,7 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
 		protoWrap = protocolWrapperInstanceSelector.select(modul)
 		assert protoWrap is not None
 		itemName = utils.formatString(format, protoWrap.viewStructure, data)
+		# print("HierarchyItem format", format, protoWrap.viewStructure, data.keys(), repr(itemName))
 		super(HierarchyItem, self).__init__([str(itemName)])
 		self.loaded = False
 		self.entryData = data

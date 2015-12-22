@@ -389,7 +389,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			return x.sortIndex
 
 		for group, handlers in by_group.items():
-			handlers.sort(key=subhandlerSorter)
+			handlers.sort(key=subhandlerSorter, reverse=True)
 			for handler in handlers:
 				groupHandlers[group].addChild(handler)
 		event.emit('mainWindowInitialized')

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import logging
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
@@ -262,7 +265,9 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.widgetGenerator = widgetGenerator
 		try:
 			prefix, descr = descr.split(": ", 1)
-		except ValueError:
+		except ValueError as err:
+			# logging.error("could not sep handler name: %r", descr)
+			# logging.exception(err)
 			pass
 		self.setText(0, descr)
 		# self.setText(1, str(sortIndex))
@@ -472,7 +477,7 @@ def formatString(format, skelStructure, data, prefix=None):
 	def chooseLang(value, prefs, key):  # FIXME: Copy&Paste from bones/string
 		"""
 			Tries to select the best language for the current user.
-			Value is the dictionary of lang -> text recived from the server,
+			Value is the dictionary of lang -> text received from the server,
 			prefs the list of languages (in order of preference) for that bone.
 		"""
 		if not isinstance(value, dict):
@@ -480,7 +485,7 @@ def formatString(format, skelStructure, data, prefix=None):
 		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
 			lang = "%s.%s" % (key, conf.adminConfig["language"])
-		except:
+		except Exception as err:
 			lang = ""
 		if lang in value.keys() and value[lang]:
 			return value[lang]
@@ -493,8 +498,9 @@ def formatString(format, skelStructure, data, prefix=None):
 			langDict = value[key]
 			try:
 				lang = conf.adminConfig["language"]
-			except:
-				lang = ""
+			except Exception as err:
+				logging.exception(err)
+				lang = "de"
 			if lang in langDict.keys():
 				return langDict[lang]
 			for lang in prefs:
@@ -518,7 +524,8 @@ def formatString(format, skelStructure, data, prefix=None):
 	if isinstance(data, str):
 		return data
 	if not data:
-		return "" # FIXME: testing if this is better than return the format string as provided
+		# return "" # FIXME: testing if this is better than return the format string as provided
+		return res
 	for key in data.keys():
 		if isinstance(data[key], dict):
 			res = formatString(res, skelStructure, data[key], prefix + [key])
@@ -530,7 +537,8 @@ def formatString(format, skelStructure, data, prefix=None):
 	if not prefix:
 		for key, bone in skelStructure.items():
 			if "languages" in bone.keys() and bone["languages"]:
-				res = res.replace("$(%s)" % key, str(chooseLang(data, bone["languages"], key)))
+				lang = chooseLang(data, bone["languages"], key)
+				res = res.replace("$(%s)" % key, str(lang))
 	return res
 
 

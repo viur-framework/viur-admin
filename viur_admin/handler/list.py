@@ -1,18 +1,11 @@
-import os
-import os.path
+# -*- coding: utf-8 -*-
 
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 
-import time
-from viur_admin.network import NetworkService
-from viur_admin.event import event
-from viur_admin.ui.editpreviewUI import Ui_BasePreview
-from viur_admin.utils import RegisterQueue, Overlay, formatString, loadIcon, WidgetHandler
 from viur_admin.config import conf
-
-# from mainwindow import WidgetHandler
+from viur_admin.event import event
+from viur_admin.utils import loadIcon, WidgetHandler
 from viur_admin.widgets.list import ListWidget
-from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler
@@ -32,10 +25,8 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 				icon = loadIcon(myview["icon"])
 		else:
 			icon = loadIcon("icons/modules/list.svg")
-		super(PredefinedViewHandler, self).__init__(widgetFactory, icon=icon, vanishOnClose=False, *args, **kwargs)
+		super(PredefinedViewHandler, self).__init__(widgetFactory, descr=myview["name"], icon=icon, vanishOnClose=False, *args, **kwargs)
 		self.viewName = viewName
-		self.setText(0, myview["name"])
-		# print("PredefinedViewHandler.init", modul, viewName)
 
 
 class ListCoreHandler(WidgetHandler):  # EntryHandler
@@ -48,8 +39,11 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 		# print("actions", actions)
 		if "columns" in config.keys():
 			if "filter" in config.keys():
-				widgetGen = lambda: ListWidget(modul, fields=config["columns"], filter=config["filter"],
-				                               actions=actions)
+				widgetGen = lambda: ListWidget(
+						modul,
+						fields=config["columns"],
+						filter=config["filter"],
+						actions=actions)
 			else:
 				widgetGen = lambda: ListWidget(modul, fields=config["columns"], actions=actions)
 		else:
@@ -57,10 +51,12 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 		icon = None
 		if "icon" in config.keys() and config["icon"]:
 			icon = loadIcon(config["icon"])
-		super(ListCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon,
-		                                      sortIndex=config.get("sortIndex", 0), vanishOnClose=False, *args,
-		                                      **kwargs)
-		# print("ListCoreHandler.init views", modul, config.keys())
+		super(ListCoreHandler, self).__init__(
+				widgetGen, descr=config["name"],
+				icon=icon,
+				sortIndex=config.get("sortIndex", 0),
+				vanishOnClose=False, *args,
+				**kwargs)
 		if "views" in config.keys():
 			for view in config["views"]:
 				self.addChild(PredefinedViewHandler(modul, view["name"]))
@@ -69,11 +65,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 class ListHandler(QtCore.QObject):
 	def __init__(self, *args, **kwargs):
 		QtCore.QObject.__init__(self, *args, **kwargs)
-		# print("ListHandler event id", id(event))
 		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
-
-		# self.connect( event, QtCore.SIGNAL('requestModulHandler(PyQt_PyObject,PyQt_PyObject)'), self.requestModulHandler )
-		# self.connect( event, QtCore.SIGNAL('requestModulListActions(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)') ,  self.requestModulListActions )
 
 	def requestModulHandler(self, queue, modulName):
 		f = lambda: ListCoreHandler(modulName)

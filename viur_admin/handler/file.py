@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from PyQt5 import QtCore
 
 from viur_admin.config import conf
@@ -25,8 +26,8 @@ class FileBaseHandler(WidgetHandler):
 		if config["icon"]:
 			kwargs["icon"] = config["icon"]
 		super(FileBaseHandler, self).__init__(
-			lambda: FileWidget(modul), descr=descr, vanishOnClose=False,
-			*args, **kwargs)
+				lambda: FileWidget(modul), sortIndex=config.get("sortIndex", 0), descr=descr, vanishOnClose=False,
+				*args, **kwargs)
 
 		event.connectWithPriority("preloadingFinished", self.setRepos, event.lowPriority)
 

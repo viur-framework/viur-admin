@@ -10,8 +10,9 @@ from viur_admin.widgets.edit import EditWidget
 
 class TreeAddAction(QtWidgets.QAction):
 	def __init__(self, parent, *args, **kwargs):
-		super(TreeAddAction, self).__init__(QtGui.QIcon(":icons/actions/add.svg"),
-		                                    QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent)
+		super(TreeAddAction, self).__init__(
+				QtGui.QIcon(":icons/actions/add.svg"),
+				QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.New)
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -26,7 +27,7 @@ class TreeAddAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
-		return ((modul == "tree" or modul.startswith("tree.")) and actionName == "add")
+		return (modul == "tree" or modul.startswith("tree.")) and actionName == "add"
 
 
 actionDelegateSelector.insert(1, TreeAddAction.isSuitableFor, TreeAddAction)
@@ -34,8 +35,9 @@ actionDelegateSelector.insert(1, TreeAddAction.isSuitableFor, TreeAddAction)
 
 class TreeEditAction(QtWidgets.QAction):
 	def __init__(self, parent, *args, **kwargs):
-		super(TreeEditAction, self).__init__(QtGui.QIcon(":icons/actions/edit.svg"),
-		                                     QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent)
+		super(TreeEditAction, self).__init__(
+				QtGui.QIcon(":icons/actions/edit.svg"),
+				QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent)
 		self.setShortcut(QtGui.QKeySequence.Open)
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 		self.triggered.connect(self.onTriggered)
@@ -59,7 +61,7 @@ class TreeEditAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
-		return ((modul == "tree" or modul.startswith("tree.")) and actionName == "edit")
+		return (modul == "tree" or modul.startswith("tree.")) and actionName == "edit"
 
 
 actionDelegateSelector.insert(1, TreeEditAction.isSuitableFor, TreeEditAction)
@@ -67,8 +69,9 @@ actionDelegateSelector.insert(1, TreeEditAction.isSuitableFor, TreeEditAction)
 
 class TreeDirUpAction(QtWidgets.QAction):
 	def __init__(self, parent, *args, **kwargs):
-		super(TreeDirUpAction, self).__init__(QtGui.QIcon(":icons/actions/folder_back.svg"),
-		                                      QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent)
+		super(TreeDirUpAction, self).__init__(
+				QtGui.QIcon(":icons/actions/folder_back.svg"),
+				QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent)
 		self.parent().nodeChanged.connect(self.onNodeChanged)
 		reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
 		assert reqWrap is not None
@@ -90,13 +93,12 @@ class TreeDirUpAction(QtWidgets.QAction):
 		assert reqWrap is not None
 		node = reqWrap.getNode(self.parent().getNode())
 		if node:
-			# print(node)
 			if node["parentdir"]:
 				self.parent().setNode(node["parentdir"], isInitialCall=True)
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
-		return ((modul == "tree" or modul.startswith("tree.")) and actionName == "dirup")
+		return (modul == "tree" or modul.startswith("tree.")) and actionName == "dirup"
 
 
 actionDelegateSelector.insert(1, TreeDirUpAction.isSuitableFor, TreeDirUpAction)
@@ -104,8 +106,9 @@ actionDelegateSelector.insert(1, TreeDirUpAction.isSuitableFor, TreeDirUpAction)
 
 class TreeDeleteAction(QtWidgets.QAction):
 	def __init__(self, parent, *args, **kwargs):
-		super(TreeDeleteAction, self).__init__(QtGui.QIcon(":icons/actions/delete.svg"),
-		                                       QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent)
+		super(TreeDeleteAction, self).__init__(
+				QtGui.QIcon(":icons/actions/delete.svg"),
+				QtCore.QCoreApplication.translate("TreeHandler", "Delete"), parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.Delete)
@@ -113,7 +116,6 @@ class TreeDeleteAction(QtWidgets.QAction):
 		self.setEnabled(False)
 
 	def onItemSelectionChanged(self):
-		print("TreeDeleteAction.onItemSelectionChanged")
 		entries = self.parent().selectedItems()
 		if len(entries) == 0:
 			self.setEnabled(False)
@@ -134,7 +136,7 @@ class TreeDeleteAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
-		return ((modul == "tree" or modul.startswith("tree.")) and actionName == "delete")
+		return (modul == "tree" or modul.startswith("tree.")) and actionName == "delete"
 
 
 actionDelegateSelector.insert(1, TreeDeleteAction.isSuitableFor, TreeDeleteAction)
@@ -142,9 +144,10 @@ actionDelegateSelector.insert(1, TreeDeleteAction.isSuitableFor, TreeDeleteActio
 
 class TreeSwitchViewAction(QtWidgets.QAction):
 	def __init__(self, parent, *args, **kwargs):
-		super(TreeSwitchViewAction, self).__init__(QtGui.QIcon(":icons/actions/switch_list.png"),
-		                                           QtCore.QCoreApplication.translate("TreeHandler", "Switch View"),
-		                                           parent)
+		super(TreeSwitchViewAction, self).__init__(
+				QtGui.QIcon(":icons/actions/switch_list.png"),
+				QtCore.QCoreApplication.translate("TreeHandler", "Switch View"),
+				parent)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut("F8")
 		if not self.parent().isIconMode():
@@ -160,7 +163,7 @@ class TreeSwitchViewAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
-		return ((modul == "tree" or modul.startswith("tree.")) and actionName == "switchview")
+		return (modul == "tree" or modul.startswith("tree.")) and actionName == "switchview"
 
 
 actionDelegateSelector.insert(1, TreeSwitchViewAction.isSuitableFor, TreeSwitchViewAction)

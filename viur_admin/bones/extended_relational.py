@@ -72,7 +72,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			return
 		elif role != QtCore.Qt.ToolTipRole and role != QtCore.Qt.EditRole and role != QtCore.Qt.DisplayRole:
 			return
-		if index.row() >= 0 and index.row() < self.rowCount():
+		if 0 <= index.row() < self.rowCount():
 			if index.col() == 0:
 				return formatString(self.format, self.structure, self.dataCache[index.row()])
 			else:
@@ -174,12 +174,12 @@ class InternalEdit(QtWidgets.QWidget):
 
 
 class ExtendedRelationalEditBone(QtWidgets.QWidget):
-	GarbargeTypeName = "ExtendedRelationalEditBone"
+	GarbageTypeName = "ExtendedRelationalEditBone"
 	skelType = None
 
 	def __init__(self, modulName, boneName, readOnly, destModul, multiple, using=None, format="$(name)",
-	             editWidget=None, *args,
-	             **kwargs):
+			editWidget=None, *args,
+			**kwargs):
 		super(ExtendedRelationalEditBone, self).__init__(*args, **kwargs)
 		self.modulName = modulName
 		self.boneName = boneName
@@ -197,8 +197,9 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			self.previewWidget = QtWidgets.QWidget(self)
 			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
 			self.layout.addWidget(self.previewWidget)
-		self.addBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
-		                                    parent=self)
+		self.addBtn = QtWidgets.QPushButton(
+				QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
+				parent=self)
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
@@ -227,18 +228,18 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 			destModul = skelStructure[boneName]["modul"]
 		else:
 			destModul = skelStructure[boneName]["type"].split(".")[1]
-		format = "$(name)"
+		fmt = "$(name)"
 		if "format" in skelStructure[boneName].keys():
-			format = skelStructure[boneName]["format"]
+			fmt = skelStructure[boneName]["format"]
 		using = skelStructure[boneName]["using"]
-		return cls(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, using=using, format=format)
+		return cls(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, using=using, format=fmt)
 
 	def installAutoCompletion(self):
 		"""
 				Installs our autoCompleter on self.entry if possible
 		"""
 		if not self.multiple:
-			self.autoCompletionModel = AutocompletionModel(self.toModul, format, {})  # FIXME: {} was
+			self.autoCompletionModel = AutocompletionModel(self.toModul, self.format, {})  # FIXME: {} was
 			# self.skelStructure
 			self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
 			self.autoCompleter.setModel(self.autoCompletionModel)
@@ -301,8 +302,12 @@ class ExtendedRelationalEditBone(QtWidgets.QWidget):
 
 	def onAddBtnReleased(self, *args, **kwargs):
 		# print("onAddBtnReleased")
-		editWidget = ExtendedRelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul,
-		                                            self.selection)
+		editWidget = ExtendedRelationalBoneSelector(
+				self.modulName,
+				self.boneName,
+				self.multiple,
+				self.toModul,
+				self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def onDelBtnReleased(self, *args, **kwargs):
@@ -347,7 +352,7 @@ class ExtendedRelationalBoneSelector(QtWidgets.QWidget):
 	selectionChanged = QtCore.pyqtSignal((object,))
 	displaySourceWidget = ListWidget
 	displaySelectionWidget = SelectedExtendedEntitiesWidget
-	GarbargeTypeName = "ExtendedRelationalBoneSelector"
+	GarbageTypeName = "ExtendedRelationalBoneSelector"
 
 	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs):
 		super(ExtendedRelationalBoneSelector, self).__init__(*args, **kwargs)

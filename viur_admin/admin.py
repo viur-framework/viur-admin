@@ -18,9 +18,9 @@ from viur_admin.bugsnag import Notification
 
 try:
 	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg
-except ImportError:
-	print(
-		"QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
+except ImportError as err:
+	logging.exception(err)
+	logging.error("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
 	sys.exit(1)
 
 from pkg_resources import resource_filename, resource_listdir
@@ -43,10 +43,10 @@ if sys.version_info < min_version:
 	sys.exit(1)
 
 # app.setStyle("cleanlooks")
-# css = QtCore.QFile(":icons/app.css")
-# css.open(QtCore.QFile.ReadOnly)
-# data = str(css.readAll(), encoding='ascii')
-# app.setStyleSheet(data)
+css = QtCore.QFile(":icons/app.css")
+css.open(QtCore.QFile.ReadOnly)
+data = str(css.readAll(), encoding='ascii')
+app.setStyleSheet(data)
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -58,9 +58,9 @@ else:
 os.chdir(path)
 
 parser = ArgumentParser()
-# parser.add_argument('-d', '--debug', dest='debug', default='warning',
-#                   help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type="choice",
-#                   choices=["debug", "info", "warning", "critical"])
+parser.add_argument('-d', '--debug', dest='debug', default='warning',
+                  help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+                  choices=["debug", "info", "warning", "critical"])
 parser.add_argument('-r', '--report', dest='report', default='auto',
                   help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
                   choices=["yes", "no", "auto"])

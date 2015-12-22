@@ -23,7 +23,6 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 		self.setEnabled(False)
 
 	def onItemSelectionChanged(self):
-		print("TreeSimpleEditAction.onItemSelectionChanged")
 		entries = self.parent().selectedItems()
 		if len(entries) != 1:
 			self.setEnabled(False)

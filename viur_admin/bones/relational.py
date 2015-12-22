@@ -76,7 +76,7 @@ class AutocompletionModel(QtCore.QAbstractListModel):
 
 
 class RelationalEditBone(QtWidgets.QWidget):
-	GarbargeTypeName = "RelationalEditBone"
+	GarbageTypeName = "RelationalEditBone"
 	skelType = None
 
 	def __init__(self, modulName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None,
@@ -140,7 +140,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 			Installs our autoCompleter on self.entry if possible
 		"""
 		if not self.multiple:
-			self.autoCompletionModel = AutocompletionModel(self.toModul, format, {})  # FIXME: {} was
+			self.autoCompletionModel = AutocompletionModel(self.toModul, self.format, {})  # FIXME: {} was
 			# self.skelStructure
 			self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
 			self.autoCompleter.setModel(self.autoCompletionModel)
@@ -228,7 +228,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 	selectionChanged = QtCore.pyqtSignal((object,))
 	displaySourceWidget = ListWidget
 	displaySelectionWidget = SelectedEntitiesWidget
-	GarbargeTypeName = "RelationalBoneSelector"
+	GarbageTypeName = "RelationalBoneSelector"
 
 	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs):
 		super(RelationalBoneSelector, self).__init__(*args, **kwargs)
