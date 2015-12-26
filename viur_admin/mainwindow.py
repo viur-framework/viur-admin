@@ -59,8 +59,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def __init__(self, *args, **kwargs):
 		super(MainWindow, self).__init__(*args, **kwargs)
-		self.logger = logging.getLogger("self")
-		self.setObjectName("self")
+		self.logger = logging.getLogger("MainWindow")
+		self.setObjectName("MainWindow")
 		self.resize(983, 707)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(":icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -446,10 +446,10 @@ class MainWindow(QtWidgets.QMainWindow):
 	def rebuildBreadCrumbs(self):
 		"""
 			Rebuilds the breadcrump-path.
-			Currently, it displayes the current modul, its icon and
+			Currently, it displays the current module, its icon and
 			stacks the path as children to its handler
 		"""
-		self.modulLbl.setText(QtCore.QCoreApplication.translate("self", "Welcome to ViUR!"))
+		self.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
 		self.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(64, 64, QtCore.Qt.IgnoreAspectRatio))
 		currentHandler = self.handlerForWidget()
 		if currentHandler:
