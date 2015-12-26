@@ -58,15 +58,20 @@ else:
 os.chdir(path)
 
 parser = ArgumentParser()
-parser.add_argument('-d', '--debug', dest='debug', default='warning',
-                  help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
-                  choices=["debug", "info", "warning", "critical"])
-parser.add_argument('-r', '--report', dest='report', default='auto',
-                  help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
-                  choices=["yes", "no", "auto"])
+parser.add_argument(
+	'-d', '--debug', dest='debug', default='warning',
+	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+	choices=["debug", "info", "warning", "critical"])
+parser.add_argument(
+	'-r', '--report', dest='report', default='auto',
+	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
+	choices=["yes", "no", "auto"])
 parser.add_argument(
 	'-i', '--no-ignore', dest='noignore', default=False,
 	help="Disable automatic exclusion of temporary files on upload", action="store_true")
+parser.add_argument(
+	'-s', '--show_sortindex', action="store_true",
+	help="Shows Handler sortIndex (helpful for reordering modules)")
 
 args = parser.parse_args()
 conf.cmdLineOpts = args
