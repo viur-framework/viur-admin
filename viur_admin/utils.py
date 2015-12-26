@@ -270,7 +270,8 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			# logging.exception(err)
 			pass
 		self.setText(0, descr)
-		# self.setText(1, str(sortIndex))
+		if conf.cmdLineOpts.show_sortindex:
+			self.setText(1, str(sortIndex))
 		self.sortIndex = sortIndex
 		if icon:
 			if isinstance(icon, QtGui.QIcon):
