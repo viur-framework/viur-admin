@@ -141,15 +141,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.handlerWidget.setSizePolicy(sizePolicy)
 		self.handlerSearchLayout = QtWidgets.QHBoxLayout()
 		self.handlerSearchLayout.setObjectName("handlerSearchLayout")
-		self.editSearch = QtWidgets.QLineEdit(self)
-		self.editSearch.setMinimumSize(QtCore.QSize(0, 32))
-		self.editSearch.setObjectName("editSearch")
-		self.handlerSearchLayout.addWidget(self.editSearch)
+		self.moduleSearch = QtWidgets.QLineEdit(self)
+		self.moduleSearch.setMinimumSize(QtCore.QSize(0, 32))
+		self.moduleSearch.setObjectName("moduleSearch")
+		self.handlerSearchLayout.addWidget(self.moduleSearch)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		self.searchAction = QtWidgets.QAction(icon, "Handler Search", self)
-		self.searchAction.setShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_S))
-		self.searchAction.triggered.connect(self.editSearch.setFocus)
+		self.searchAction.setShortcut(QtGui.QKeySequence.Find)
+		self.searchAction.triggered.connect(self.moduleSearch.setFocus)
 		self.searchBTN = QtWidgets.QPushButton(self)
 		self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
 		self.searchBTN.setIcon(icon)
@@ -211,7 +211,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.actionAbout.setText(_translate("MainWindow", "About"))
 		self.actionLogout.setText(_translate("MainWindow", "Ausloggen"))
 		self.actionTasks.setText(_translate("MainWindow", "Tasks"))
-		self.editSearch.setPlaceholderText(_translate("MainWindow", "search..."))
+		self.moduleSearch.setPlaceholderText(_translate("List", "Search"))
 		self.stackedWidget.setCurrentIndex(-1)
 		QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -239,7 +239,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.actionTasks.triggered.connect(self.onActionTasksTriggered)
 		self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
 		self.searchBTN.released.connect(self.searchHandler)
-		self.editSearch.returnPressed.connect(self.searchHandler)
+		self.moduleSearch.returnPressed.connect(self.searchHandler)
 		self.currentWidget = None
 		self.helpBrowser = None
 		self.startPage = None
@@ -574,7 +574,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
 		settings.setValue("geometry", self.saveGeometry())
 		settings.setValue("windowState", self.saveState())
-		super(self, self).closeEvent(event)
+		super(MainWindow, self).closeEvent(event)
 
 	def _setAllHidden(self, hidden=True):
 		it = QtWidgets.QTreeWidgetItemIterator(self.treeWidget)
@@ -585,7 +585,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			item = it.value()
 
 	def searchHandler(self):
-		text = self.editSearch.text()
+		text = self.moduleSearch.text()
 		if text and len(text) > 2:
 			self._setAllHidden()
 		else:

@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'tree.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Tree(object):
     def setupUi(self, Tree):
@@ -30,7 +28,6 @@ class Ui_Tree(object):
         self.verticalLayout_2.setContentsMargins(0, 10, 0, 10)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.listWidgetBox = QtWidgets.QVBoxLayout()
-        self.listWidgetBox.setContentsMargins(0, 0, 0, 0)
         self.listWidgetBox.setObjectName("listWidgetBox")
         self.verticalLayout_2.addLayout(self.listWidgetBox)
         self.boxUpload = QtWidgets.QVBoxLayout()
@@ -40,11 +37,12 @@ class Ui_Tree(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.editSearch = QtWidgets.QLineEdit(Tree)
+        self.editSearch.setText("")
         self.editSearch.setObjectName("editSearch")
         self.horizontalLayout.addWidget(self.editSearch)
         self.btnSearch = QtWidgets.QPushButton(Tree)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnSearch.setIcon(icon)
         self.btnSearch.setObjectName("btnSearch")
         self.horizontalLayout.addWidget(self.btnSearch)
@@ -56,6 +54,6 @@ class Ui_Tree(object):
     def retranslateUi(self, Tree):
         _translate = QtCore.QCoreApplication.translate
         Tree.setWindowTitle(_translate("Tree", "Form"))
-        self.editSearch.setText(_translate("Tree", "Search"))
+        self.editSearch.setPlaceholderText(_translate("Tree", "Search"))
         self.btnSearch.setText(_translate("Tree", "Search"))
 

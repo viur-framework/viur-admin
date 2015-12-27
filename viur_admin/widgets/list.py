@@ -464,8 +464,9 @@ class ListWidget(QtWidgets.QWidget):
 		self.toolBar = QtWidgets.QToolBar(self)
 		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
-		if filter is not None and "search" in filter.keys():
-			self.ui.editSearch.setText(filter["search"])
+		# FIXME: testing changing to placeholder text
+		# if filter is not None and "search" in filter.keys():
+		# 	self.ui.editSearch.setText(filter["search"])
 		config = conf.serverConfig["modules"][modul]
 		handler = config["handler"]
 		try:

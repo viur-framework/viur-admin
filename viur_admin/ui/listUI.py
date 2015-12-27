@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'list.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_List(object):
     def setupUi(self, List):
@@ -28,11 +26,12 @@ class Ui_List(object):
         self.layoutToolBar.setObjectName("layoutToolBar")
         self.editSearch = QtWidgets.QLineEdit(List)
         self.editSearch.setMinimumSize(QtCore.QSize(0, 32))
+        self.editSearch.setText("")
         self.editSearch.setObjectName("editSearch")
         self.layoutToolBar.addWidget(self.editSearch)
         self.btnPrefixSearch = QtWidgets.QPushButton(List)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPrefixSearch.setIcon(icon)
         self.btnPrefixSearch.setObjectName("btnPrefixSearch")
         self.layoutToolBar.addWidget(self.btnPrefixSearch)
@@ -49,7 +48,7 @@ class Ui_List(object):
     def retranslateUi(self, List):
         _translate = QtCore.QCoreApplication.translate
         List.setWindowTitle(_translate("List", "Form"))
-        self.editSearch.setText(_translate("List", "Search"))
+        self.editSearch.setPlaceholderText(_translate("List", "Search"))
         self.btnPrefixSearch.setText(_translate("List", "Prefix search"))
         self.searchBTN.setText(_translate("List", "Fulltext search"))
 
