@@ -3,6 +3,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
 
 
@@ -14,13 +15,9 @@ class BooleanViewBoneDelegate(BaseViewBoneDelegate):
 			return (QtCore.QCoreApplication.translate("BooleanEditBone", "No"))
 
 
-class BooleanEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, editWidget=None, *args, **kwargs):
-		super(BooleanEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
+class BooleanEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, editWidget=None, *args, **kwargs):
+		super(BooleanEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.checkBox = QtWidgets.QCheckBox(self)
 		if readOnly:
@@ -28,12 +25,12 @@ class BooleanEditBone(QtWidgets.QWidget):
 		self.layout.addWidget(self.checkBox)
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		return cls(modulName, boneName, readOnly, **kwargs)
+		return cls(moduleName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		if self.boneName in data.keys() and data[self.boneName]:
 			self.checkBox.setChecked(True)
@@ -45,7 +42,7 @@ class BooleanEditBone(QtWidgets.QWidget):
 		return (self.serialize())
 
 
-def CheckForBooleanBone(modulName, boneName, skelStucture):
+def CheckForBooleanBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "bool")
 
 

@@ -5,6 +5,7 @@ from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEd
 from viur_admin.widgets.tree import TreeWidget
 from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 
 class TreeItemViewBoneDelegate(RelationalViewBoneDelegate):
@@ -15,7 +16,7 @@ class TreeItemBone(RelationalEditBone):
 	skelType = "leaf"
 
 	def onAddBtnReleased(self, *args, **kwargs):
-		editWidget = TreeBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection)
+		editWidget = TreeBoneSelector(self.moduleName, self.boneName, self.multiple, self.toModul, self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def installAutoCompletion(self):
@@ -49,7 +50,7 @@ class TreeBoneSelector(RelationalBoneSelector):
 			event.emit("popWidget", self)
 
 
-def CheckForTreeItemBone(modulName, boneName, skelStucture):
+def CheckForTreeItemBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("treeitem."))
 
 

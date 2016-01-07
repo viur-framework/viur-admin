@@ -526,7 +526,8 @@ QTableView::item:selected {
 
 QTableView::item:focus {
     outline: 0;
-    border-right: 4px solid #BE1622;
+    border: 1px solid #00be43;
+    color: #000000;
 }
 
 QHeaderView::section {
@@ -575,7 +576,7 @@ QDoubleSpinBox::up-button {
 
 QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow {
-    image: url(:/icons/menu/greyarrowup.png);
+    image: url(:/icons/menu/arrow_up.svg);
 }
 
 QSpinBox::down-button,
@@ -607,7 +608,7 @@ QDoubleSpinBox::down-button:pressed {
 
 QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow {
-    image: url(:/icons/menu/greyarrowdown.png);
+    image: url(:/icons/menu/arrow_down.svg);
 }
 
 QSpinBox::up-button:disabled,

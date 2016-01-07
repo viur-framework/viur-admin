@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
@@ -35,11 +36,11 @@ class FixedComboBox(QtWidgets.QComboBox):
 		super(FixedComboBox, self).focusOutEvent(e)
 
 
-class SelectOneEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
-		super(SelectOneEditBone, self).__init__(*args, **kwargs)
+class SelectOneEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
+		super(SelectOneEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.editWidget = editWidget
-		self.modulName = modulName
+		self.moduleName = moduleName
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.values = values
@@ -53,18 +54,18 @@ class SelectOneEditBone(QtWidgets.QWidget):
 			tmpList.sort(key=lambda x: x[1])  # Values
 		self.comboBox.addItems([x[1] for x in tmpList])
 
-	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
+	@staticmethod
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if "sortBy" in skelStructure[boneName].keys():
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return cls(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		return SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		if 1:  # There might be junk comming from the server
 			items = dict([(str(k), str(v)) for k, v in self.values])
@@ -82,11 +83,8 @@ class SelectOneEditBone(QtWidgets.QWidget):
 				return {self.boneName: str(key)}
 		return {self.boneName: None}
 
-	def serializeForDocument(self):
-		return self.serialize()
 
-
-def CheckForSelectOneBone(modulName, boneName, skelStucture):
+def CheckForSelectOneBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"] == "selectone"
 
 

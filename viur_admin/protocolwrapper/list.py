@@ -23,16 +23,15 @@ class ListWrapper(QtCore.QObject):
 	modulStructureAvaiable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
 	# avaiable
 
-	def __init__(self, modul, *args, **kwargs):
+	def __init__(self, module, *args, **kwargs):
 		super(ListWrapper, self).__init__()
-		self.modul = modul
+		self.module = module
 		self.dataCache = {}
 		self.viewStructure = None
 		self.addStructure = None
 		self.editStructure = None
 		self.busy = True
-		req = NetworkService.request("/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable)
-		# print("Initializing ListWrapper for modul %s" % self.modul)
+		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvaiable)
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 		self.deferedTaskQueue = []
 		self.checkBusyStatus()
@@ -59,8 +58,8 @@ class ListWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return (req)
 
-	def checkForOurModul(self, modulName):
-		return (self.modul == modulName)
+	def checkForOurModul(self, moduleName):
+		return (self.module == moduleName)
 
 	def onStructureAvaiable(self, req):
 		tmp = NetworkService.decode(req)
@@ -99,9 +98,8 @@ class ListWrapper(QtCore.QObject):
 				return (key)
 		# Its a cache-miss or cache too old
 		self.dataCache[key] = None
-		r = NetworkService.request("/%s/list" % self.modul, kwargs, successHandler=self.addCacheData)
+		r = NetworkService.request("/%s/list" % self.module, kwargs, successHandler=self.addCacheData)
 		r.wrapperCbCacheKey = key
-		# print("request cache key", self, r, r.wrapperCbCacheKey)
 		self.checkBusyStatus()
 		return key
 
@@ -109,7 +107,7 @@ class ListWrapper(QtCore.QObject):
 		if key in self.dataCache.keys():
 			QtCore.QTimer.singleShot(25, lambda *args, **kwargs: self.entityAvailable.emit(self.dataCache[key]))
 			return (key)
-		r = NetworkService.request("/%s/view/%s" % (self.modul, key), successHandler=self.addCacheData)
+		r = NetworkService.request("/%s/view/%s" % (self.module, key), successHandler=self.addCacheData)
 		return (key)
 
 	def execDefered(self, *args, **kwargs):
@@ -130,13 +128,12 @@ class ListWrapper(QtCore.QObject):
 		elif data["action"] == "view":
 			self.dataCache[data["values"]["id"]] = data["values"]
 			self.entityAvailable.emit(data["values"])
-		# print("addcache", self, req)
 		if hasattr(req, "wrapperCbCacheKey"):
 			self.queryResultAvaiable.emit(req.wrapperCbCacheKey)
 		self.checkBusyStatus()
 
 	def add(self, **kwargs):
-		req = NetworkService.request("/%s/add/" % (self.modul), kwargs, secure=(len(kwargs) > 0),
+		req = NetworkService.request("/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
 		                             finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
@@ -147,7 +144,7 @@ class ListWrapper(QtCore.QObject):
 		return (str(id(req)))
 
 	def edit(self, key, **kwargs):
-		req = NetworkService.request("/%s/edit/%s" % (self.modul, key), kwargs, secure=(len(kwargs.keys()) > 0),
+		req = NetworkService.request("/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs.keys()) > 0),
 		                             finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
@@ -161,11 +158,10 @@ class ListWrapper(QtCore.QObject):
 		if isinstance(ids, list):
 			req = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
 			for id in ids:
-				# print(id)
-				r = NetworkService.request("/%s/delete" % self.modul, {"id": id}, secure=True, parent=req)
+				r = NetworkService.request("/%s/delete" % self.module, {"id": id}, secure=True, parent=req)
 				req.addQuery(r)
 		else:  # We just delete one
-			NetworkService.request("/%s/delete/%s" % (self.modul, id), secure=True,
+			NetworkService.request("/%s/delete/%s" % (self.module, id), secure=True,
 			                       finishedHandler=self.delayEmitEntriesChanged)
 		self.checkBusyStatus()
 
@@ -208,8 +204,8 @@ class ListWrapper(QtCore.QObject):
 	# self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 
-def CheckForListModul(modulName, modulList):
-	modulData = modulList[modulName]
+def CheckForListModul(moduleName, modulList):
+	modulData = modulList[moduleName]
 	if "handler" in modulData.keys() and (
 						modulData["handler"] == "base" or modulData["handler"] == "list" or modulData[
 				"handler"].startswith(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets, QtGui
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
@@ -18,14 +19,9 @@ class PasswordValidator(QtGui.QValidator):
 		self.lineEditCheck = lineEditCheck
 
 
-class PasswordEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, editWidget=None, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
-		self.boneName = boneName
+class PasswordEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, editWidget=None, *args, **kwargs):
+		super().__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		layout = QtWidgets.QVBoxLayout(self)
 		self.setLayout(layout)
 		self.lineEdit = QtWidgets.QLineEdit(self)
@@ -58,9 +54,9 @@ class PasswordEditBone(QtWidgets.QWidget):
 				self.editWidget.ui.btnSaveClose.setEnabled(False)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		return PasswordEditBone(modulName, boneName, readOnly, **kwargs)
+		return PasswordEditBone(moduleName, boneName, readOnly, **kwargs)
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.langEdits.keys():
@@ -86,7 +82,7 @@ class PasswordEditBone(QtWidgets.QWidget):
 		return self.serialize()
 
 
-def CheckForPasswordBone(modulName, boneName, skelStucture):
+def CheckForPasswordBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"] == "password"
 
 

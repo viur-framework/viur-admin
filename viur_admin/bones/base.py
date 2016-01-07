@@ -2,48 +2,39 @@
 
 from PyQt5 import QtCore, QtWidgets
 
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	request_repaint = QtCore.pyqtSignal()
 
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
+	def __init__(self, moduleName, boneName, skelStructure, *args, **kwargs):
 		super().__init__(**kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName
-		self.modulName = modulName
+		self.moduleName = moduleName
 
 
-class BaseEditBone(QtWidgets.QWidget):
-	def __init__(self, parent=None, editWiget=None, **kwargs):
-		super().__init__(parent)
-		self.editWidget = editWiget
-
-	def getLineEdit(self):
-		return (QtWidgets.QLineEdit(self))
-
-	def setParams(self):
-		if self.readOnly:
-			self.lineEdit.setReadOnly(True)
-		else:
-			self.lineEdit.setReadOnly(False)
-
-	def __init__(self, modulName, boneName, readOnly, editWidget=None, *args, **kwargs):
-		super(BaseEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.boneName = boneName
-		self.readOnly = readOnly
+class BaseEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, editWidget=None, *args, **kwargs):
+		super(BaseEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QHBoxLayout(self)
-		self.lineEdit = self.getLineEdit()
+		self.lineEdit = QtWidgets.QLineEdit()
 		self.layout.addWidget(self.lineEdit)
 		self.setParams()
 		self.lineEdit.show()
 
+	def setParams(self):
+		if self.readOnly:
+			self.setEnabled(False)
+		else:
+			self.setEnabled(True)
+
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		return BaseEditBone(modulName, boneName, readOnly, **kwargs)
+		return BaseEditBone(moduleName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data):
 		if self.boneName in data.keys():

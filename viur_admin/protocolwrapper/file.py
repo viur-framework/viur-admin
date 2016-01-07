@@ -134,7 +134,7 @@ class RecursiveUploader(QtCore.QObject):
 		else:
 			return (name)
 
-	def __init__(self, files, node, modul, *args, **kwargs):
+	def __init__(self, files, node, module, *args, **kwargs):
 		"""
 			@param files: List of local files or directories (including thier absolute path) which will be uploaded.
 			@type files: List
@@ -142,12 +142,12 @@ class RecursiveUploader(QtCore.QObject):
 			@type rootNode: String
 			@param path: Remote destination path, relative to rootNode.
 			@type path: String
-			@param modul: Modulname to upload to (usually "file")
-			@type modul: String
+			@param module: Modulname to upload to (usually "file")
+			@type module: String
 		"""
 		super(RecursiveUploader, self).__init__(*args, **kwargs)
 		self.node = node
-		self.modul = modul
+		self.module = module
 		self.hasFinished = False
 		filteredFiles = [x for x in files if
 		                 conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
@@ -168,7 +168,7 @@ class RecursiveUploader(QtCore.QObject):
 				# We can ignore that file
 				continue
 			if os.path.isdir(fileName.encode(sys.getfilesystemencoding())):
-				r = NetworkService.request("/%s/list/node/%s" % (self.modul, self.node),
+				r = NetworkService.request("/%s/list/node/%s" % (self.module, self.node),
 				                           successHandler=self.onDirListAvaiable)
 				r.uploadDirName = fileName
 				dirName = fileName.rstrip("/").split("/")[-1]
@@ -224,11 +224,11 @@ class RecursiveUploader(QtCore.QObject):
 				# This directory allready exists
 				self.stats["dirsDone"] += 1
 				r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-				                      skel["id"], self.modul, parent=self)
+				                      skel["id"], self.module, parent=self)
 				r.uploadProgress.connect(self.uploadProgress)
 				self.cancel.connect(r.cancel)
 				return
-		r = NetworkService.request("/%s/add/" % self.modul,
+		r = NetworkService.request("/%s/add/" % self.module,
 		                           {"node": self.node, "name": self.getDirName(req.uploadDirName), "skelType": "node"},
 		                           secure=True, finishedHandler=self.onMkDir)
 		r.uploadDirName = req.uploadDirName
@@ -241,7 +241,7 @@ class RecursiveUploader(QtCore.QObject):
 		assert data["action"] == "addSuccess"
 		self.stats["dirsDone"] += 1
 		r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-		                      data["values"]["id"], self.modul, parent=self)
+		                      data["values"]["id"], self.module, parent=self)
 		r.uploadProgress.connect(self.uploadProgress)
 		self.cancel.connect(r.cancel)
 		self.uploadProgress.emit(0, 1)
@@ -401,7 +401,7 @@ class FileWrapper(TreeWrapper):
 		"""
 		if not files:
 			return
-		uploader = RecursiveUploader(files, node, self.modul, parent=self)
+		uploader = RecursiveUploader(files, node, self.module, parent=self)
 		# self.transferQueues.append( uploader )
 		# self.ui.boxUpload.addWidget( uploader )
 		uploader.finished.connect(self.delayEmitEntriesChanged)
@@ -409,7 +409,7 @@ class FileWrapper(TreeWrapper):
 		# self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.delayEmitEntriesChanged )
 		# self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
 		# self.connect( uploader, QtCore.SIGNAL("failed(PyQt_PyObject)"), self.onTransferFailed )
-		return (uploader)
+		return uploader
 
 	def download(self, targetDir, files, dirs):
 		"""
@@ -425,7 +425,7 @@ class FileWrapper(TreeWrapper):
 			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
 			@type dirs: List
 		"""
-		downloader = RecursiveDownloader(targetDir, files, dirs, self.modul)
+		downloader = RecursiveDownloader(targetDir, files, dirs, self.module)
 		# self.transferQueues.append( downloader )
 		# self.ui.boxUpload.addWidget( downloader )
 		self.downloader.finished.connect(self.delayEmitEntriesChanged)
@@ -436,8 +436,8 @@ class FileWrapper(TreeWrapper):
 	#	self.transferQueues.remove( obj )
 
 
-def CheckForFileModul(modulName, modulList):
-	modulData = modulList[modulName]
+def CheckForFileModul(moduleName, modulList):
+	modulData = modulList[moduleName]
 	if "handler" in modulData.keys() and modulData["handler"].startswith("tree.simple.file"):
 		return (True)
 	return (False)

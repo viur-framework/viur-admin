@@ -2,6 +2,7 @@
 
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
@@ -82,7 +83,7 @@ class FileItemBone(TreeItemBone):
 
 	def onAddBtnReleased(self, *args, **kwargs):
 		editWidget = FileBoneSelector(
-			self.modulName,
+			self.moduleName,
 			self.boneName,
 			self.multiple,
 			self.toModul,
@@ -136,7 +137,7 @@ class FileBoneSelector(TreeBoneSelector):
 	displaySourceWidget = FileWidget
 
 
-def CheckForFileBone(modulName, boneName, skelStucture):
+def CheckForFileBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"].startswith("treeitem.file")
 
 

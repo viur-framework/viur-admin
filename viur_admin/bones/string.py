@@ -3,6 +3,7 @@
 from html.parser import HTMLParser
 
 from PyQt5 import QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
 from viur_admin.bones.base import BaseViewBoneDelegate
@@ -98,16 +99,11 @@ class Tag(QtWidgets.QWidget):
 		self.editField.hide()
 
 
-class StringEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, multiple=False, languages=None, editWidget=None, *args, **kwargs):
-		super(StringEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
+class StringEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, multiple=False, languages=None, editWidget=None, *args, **kwargs):
+		super(StringEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
 		self.multiple = multiple
 		self.languages = languages
-		self.boneName = boneName
 		if self.languages and self.multiple:  # FIXME: Multiple and readOnly...
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.tabWidget = QtWidgets.QTabWidget(self)
@@ -158,7 +154,7 @@ class StringEditBone(QtWidgets.QWidget):
 			self.lineEdit.setReadOnly(self.readOnly)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if boneName in skelStructure.keys():
 			if "multiple" in skelStructure[boneName].keys():
@@ -169,7 +165,7 @@ class StringEditBone(QtWidgets.QWidget):
 				languages = skelStructure[boneName]["languages"]
 			else:
 				languages = None
-		return (StringEditBone(modulName, boneName, readOnly, multiple=multiple, languages=languages, **kwargs))
+		return (StringEditBone(moduleName, boneName, readOnly, multiple=multiple, languages=languages, **kwargs))
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.langEdits.keys():
@@ -240,9 +236,6 @@ class StringEditBone(QtWidgets.QWidget):
 			res[self.boneName] = self.lineEdit.text()
 		return (res)
 
-	def serializeForDocument(self):
-		return (self.serialize())
-
 	def genTag(self, tag, editMode=False, lang=None):
 		if lang is not None:
 			self.langEdits[lang].layout().addWidget(Tag(tag, editMode))
@@ -250,7 +243,7 @@ class StringEditBone(QtWidgets.QWidget):
 			self.layout().addWidget(Tag(tag, editMode))
 
 
-def CheckForStringBone(modulName, boneName, skelStucture):
+def CheckForStringBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "str")
 
 

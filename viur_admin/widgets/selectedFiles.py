@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from event import event
 from utils import RegisterQueue, formatString, itemFromUrl
@@ -8,9 +8,9 @@ from config import conf
 from widgets.file import FileItem
 
 
-class SelectedFilesWidget(QtGui.QListWidget):
+class SelectedFilesWidget(QtWidgets.QListWidget):
 	"""
-		Displayes the currently selected files of one fileBone.
+		Displays the currently selected files of one fileBone.
 	"""
 
 	def __init__(self, parent, modul, selection=None, *args, **kwargs):

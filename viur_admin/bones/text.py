@@ -4,6 +4,8 @@ from html.entities import entitydefs
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
 
+from viur_admin.bones.bone_interface import BoneEditInterface
+
 from viur_admin.event import event
 from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
@@ -999,14 +1001,11 @@ class ClickableWebView(QtWebKitWidgets.QWebView):
 		self.clicked.emit()
 
 
-class TextEditBone(QtWidgets.QWidget):
+class TextEditBone(BoneEditInterface):
 	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None, editWidget=None,
 	             *args, **kwargs):
-		super(TextEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
+		super(TextEditBone, self).__init__(modulName, boneName, readOnly, editWidget)
+
 		self.setLayout(QtWidgets.QVBoxLayout(self))
 		self.languages = languages
 		self.plaintext = plaintext
@@ -1121,7 +1120,7 @@ class TextEditBone(QtWidgets.QWidget):
 			self.webView.setHtml(text)
 
 	def unserialize(self, data):
-		if not self.boneName in data.keys():
+		if self.boneName not in data.keys():
 			return
 		if self.languages and isinstance(data[self.boneName], dict):
 			for lang in self.languages:

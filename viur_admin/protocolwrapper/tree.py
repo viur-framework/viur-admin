@@ -25,9 +25,9 @@ class TreeWrapper(QtCore.QObject):
 	updatingDataAvaiable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
 	onModulStructureAvaiable = QtCore.pyqtSignal()
 
-	def __init__(self, modul, *args, **kwargs):
+	def __init__(self, module, *args, **kwargs):
 		super(TreeWrapper, self).__init__()
-		self.modul = modul
+		self.module = module
 		self.dataCache = {}
 		# self.parentMap = {} #Stores references from child -> parent
 		self.viewLeafStructure = None
@@ -39,8 +39,8 @@ class TreeWrapper(QtCore.QObject):
 		self.editNodeStructure = None
 		self.rootNodes = None
 		self.busy = True
-		req = NetworkService.request("/getStructure/%s" % self.modul, successHandler=self.onStructureAvaiable)
-		NetworkService.request("/%s/listRootNodes" % self.modul, successHandler=self.onRootNodesAvaiable)
+		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvaiable)
+		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvaiable)
 		protocolWrapperInstanceSelector.insert(self.protocolWrapperInstancePriority, self.checkForOurModul, self)
 		self.deferedTaskQueue = []
 
@@ -55,8 +55,8 @@ class TreeWrapper(QtCore.QObject):
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
 
-	def checkForOurModul(self, modulName):
-		return self.modul == modulName
+	def checkForOurModul(self, moduleName):
+		return self.module == moduleName
 
 	def clearCache(self):
 		"""
@@ -137,13 +137,13 @@ class TreeWrapper(QtCore.QObject):
 		for skelType in ["node", "leaf"]:
 			tmp["skelType"] = skelType
 			tmp["amount"] = self.batchSize
-			r = NetworkService.request("/%s/list" % self.modul, tmp, successHandler=self.addCacheData)
+			r = NetworkService.request("/%s/list" % self.module, tmp, successHandler=self.addCacheData)
 			r.wrapperCacheKey = key
 			r.skelType = skelType
 			r.node = node
 			r.queryArgs = kwargs
 		if node not in [x["key"] for x in self.rootNodes]:  # Dont query rootNodes again..
-			r = NetworkService.request("/%s/view/node/%s" % (self.modul, node), successHandler=self.addCacheData)
+			r = NetworkService.request("/%s/view/node/%s" % (self.module, node), successHandler=self.addCacheData)
 			r.wrapperCacheKey = node
 			r.skelType = "node"
 			r.node = node
@@ -156,7 +156,7 @@ class TreeWrapper(QtCore.QObject):
 			self.deferedTaskQueue.append(("entityAvailable", key))
 			QtCore.QTimer.singleShot(25, self.execDefered)
 			return key
-		r = NetworkService.request("/%s/view/%s/%s" % (self.modul, skelType, key), successHandler=self.addCacheData)
+		r = NetworkService.request("/%s/view/%s/%s" % (self.module, skelType, key), successHandler=self.addCacheData)
 		r.wrapperCacheKey = key
 		r.queryArgs = None
 		r.skelType = skelType
@@ -209,7 +209,7 @@ class TreeWrapper(QtCore.QObject):
 					tmp["cursor"] = cursor
 					tmp["skelType"] = req.skelType
 					tmp["amount"] = self.batchSize
-					r = NetworkService.request("/%s/list" % self.modul, tmp, successHandler=self.addCacheData)
+					r = NetworkService.request("/%s/list" % self.module, tmp, successHandler=self.addCacheData)
 					r.wrapperCacheKey = req.wrapperCacheKey
 					r.skelType = req.skelType
 					r.node = req.node
@@ -229,7 +229,7 @@ class TreeWrapper(QtCore.QObject):
 		tmp["node"] = node
 		tmp["skelType"] = skelType
 		req = NetworkService.request(
-				"/%s/add/" % self.modul, tmp, secure=(len(kwargs) > 0),
+				"/%s/add/" % self.module, tmp, secure=(len(kwargs) > 0),
 				finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
@@ -241,7 +241,7 @@ class TreeWrapper(QtCore.QObject):
 
 	def edit(self, key, skelType, **kwargs):
 		req = NetworkService.request(
-				"/%s/edit/%s/%s" % (self.modul, skelType, key), kwargs, secure=(len(kwargs) > 0),
+				"/%s/edit/%s/%s" % (self.module, skelType, key), kwargs, secure=(len(kwargs) > 0),
 				finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, don't show a missing hint
@@ -265,10 +265,10 @@ class TreeWrapper(QtCore.QObject):
 		request = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
 		for leaf in leafs:
 			request.addQuery(
-					NetworkService.request("/{0}/delete/leaf/{1}".format(self.modul, leaf), secure=True, parent=self))
+					NetworkService.request("/{0}/delete/leaf/{1}".format(self.module, leaf), secure=True, parent=self))
 		for node in nodes:
 			request.addQuery(
-					NetworkService.request("/{0}/delete/node/{1}".format(self.modul, node), secure=True, parent=self))
+					NetworkService.request("/{0}/delete/node/{1}".format(self.module, node), secure=True, parent=self))
 		# request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
 		self.checkBusyStatus()
@@ -287,7 +287,7 @@ class TreeWrapper(QtCore.QObject):
 		request = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
 		for node in nodes:
 			request.addQuery(NetworkService.request(
-					"/%s/move" % self.modul,
+					"/%s/move" % self.module,
 					{
 						"id": node,
 						"skelType": "node",
@@ -296,7 +296,7 @@ class TreeWrapper(QtCore.QObject):
 					parent=self, secure=True))
 		for leaf in leafs:
 			request.addQuery(NetworkService.request(
-					"/%s/move" % self.modul,
+					"/%s/move" % self.module,
 					{
 						"id": leaf,
 						"skelType": "leaf",
@@ -350,8 +350,8 @@ class TreeWrapper(QtCore.QObject):
 		self.emitEntriesChanged()
 
 
-def CheckForTreeModul(modulName, modulList):
-	modulData = modulList[modulName]
+def CheckForTreeModul(moduleName, modulList):
+	modulData = modulList[moduleName]
 	if "handler" in modulData.keys() and (modulData["handler"] == "tree" or modulData["handler"].startswith("tree.")):
 		return True
 	return False

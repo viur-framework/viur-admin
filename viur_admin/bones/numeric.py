@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtWidgets
-
 from math import pow
-from viur_admin.bones.base import BaseEditBone
+
+from PyQt5 import QtCore, QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
+
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.utils import wheelEventFilter
@@ -59,15 +60,24 @@ class NumericViewBoneDelegate(BaseViewBoneDelegate):
 		return (super(NumericViewBoneDelegate, self).displayText(value, locale))
 
 
-class NumericEditBone(BaseEditBone):
-	def __init__(self, modulName, boneName, readOnly, precision=0, min=-pow(2, 30), max=pow(2, 30), *args, **kwargs):
-		self.precision = precision  # Needed for getLineEdit
+class NumericEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, precision=0, min=-pow(2, 30), max=pow(2, 30), *args, **kwargs):
+		super(NumericEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
+		self.precision = precision
 		self.min = min
 		self.max = max
-		super(NumericEditBone, self).__init__(modulName, boneName, readOnly)
+		print("NumericEditBone.getLineEdit")
+		lineLayout = QtWidgets.QHBoxLayout(self)
+		if self.precision:
+			self.lineEdit = FixedQDoubleSpinBox(self)
+			self.lineEdit.setDecimals(self.precision)
+		else:  # Just ints
+			self.lineEdit = FixedQSpinBox(self)
+		self.lineEdit.setRange(self.min, self.max)
+		lineLayout.addWidget(self.lineEdit)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		precision = int(skelStructure[boneName]["precision"]) if "precision" in skelStructure[boneName].keys() else 0
 		if "min" in skelStructure[boneName].keys() and "max" in skelStructure[boneName].keys():
@@ -76,22 +86,10 @@ class NumericEditBone(BaseEditBone):
 		else:
 			minVal = -pow(2, 30)
 			maxVal = pow(2, 30)
-		return (NumericEditBone(modulName, boneName, readOnly, precision=precision, min=minVal, max=maxVal, **kwargs))
-
-	def getLineEdit(self):
-		if self.precision:
-			spinBox = FixedQDoubleSpinBox(self)
-			spinBox.setDecimals(self.precision)
-		else:  # Just ints
-			spinBox = FixedQSpinBox(self)
-		spinBox.setRange(self.min, self.max)
-		return (spinBox)
-
-	# if "min" in self.boneStructure.keys() and "max" in self.boneStructure.keys():
-
+		return NumericEditBone(moduleName, boneName, readOnly, precision=precision, min=minVal, max=maxVal, **kwargs)
 
 	def unserialize(self, data):
-		if not self.boneName in data.keys():
+		if self.boneName not in data.keys():
 			return
 		if not self.precision:
 			self.lineEdit.setValue(int(data[self.boneName]) if data[self.boneName] else 0)
@@ -99,13 +97,13 @@ class NumericEditBone(BaseEditBone):
 			self.lineEdit.setValue(float(data[self.boneName]) if data[self.boneName] else 0)
 
 	def serializeForPost(self):
-		return ({self.boneName: str(self.lineEdit.value())})
+		return {self.boneName: str(self.lineEdit.value())}
 
 	def serializeForDocument(self):
-		return (self.serialize())
+		return self.serialize()
 
 
-def CheckForNumericBone(modulName, boneName, skelStucture):
+def CheckForNumericBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "numeric")
 
 

@@ -20,18 +20,18 @@ class SingletonWrapper(QtCore.QObject):
 	# avaiable
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
 
-	def __init__(self, modul, *args, **kwargs):
+	def __init__(self, module, *args, **kwargs):
 		super(SingletonWrapper, self).__init__()
-		self.modul = modul
+		self.module = module
 		self.busy = True
 		self.editStructure = None
 		self.viewStructure = None
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 		self.deferedTaskQueue = []
-		req = NetworkService.request("/getStructure/%s" % (self.modul), successHandler=self.onStructureAvaiable)
+		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvaiable)
 
-	def checkForOurModul(self, modulName):
-		return (self.modul == modulName)
+	def checkForOurModul(self, moduleName):
+		return self.module == moduleName
 
 	def onStructureAvaiable(self, req):
 		tmp = NetworkService.decode(req)
@@ -50,7 +50,7 @@ class SingletonWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 
 	def edit(self, **kwargs):
-		req = NetworkService.request("/%s/edit" % (self.modul), kwargs, secure=(len(kwargs.keys()) > 0),
+		req = NetworkService.request("/%s/edit" % (self.module), kwargs, secure=(len(kwargs.keys()) > 0),
 		                             finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
@@ -85,12 +85,12 @@ class SingletonWrapper(QtCore.QObject):
 			self.busyStateChanged.emit(busy)
 
 
-def CheckForSingletonModul(modulName, modulList):
-	modulData = modulList[modulName]
+def CheckForSingletonModul(moduleName, modulList):
+	modulData = modulList[moduleName]
 	if "handler" in modulData.keys() and (
 					modulData["handler"] == "singleton" or modulData["handler"].startswith("singleton.")):
-		return (True)
-	return (False)
+		return True
+	return False
 
 
 protocolWrapperClassSelector.insert(0, CheckForSingletonModul, SingletonWrapper)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.priorityqueue import editBoneSelector
 
@@ -46,14 +47,11 @@ class AccessCheckBox(QtWidgets.QCheckBox):
 					item.setChecked(False)
 
 
-class AccessSelectMultiEditBone(QtWidgets.QWidget):
+class AccessSelectMultiEditBone(BoneEditInterface):
 	states = ["view", "edit", "add", "delete"]
 
-	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
-		super(AccessSelectMultiEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
+	def __init__(self, moduleName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
+		super(AccessSelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.checkboxes = {}
 		self.flags = {}
@@ -137,14 +135,14 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 			self.moduleBoxes[module].setCheckState(QtCore.Qt.PartiallyChecked)
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if "sortBy" in skelStructure[boneName].keys():
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return AccessSelectMultiEditBone(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		return AccessSelectMultiEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
 		if self.boneName not in data.keys():
@@ -173,7 +171,7 @@ class AccessSelectMultiEditBone(QtWidgets.QWidget):
 		return self.serialize()
 
 
-def CheckForAccessSelectMultiBone(modulName, boneName, skelStucture):
+def CheckForAccessSelectMultiBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"] == "selectmulti.access" or skelStucture[boneName]["type"].startswith(
 		"selectmulti.access")
 

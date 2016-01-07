@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.event import event
@@ -75,17 +76,13 @@ class AutocompletionModel(QtCore.QAbstractListModel):
 		return
 
 
-class RelationalEditBone(QtWidgets.QWidget):
+class RelationalEditBone(BoneEditInterface):
 	GarbageTypeName = "RelationalEditBone"
 	skelType = None
 
-	def __init__(self, modulName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None,
+	def __init__(self, moduleName, boneName, readOnly, kind, destModul, multiple, format="$(name)", editWidget=None,
 	             *args, **kwargs):
-		super(RelationalEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
+		super(RelationalEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.toModul = destModul
 		self.multiple = multiple
 		self.format = format
@@ -122,7 +119,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 			self.layout.addWidget(self.addBtn)
 
 	@classmethod
-	def fromSkelStructure(cls, modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
 		kind = skelStructure[boneName]["type"].split(".")[1]
@@ -133,7 +130,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 		format = "$(name)"
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
-		return cls(modulName, boneName, readOnly, kind, destModul, multiple, format, **kwargs)
+		return cls(moduleName, boneName, readOnly, kind, destModul, multiple, format, **kwargs)
 
 	def installAutoCompletion(self):
 		"""
@@ -199,7 +196,7 @@ class RelationalEditBone(QtWidgets.QWidget):
 		self.updateVisiblePreview()
 
 	def onAddBtnReleased(self, *args, **kwargs):
-		editWidget = RelationalBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection)
+		editWidget = RelationalBoneSelector(self.moduleName, self.boneName, self.multiple, self.toModul, self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def onDelBtnReleased(self, *args, **kwargs):
@@ -230,9 +227,9 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 	displaySelectionWidget = SelectedEntitiesWidget
 	GarbageTypeName = "RelationalBoneSelector"
 
-	def __init__(self, modulName, boneName, multiple, toModul, selection, *args, **kwargs):
+	def __init__(self, moduleName, boneName, multiple, toModul, selection, *args, **kwargs):
 		super(RelationalBoneSelector, self).__init__(*args, **kwargs)
-		self.modulName = modulName
+		self.moduleName = moduleName
 		self.boneName = boneName
 		self.multiple = multiple
 		self.modul = toModul
@@ -259,7 +256,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		event.emit('stackWidget', self)
 
 	def getBreadCrumb(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modulName)
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		# FIXME: Bad hack to get the editWidget we belong to
 		skel = None
@@ -313,7 +310,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		return self.list.getModul()
 
 
-def CheckForRelationalicBone(modulName, boneName, skelStucture):
+def CheckForRelationalicBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"].startswith("relational.")
 
 

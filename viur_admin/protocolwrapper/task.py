@@ -18,18 +18,18 @@ class TaskWrapper(QtCore.QObject):
 	# avaiable
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
 
-	def __init__(self, modul, *args, **kwargs):
+	def __init__(self, module, *args, **kwargs):
 		super(TaskWrapper, self).__init__()
-		self.modul = modul
+		self.module = module
 		self.busy = False
 		# self.editStructure = None # Warning: This depends on the currently edited task!!
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 
-	def checkForOurModul(self, modulName):
-		return (self.modul == modulName)
+	def checkForOurModul(self, moduleName):
+		return (self.module == moduleName)
 
 	def edit(self, key, **kwargs):
-		req = NetworkService.request("/%s/execute/%s" % (self.modul, key), kwargs, secure=(len(kwargs.keys()) > 0),
+		req = NetworkService.request("/%s/execute/%s" % (self.module, key), kwargs, secure=(len(kwargs.keys()) > 0),
 		                             finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint

@@ -55,7 +55,7 @@ class TreeHandler(QtCore.QObject):
 			f = lambda: TreeBaseHandler(modul)
 			queue.registerHandler(3, f)
 
-	def openList(self, modulName, config):
+	def openList(self, moduleName, config):
 		if "name" in config.keys():
 			name = config["name"]
 		else:
@@ -65,7 +65,7 @@ class TreeHandler(QtCore.QObject):
 		else:
 			icon = None
 		# event.emit(QtCore.SIGNAL('addHandlerWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
-		#            TreeList(modulName, config), name, icon)
+		#            TreeList(moduleName, config), name, icon)
 
 
 _fileHandler = TreeHandler()

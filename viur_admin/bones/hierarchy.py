@@ -4,6 +4,8 @@ from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEd
 from viur_admin.widgets.hierarchy import HierarchyWidget
 from viur_admin.priorityqueue import editBoneSelector
 
+from viur_admin.bones.bone_interface import BoneEditInterface
+
 
 class HierarchyItemViewBoneDelegate(RelationalViewBoneDelegate):
 	pass
@@ -11,7 +13,7 @@ class HierarchyItemViewBoneDelegate(RelationalViewBoneDelegate):
 
 class HierarchyItemBone(RelationalEditBone):
 	def onAddBtnReleased(self, *args, **kwargs):
-		editWidget = HierarchyBoneSelector(self.modulName, self.boneName, self.multiple, self.toModul, self.selection)
+		editWidget = HierarchyBoneSelector(self.moduleName, self.boneName, self.multiple, self.toModul, self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def installAutoCompletion(self):
@@ -38,7 +40,7 @@ class HierarchyBoneSelector(RelationalBoneSelector):
 			event.emit("popWidget", self)
 
 
-def CheckForHierarchyItemBone(modulName, boneName, skelStucture):
+def CheckForHierarchyItemBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("hierarchy."))
 
 

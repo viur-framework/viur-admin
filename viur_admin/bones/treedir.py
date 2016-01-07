@@ -6,20 +6,17 @@ from viur_admin.widgets.tree import TreeWidget
 from viur_admin.ui.treeselectorUI import Ui_TreeSelector
 from viur_admin.bones.relational import RelationalViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 
 class TreeDirViewBoneDelegate(RelationalViewBoneDelegate):
 	pass
 
 
-class TreeDirEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, destModul, multiple=False, format="$(name)", editWidget=None,
+class TreeDirEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, destModul, multiple=False, format="$(name)", editWidget=None,
 	             *args, **kwargs):
-		super(TreeDirEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
-		self.readOnly = readOnly
+		super(TreeDirEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.toModul = destModul
 		self.multiple = multiple
 		self.format = format
@@ -50,7 +47,7 @@ class TreeDirEditBone(QtWidgets.QWidget):
 	#  #Fetch the structure of our referenced modul
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
 		destModul = skelStructure[boneName]["type"].split(".")[1]
@@ -58,7 +55,7 @@ class TreeDirEditBone(QtWidgets.QWidget):
 		if "format" in skelStructure[boneName].keys():
 			format = skelStructure[boneName]["format"]
 		return (
-		TreeDirEditBone(modulName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs))
+		TreeDirEditBone(moduleName, boneName, readOnly, multiple=multiple, destModul=destModul, format=format, **kwargs))
 
 	def setSelection(self, selection):
 		if self.multiple:
@@ -74,7 +71,7 @@ class TreeDirEditBone(QtWidgets.QWidget):
 		event.emit(QtCore.SIGNAL(
 			'requestTreeDirBoneSelection(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,'
 			'PyQt_PyObject)'),
-			queue, self.modulName, self.boneName, self.skelStructure, self.selection, self.setSelection)
+			queue, self.moduleName, self.boneName, self.skelStructure, self.selection, self.setSelection)
 		self.widget = queue.getBest()()
 
 	def onDelBtnReleased(self, *args, **kwargs):
@@ -107,7 +104,7 @@ class TreeDirEditBone(QtWidgets.QWidget):
 
 
 class BaseTreeDirBoneSelector(TreeWidget):
-	def __init__(self, modulName, boneName, skelStructure, selection, setSelection, *args, **kwargs):
+	def __init__(self, moduleName, boneName, skelStructure, selection, setSelection, *args, **kwargs):
 		self.modul = skelStructure[boneName]["type"].split(".")[1]
 		self.boneName = boneName
 		self.skelStructure = skelStructure
@@ -175,7 +172,7 @@ class BaseTreeDirBoneSelector(TreeWidget):
 		event.accept()
 
 
-def CheckForTreeDirBone(modulName, boneName, skelStucture):
+def CheckForTreeDirBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("treedir."))
 
 

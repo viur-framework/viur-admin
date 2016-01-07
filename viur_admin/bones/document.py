@@ -2,17 +2,17 @@ from PyQt5 import QtCore, QtGui, QtWebKitWidgets, QtWidgets
 
 from viur_admin.bones.docedit import DocEdit
 from viur_admin.bones.text import TextViewBoneDelegate
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 
 class DocumentViewBoneDelegate(TextViewBoneDelegate):
 	pass
 
 
-class DocumentEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, skelStructure, editWidget=None, *args, **kwargs):
-		super(DocumentEditBone, self).__init__(*args, **kwargs)
+class DocumentEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, skelStructure, editWidget=None, *args, **kwargs):
+		super(DocumentEditBone, self).__init__(moduleName, boneName, False, editWidget, *args, **kwargs)
 		self.skelStructure = skelStructure
-		self.boneName = boneName
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("DocumentEditBone", "Open editor"), self)
 		iconbtn = QtGui.QIcon()
@@ -64,14 +64,14 @@ class DocumentHandler(QtCore.QObject):
 	#              QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)'),
 	#              self.onRequestBoneEditWidget)
 
-	def onRequestBoneViewDelegate(self, registerObject, modulName, boneName, skelStucture):
+	def onRequestBoneViewDelegate(self, registerObject, moduleName, boneName, skelStucture):
 		if skelStucture[boneName]["type"] == "document":
-			registerObject.registerHandler(10, lambda: DocumentViewBoneDelegate(registerObject, modulName, boneName,
+			registerObject.registerHandler(10, lambda: DocumentViewBoneDelegate(registerObject, moduleName, boneName,
 			                                                                    skelStucture))
 
-	def onRequestBoneEditWidget(self, registerObject, modulName, boneName, skelStucture):
+	def onRequestBoneEditWidget(self, registerObject, moduleName, boneName, skelStucture):
 		if skelStucture[boneName]["type"] == "document":
-			registerObject.registerHandler(10, DocumentEditBone(modulName, boneName, skelStucture))
+			registerObject.registerHandler(10, DocumentEditBone(moduleName, boneName, skelStucture))
 
 
 _documentHandler = DocumentHandler()

@@ -67,8 +67,8 @@ class ListHandler(QtCore.QObject):
 		QtCore.QObject.__init__(self, *args, **kwargs)
 		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
 
-	def requestModulHandler(self, queue, modulName):
-		f = lambda: ListCoreHandler(modulName)
+	def requestModulHandler(self, queue, moduleName):
+		f = lambda: ListCoreHandler(moduleName)
 		queue.registerHandler(0, f)
 
 

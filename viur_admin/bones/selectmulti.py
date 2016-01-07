@@ -2,17 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
-		super(SelectMultiViewBoneDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
+	def __init__(self, moduleName, boneName, skelStructure, *args, **kwargs):
+		super(SelectMultiViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName
-		self.modulName = modulName
+		self.moduleName = moduleName
 
 	def displayText(self, value, locale):
 		# print("SelectMultiViewBoneDelegate.displayText", value, locale)
@@ -22,12 +23,9 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 		return super(SelectMultiViewBoneDelegate, self).displayText(resStr, locale)
 
 
-class SelectMultiEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
-		super(SelectMultiEditBone, self).__init__(*args, **kwargs)
-		self.editWidget = editWidget
-		self.modulName = modulName
-		self.boneName = boneName
+class SelectMultiEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
+		super(SelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.checkboxes = {}
 		tmpList = values
@@ -42,14 +40,14 @@ class SelectMultiEditBone(QtWidgets.QWidget):
 			self.checkboxes[key] = cb
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		if "sortBy" in skelStructure[boneName].keys():
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
-		return SelectMultiEditBone(modulName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		return SelectMultiEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
 		if not self.boneName in data.keys():
@@ -60,11 +58,8 @@ class SelectMultiEditBone(QtWidgets.QWidget):
 	def serializeForPost(self):
 		return {self.boneName: [key for key, checkbox in self.checkboxes.items() if checkbox.isChecked()]}
 
-	def serializeForDocument(self):
-		return self.serialize()
 
-
-def CheckForSelectMultiBone(modulName, boneName, skelStucture):
+def CheckForSelectMultiBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"] == "selectmulti" or skelStucture[boneName]["type"].startswith("selectmulti.")
 
 

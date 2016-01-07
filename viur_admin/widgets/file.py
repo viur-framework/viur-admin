@@ -38,8 +38,9 @@ class FileItem(LeafItem):
 		if not pixmap.isNull():
 			icon = QtGui.QIcon(pixmap.scaled(104, 104))
 			# self.setIcon(icon)
-			self.setToolTip("<img src=\"%s\" width=\"400\" height=\"400\"><br>%s" % (
-				remoteFile.getFileName(), str(self.entryData["name"])))
+			width = max(400, min(pixmap.width(), 500))
+			self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
+				remoteFile.getFileName(), width, str(self.entryData["name"])))
 		self.listWidget().setViewMode(0)
 		self.listWidget().setViewMode(1)
 

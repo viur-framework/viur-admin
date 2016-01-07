@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from PyQt5 import QtCore, QtWidgets
+from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.priorityqueue import editBoneSelector
 from viur_admin.utils import wheelEventFilter
@@ -68,9 +69,9 @@ class FixedTimeEdit(QtWidgets.QTimeEdit):
 		super(FixedTimeEdit, self).focusOutEvent(e)
 
 
-class DateEditBone(QtWidgets.QWidget):
-	def __init__(self, modulName, boneName, readOnly, hasDate, hasTime, editWidget=None, *args, **kwargs):
-		super(DateEditBone, self).__init__(*args, **kwargs)
+class DateEditBone(BoneEditInterface):
+	def __init__(self, moduleName, boneName, readOnly, hasDate, hasTime, editWidget=None, *args, **kwargs):
+		super(DateEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 
 		self.editWidget = editWidget
 		self.boneName = boneName
@@ -98,11 +99,11 @@ class DateEditBone(QtWidgets.QWidget):
 		self.lineEdit.show()
 
 	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		hasDate = skelStructure[boneName]["date"]
 		hasTime = skelStructure[boneName]["time"]
-		return DateEditBone(modulName, boneName, readOnly, hasDate, hasTime, **kwargs)
+		return DateEditBone(moduleName, boneName, readOnly, hasDate, hasTime, **kwargs)
 
 	def unserialize(self, data):
 		value = None
@@ -143,7 +144,7 @@ class DateEditBone(QtWidgets.QWidget):
 		return (self.serialize())
 
 
-def CheckForDateBone(modulName, boneName, skelStucture):
+def CheckForDateBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "date")
 
 

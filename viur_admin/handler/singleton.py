@@ -46,10 +46,10 @@ class SingletonHandler(QtCore.QObject):
 
 	# print("SingletonHandler event id", id(event))
 
-	def requestModulHandler(self, queue, modulName):
-		config = conf.serverConfig["modules"][modulName]
+	def requestModulHandler(self, queue, moduleName):
+		config = conf.serverConfig["modules"][moduleName]
 		if (config["handler"] == "singleton"):
-			f = lambda: SingletonEntryHandler(modulName)
+			f = lambda: SingletonEntryHandler(moduleName)
 			queue.registerHandler(5, f)
 
 
