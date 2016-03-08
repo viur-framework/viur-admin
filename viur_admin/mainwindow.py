@@ -258,6 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.preloader.show()
 		self.preloader.finished.connect(self.onPreloaderFinished)
 		# self.logger.debug("Checkpoint: loadConfig")
+		NetworkService.request("/user/view/self", successHandler=self.onLoadUser, failureHandler=self.onError)
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError)
 
 	def onPreloaderFinished(self):
@@ -270,11 +271,23 @@ class MainWindow(QtWidgets.QMainWindow):
 		try:
 			conf.serverConfig = NetworkService.decode(request)
 		except:
-
 			self.onError(msg="Unable to parse portalconfig!")
 			return
 		event.emit("configDownloaded")
-		self.setup()
+		if conf.currentUserEntry is not None:
+			self.setup()
+
+	def onLoadUser(self, request):
+		try:
+			conf.currentUserEntry = NetworkService.decode(request)["values"]
+			logging.debug(conf.currentUserEntry)
+		except Exception as err:
+			logging.exception(err)
+			self.onError(msg="Unable to parse user entry!")
+			return
+		else:
+			if conf.serverConfig is not None:
+				self.setup()
 
 	# event.emit( "loginSucceeded()" )
 
@@ -504,7 +517,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				group_prefix = group["prefix"]
 				groupHandlers[group_prefix] = group_handler
 				by_group[group_prefix] = list()
-				self.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
+				# self.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
 		if "modules" not in conf.portal:
 			conf.portal["modules"] = {}
 
@@ -513,9 +526,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		groupHandlers = OrderedDict(sorted(groupHandlers.items(), key=sortItemHandlers))
 
-		for modul, cfg in data["modules"].items():
+		access = conf.currentUserEntry["access"]
+		for module, cfg in data["modules"].items():
+			if "root" not in access and not "{0}-view".format(module) in access:
+				continue
 			queue = RegisterQueue()
-			event.emit('requestModulHandler', queue, modul)
+			event.emit('requestModulHandler', queue, module)
 			handler = queue.getBest()()
 			if "name" in cfg.keys() and groupHandlers:
 				parent = None
@@ -531,20 +547,29 @@ class MainWindow(QtWidgets.QMainWindow):
 			else:
 				self.treeWidget.addTopLevelItem(handler)
 			handlers.append(handler)
-			wrapperClass = protocolWrapperClassSelector.select(modul, data["modules"])
+			wrapperClass = protocolWrapperClassSelector.select(module, data["modules"])
 			if wrapperClass is not None:
-				wrapperClass(modul)
-			event.emit('modulHandlerInitialized', modul)
+				wrapperClass(module)
+			event.emit('modulHandlerInitialized', module)
 
 		# self.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
 
 		def subhandlerSorter(x):
 			return x.sortIndex
 
+		emptyGroups = list()
 		for group, handlers in by_group.items():
 			handlers.sort(key=subhandlerSorter, reverse=True)
 			for handler in handlers:
 				groupHandlers[group].addChild(handler)
+			if handlers:
+				self.treeWidget.addTopLevelItem(groupHandlers[group])
+			else:
+				emptyGroups.append((group, groupHandlers[group]))
+
+		for prefix, groupHandler in emptyGroups:
+			groupHandlers.pop(prefix)
+			del by_group[prefix]
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 

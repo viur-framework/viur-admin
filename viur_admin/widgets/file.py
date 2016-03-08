@@ -198,7 +198,7 @@ class FileListView(TreeListView):
 		if (all([str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or (
 						len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
 		         event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
-			# Its an upload (files/dirs draged from the local filesystem into our fileview)
+			# Its an upload (files/dirs dragged from the local filesystem into our fileview)
 			self.doUpload([file.toLocalFile() for file in event.mimeData().urls()], self.getNode())
 		else:
 			super(FileListView, self).dropEvent(event)

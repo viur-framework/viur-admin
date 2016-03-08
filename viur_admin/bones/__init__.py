@@ -2,7 +2,7 @@ import viur_admin.bones.base
 import viur_admin.bones.boolean
 import viur_admin.bones.color
 import viur_admin.bones.date
-import viur_admin.bones.document
+# import viur_admin.bones.document
 import viur_admin.bones.file
 import viur_admin.bones.hierarchy
 import viur_admin.bones.numeric

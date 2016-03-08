@@ -1,8 +1,13 @@
 from PyQt5 import QtCore, QtGui, QtWebKitWidgets, QtWidgets
 
+# FIXME: NOT used anymore in viur server do not use this...
+
+
 from viur_admin.bones.docedit import DocEdit
 from viur_admin.bones.text import TextViewBoneDelegate
 from viur_admin.bones.bone_interface import BoneEditInterface
+
+
 
 
 class DocumentViewBoneDelegate(TextViewBoneDelegate):

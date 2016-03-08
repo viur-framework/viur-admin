@@ -19,6 +19,7 @@ class Config(object):
 		self.currentPortalConfigDirectory = None
 		self.currentUsername = None  # Store the current Username/Password sothat
 		self.currentPassword = None  # plugins are able to authenticate against other services
+		self.currentUserEntry = None
 		self.availableLanguages = {}
 		self.cmdLineOpts = None
 		self.loadConfig()
