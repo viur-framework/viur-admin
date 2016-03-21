@@ -4,6 +4,7 @@ QMainWindow, QMenuBar, QStatusBar {
 }
 
 QInputDialog {
+    background: #f4f4f4;
 }
 
 QScrollArea,
@@ -566,7 +567,6 @@ QSpinBox::up-button,
 QDoubleSpinBox::up-button {
     subcontrol-origin: border;
     subcontrol-position: top right; /* position at the top right corner */
-    width: 24px;
     width: 20px;
     height: 12px;
     padding: 1px;
@@ -577,6 +577,8 @@ QDoubleSpinBox::up-button {
 QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow {
     image: url(:/icons/menu/arrow_up.svg);
+    width: 7px;
+    height: 7px;
 }
 
 QSpinBox::down-button,
@@ -588,8 +590,7 @@ QDoubleSpinBox::down-button {
     padding: 1px;
     border: 1px solid #aaa;
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #ddd, stop : 1 #ccc);
-    /*border-width: 1px;
-    border-top-width: 0;*/
+
 }
 
 QSpinBox::up-button:hover,
@@ -603,12 +604,15 @@ QSpinBox::up-button:pressed,
 QDoubleSpinBox::up-button:pressed,
 QSpinBox::down-button:pressed,
 QDoubleSpinBox::down-button:pressed {
-    background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #ccc, stop : 1 #ddd);
+    /*background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #ccc, stop : 1 #ddd);*/
+    background-color: #fd3c3c;
 }
 
 QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow {
     image: url(:/icons/menu/arrow_down.svg);
+    width: 7px;
+    height: 7px;
 }
 
 QSpinBox::up-button:disabled,
@@ -706,5 +710,6 @@ MessageBox
 */
 
 QMessageBox {
-    background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 1, y2 : 0, stop : 0 rgba(0, 0, 0, 255), stop : 1 rgba(244, 244, 244, 255));
+    /*background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 1, y2 : 0, stop : 0 rgba(0, 0, 0, 255), stop : 1 rgba(244, 244, 244, 255));*/
+    background: #f4f4f4;
 }

@@ -7,6 +7,7 @@ from viur_admin.widgets.edit import EditWidget
 from viur_admin.utils import WidgetHandler
 from viur_admin.config import conf
 from viur_admin.widgets.list import CsvExportWidget
+from viur_admin.ui.editpreviewUI import Ui_BasePreview
 
 
 class ListAddAction(QtWidgets.QAction):
@@ -147,25 +148,33 @@ class ListDeleteAction(QtWidgets.QAction):
 actionDelegateSelector.insert(1, ListDeleteAction.isSuitableFor, ListDeleteAction)
 
 
-class Preview(QtWidgets.QWidget):
+class Preview(QtWidgets.QDialog):
 	def __init__(self, urls, modul, data, *args, **kwargs):
 		super(Preview, self).__init__(*args, **kwargs)
-		self.ui = Ui_EditPreview()
-		self.ui.setupUi(self)
+		self.setObjectName("BasePreview")
+		# self.resize(300, 482)
+		self.setWindowTitle("")
+		icon = QtGui.QIcon()
+		icon.addPixmap(QtGui.QPixmap(":icons/ViURadmin.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		self.setWindowIcon(icon)
+		self.verticalLayout = QtWidgets.QVBoxLayout(self)
+		self.cbUrls = QtWidgets.QComboBox(self)
+		self.cbUrls.setObjectName("cbUrls")
+		self.verticalLayout.addWidget(self.cbUrls)
 		self.urls = [(k, v) for (k, v) in urls.items()]
 		self.urls.sort(key=lambda x: x[0])
 		self.modul = modul
 		self.data = data
 		self.request = None
-		self.ui.cbUrls.addItems([x[0] for x in self.urls])
+		self.cbUrls.addItems([x[0] for x in self.urls])
 		if "actiondescr" in data.keys():
 			self.setWindowTitle("%s: %s" % (data["actiondescr"], data["name"]))
 		elif "name" in data.keys():
 			self.setWindowTitle(QtCore.QCoreApplication.translate("ListHandler", "Preview: %s") % data["name"])
 		else:
 			self.setWindowTitle(QtCore.QCoreApplication.translate("ListHandler", "Preview"))
-		self.ui.cbUrls.currentIndexChanged.connect(self.onCbUrlsCurrentIndexChanged)
-		self.ui.btnReload.released.connect(self.onBtnReloadReleased)
+		self.cbUrls.currentIndexChanged.connect(self.onCbUrlsCurrentIndexChanged)
+		# self.ui.btnReload.released.connect(self.onBtnReloadReleased)
 		if len(self.urls) > 0:
 			self.onCbUrlsCurrentIndexChanged(0)
 		self.show()
@@ -173,28 +182,10 @@ class Preview(QtWidgets.QWidget):
 	def onCbUrlsCurrentIndexChanged(self, idx):
 		if not isinstance(idx, int):
 			return
+		baseurl = NetworkService.url.replace("/admin", "")
 		url = self.urls[idx][1]
 		url = url.replace("{{id}}", self.data["id"]).replace("{{modul}}", self.modul)
-		self.currentURL = url
-		if url.lower().startswith("http"):
-			self.ui.webView.setUrl(QtCore.QUrl(self.currentURL))
-		else:
-			"""Its the originating server - Load the page in our context (cookies!)"""
-			if self.request:
-				# self.request.deleteLater()
-				self.request = None
-			request = NetworkService.request(NetworkService.url.replace("/admin", "") + url,
-			                                 finishedHandler=self.setHTML)
-
-	def setHTML(self, req):
-		if 1:  # try:
-			html = bytes(req.readAll().data()).decode("UTF8")
-		else:  # except:
-			html = QtCore.QCoreApplication.translate("ListHandler", "Preview not possible")
-		self.ui.webView.setHtml(html, QtCore.QUrl(NetworkService.url.replace("/admin", "") + self.currentURL))
-
-	def onBtnReloadReleased(self, *args, **kwargs):
-		self.onCbUrlsCurrentIndexChanged(self.ui.cbUrls.currentIndex())
+		QtGui.QDesktopServices.openUrl(QtCore.QUrl(baseurl + url))
 
 
 class ListPreviewAction(QtWidgets.QAction):
