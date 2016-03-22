@@ -173,6 +173,7 @@ class TreeListView(QtWidgets.QListWidget):
 			@param path: If given, displaying starts in this path
 			@type path: String or None
 		"""
+		print("TreeListView.__init__", modul, rootNode, node, args, kwargs)
 		super(TreeListView, self).__init__(*args, **kwargs)
 		self.modul = modul
 		self.rootNode = rootNode
@@ -469,6 +470,7 @@ class TreeWidget(QtWidgets.QWidget):
 			@param leafItem: If set, use this class for displaying Directories inside the QListWidget.
 			@param leafItem: QListWidgetItem
 		"""
+		print("TreeWidget.__init__", modul, rootNode, node, actions, editOnDoubleClick, args, kwargs)
 		super(TreeWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_Tree()
 		self.ui.setupUi(self)

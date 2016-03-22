@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from viur_admin.event import event
 from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
-from viur_admin.widgets.tree import TreeWidget
-from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
+from viur_admin.event import event
 from viur_admin.priorityqueue import editBoneSelector
-from viur_admin.bones.bone_interface import BoneEditInterface
+from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
+from viur_admin.widgets.tree import TreeWidget
 
 
 class TreeItemViewBoneDelegate(RelationalViewBoneDelegate):
@@ -51,7 +50,7 @@ class TreeBoneSelector(RelationalBoneSelector):
 
 
 def CheckForTreeItemBone(moduleName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"].startswith("treeitem."))
+	return skelStucture[boneName]["type"].startswith("treeitem.")
 
 
 editBoneSelector.insert(1, CheckForTreeItemBone, TreeItemBone)
