@@ -84,6 +84,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 
 	def updateUI(self):
 		item = self.ui.acclistWidget.currentItem()
+		self.ui.acclistWidget.sortItems()
 		if not item:
 			self.ui.editAccountName.setText("")
 			self.ui.editUrl.setText("")

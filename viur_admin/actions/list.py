@@ -7,7 +7,6 @@ from viur_admin.widgets.edit import EditWidget
 from viur_admin.utils import WidgetHandler
 from viur_admin.config import conf
 from viur_admin.widgets.list import CsvExportWidget
-from viur_admin.ui.editpreviewUI import Ui_BasePreview
 
 
 class ListAddAction(QtWidgets.QAction):

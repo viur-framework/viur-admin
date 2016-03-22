@@ -287,12 +287,14 @@ class RecursiveDownloader(QtCore.QObject):
 		self.localTargetDir = localTargetDir
 		self.modul = modul
 		self.cancel = False
-		self.stats = {"dirsTotal": 0,
-		              "dirsDone": 0,
-		              "filesTotal": 0,
-		              "filesDone": 0,
-		              "bytesTotal": 0,
-		              "bytesDone": 0}
+		self.stats = {
+			"dirsTotal": 0,
+			"dirsDone": 0,
+			"filesTotal": 0,
+			"filesDone": 0,
+			"bytesTotal": 0,
+			"bytesDone": 0
+		}
 		self.remainingRequests = 0
 		for file in files:
 			self.remainingRequests += 1
@@ -392,12 +394,10 @@ class FileWrapper(TreeWrapper):
 	def upload(self, files, node):
 		"""
 			Uploads a list of files to the Server and adds them to the given path on the server.
-			@param files: List of local filenames including their full, absolute path
-			@type files: List
-			@param rootNode: RootNode which will recive the uploads
-			@type rootNode: String
-			@param path: Path (server-side) relative to the given RootNode
-			@type path: String
+			@param files: List of local file names including their full, absolute path
+			@type files: list
+			@param node: RootNode which will receive the uploads
+			@type node: str
 		"""
 		if not files:
 			return
@@ -416,21 +416,17 @@ class FileWrapper(TreeWrapper):
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
 			@type targetDir: String
-			@param rootNode: RootNode to download from
-			@type rootNode: String
-			@param path: Path relative to the RootNode containing the files and directories which should be downloaded
-			@type path: String
 			@param files: List of files in this directory which should be downloaded
-			@type files: List
+			@type files: list
 			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
-			@type dirs: List
+			@type dirs: list
 		"""
 		downloader = RecursiveDownloader(targetDir, files, dirs, self.module)
 		# self.transferQueues.append( downloader )
 		# self.ui.boxUpload.addWidget( downloader )
 		self.downloader.finished.connect(self.delayEmitEntriesChanged)
 		# self.connect( downloader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.removeFromTransferQueue )
-		return (downloader)
+		return downloader
 
 	# def removeFromTransferQueue( self, obj ):
 	#	self.transferQueues.remove( obj )
@@ -439,8 +435,8 @@ class FileWrapper(TreeWrapper):
 def CheckForFileModul(moduleName, modulList):
 	modulData = modulList[moduleName]
 	if "handler" in modulData.keys() and modulData["handler"].startswith("tree.simple.file"):
-		return (True)
-	return (False)
+		return True
+	return False
 
 
 protocolWrapperClassSelector.insert(3, CheckForFileModul, FileWrapper)

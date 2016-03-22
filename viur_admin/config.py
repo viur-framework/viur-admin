@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from hashlib import sha512
+from operator  import attrgetter
 
 
 class Config(object):
@@ -52,6 +53,9 @@ class Config(object):
 			except:
 				print("Could not load Accounts")
 				self.accounts = []
+		for i in self.accounts:
+			print(i)
+		self.accounts.sort(key=lambda x: x["name"].lower())
 		# Load rest of the config
 		configFileName = os.path.join(self.storagePath, "config.dat")
 		try:

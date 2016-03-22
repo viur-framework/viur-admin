@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'edit.ui'
+# Form implementation generated from reading ui file 'ui/edit.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Edit(object):
     def setupUi(self, Edit):
@@ -29,36 +27,28 @@ class Ui_Edit(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnReset = QtWidgets.QPushButton(Edit)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":icons/actions/undo.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/undo_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnReset.setIcon(icon)
         self.btnReset.setObjectName("btnReset")
         self.horizontalLayout_2.addWidget(self.btnReset)
         self.btnClose = QtWidgets.QPushButton(Edit)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":icons/actions/cancel_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnClose.setIcon(icon1)
         self.btnClose.setObjectName("btnClose")
         self.horizontalLayout_2.addWidget(self.btnClose)
         spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
-        self.btnPreview = QtWidgets.QPushButton(Edit)
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":icons/actions/preview.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnPreview.setIcon(icon2)
-        self.btnPreview.setObjectName("btnPreview")
-        self.horizontalLayout_2.addWidget(self.btnPreview)
-        spacerItem1 = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem1)
         self.btnSaveClose = QtWidgets.QPushButton(Edit)
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":icons/actions/save_new.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnSaveClose.setIcon(icon3)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":icons/actions/save_new.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnSaveClose.setIcon(icon2)
         self.btnSaveClose.setObjectName("btnSaveClose")
         self.horizontalLayout_2.addWidget(self.btnSaveClose)
         self.btnSaveContinue = QtWidgets.QPushButton(Edit)
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":icons/actions/save_continue.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnSaveContinue.setIcon(icon4)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":icons/actions/save_continue.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnSaveContinue.setIcon(icon3)
         self.btnSaveContinue.setObjectName("btnSaveContinue")
         self.horizontalLayout_2.addWidget(self.btnSaveContinue)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -72,7 +62,6 @@ class Ui_Edit(object):
         Edit.setWindowTitle(_translate("Edit", "Form"))
         self.btnReset.setText(_translate("Edit", "Reset"))
         self.btnClose.setText(_translate("Edit", "Close"))
-        self.btnPreview.setText(_translate("Edit", "Preview"))
         self.btnSaveClose.setText(_translate("Edit", "Save and close"))
         self.btnSaveContinue.setText(_translate("Edit", "Save and continue"))
 

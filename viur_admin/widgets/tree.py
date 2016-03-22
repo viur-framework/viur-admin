@@ -513,6 +513,7 @@ class TreeWidget(QtWidgets.QWidget):
 				                                     "switchview"])
 
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
+		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)
 		self.tree.itemDoubleClicked.connect(self.itemDoubleClicked)
 
 		protoWrap = protocolWrapperInstanceSelector.select(modul)

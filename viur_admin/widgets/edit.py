@@ -9,41 +9,8 @@ from viur_admin.event import event
 from viur_admin.utils import Overlay, formatString
 from viur_admin.config import conf
 from viur_admin.ui.editUI import Ui_Edit
-from viur_admin.ui.editpreviewUI import Ui_BasePreview
 from viur_admin.priorityqueue import editBoneSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-
-
-class Preview(QtWidgets.QWidget):
-	"""Livepreview for unsaved changes"""
-
-	def __init__(self, modul, data, *args, **kwargs):
-		super(Preview, self).__init__(*args, **kwargs)
-		self.ui = Ui_BasePreview()
-		self.ui.setupUi(self)
-		self.modul = modul
-		self.data = data
-		self.ui.cbUrls.hide()
-		self.ui.btnReload.hide()
-		if "name" in data.keys():
-			self.setWindowTitle("Vorschau: %s" % data["name"])
-		self.loadURL()
-		self.show()
-
-	def loadURL(self):
-		NetworkService.request("%s/%s/preview" % (NetworkService.url.replace("/admin", ""), self.modul), self.data,
-		                       secure=True, successHandler=self.setHTML)
-
-	def setHTML(self, req):
-		try:
-			res = req.readAll().data().decode("UTF-8")
-		except:
-			res = QtCore.QCoreApplication.translate("Preview", "Preview not possible")
-		self.ui.webView.setHtml(res,
-		                        QtCore.QUrl("%s/%s/preview" % (NetworkService.url.replace("/admin", ""), self.modul)))
-
-	def onBtnReloadReleased(self, *args, **kwargs):
-		self.loadURL()
 
 
 class EditWidget(QtWidgets.QWidget):
@@ -117,7 +84,6 @@ class EditWidget(QtWidgets.QWidget):
 		self.ui.btnReset.released.connect(self.onBtnResetReleased)
 		self.ui.btnSaveContinue.released.connect(self.onBtnSaveContinueReleased)
 		self.ui.btnSaveClose.released.connect(self.onBtnSaveCloseReleased)
-		self.ui.btnPreview.released.connect(self.onBtnPreviewReleased)
 		self.ui.btnClose.released.connect(self.onBtnCloseReleased)
 		if not self.key and not self.clone:
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Close"))
@@ -365,12 +331,6 @@ class EditWidget(QtWidgets.QWidget):
 		for key, bone in self.bones.items():
 			res.update(bone.serializeForPost())
 		self.save(res)
-
-	def onBtnPreviewReleased(self, *args, **kwargs):
-		res = {}
-		for key, bone in self.bones.items():
-			res.update(bone.serializeForPost())
-		self.preview = Preview(self.modul, res)
 
 	def onSaveSuccess(self, editTaskID):
 		"""

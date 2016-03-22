@@ -218,6 +218,7 @@ class Login(QtWidgets.QMainWindow):
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
+		cb.setFocus()
 
 	def onCbPortalCurrentIndexChanged(self, index):
 		if isinstance(index, str):

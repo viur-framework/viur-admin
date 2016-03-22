@@ -6,6 +6,7 @@ from viur_admin.event import event
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.utils import WidgetHandler
 from viur_admin.widgets.edit import EditWidget
+import time
 
 
 class TreeAddAction(QtWidgets.QAction):
@@ -75,7 +76,15 @@ class TreeDirUpAction(QtWidgets.QAction):
 		self.parent().nodeChanged.connect(self.onNodeChanged)
 		reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
 		assert reqWrap is not None
-		if self.parent().getNode() in [x["key"] for x in reqWrap.rootNodes]:
+		x = 3
+		while x:
+			if reqWrap.rootNodes is None:
+				print("rootNones is still None - waiting...", reqWrap)
+				time.sleep(0.2)
+				x -= 1
+			else:
+				break
+		if reqWrap.rootNodes and self.parent().getNode() in [x["key"] for x in reqWrap.rootNodes]:
 			self.setEnabled(False)
 		self.triggered.connect(self.onTriggered)
 
