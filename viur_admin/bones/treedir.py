@@ -42,15 +42,28 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
+		return
+		# if not isinstance(item, self.list.getNodeItemClass()):
+		# 	return
+		#
+		# data = item.entryData
+		# if self.multiple:
+		# 	self.selection.extend([data])
+		# else:
+		# 	self.selectionChanged.emit([data])
+		# 	event.emit("popWidget", self)
+
+	def onItemClicked(self, item):
+		print("TreeDirBoneSelector.onItemClicked")
 		if not isinstance(item, self.list.getNodeItemClass()):
 			return
 
 		data = item.entryData
-		if self.multiple:
-			self.selection.extend([data])
+		selection = self.selection.get()
+		if data in selection:
+			self.selection.set([])
 		else:
-			self.selectionChanged.emit([data])
-			event.emit("popWidget", self)
+			self.selection.set([data])
 
 
 def CheckForTreeDirBone(moduleName, boneName, skelStucture):
@@ -59,4 +72,4 @@ def CheckForTreeDirBone(moduleName, boneName, skelStucture):
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForTreeDirBone, TreeDirBone)
-# viewDelegateSelector.insert(2, CheckForTreeDirBone, TreeDirViewBoneDelegate)
+viewDelegateSelector.insert(2, CheckForTreeDirBone, TreeDirViewBoneDelegate)

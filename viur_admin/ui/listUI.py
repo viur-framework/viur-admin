@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'list.ui'
+# Form implementation generated from reading ui file 'ui/list.ui'
 #
 # Created by: PyQt5 UI code generator 5.5.1
 #
@@ -19,9 +19,6 @@ class Ui_List(object):
         self.boxActions.setContentsMargins(0, 0, 0, 0)
         self.boxActions.setObjectName("boxActions")
         self.verticalLayout.addLayout(self.boxActions)
-        self.tableWidget = QtWidgets.QWidget(List)
-        self.tableWidget.setObjectName("tableWidget")
-        self.verticalLayout.addWidget(self.tableWidget)
         self.layoutToolBar = QtWidgets.QHBoxLayout()
         self.layoutToolBar.setObjectName("layoutToolBar")
         self.editSearch = QtWidgets.QLineEdit(List)
@@ -41,6 +38,9 @@ class Ui_List(object):
         self.searchBTN.setObjectName("searchBTN")
         self.layoutToolBar.addWidget(self.searchBTN)
         self.verticalLayout.addLayout(self.layoutToolBar)
+        self.tableWidget = QtWidgets.QWidget(List)
+        self.tableWidget.setObjectName("tableWidget")
+        self.verticalLayout.addWidget(self.tableWidget)
 
         self.retranslateUi(List)
         QtCore.QMetaObject.connectSlotsByName(List)

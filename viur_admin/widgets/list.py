@@ -305,6 +305,7 @@ class ListTableView(QtWidgets.QTableView):
 			# Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select(self.modul, field, self.structureCache)
 			delegate = delegateFactory(self.modul, field, self.structureCache)
+			print(field, delegateFactory, delegate)
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)

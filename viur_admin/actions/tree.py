@@ -74,7 +74,11 @@ class TreeDirUpAction(QtWidgets.QAction):
 				QtGui.QIcon(":icons/actions/folder_back.svg"),
 				QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent)
 		self.parent().nodeChanged.connect(self.onNodeChanged)
-		reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
+		print("protowrap for modul test", self.parent().modul)
+		realModule = self.parent().modul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+		reqWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert reqWrap is not None
 		x = 3
 		while x:
@@ -89,7 +93,10 @@ class TreeDirUpAction(QtWidgets.QAction):
 		self.triggered.connect(self.onTriggered)
 
 	def onNodeChanged(self, node):
-		reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
+		realModule = self.parent().modul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+		reqWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert reqWrap is not None
 		node = reqWrap.getNode(self.parent().getNode())
 		if not node["parentdir"]:
@@ -98,7 +105,10 @@ class TreeDirUpAction(QtWidgets.QAction):
 			self.setEnabled(True)
 
 	def onTriggered(self, e):
-		reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
+		realModule = self.parent().modul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+		reqWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert reqWrap is not None
 		node = reqWrap.getNode(self.parent().getNode())
 		if node:

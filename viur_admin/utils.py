@@ -485,7 +485,7 @@ def formatString(format, skelStructure, data, prefix=None):
 			return str(value)
 		# Datastore format. (ie the langdict has been serialized to name.lang pairs
 		try:
-			lang = "%s.%s" % (key, conf.adminConfig["language"])
+			lang = "%s.%s" % (key, conf.adminConfig.get("language", "de"))
 		except Exception as err:
 			lang = ""
 		if lang in value.keys() and value[lang]:
@@ -498,7 +498,7 @@ def formatString(format, skelStructure, data, prefix=None):
 		if key in value.keys() and isinstance(value[key], dict):
 			langDict = value[key]
 			try:
-				lang = conf.adminConfig["language"]
+				lang = conf.adminConfig.get("language")
 			except Exception as err:
 				logging.exception(err)
 				lang = "de"

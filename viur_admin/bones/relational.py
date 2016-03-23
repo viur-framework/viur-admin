@@ -32,6 +32,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.boneName = boneName
 
 	def displayText(self, value, locale):
+		print( value, locale)
 		return formatString(self.format, self.structure, value)
 
 
@@ -148,7 +149,10 @@ class RelationalEditBone(BoneEditInterface):
 			self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
 	def updateVisiblePreview(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)
+		realModule = self.toModul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		structure = None
 		if self.skelType is None:
@@ -251,6 +255,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			self.selection.hide()
 			self.ui.lblSelected.hide()
 		self.list.itemDoubleClicked.connect(self.onSourceItemDoubleClicked)
+		self.list.itemClicked.connect(self.onItemClicked)
 		self.ui.btnSelect.clicked.connect(self.onBtnSelectReleased)
 		self.ui.btnCancel.clicked.connect(self.onBtnCancelReleased)
 		event.emit('stackWidget', self)
@@ -294,10 +299,14 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			event.emit("popWidget", self)
 
 	def onBtnSelectReleased(self, *args, **kwargs):
+		print("onBtnSelectReleased")
+		selection = self.selection.get()
+		print("selection", selection)
 		self.selectionChanged.emit(self.selection.get())
 		event.emit("popWidget", self)
 
 	def onBtnCancelReleased(self, *args, **kwargs):
+		print("onBtnCancelReleased")
 		event.emit("popWidget", self)
 
 	def getFilter(self):
@@ -308,6 +317,10 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 
 	def getModul(self):
 		return self.list.getModul()
+
+	def onItemClicked(self, item):
+		print("RelationalBoneSelector.onItemClicked")
+		pass
 
 
 def CheckForRelationalicBone(moduleName, boneName, skelStucture):

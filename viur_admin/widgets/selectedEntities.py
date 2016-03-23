@@ -33,8 +33,13 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		self.headers = []
 		self.skelType = skelType
 		self.entryFetches = []  # List of fetch-Tasks we issued
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
+
 		protoWrap.entityAvailable.connect(self.onItemDataAvaiable)
 		for item in (selection or []):
 			self.addItem(item)
@@ -46,7 +51,11 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			@param item: The new item
 			@type item: Dict or String
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		if not item:
 			return
@@ -74,7 +83,11 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			Fetching the updated information from the server finished.
 			Start displaying that item.
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		if item is None or not item["id"] in self.entryFetches:
 			return
@@ -156,7 +169,11 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
+		realModule = self.model().modul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected
 		if self.skelType is None:

@@ -85,7 +85,11 @@ class PathListView(QtWidgets.QListWidget):
 		self.itemClicked.connect(self.pathListItemClicked)
 		self.setFlow(self.LeftToRight)
 		self.setFixedHeight(35)
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect(self.onEntitiesChanged)
 
@@ -93,7 +97,11 @@ class PathListView(QtWidgets.QListWidget):
 		self.rebuild()
 
 	def rebuild(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		self.clear()
 		node = self.node
@@ -123,7 +131,11 @@ class PathListView(QtWidgets.QListWidget):
 
 	def dropEvent(self, event):
 		dataDict = json.loads(event.mimeData().data("viur/treeDragData").data().decode("UTF-8"))
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		destItem = self.itemAt(event.pos())
 		protoWrap.move(
@@ -180,7 +192,11 @@ class TreeListView(QtWidgets.QListWidget):
 		self.node = node or rootNode
 		self.customQueryKey = None  # As loading is performed in background, they might return results for a dataset
 		# which isnt displayed anymore
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect(self.onTreeChanged)
 		protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
@@ -288,7 +304,11 @@ class TreeListView(QtWidgets.QListWidget):
 
 	def dropEvent(self, event):
 		dataDict = json.loads(event.mimeData().data("viur/treeDragData").data().decode("UTF-8"))
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		destItem = self.itemAt(event.pos())
 		if not isinstance(destItem, self.nodeItem):
@@ -314,7 +334,11 @@ class TreeListView(QtWidgets.QListWidget):
 			self.loadData()
 
 	def loadData(self, queryObj=None):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		protoWrap.queryData(self.node)
 
 	def onTreeChanged(self, node):
@@ -324,7 +348,11 @@ class TreeListView(QtWidgets.QListWidget):
 			return
 		if self.customQueryKey is not None:  # We currently display a searchresult:
 			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		res = protoWrap.childrenForNode(self.node)
 		self.setDisplayData(res)
@@ -332,7 +360,11 @@ class TreeListView(QtWidgets.QListWidget):
 	def onCustomQueryFinished(self, queryKey):
 		if queryKey != self.customQueryKey:
 			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		self.setDisplayData(protoWrap.getNodesForCustomQuery(queryKey))
 
@@ -366,7 +398,11 @@ class TreeListView(QtWidgets.QListWidget):
 		menu.popup(self.mapToGlobal(point))
 
 	def onContextMenuTriggered(self, action):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		if action.task == "move":
 			nodes = []
@@ -410,7 +446,11 @@ class TreeListView(QtWidgets.QListWidget):
 						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
 				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return False
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		protoWrap.deleteEntities(nodes, leafs)
 		return True
@@ -451,7 +491,7 @@ class TreeWidget(QtWidgets.QWidget):
 	currentItemChanged = QtCore.pyqtSignal((QtWidgets.QListWidgetItem, QtWidgets.QListWidgetItem))
 	itemSelectionChanged = QtCore.pyqtSignal()
 	itemDoubleClicked = QtCore.pyqtSignal((QtWidgets.QListWidgetItem))
-
+	itemClicked = QtCore.pyqtSignal((QtWidgets.QListWidgetItem))
 	lastSeenNode = {}  # allow opening the last viewed node again
 
 	def __init__(self, modul, rootNode=None, node=None, actions=None, editOnDoubleClick=False, *args, **kwargs):
@@ -517,8 +557,15 @@ class TreeWidget(QtWidgets.QWidget):
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
 		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)
 		self.tree.itemDoubleClicked.connect(self.itemDoubleClicked)
+		self.tree.itemClicked.connect(self.itemClicked)
 
-		protoWrap = protocolWrapperInstanceSelector.select(modul)
+
+		if modul.endswith("_rootNode"):
+			realModule = modul.replace("_rootNode", "")
+		else:
+			realModule = modul
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
+
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
 		if not rootNode and protoWrap.rootNodes:
@@ -571,8 +618,12 @@ class TreeWidget(QtWidgets.QWidget):
 			self._currentActions = []
 			return
 		self._currentActions = actions[:]
+		if self.modul.endswith("_rootNode"):
+			realModule = self.modul.replace("_rootNode", "")
+		else:
+			realModule = self.modul
 		for action in actions:
-			modulCfg = conf.serverConfig["modules"][self.modul]
+			modulCfg = conf.serverConfig["modules"][realModule]
 			actionWdg = actionDelegateSelector.select("%s.%s" % (modulCfg["handler"], self.getModul()), action)
 			if actionWdg is not None:
 				actionWdg = actionWdg(self)

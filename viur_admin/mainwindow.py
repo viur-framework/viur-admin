@@ -2,7 +2,7 @@
 import logging
 from collections import OrderedDict
 
-from PyQt5 import QtCore, QtGui, QtWebKitWidgets, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin import startpages
 from viur_admin.config import conf
@@ -579,13 +579,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		showAbout(self)
 
 	def onActionHelpTriggered(self):
-		if self.helpBrowser:
-			self.helpBrowser.deleteLater()
-		self.helpBrowser = QtWebKitWidgets.QWebView()
-		self.helpBrowser.setUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
-		self.helpBrowser.setWindowTitle(QtCore.QCoreApplication.translate("Help", "Help"))
-		self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(":icons/menu/help.png")))
-		self.helpBrowser.show()
+		QtGui.QDesktopServices.openUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
 
 	def onActionTasksTriggered(self, checked=None):
 		"""

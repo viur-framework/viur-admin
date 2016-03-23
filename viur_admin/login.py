@@ -210,11 +210,15 @@ class Login(QtWidgets.QMainWindow):
 	def loadAccounts(self):
 		cb = self.ui.cbPortal
 		cb.clear()
-		for account in conf.accounts:
+		currentPortalName = conf.adminConfig.get("currentPortalName")
+		currentIndex = 0
+		for ix, account in enumerate(conf.accounts):
 			cb.addItem(account["name"])
+			if account["name"] == currentPortalName:
+				currentIndex = ix
 		if len(conf.accounts) > 0:
-			cb.setCurrentIndex(0)
-			self.onCbPortalCurrentIndexChanged(0)
+			cb.setCurrentIndex(currentIndex)
+			self.onCbPortalCurrentIndexChanged(currentIndex)
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
@@ -227,6 +231,7 @@ class Login(QtWidgets.QMainWindow):
 			activeaccount = {"name": "", "user": "", "password": "", "url": ""}
 		else:
 			activeaccount = conf.accounts[self.ui.cbPortal.currentIndex()]
+		conf.adminConfig["currentPortalName"] = activeaccount["name"]
 		self.ui.editUsername.setText(activeaccount["user"])
 		self.ui.editPassword.setText(activeaccount["password"])
 		self.ui.editUrl.setText(activeaccount["url"])
@@ -313,13 +318,7 @@ class Login(QtWidgets.QMainWindow):
 		showAbout(self)
 
 	def onActionHelpTriggered(self):
-		if self.helpBrowser:
-			self.helpBrowser.deleteLater()
-		self.helpBrowser = QtWebKitWidgets.QWebView()
-		self.helpBrowser.setUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
-		self.helpBrowser.setWindowTitle(QtCore.QCoreApplication.translate("Help", "Help"))
-		self.helpBrowser.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(":icons/menu/help.png")))
-		self.helpBrowser.show()
+		QtGui.QDesktopServices.openUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
 
 	def setCaptcha(self, token, url):
 		self.captchaToken = token

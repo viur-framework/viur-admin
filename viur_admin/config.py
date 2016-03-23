@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from hashlib import sha512
+from pprint import pprint
 from operator  import attrgetter
 
 
@@ -63,6 +64,7 @@ class Config(object):
 			configData = self.xor(configFileObject.read()).decode("UTF-8")
 			cfg = json.loads(configData)
 			self.adminConfig = cfg
+			pprint(cfg)
 		except Exception as err:
 			logging.exception(err)
 			self.adminConfig = {}
