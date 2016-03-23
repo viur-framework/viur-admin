@@ -3,27 +3,68 @@
 <meta charset="utf-8">
 <head>
 	<link rel="stylesheet" type="text/css" href="markdown.css">
+	<link rel="stylesheet" type="text/css" href="reset.css">
+	<style>
+		html, body {
+			height: 90%;
+			width: 90%;
+		}
+		html, body, textarea, #placeholder {
+			height: 90%;
+		}
+
+		textarea, #placeholder {
+			display: block;
+			width: 50%;
+			border: 1px solid black;
+			float: left;
+			box-sizing: border-box;
+		}
+		a.compile-btn {
+			display: block;
+			background-color: aqua;
+			float: left;
+		}
+	</style>
 	<script src="marked.min.js"></script>
+	<script src="jquery-2.2.2.min.js"></script>
+
+
 	<!--<script src="qwebchannel.js"></script>-->
 </head>
 <body>
+<textarea class="js-mdtext">
+## Eine Überschrift ##
+
+* Eins
+* Zwo
+* Dreh
+
+</textarea>
 <div id="placeholder"></div>
+<a href="javascript:void(0);" class="js-compile compile-btn">Compile</a>
 <script>
 	'use strict';
 
 	var placeholder = document.getElementById('placeholder');
 
-	var updateText = function(text) {
+	var updateText = function (text) {
 		placeholder.innerHTML = marked(text);
 	};
 
-//	new QWebChannel(qt.webChannelTransport,
-//			function(channel) {
-//				var content = channel.objects.content;
-//				updateText(content.text);
-//				content.textChanged.connect(updateText);
-//			}
-//	);
+	$(document).ready(function(){
+		$(".js-compile").click(function () {
+			updateText(marked($(".js-mdtext").text()));
+		});
+	});
+
+	//	new QWebChannel(qt.webChannelTransport,
+	//			function(channel) {
+	//				var content = channel.objects.content;
+	//				updateText(content.text);
+	//				content.textChanged.connect(updateText);
+	//			}
+	//	);
 </script>
 </body>
 </html>
