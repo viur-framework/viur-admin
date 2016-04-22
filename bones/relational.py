@@ -139,7 +139,10 @@ class RelationalEditBone( QtGui.QWidget ):
 			self.autoCompleter.highlighted.connect( self.setAutoCompletion ) 
 
 	def updateVisiblePreview(self):
-		protoWrap = protocolWrapperInstanceSelector.select( self.toModul )
+		realModule = self.toModul
+		if realModule.endswith("_rootNode"):
+			realModule = realModule.replace("_rootNode", "")
+		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 		if self.skelType is None:
 			structure = protoWrap.viewStructure
@@ -242,6 +245,7 @@ class RelationalBoneSelector( QtGui.QWidget ):
 			self.selection.hide()
 			self.ui.lblSelected.hide()
 		self.list.itemDoubleClicked.connect( self.onSourceItemDoubleClicked )
+		self.list.itemClicked.connect(self.onItemClicked)
 		self.ui.btnSelect.clicked.connect( self.onBtnSelectReleased )
 		self.ui.btnCancel.clicked.connect( self.onBtnCancelReleased )
 		event.emit( 'stackWidget', self )
@@ -282,6 +286,10 @@ class RelationalBoneSelector( QtGui.QWidget ):
 		else:
 			self.selectionChanged.emit( [data] )
 			event.emit( "popWidget", self )
+
+	def onItemClicked(self, item):
+		print("RelationalBoneSelector.onItemClicked")
+		pass
 
 	def onBtnSelectReleased(self, *args, **kwargs):
 		self.selectionChanged.emit( self.selection.get() )
