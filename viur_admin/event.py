@@ -41,8 +41,8 @@ class EventDispatcher(QtCore.QObject):
 		Our global EventDispatcher.
 		This is extended to allow registering events by priority.
 
-		*Warning:* If connecting using connectWithPriority, its not guranteed that youll ever recive events.
-		Its possible for objects earlyer in the queue to stop distributing the event using StopIteration.
+		*Warning:* If connecting using connectWithPriority, its not guaranteed that you'll ever receive events.
+		Its possible for objects earlier in the queue to stop distributing the event using StopIteration.
 	"""
 	highestPriority = 1
 	highPriority = 2
