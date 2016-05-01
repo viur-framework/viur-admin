@@ -7,3 +7,6 @@
 /cacert.pem_
 .idea
 *.egg-info
+.eggs/
+MANIFEST
+
