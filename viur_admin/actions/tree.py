@@ -22,7 +22,7 @@ class TreeAddAction(QtWidgets.QAction):
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
 		modul = self.parent().tree.modul
 		node = self.parent().getNode()
-		widget = lambda: EditWidget(modul, EditWidget.appTree, 0, node=node)
+		widget = lambda: EditWidget(modul, EditWidget.appTree, node=node)
 		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/add.svg"))
 		event.emit(QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler)
 
