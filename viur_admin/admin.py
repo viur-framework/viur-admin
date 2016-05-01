@@ -10,23 +10,55 @@ http://www.viur.is
 http://docs.viur.is
 """
 
-import logging
 import sys
 import os
+min_version = (3, 2)
+if sys.version_info < min_version:
+	logger.error("You need python3.2 or newer! - found: %r", sys.version_info)
+	sys.exit(1)
+
+from viur_admin.log import prepareLogger
+
+
 from argparse import ArgumentParser
 from viur_admin.bugsnag import Notification
 
 try:
-	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg
+	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebKitWidgets
 except ImportError as err:
-	logging.exception(err)
-	logging.error("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
+	logger.exception(err)
+	logger.error("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
 	sys.exit(1)
 
 from pkg_resources import resource_filename, resource_listdir
+
+parser = ArgumentParser()
+parser.add_argument(
+		'-d', '--debug', dest='debug', default='info',
+		help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+		choices=["debug", "info", "warning", "critical"])
+parser.add_argument(
+		'-r', '--report', dest='report', default='auto',
+		help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
+		choices=["yes", "no", "auto"])
+parser.add_argument(
+		'-i', '--no-ignore', dest='noignore', default=False,
+		help="Disable automatic exclusion of temporary files on upload", action="store_true")
+parser.add_argument(
+		'-s', '--show_sortindex', action="store_true",
+		help="Shows Handler sortIndex (helpful for reordering modules)")
+
+
+
+args = parser.parse_args()
+args = args
+prepareLogger(args.debug)
 from viur_admin.config import conf
 
+conf.cmdLineOpts = args
+
 app = QtWidgets.QApplication(sys.argv)
+
 
 import viur_admin.protocolwrapper
 import viur_admin.handler
@@ -37,16 +69,11 @@ from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
 import viur_admin.ui.icons_rc
 
-min_version = (3, 2)
-if sys.version_info < min_version:
-	print("You need python3.2 or newer!")
-	sys.exit(1)
-
-# app.setStyle("cleanlooks")
-# css = QtCore.QFile(":icons/app.css")
-# css.open(QtCore.QFile.ReadOnly)
-# data = str(css.readAll(), encoding='ascii')
-data = str(open("app.css", "rb").read(), encoding="ascii")
+app.setStyle("cleanlooks")
+css = QtCore.QFile(":icons/app.css")
+css.open(QtCore.QFile.ReadOnly)
+data = str(css.readAll(), encoding='ascii')
+# data = str(open("app.css", "rb").read(), encoding="ascii")
 app.setStyleSheet(data)
 
 cwd = os.getcwd()
@@ -58,26 +85,6 @@ else:
 	path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
 os.chdir(path)
 
-parser = ArgumentParser()
-parser.add_argument(
-	'-d', '--debug', dest='debug', default='warning',
-	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
-	choices=["debug", "info", "warning", "critical"])
-parser.add_argument(
-	'-r', '--report', dest='report', default='auto',
-	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
-	choices=["yes", "no", "auto"])
-parser.add_argument(
-	'-i', '--no-ignore', dest='noignore', default=False,
-	help="Disable automatic exclusion of temporary files on upload", action="store_true")
-parser.add_argument(
-	'-s', '--show_sortindex', action="store_true",
-	help="Shows Handler sortIndex (helpful for reordering modules)")
-
-args = parser.parse_args()
-conf.cmdLineOpts = args
-
-logging.getLogger().setLevel(logging.DEBUG)
 
 #
 # def reportError(type, value, tb):

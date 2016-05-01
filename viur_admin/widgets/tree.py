@@ -2,6 +2,7 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.log import getLogger
 
 from viur_admin import utils
 from viur_admin.config import conf
@@ -11,6 +12,8 @@ from viur_admin.ui.treeUI import Ui_Tree
 from viur_admin.utils import Overlay
 from viur_admin.utils import WidgetHandler
 from viur_admin.widgets.edit import EditWidget
+
+logger = getLogger(__name__)
 
 
 class NodeItem(QtWidgets.QListWidgetItem):
@@ -185,7 +188,6 @@ class TreeListView(QtWidgets.QListWidget):
 			@param path: If given, displaying starts in this path
 			@type path: String or None
 		"""
-		print("TreeListView.__init__", modul, rootNode, node, args, kwargs)
 		super(TreeListView, self).__init__(*args, **kwargs)
 		self.modul = modul
 		self.rootNode = rootNode
@@ -221,13 +223,13 @@ class TreeListView(QtWidgets.QListWidget):
 	## Getters & Setters
 
 	def getNode(self):
-		return (self.node)
+		return self.node
 
 	def getRootNode(self):
-		return (self.rootNode)
+		return self.rootNode
 
 	def getModul(self):
-		return (self.modul)
+		return self.modul
 
 	@QtCore.pyqtSlot(str)
 	def setNode(self, node, isInitialCall=False):
@@ -245,7 +247,6 @@ class TreeListView(QtWidgets.QListWidget):
 			@param isInitialCall: If this is the initial call, we remit the signal
 			@type repoName: bool
 		"""
-		print("Setting ROOTnode", rootNode)
 		self.customQueryKey = None
 		if rootNode == self.rootNode:
 			return
@@ -510,7 +511,6 @@ class TreeWidget(QtWidgets.QWidget):
 			@param leafItem: If set, use this class for displaying Directories inside the QListWidget.
 			@param leafItem: QListWidgetItem
 		"""
-		print("TreeWidget.__init__", modul, rootNode, node, actions, editOnDoubleClick, args, kwargs)
 		super(TreeWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_Tree()
 		self.ui.setupUi(self)
@@ -684,14 +684,8 @@ class TreeWidget(QtWidgets.QWidget):
 			@param searchStr: Token to search for
 			@type searchStr: String or None
 		"""
-		if searchStr:
-			self.path = None
-			self.searchStr = searchStr
-			self.loadData({"rootNode": self.rootNode, "path": "", "name$lk": self.searchStr})
-		else:
-			self.path = []
-			self.searchStr = None
-			self.loadData()
+		# befoire = {"rootNode": self.rootNode, "path": "", "name$lk": self.searchStr}
+		self.tree.search(searchStr)
 
 	def requestDelete(self, nodes, leafs):
 		"""
@@ -705,7 +699,7 @@ class TreeWidget(QtWidgets.QWidget):
 		"""
 		self.tree.requestDelete(nodes, leafs)
 
-	def onProgessUpdate(self, request, done, maximum):
+	def onProgressUpdate(self, request, done, maximum):
 		if request.queryType == "move":
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Moving: %s of %s finished.")
 		elif request.queryType == "copy":
@@ -713,6 +707,7 @@ class TreeWidget(QtWidgets.QWidget):
 		elif request.queryType == "delete":
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Deleting: %s of %s removed.")
 		else:
+			logger.error("Error in TreeWidget.onProgressUpdate", request.queryType == "move")
 			raise NotImplementedError()
 		self.overlay.inform(self.overlay.BUSY, descr % (done, maximum))
 

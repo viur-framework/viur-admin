@@ -1,40 +1,85 @@
-import sys
+# -*- coding: utf-8 -*-
+
 import os.path
 
 from cx_Freeze import setup, Executable
 
+base = 'Win32GUI'
 
-# Try reading the .git version
-version = "unknown"
-try:
-    gitHead = open(".git/FETCH_HEAD", "r").read()
-    for line in gitHead.splitlines():
-        line = line.replace("\t", " ")
-        if "branch 'master'" in line:
-            version = line.split(" ")[0]
-except:
-    pass
+company_name = 'Mausbrand Informationssysteme GmbH'
+product_name = 'ViurAdmin'
 
-extraArgs = {}
-if sys.platform.startswith("win32"):
-    extraArgs.update({"base": "Win32GUI"})
+viur_admin_descr = 'The Viur Desktop Administration Tool'
 
-fwadmin = Executable(
-    script="admin.py", icon=os.path.join("icons", "viur_win.ico"), **extraArgs)
-fwupdater = Executable(
-    script="updater.py", icon=os.path.join("icons", "viur_updater_win.ico"), **extraArgs)
-buildList = [fwadmin, fwupdater]
-if sys.platform.startswith("win32"):
-    fwadmindbg = Executable(script="admin.py", icon=os.path.join("icons", "viur_win.ico"), targetName="admindbg.exe")
-    buildList.append(fwadmindbg)
+shortcut_table = [
+	(
+		"DesktopShortcut",  # Shortcut
+		"DesktopFolder",  # Directory_
+		"ViurAdmin",  # Name
+		"TARGETDIR",  # Component_
+		"[TARGETDIR]admin.exe",  # Target
+		None,  # Arguments
+		viur_admin_descr,  # Description
+		None,  # Hotkey
+		None,  # Icon
+		None,  # IconIndex
+		None,  # ShowCmd
+		'TARGETDIR'  # WkDir
+	),
+	(
+		"StartupShortcut",  # Shortcut
+		"StartupFolder",  # Directory_
+		"ViurAdmin",  # Name
+		"TARGETDIR",  # Component_
+		"[TARGETDIR]admin.exe",  # Target
+		None,  # Arguments
+		viur_admin_descr,  # Description
+		None,  # Hotkey
+		None,  # Icon
+		None,  # IconIndex
+		None,  # ShowCmd
+		'TARGETDIR'  # WkDir
+	)
+]
 
-opts = {
-"build_exe": {"include_files": ["app.css", "cacert.pem", "license.txt", "mime.types", "plugins", "icons", "locales"]}}
+msi_data = {"Shortcut": shortcut_table}
+bdist_msi_options = {
+	'upgrade_code': '{5A11CF14-7ADE-4F1F-9B1A-9B34F6AF9EED}',
+	'data': msi_data,
+	'add_to_path': False,
+	'initial_target_dir': r'[ProgramFilesFolder]\%s\%s' % (company_name, product_name)
+}
 
-setup(name="ViUR-Admin",
-      version=version,
-      description="ViUR Administations-Tool",
-      executables=buildList,
-      options=opts
+executables = [
+	Executable(
+			os.path.join("viur_admin", "admin.py"),
+			icon=os.path.join("viur_admin", "icons", "viur_win.ico"),
+			base=base,
+			shortcutName="ViurAdmin",
+			shortcutDir="ProgramMenuFolder"
+	)
+]
+
+options = {
+	"build_exe": {
+		"includes": ["atexit", "re", "PyQt5.QtPrintSupport"],
+		"include_files": [
+			"viur_admin/icons",
+			"viur_admin/cacert.pem",
+			"viur_admin/license.txt",
+			"viur_admin/mime.types",
+			"viur_admin/plugins",
+			"viur_admin/locales"]
+	},
+	"bdist_msi": bdist_msi_options
+}
+
+setup(
+		name='Viur Admin',
+		version='0.99.1',
+		description=viur_admin_descr,
+		author=company_name,
+		author_email='info@mausbrand.de',
+		options=options,
+		executables=executables
 )
-

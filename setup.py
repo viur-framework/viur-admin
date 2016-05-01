@@ -10,7 +10,7 @@ setup(
     version='0.1',
     packages=["viur_admin"],
     zip_safe=False,
-    # install_requires=["requests"],
+    install_requires=["markdown2", "html2text"],
     include_package_data=True,
     package_data={"": ["locales/*.qm"]},
     entry_points="""
@@ -23,5 +23,5 @@ setup(
     long_description="",
     license="GPL v3",
     keywords="",
-    url=""
+    url="http://www.viur.is"
 )

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 from collections import OrderedDict
 
 from PyQt5 import QtCore
@@ -39,10 +42,10 @@ class TreeWrapper(QtCore.QObject):
 		self.editNodeStructure = None
 		self.rootNodes = None
 		self.busy = True
-		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvaiable)
-		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvaiable)
+		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvailable)
+		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvailable)
 		protocolWrapperInstanceSelector.insert(self.protocolWrapperInstancePriority, self.checkForOurModul, self)
-		self.deferedTaskQueue = []
+		self.deferredTaskQueue = []
 
 	def checkBusyStatus(self):
 		busy = False
@@ -72,7 +75,7 @@ class TreeWrapper(QtCore.QObject):
 			node["parentdir"] = None
 			self.dataCache[node["key"]] = node
 
-	def onStructureAvaiable(self, req):
+	def onStructureAvailable(self, req):
 		tmp = NetworkService.decode(req)
 		if tmp is None:
 			self.checkBusyStatus()
@@ -93,10 +96,12 @@ class TreeWrapper(QtCore.QObject):
 				self.addNodeStructure = structure
 			elif stype == "addLeafSkel":
 				self.addLeafStructure = structure
+			else:
+				raise ValueError("onStructureAvailable: unknown node type: {0}".format(stype))
 		self.onModulStructureAvaiable.emit()
 		self.checkBusyStatus()
 
-	def onRootNodesAvaiable(self, req):
+	def onRootNodesAvailable(self, req):
 		tmp = NetworkService.decode(req)
 		if isinstance(tmp, list):
 			self.rootNodes = tmp
@@ -126,7 +131,7 @@ class TreeWrapper(QtCore.QObject):
 			if self.dataCache[key] is None:
 				# We already started fetching that key
 				return key
-			self.deferedTaskQueue.append(("entitiesChanged", key))
+			self.deferredTaskQueue.append(("entitiesChanged", key))
 			QtCore.QTimer.singleShot(25, self.execDefered)
 			# callback( None, data, cursor )
 			return key
@@ -153,7 +158,7 @@ class TreeWrapper(QtCore.QObject):
 
 	def queryEntry(self, key, skelType):
 		if key in self.dataCache.keys():
-			self.deferedTaskQueue.append(("entityAvailable", key))
+			self.deferredTaskQueue.append(("entityAvailable", key))
 			QtCore.QTimer.singleShot(25, self.execDefered)
 			return key
 		r = NetworkService.request("/%s/view/%s/%s" % (self.module, skelType, key), successHandler=self.addCacheData)
@@ -164,7 +169,7 @@ class TreeWrapper(QtCore.QObject):
 		return key
 
 	def execDefered(self, *args, **kwargs):
-		m, key = self.deferedTaskQueue.pop(0)
+		m, key = self.deferredTaskQueue.pop(0)
 		if m == "entitiesChanged":
 			self.entitiesChanged.emit(key)
 		elif m == "entityAvailable":
@@ -317,7 +322,7 @@ class TreeWrapper(QtCore.QObject):
 		"""
 		if req is not None:
 			try:
-				print(NetworkService.decode(req))
+				logger.debug(NetworkService.decode(req))
 			except:
 				pass
 			# print("error decoding response")

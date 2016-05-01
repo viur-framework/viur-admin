@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import logging
+from viur_admin.log import getLogger
+logger = getLogger(__name__)
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
@@ -125,7 +127,7 @@ class FileItemBone(TreeItemBone):
 				self.addBtn.setText("Dateien auswählen")
 		else:
 			if self.selection:
-				logging.debug("selection: %r", self.selection)
+				logger.debug("selection: %r", self.selection)
 				if self.selection["mimetype"].startswith("image/"):
 					RemoteFile(self.selection["dlkey"], successHandler=self.loadIconFromRequest)
 				self.entry.setText(formatString(self.format, structure, self.selection))

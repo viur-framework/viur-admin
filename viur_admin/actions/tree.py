@@ -74,7 +74,6 @@ class TreeDirUpAction(QtWidgets.QAction):
 				QtGui.QIcon(":icons/actions/folder_back.svg"),
 				QtCore.QCoreApplication.translate("TreeHandler", "Directory up"), parent)
 		self.parent().nodeChanged.connect(self.onNodeChanged)
-		print("protowrap for modul test", self.parent().modul)
 		realModule = self.parent().modul
 		if realModule.endswith("_rootNode"):
 			realModule = realModule.replace("_rootNode", "")
@@ -83,7 +82,7 @@ class TreeDirUpAction(QtWidgets.QAction):
 		x = 3
 		while x:
 			if reqWrap.rootNodes is None:
-				print("rootNones is still None - waiting...", reqWrap)
+				# print("rootNones is still None - waiting...", reqWrap)
 				time.sleep(0.2)
 				x -= 1
 			else:

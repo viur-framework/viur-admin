@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
-import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 import os
 from hashlib import sha512
 from pprint import pprint
@@ -52,10 +54,9 @@ class Config(object):
 				cfg = json.loads(configData)
 				self.accounts = cfg
 			except:
-				print("Could not load Accounts")
+				logger.error("Could not load accounts")
 				self.accounts = []
-		for i in self.accounts:
-			print(i)
+
 		self.accounts.sort(key=lambda x: x["name"].lower())
 		# Load rest of the config
 		configFileName = os.path.join(self.storagePath, "config.dat")
@@ -64,9 +65,8 @@ class Config(object):
 			configData = self.xor(configFileObject.read()).decode("UTF-8")
 			cfg = json.loads(configData)
 			self.adminConfig = cfg
-			pprint(cfg)
 		except Exception as err:
-			logging.exception(err)
+			logger.exception(err)
 			self.adminConfig = {}
 
 	def saveConfig(self):
@@ -86,7 +86,7 @@ class Config(object):
 		configFileObject.close()
 
 	def loadPortalConfig(self, url):
-		print("------------------ LOADING PORTAL CONFIG -------------_")
+		logger.debug("LOADING PORTAL CONFIG")
 		self.currentPortalConfigDirectory = os.path.join(self.storagePath, sha512(url.encode("UTF-8")).hexdigest())
 		try:
 			if not os.path.isdir(self.currentPortalConfigDirectory):
@@ -95,8 +95,9 @@ class Config(object):
 			configData = configFileObject.read().decode("UTF-8")
 			cfg = json.loads(configData)
 			self.portal = cfg
-		except:
-			print("Could not load Portalconfig")
+		except Exception as err:
+			logger.error("Could not load Portal Config")
+			logger.exception(err)
 			self.portal = {"modules": {}}
 
 	def savePortalConfig(self):

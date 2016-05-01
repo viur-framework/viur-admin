@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
 
+
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -47,7 +52,7 @@ class ExtendedRelationalViewBoneDelegate(BaseViewBoneDelegate):
 				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
 				                     relStructDict, value["rel"], prefix=["rel"]) or value["id"]
 		except Exception as err:
-			# logging.exception(err)
+			logger.exception(err)
 			# We probably received some garbage
 			value = ""
 		# print("formatString result", value)

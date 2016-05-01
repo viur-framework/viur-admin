@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 
 from PyQt5 import QtCore
 
@@ -23,7 +25,7 @@ class TreeBaseHandler(WidgetHandler):
 			icon = loadIcon(":icons/modules/tree.svg")
 		super(TreeBaseHandler, self).__init__(lambda: TreeWidget(modul), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False, *args,
 		                                      **kwargs)
-		# logging.debug("TreeBaseHandler name: %r", config["name"])
+		logger.debug("TreeBaseHandler name: %r", config["name"])
 		# self.setText(0, config["name"])
 
 

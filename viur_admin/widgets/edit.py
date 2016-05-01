@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-# import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -72,10 +75,10 @@ class EditWidget(QtWidgets.QWidget):
 		self.editTaskID = None
 		self.reloadData()
 		# Hide Previewbuttons if no PreviewURLs are set
-		if modul in conf.serverConfig["modules"].keys():
-			if not "previewurls" in conf.serverConfig["modules"][self.modul].keys() \
-					or not conf.serverConfig["modules"][self.modul]["previewurls"]:
-				self.ui.btnPreview.hide()
+		# if modul in conf.serverConfig["modules"].keys():
+		# 	if not "previewurls" in conf.serverConfig["modules"][self.modul].keys() \
+		# 			or not conf.serverConfig["modules"][self.modul]["previewurls"]:
+		# 		self.ui.btnPreview.hide()
 		if modul == "_tasks":
 			self.ui.btnPreview.hide()
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Execute"))
@@ -135,7 +138,7 @@ class EditWidget(QtWidgets.QWidget):
 		event.emit("popWidget", self)
 
 	def reloadData(self):
-		print("--RELOADING--")
+		# print("--RELOADING--")
 		self.save({})
 		return
 
@@ -311,7 +314,7 @@ class EditWidget(QtWidgets.QWidget):
 			for bone in self.bones.values():
 				bone.unserialize(data)
 		except AssertionError as err:
-			# logging.exception(err)
+			logger.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))
 			self.ui.btnSaveClose.setDisabled(True)
 			self.ui.btnSaveContinue.setDisabled(True)

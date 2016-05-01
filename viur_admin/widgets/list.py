@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import csv
 import json
-# import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 import os.path
 from datetime import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -305,7 +308,6 @@ class ListTableView(QtWidgets.QTableView):
 			# Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select(self.modul, field, self.structureCache)
 			delegate = delegateFactory(self.modul, field, self.structureCache)
-			print(field, delegateFactory, delegate)
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)
@@ -672,8 +674,6 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.ui.filenameDialogAction.setDefaultAction(self.fileAction)
 		self.ui.filenameDialogAction.setText(_translate("CsvExport", "..."))
 		self.ui.filenameDialogAction.triggered.connect(self.onChooseOutputFile)
-
-	# self.logger = logging.getLogger("List Widget")
 
 	def onTriggered(self):
 		# self.overlay = Overlay(self)

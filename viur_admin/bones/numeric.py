@@ -66,7 +66,6 @@ class NumericEditBone(BoneEditInterface):
 		self.precision = precision
 		self.min = min
 		self.max = max
-		print("NumericEditBone.getLineEdit")
 		lineLayout = QtWidgets.QHBoxLayout(self)
 		if self.precision:
 			self.lineEdit = FixedQDoubleSpinBox(self)

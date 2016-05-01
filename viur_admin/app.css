@@ -334,8 +334,7 @@ QListWidget,
 QDateEdit,
 QDateTimeEdit,
 QTextEdit {
-    padding: 6px 7px 7px;
-    height: 16px;
+    padding: 5px;
     border: 1px solid #ccc;
     border-bottom: 1px solid #BE1622;
     background-color: qlineargradient(spread:pad, x1 : 0, y1 : 0, x2 : 0, y2 : 1, stop : 0 #eaeaea, stop : 1 #fafafa);

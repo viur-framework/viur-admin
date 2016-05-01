@@ -216,18 +216,14 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		targetItem = self.itemAt(event.pos())
 		event.setDropAction(QtCore.Qt.MoveAction)
 		# event.accept()
-		print("dropEvent", targetItem, draggedItem)
 		super(HierarchyTreeWidget, self).dropEvent(event)
 		if not targetItem:  # Moved to the end of the list
 			self.reparent(draggedItem.entryData["id"], self.rootNode)
-			print("no target item")
 			if self.topLevelItemCount() > 1:
-				print("no target item + updatesortindex")
 				self.updateSortIndex(draggedItem.entryData["id"],
 				                     self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1)
 		else:
 			if draggedItem.parent() is targetItem:  # Moved to subitem
-				print("moved to subitem")
 				self.reparent(draggedItem.entryData["id"], targetItem.entryData["id"])
 			else:  # Moved within its parent list
 				while targetItem:
@@ -370,7 +366,6 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 			A item has been selected. If we have a previewURL -> show it
 		"""
-		print("HierarchyWidget.onItemClicked", item, col)
 		config = conf.serverConfig["modules"][self.modul]
 		if "previewURL" in config.keys() and config["previewURL"]:
 			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])

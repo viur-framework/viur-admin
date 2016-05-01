@@ -32,7 +32,6 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.boneName = boneName
 
 	def displayText(self, value, locale):
-		print( value, locale)
 		return formatString(self.format, self.structure, value)
 
 
@@ -299,14 +298,11 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			event.emit("popWidget", self)
 
 	def onBtnSelectReleased(self, *args, **kwargs):
-		print("onBtnSelectReleased")
 		selection = self.selection.get()
-		print("selection", selection)
 		self.selectionChanged.emit(self.selection.get())
 		event.emit("popWidget", self)
 
 	def onBtnCancelReleased(self, *args, **kwargs):
-		print("onBtnCancelReleased")
 		event.emit("popWidget", self)
 
 	def getFilter(self):
@@ -319,7 +315,6 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		return self.list.getModul()
 
 	def onItemClicked(self, item):
-		print("RelationalBoneSelector.onItemClicked")
 		pass
 
 

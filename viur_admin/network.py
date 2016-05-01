@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 
 import os
 import os.path
@@ -9,7 +12,6 @@ import mimetypes
 import random
 from queue import Queue, Empty as QEmpty, Full as QFull
 from hashlib import sha1
-import logging
 import weakref
 import string
 
@@ -113,7 +115,6 @@ class SecurityTokenProvider(QObject):
 
 	def __init__(self, *args, **kwargs):
 		super(SecurityTokenProvider, self).__init__(*args, **kwargs)
-		# self.logger = logging.getLogger("RequestWrapper")
 		self.queue = Queue(5)  # Queue of valid tokens
 		self.isRequesting = False
 
@@ -121,7 +122,7 @@ class SecurityTokenProvider(QObject):
 		"""
 			Flushes the cache and tries to rebuild it
 		"""
-		# self.logger.debug("Reset")
+		logger.debug("Reset")
 		while not self.queue.empty():
 			self.queue.get(False)
 		self.isRequesting = False
@@ -133,7 +134,7 @@ class SecurityTokenProvider(QObject):
 		if not self.isRequesting:
 			if SecurityTokenProvider.errorCount > 5:  # We got 5 Errors in a row
 				raise RuntimeError("Error-limit exceeded on fetching skey")
-			# self.logger.debug("Fetching new skey")
+			logger.debug("Fetching new skey")
 			self.isRequesting = True
 			NetworkService.request("/skey", successHandler=self.onSkeyAvailable, failureHandler=self.onError)
 
@@ -151,8 +152,8 @@ class SecurityTokenProvider(QObject):
 		try:
 			skey = NetworkService.decode(request)
 		except Exception as err:
-			# self.logger.error("cannot decode get skey response")
-			# logging.exception(err)
+			logger.error("cannot decode get skey response")
+			logger.exception(err)
 			SecurityTokenProvider.errorCount += 1
 			self.isRequesting = False
 			return
@@ -203,8 +204,7 @@ class RequestWrapper(QtCore.QObject):
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
 	             failSilent=False):
 		super(QtCore.QObject, self).__init__()
-		# self.logger = logging.getLogger("RequestWrapper")
-		# self.logger.debug("New network request: %s", str(self))
+		logger.debug("New network request: %s", str(self))
 		self.request = request
 		self.url = url
 		self.failSilent = failSilent
@@ -362,8 +362,7 @@ class RemoteFile(QtCore.QObject):
 
 	def __init__(self, dlKey, successHandler=None, failureHandler=None, *args, **kwargs):
 		super(RemoteFile, self).__init__(*args, **kwargs)
-		# self.logger = logging.getLogger("RemoteFile")
-		# self.logger.debug("New RemoteFile: %s for %s", str(self), str(dlKey))
+		logger.debug("New RemoteFile: %s for %s", str(self), str(dlKey))
 		if successHandler:
 			self.successHandlerSelf = weakref.ref(successHandler.__self__)
 			self.successHandlerName = successHandler.__name__
@@ -399,8 +398,7 @@ class RemoteFile(QtCore.QObject):
 				try:
 					getattr(s, self.successHandlerName)(self)
 				except Exception as err:
-					pass
-					# logging.exception(err)
+					logger.exception(err)
 		self._delayTimer = QtCore.QTimer(self)
 		self._delayTimer.singleShot(250, self.remove)
 
@@ -454,7 +452,6 @@ class RemoteFile(QtCore.QObject):
 class NetworkService():
 	url = None
 	currentRequests = []  # A list of currently running requests
-	# logger = logging.getLogger("NetworkService")
 
 	@staticmethod
 	def genReqStr(params):

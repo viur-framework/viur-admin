@@ -33,7 +33,6 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 		# print("model init structure", structureCache)
 		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
-			print("item in selection", item)
 			self.addItem(item)
 
 	def addItem(self, item):
@@ -43,13 +42,11 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 			@param item: The new item
 			@type item: Dict or String
 		"""
-		print("addItem", item)
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		if not item:
 			return
 		if isinstance(item, dict):
-			print("item", item)
 			id = item["dest"]["id"]
 			if "_type" in item.keys():
 				self.entryFetches.append(protoWrap.queryEntry(id, item["_type"]))

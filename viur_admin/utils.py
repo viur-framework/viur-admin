@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -260,14 +262,12 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			self.mainWindow = mainWindow
 		if self.mainWindow is None:
 			raise UnboundLocalError(
-				"You either have to create the mainwindow before using this class or specifiy an replacement.")
+					"You either have to create the mainwindow before using this class or specifiy an replacement.")
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		try:
 			prefix, descr = descr.split(": ", 1)
 		except ValueError as err:
-			# logging.error("could not sep handler name: %r", descr)
-			# logging.exception(err)
 			pass
 		self.setText(0, descr)
 		if conf.cmdLineOpts.show_sortindex:
@@ -288,8 +288,9 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.vanishOnClose = vanishOnClose
 
 	def loadIconFromRequest(self, request):
-		icon = QtGui.QIcon(request.getFileName())
-		# logging.debug("loadIconFromRequest %r", icon)
+		filename = request.getFileName()
+		icon = QtGui.QIcon(filename)
+		logger.debug("WidgetHandler.loadIconFromRequest: %r, %r", filename, icon)
 		self.setIcon(0, icon)
 
 	def focus(self):
@@ -424,7 +425,7 @@ def urlForItem(modul, item):
 	else:
 		if "name" in item.keys():
 			return QtCore.QUrl(
-				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"], item["name"]))
+					"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"], item["name"]))
 		else:  # Return a URL without a name appended
 			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"]))
 
@@ -475,11 +476,15 @@ def formatString(format, skelStructure, data, prefix=None):
 	@return: String
 	"""
 
-	def chooseLang(value, prefs, key):  # FIXME: Copy&Paste from bones/string
-		"""
-			Tries to select the best language for the current user.
-			Value is the dictionary of lang -> text received from the server,
-			prefs the list of languages (in order of preference) for that bone.
+	def chooseLang(value, languageList, key):  # FIXME: Copy&Paste from bones/string
+		"""Tries to select the best language for the current user.
+
+		:param value: is the dictionary of lang -> text received from the server,
+		:type value: dict
+		:param languageList: the list of languages (in order of preference) for that bone.
+		:type languageList: list
+		:param key:
+		:type key: str
 		"""
 		if not isinstance(value, dict):
 			return str(value)
@@ -490,7 +495,7 @@ def formatString(format, skelStructure, data, prefix=None):
 			lang = ""
 		if lang in value.keys() and value[lang]:
 			return value[lang]
-		for lang in prefs:
+		for lang in languageList:
 			if "%s.%s" % (key, lang) in value.keys():
 				if value["%s.%s" % (key, lang)]:
 					return value["%s.%s" % (key, lang)]
@@ -500,11 +505,11 @@ def formatString(format, skelStructure, data, prefix=None):
 			try:
 				lang = conf.adminConfig.get("language")
 			except Exception as err:
-				logging.exception(err)
+				logger.exception(err)
 				lang = "de"
 			if lang in langDict.keys():
 				return langDict[lang]
-			for lang in prefs:
+			for lang in languageList:
 				if lang in langDict.keys():
 					if langDict[lang]:
 						return langDict[lang]
@@ -550,7 +555,7 @@ def loadIcon(icon):
 	"""
 	if isinstance(icon, QtGui.QIcon):
 		return icon
-	elif isinstance(icon, str) and not icon.startswith("/") and not ("..") in icon and not icon.startswith(
+	elif isinstance(icon, str) and not icon.startswith("/") and ".." not in icon and not icon.startswith(
 			"https://") and not icon.startswith("http://"):
 		return QtGui.QIcon(":{0}".format(icon))
 	elif isinstance(icon, str):
@@ -560,8 +565,11 @@ def loadIcon(icon):
 
 
 def showAbout(parent=None):
-	"""
-	Shows the about-dialog
+	"""Shows the about-dialog
+
+	:param parent:
+	:type parent: QtWidgets.QWidget
+	:return:
 	"""
 	try:
 		import BUILD_CONSTANTS

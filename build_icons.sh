@@ -1,9 +1,7 @@
 #!/bin/bash
 
-pushd viur_admin/icons
-cp ../cacert.pem .
-cp ../icons.qrc .
-cp ../app.css .
+pushd viur_admin
+cp cacert.pem app.css html/mdedit.html html/mdedit_docs.md icons.qrc icons
+pushd icons
 pyrcc5 icons.qrc -o ../ui/icons_rc.py
-rm icons.qrc app.css cacert.pem
-popd
+rm cacert.pem app.css mdedit.html mdedit_docs.md icons.qrc

@@ -1,10 +1,8 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+# -*- coding: utf-8 -*-
 
-from viur_admin.bones.bone_interface import BoneEditInterface
+
 from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
-from viur_admin.event import event
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.utils import Overlay
 from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.widgets.tree import TreeWidget
 
@@ -43,18 +41,8 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 			Read its properties and add them to our selection.
 		"""
 		return
-		# if not isinstance(item, self.list.getNodeItemClass()):
-		# 	return
-		#
-		# data = item.entryData
-		# if self.multiple:
-		# 	self.selection.extend([data])
-		# else:
-		# 	self.selectionChanged.emit([data])
-		# 	event.emit("popWidget", self)
 
 	def onItemClicked(self, item):
-		print("TreeDirBoneSelector.onItemClicked")
 		if not isinstance(item, self.list.getNodeItemClass()):
 			return
 

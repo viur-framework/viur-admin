@@ -1,8 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.ui.accountmanagerUI import Ui_MainWindow
-from viur_admin.event import event
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 from viur_admin.config import conf
+from viur_admin.event import event
+from viur_admin.ui.accountmanagerUI import Ui_MainWindow
 
 """
 	Allows editing the local accountlist.
@@ -25,6 +28,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		self.loadAccountList()
+		self.oldAccountName = None
 		self.ui.addAccBTN.released.connect(self.onAddAccBTNReleased)
 		self.ui.acclistWidget.itemClicked.connect(self.onAcclistWidgetItemClicked)
 		self.ui.delAccBTN.released.connect(self.onDelAccBTNReleased)
@@ -40,11 +44,16 @@ class Accountmanager(QtWidgets.QMainWindow):
 		guiList = self.ui.acclistWidget
 		guiList.setIconSize(QtCore.QSize(128, 128))
 		guiList.clear()
-		for account in conf.accounts:
+		currentPortalName = conf.adminConfig.get("currentPortalName")
+		logger.debug("currentPortalName %r", currentPortalName)
+		currentIndex = 0
+		for ix, account in enumerate(conf.accounts):
+			if account["name"] == currentPortalName:
+				currentIndex = ix
 			item = AccountItem(account)
 			guiList.addItem(item)
 		if len(conf.accounts) > 0:
-			guiList.setCurrentRow(0)
+			guiList.setCurrentRow(ix)
 			self.onAcclistWidgetItemClicked(None)
 
 	def closeEvent(self, e):
@@ -58,7 +67,12 @@ class Accountmanager(QtWidgets.QMainWindow):
 	def onAddAccBTNReleased(self):
 		guiList = self.ui.acclistWidget
 		item = AccountItem(
-			{"name": QtCore.QCoreApplication.translate("Accountmanager", "New"), "user": "", "password": "", "url": ""})
+				{
+					"name": QtCore.QCoreApplication.translate("Accountmanager", "New"),
+					"user": "", "password": "",
+					"url": ""
+				}
+		)
 		guiList.addItem(item)
 		guiList.setCurrentItem(item)
 		self.updateUI()
@@ -70,13 +84,14 @@ class Accountmanager(QtWidgets.QMainWindow):
 		item = self.ui.acclistWidget.currentItem()
 		if not item:
 			return
-		reply = QtWidgets.QMessageBox.question(self,
-		                                       QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
-		                                       QtCore.QCoreApplication.translate("Accountmanager",
-		                                                                         "Really delete the account \"%s\"?") %
-		                                       item.account["name"],
-		                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-		                                       QtWidgets.QMessageBox.No)
+		reply = QtWidgets.QMessageBox.question(
+				self,
+				QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
+				QtCore.QCoreApplication.translate("Accountmanager",
+				                                  "Really delete the account \"%s\"?") %
+				item.account["name"],
+				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+				QtWidgets.QMessageBox.No)
 		if reply == QtWidgets.QMessageBox.No:
 			return
 		self.ui.acclistWidget.takeItem(self.ui.acclistWidget.row(item))
@@ -101,6 +116,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 			self.ui.editUserName.blockSignals(True)
 			self.ui.editPassword.blockSignals(True)
 			self.ui.editAccountName.setText(item.account["name"])
+			self.oldAccountName = item.account["name"]
 			self.ui.editUrl.setText(item.account["url"])
 			self.ui.editUserName.setText(item.account["user"])
 			self.ui.editPassword.setText(item.account["password"])
@@ -113,12 +129,12 @@ class Accountmanager(QtWidgets.QMainWindow):
 			self.ui.editUrl.blockSignals(False)
 			self.ui.editUserName.blockSignals(False)
 			self.ui.editPassword.blockSignals(False)
-			if (item.account["password"] != ""):
+			if item.account["password"] != "":
 				self.ui.accSavePWcheckBox.setCheckState(QtCore.Qt.Checked)
 
 	def onAccSavePWcheckBoxStateChanged(self, state):
 		self.ui.editPassword.setEnabled(state)
-		if (state == 0):
+		if state == 0:
 			self.ui.editPassword.setText("")
 
 	def saveAccount(self):
@@ -126,15 +142,22 @@ class Accountmanager(QtWidgets.QMainWindow):
 		if not item:
 			return
 		url = self.ui.editUrl.text()
-		if (url.find("http") == -1):
+		url = url.rstrip("/")
+		if url.find("http") == -1:
 			url = "https://" + url
-		if (url.find("/admin") == -1):
+		if url.find("/admin") == -1:
 			url += "/admin"
-		account = {"name": self.ui.editAccountName.text(),
-		           "user": self.ui.editUserName.text(),
-		           "password": self.ui.editPassword.text(),
-		           "url": url
-		           }
+		account = {
+			"name": self.ui.editAccountName.text(),
+			"user": self.ui.editUserName.text(),
+			"password": self.ui.editPassword.text(),
+			"url": url
+		}
+		cpn = conf.adminConfig.get("currentPortalName")
+		name = account["name"]
+		if cpn == self.oldAccountName:
+			self.oldAccountName = conf.adminConfig["currentPortalName"] = name
+			conf.saveConfig()
 		item.update(account)
 
 	def onEditAccountNameTextChanged(self):

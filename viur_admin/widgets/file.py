@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from viur_admin.log import getLogger
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.network import RemoteFile
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+logger = getLogger(__name__)
 
 
 class FileItem(LeafItem):
@@ -37,7 +38,7 @@ class FileItem(LeafItem):
 		pixmap.loadFromData(remoteFile.getFileContents())
 		if not pixmap.isNull():
 			icon = QtGui.QIcon(pixmap.scaled(104, 104))
-			# self.setIcon(icon)
+			self.setIcon(icon)
 			width = max(400, min(pixmap.width(), 500))
 			self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
 				remoteFile.getFileName(), width, str(self.entryData["name"])))
@@ -71,15 +72,25 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi(self)
 		self.uploader = uploader
+		logger.debug("UploadStatusWidget.init: %r", uploader)
 		self.uploader.uploadProgress.connect(self.onUploadProgress)
 		self.uploader.finished.connect(self.onFinished)
-		self.ui.btnCancel.released.connect(uploader.cancel)
 
 	def onBtnCancelReleased(self, *args, **kwargs):
 		self.uploader.cancelUpload()
 
 	def onUploadProgress(self, bytesSend, bytesTotal):
+		"""Updates the process widget
+
+		:param bytesSend:
+		:type bytesSend: int
+		:param bytesTotal:
+		:type bytesTotal: int
+		:return:
+		"""
+
 		stats = self.uploader.getStats()
+		logger.debug("UploadStatusWidget.onUploadProgress: %r, %r, %r", bytesSend, bytesTotal, stats)
 		self.ui.lblProgress.setText(
 			QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % (
 				stats["filesDone"], stats["filesTotal"], stats["dirsDone"], stats["dirsTotal"], stats["bytesDone"],
@@ -94,12 +105,13 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		                                     buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
 		                                             QtWidgets.QMessageBox.Cancel)
 		if res == QtWidgets.QMessageBox.Yes:
-			return (True)
+			return True
 		elif res == QtWidgets.QMessageBox.Cancel:
-			return (False)
-		return (None)
+			return False
+		return None
 
 	def onFinished(self, req):
+		logger.debug("UploadStatusWidget.onFinished")
 		self.deleteLater()
 
 
@@ -110,7 +122,7 @@ class DownloadStatusWidget(QtWidgets.QWidget):
 		If downloading has finished, finished(PyQt_PyObject=self) is emited.
 	"""
 
-	directorySize = 15  # Letz count an directory as 15 Bytes
+	directorySize = 15  # Let's count an directory as 15 Bytes
 
 	def __init__(self, downloader, *args, **kwargs):
 		"""
@@ -133,10 +145,17 @@ class DownloadStatusWidget(QtWidgets.QWidget):
 		self.downloader = downloader
 		self.downloader.downloadProgress.connect(self.onDownloadProgress)
 		self.downloader.finished.connect(self.onFinished)
-
-	# self.ui.btnCancel.released.connect( downloader.cancel )
+		self.ui.btnCancel.released.connect(downloader.cancel)
 
 	def onDownloadProgress(self, bytesDone, bytesTotal):
+		"""Updates the process widget
+
+		:param bytesDone:
+		:type bytesDone: int
+		:param bytesTotal:
+		:type bytesTotal: int
+		:return:
+		"""
 		stats = self.downloader.getStats()
 		self.ui.lblProgress.setText(
 			QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % (
@@ -168,24 +187,15 @@ class FileListView(TreeListView):
 		uploader = protoWrap.upload(files, node)
 		self.parent().layout().addWidget(UploadStatusWidget(uploader))
 
-	# uploader = RecursiveUploader( files, rootNode, path, self.getModul() )
-	# self.ui.boxUpload.addWidget( uploader )
-	# self.connect( uploader, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.onTransferFinished )
-	# self.connect( uploader, QtCore.SIGNAL("failed(PyQt_PyObject)"), self.onTransferFailed )
-
 	def doDownload(self, targetDir, files, dirs):
 		"""
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
 			@type targetDir: String
-			@param rootNode: RootNode to download from
-			@type rootNode: String
-			@param path: Path relative to the RootNode containing the files and directories which should be downloaded
-			@type path: String
 			@param files: List of files in this directory which should be downloaded
-			@type files: List
+			@type files: list
 			@param dirs: List of directories (in the directory specified by rootNode+path) which should be downloaded
-			@type dirs: List
+			@type dirs: list
 		"""
 		protoWrap = protocolWrapperInstanceSelector.select(self.getModul())
 		downloader = protoWrap.download(targetDir, files, dirs)
@@ -229,7 +239,7 @@ class FileWidget(TreeWidget):
 			actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete", "switchview"], *args, **kwargs)
 
 	def doUpload(self, files, node):
-		return (self.tree.doUpload(files, node))
+		return self.tree.doUpload(files, node)
 
 	def doDownload(self, targetDir, files, dirs):
-		return (self.tree.doDownload(targetDir, files, dirs))
+		return self.tree.doDownload(targetDir, files, dirs)

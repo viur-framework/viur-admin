@@ -74,7 +74,6 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			@param selection: The new selection
 			@type selection: List-of-Dict, Dict or None
 		"""
-		print("selectedFiles", selection)
 		self.clear()
 		self.selection = selection
 		if isinstance(self.selection, dict):
@@ -97,7 +96,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			Returns the currently selected items.
 			@returns: List or None
 		"""
-		return (self.selection)
+		return self.selection
 
 	def dragMoveEvent(self, event):
 		event.accept()

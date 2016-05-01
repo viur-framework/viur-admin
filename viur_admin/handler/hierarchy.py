@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
 from PyQt5 import QtCore
 
 from viur_admin.config import conf

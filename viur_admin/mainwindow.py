@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-import logging
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -59,7 +61,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def __init__(self, *args, **kwargs):
 		super(MainWindow, self).__init__(*args, **kwargs)
-		self.logger = logging.getLogger("MainWindow")
 		self.setObjectName("MainWindow")
 		self.resize(983, 707)
 		icon = QtGui.QIcon()
@@ -257,7 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.preloader = Preloader()
 		self.preloader.show()
 		self.preloader.finished.connect(self.onPreloaderFinished)
-		# self.logger.debug("Checkpoint: loadConfig")
+		# logger.debug("Checkpoint: loadConfig")
 		NetworkService.request("/user/view/self", successHandler=self.onLoadUser, failureHandler=self.onError)
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError)
 
@@ -267,7 +268,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.show()
 
 	def onLoadConfig(self, request):
-		# self.logger.debug("Checkpoint: onLoadConfig")
+		# logger.debug("Checkpoint: onLoadConfig")
 		try:
 			conf.serverConfig = NetworkService.decode(request)
 		except:
@@ -280,9 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
 	def onLoadUser(self, request):
 		try:
 			conf.currentUserEntry = NetworkService.decode(request)["values"]
-			logging.debug(conf.currentUserEntry)
+			logger.debug("userConfigLoaded: %r", conf.currentUserEntry)
 		except Exception as err:
-			logging.exception(err)
+			logger.exception(err)
 			self.onError(msg="Unable to parse user entry!")
 			return
 		else:
@@ -296,7 +297,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			Called if something went wrong while loading or parsing the
 			portalconfig requested from the server.
 		"""
-		self.logger.error(msg)
+		logger.error("OnError msg: %r", msg)
 		QtCore.QTimer.singleShot(3000, self.resetLoginWindow)
 
 	def handlerForWidget(self, wdg=None):
@@ -405,9 +406,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		currentHandler = self.handlerForWidget(widget)
 		if currentHandler is None:
-			logging.error("Stale widget: " + str(widget))
-			assert False
-			return
+			logger.error("Stale widget: " + str(widget))
+			raise
 		currentHandler.close()
 		self.rebuildBreadCrumbs()
 
@@ -528,6 +528,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		access = conf.currentUserEntry["access"]
 		for module, cfg in data["modules"].items():
+			logger.debug("starting to load module %r", module)
 			if "root" not in access and not "{0}-view".format(module) in access:
 				continue
 			queue = RegisterQueue()

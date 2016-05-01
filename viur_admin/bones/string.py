@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 from html.parser import HTMLParser
 
 from PyQt5 import QtWidgets, QtGui
@@ -172,9 +175,12 @@ class StringEditBone(BoneEditInterface):
 
 	def onTabLanguageChanged(self, lang):
 		if lang in self.langEdits.keys():
-			self.tabWidget.blockSignals(True)
-			self.tabWidget.setCurrentWidget(self.langEdits[lang])
-			self.tabWidget.blockSignals(False)
+			try:
+				self.tabWidget.blockSignals(True)
+				self.tabWidget.setCurrentWidget(self.langEdits[lang])
+				self.tabWidget.blockSignals(False)
+			except RuntimeError as err:
+				logger.exception(err)
 
 	def onTabCurrentChanged(self, idx):
 		wdg = self.tabWidget.widget(idx)
