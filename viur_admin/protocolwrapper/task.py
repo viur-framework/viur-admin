@@ -13,7 +13,7 @@ class TaskWrapper(QtCore.QObject):
 
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
-	updatingDataAvaiable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
+	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
 	modulStructureAvaiable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
 	# avaiable
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
@@ -49,7 +49,7 @@ class TaskWrapper(QtCore.QObject):
 			self.updatingSucceeded.emit(str(id(req)))
 			self.checkBusyStatus()
 		else:  # There were missing fields
-			self.updatingDataAvaiable.emit(str(id(req)), data, req.wasInitial)
+			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
 		self.checkBusyStatus()
 
 	def checkBusyStatus(self):
