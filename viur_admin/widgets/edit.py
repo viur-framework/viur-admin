@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+import os
+import os.path
+from hashlib import sha1
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -22,7 +27,7 @@ class EditWidget(QtWidgets.QWidget):
 	appTree = "tree"
 	appSingleton = "singleton"
 
-	def __init__(self, modul, applicationType, key=0, node=None, skelType=None, clone=False, *args, **kwargs):
+	def __init__(self, modul, applicationType, key=None, node=None, skelType=None, clone=False, *args, **kwargs):
 		"""
 			Initialize a new Edit or Add-Widget for the given modul.
 			@param modul: Name of the modul
@@ -31,17 +36,15 @@ class EditWidget(QtWidgets.QWidget):
 			additional complexity introduced by the hierarchy / tree-application
 			@type applicationType: Any of EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree or
 			EditWidget.appSingleton
-			@param id: ID of the entry. If none, it will add a new Entry.
-			@type id: Number
-			@param rootNode: If applicationType==EditWidget.appHierarchy, the new entry will be added under this
+			@param key: id/key of the new entry. If None, It's a new entry, if clone it's the key of the entry we will clone
+			@type key: str
+			@param node: If applicationType==EditWidget.appHierarchy, the new entry will be added under this
 			node, if applicationType==EditWidget,appTree the final node is derived from this and the path-parameter.
 			Has no effect if applicationType is not appHierarchy or appTree or if an id have been set.
-			@type rootNode: String
-			@param path: Specifies the path from the rootNode for new entries in a treeApplication
-			@type path: String
+			@type node: str
 			@param clone: If true, it will load the values from the given id, but will save a new entry (i.e. allows
 			"cloning" an existing entry)
-			@type clone: Bool
+			@type clone: bool
 		"""
 		super(EditWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_Edit()
@@ -56,11 +59,9 @@ class EditWidget(QtWidgets.QWidget):
 			assert key or node  # Need either an id or an node
 		if clone:
 			assert key  # Need an id if we should clone an entry
-			assert not applicationType == EditWidget.appSingleton  # We cant clone a singleton
+			assert not applicationType == EditWidget.appSingleton  # We can't clone a singleton
 			if applicationType == EditWidget.appHierarchy or applicationType == EditWidget.appTree:
-				assert rootNode  # We still need a rootNode for cloning
-			if applicationType == EditWidget.appTree:
-				assert path  # We still need a path for cloning
+				assert node  # We still need a rootNode for cloning
 		# End santy-checks
 		self.applicationType = applicationType
 		self.key = key
@@ -97,7 +98,7 @@ class EditWidget(QtWidgets.QWidget):
 		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
 		protoWrap.updatingSucceeded.connect(self.onSaveSuccess)
 		protoWrap.updatingFailedError.connect(self.onSaveError)
-		protoWrap.updatingDataAvaiable.connect(self.onDataAvaiable)
+		protoWrap.updatingDataAvailable.connect(self.onDataAvailable)
 		self.overlay.inform(self.overlay.BUSY)
 
 	def onBusyStateChanged(self, busy):
@@ -155,7 +156,7 @@ class EditWidget(QtWidgets.QWidget):
 			else:
 				self.editTaskID = protoWrap.add(**data)
 		elif self.applicationType == EditWidget.appHierarchy:  ## Application: Hierarchy
-			if self.key and not self.clone:
+			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit(self.key, **data)
 			else:
 				self.editTaskID = protoWrap.add(self.node, **data)
@@ -247,7 +248,7 @@ class EditWidget(QtWidgets.QWidget):
 				tabs[tabName] = QtWidgets.QFormLayout(containerWidget)
 				containerWidget.setLayout(tabs[tabName])
 				containerWidget.setSizePolicy(
-					QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
+						QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
 				tmpTabs.append((scrollArea, tabName))
 				scrollArea.setWidgetResizable(True)
 		tmpTabs.sort(key=lambda x: x[1])
@@ -347,7 +348,7 @@ class EditWidget(QtWidgets.QWidget):
 		else:
 			self.reloadData()
 
-	def onDataAvaiable(self, editTaskID, data, wasInitial):
+	def onDataAvailable(self, editTaskID, data, wasInitial):
 		"""
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
