@@ -44,7 +44,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect(self.reload)
-		protoWrap.queryResultAvaiable.connect(self.addData)
+		protoWrap.queryResultAvailable.connect(self.addData)
 		# self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
 		self.reload()
 
@@ -685,7 +685,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
-		protoWrap.queryResultAvaiable.connect(self.addData)
+		protoWrap.queryResultAvailable.connect(self.addData)
 		self.loadNext()
 
 	def loadNext(self):

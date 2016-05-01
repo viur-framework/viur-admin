@@ -40,7 +40,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
 
-		protoWrap.entityAvailable.connect(self.onItemDataAvaiable)
+		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
 			self.addItem(item)
 
@@ -76,9 +76,9 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		else:
 			raise NotImplementedError()
 			# self.entryFetches.append( protoWrap.queryEntry( id ) )
-			# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
+			# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )
 
-	def onItemDataAvaiable(self, item):
+	def onItemDataAvailable(self, item):
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.

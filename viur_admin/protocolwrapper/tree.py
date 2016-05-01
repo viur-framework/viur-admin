@@ -21,12 +21,12 @@ class TreeWrapper(QtCore.QObject):
 	entitiesChanged = QtCore.pyqtSignal((str,))  # Node,
 	entityAvailable = QtCore.pyqtSignal((object,))  # A recently queried entity was fetched and is now available
 	customQueryFinished = QtCore.pyqtSignal((str,))  # RequestID,
-	rootNodesAvaiable = QtCore.pyqtSignal()
+	rootNodesAvailable = QtCore.pyqtSignal()
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, I'm busy right now
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	onModulStructureAvaiable = QtCore.pyqtSignal()
+	onModulStructureAvailable = QtCore.pyqtSignal()
 
 	def __init__(self, module, *args, **kwargs):
 		super(TreeWrapper, self).__init__()
@@ -98,7 +98,7 @@ class TreeWrapper(QtCore.QObject):
 				self.addLeafStructure = structure
 			else:
 				raise ValueError("onStructureAvailable: unknown node type: {0}".format(stype))
-		self.onModulStructureAvaiable.emit()
+		self.onModulStructureAvailable.emit()
 		self.checkBusyStatus()
 
 	def onRootNodesAvailable(self, req):
@@ -106,7 +106,7 @@ class TreeWrapper(QtCore.QObject):
 		if isinstance(tmp, list):
 			self.rootNodes = tmp
 		self.clearCache()
-		self.rootNodesAvaiable.emit()
+		self.rootNodesAvailable.emit()
 		self.checkBusyStatus()
 
 	def childrenForNode(self, node):

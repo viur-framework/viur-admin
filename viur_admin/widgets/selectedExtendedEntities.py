@@ -63,7 +63,7 @@ class SelectedExtendedEntitiesTableModel(QtCore.QAbstractTableModel):
 		else:
 			raise NotImplementedError()
 		# self.entryFetches.append( protoWrap.queryEntry( id ) )
-		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvaiable )
+		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )
 
 	def onItemDataAvailable(self, item):
 		"""

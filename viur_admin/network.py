@@ -412,10 +412,10 @@ class RemoteFile(QtCore.QObject):
 				dlKey = "%s%s" % (url, dlKey)
 			else:
 				dlKey = "/file/download/%s" % dlKey
-		req = NetworkService.request(dlKey, successHandler=self.onFileAvaiable, failSilent=True)
+		req = NetworkService.request(dlKey, successHandler=self.onFileAvailable, failSilent=True)
 
-	def onFileAvaiable(self, request):
-		# self.logger.debug("Checkpoint: onFileAvaiable")
+	def onFileAvailable(self, request):
+		# self.logger.debug("Checkpoint: onFileAvailable")
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(self.dlKey.encode("UTF-8")).hexdigest())
 		data = request.readAll()
 		open(fileName, "w+b").write(data.data())

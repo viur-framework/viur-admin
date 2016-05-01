@@ -329,9 +329,9 @@ class Login(QtWidgets.QMainWindow):
 		self.captchaToken = token
 		self.captchaReq = NetworkService.request(
 			"https://www.google.com/accounts/{0}".format(url),
-			finishedHandler=self.onCaptchaAvaiable)
+			finishedHandler=self.onCaptchaAvailable)
 
-	def onCaptchaAvaiable(self):
+	def onCaptchaAvailable(self):
 		pixmap = QtGui.QPixmap()
 		data = bytes(self.captchaReq.readAll())
 		pixmap.loadFromData(data)

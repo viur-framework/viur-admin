@@ -16,7 +16,7 @@ class SingletonWrapper(QtCore.QObject):
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	modulStructureAvaiable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
+	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
 	# avaiable
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
 
@@ -27,13 +27,13 @@ class SingletonWrapper(QtCore.QObject):
 		self.editStructure = None
 		self.viewStructure = None
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
-		self.deferedTaskQueue = []
-		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvaiable)
+		self.deferredTaskQueue = []
+		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvailable)
 
 	def checkForOurModul(self, moduleName):
 		return self.module == moduleName
 
-	def onStructureAvaiable(self, req):
+	def onStructureAvailable(self, req):
 		tmp = NetworkService.decode(req)
 		if tmp is None:
 			self.checkBusyStatus()
@@ -46,7 +46,7 @@ class SingletonWrapper(QtCore.QObject):
 				self.viewStructure = structure
 			elif stype == "editSkel":
 				self.editStructure = structure
-		self.modulStructureAvaiable.emit()
+		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
 	def edit(self, **kwargs):

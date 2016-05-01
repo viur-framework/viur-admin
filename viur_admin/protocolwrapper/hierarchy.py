@@ -21,7 +21,7 @@ class HierarchyWrapper(QtCore.QObject):
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	modulStructureAvaiable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
+	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
 	# available
 	rootNodesAvailable = QtCore.pyqtSignal()  # We fetched the list of rootNodes for this modul and that data is now
 
@@ -69,7 +69,7 @@ class HierarchyWrapper(QtCore.QObject):
 				self.editStructure = structure
 			elif stype == "addSkel":
 				self.addStructure = structure
-		self.modulStructureAvaiable.emit()
+		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
 	def onRootNodesAvailable(self, req):
