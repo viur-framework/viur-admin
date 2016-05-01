@@ -3,30 +3,30 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.utils import Overlay
-from viur_admin.network import NetworkService
 from viur_admin import utils
 from viur_admin.config import conf
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.hierarchyUI import Ui_Hierarchy
+from viur_admin.utils import Overlay
+from viur_admin.widgets.edit import EditWidget
 
 
 class HierarchyItem(QtWidgets.QTreeWidgetItem):
-	"""
-		Displayes one entry in a QTreeWidget.
-		Its comparison-methods have been overriden to reflect the sort-order on the server.
+	""" Displays one entry in a QTreeWidget.
+
+	Its comparison-methods have been overridden to reflect the sort-order on the server.
 	"""
 
 	def __init__(self, modul, data):
 		config = conf.serverConfig["modules"][modul]
 		if "format" in config.keys():
-			format = config["format"]
+			fmt = config["format"]
 		else:
-			format = "$(name)"
+			fmt = "$(name)"
 		protoWrap = protocolWrapperInstanceSelector.select(modul)
 		assert protoWrap is not None
-		itemName = utils.formatString(format, protoWrap.viewStructure, data)
+		itemName = utils.formatString(fmt, protoWrap.viewStructure, data)
 		# print("HierarchyItem format", format, protoWrap.viewStructure, data.keys(), repr(itemName))
 		super(HierarchyItem, self).__init__([str(itemName)])
 		self.loaded = False
@@ -34,42 +34,43 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
 		self.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
 
 	def __gt__(self, other):
-		if isinstance(other,
-		              HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
-			return (self.entryData["sortindex"] > other.entryData["sortindex"])
+		if isinstance(other, HierarchyItem) and \
+						"sortindex" in self.entryData.keys() and \
+						"sortindex" in other.entryData.keys():
+			return self.entryData["sortindex"] > other.entryData["sortindex"]
 		else:
-			return (super(HierarchyItem, self).__gt__(other))
+			return super(HierarchyItem, self).__gt__(other)
 
 	def __lt__(self, other):
-		if isinstance(other,
-		              HierarchyItem) and "sortindex" in self.entryData.keys() and "sortindex" in other.entryData.keys():
-			return (self.entryData["sortindex"] < other.entryData["sortindex"])
+		if isinstance(other, HierarchyItem) and \
+						"sortindex" in self.entryData.keys() and \
+						"sortindex" in other.entryData.keys():
+			return self.entryData["sortindex"] < other.entryData["sortindex"]
 		else:
-			return (super(HierarchyItem, self).__lt__(other))
+			return super(HierarchyItem, self).__lt__(other)
 
 
 class HierarchyTreeWidget(QtWidgets.QTreeWidget):
-	"""
-		Provides an interface for Data structured as a hierarchy on the server.
+	""" Provides an interface for Data structured as a hierarchy on the server.
 
-		@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode,
-		PyQt_PyObject=itemID )
-		@emits onItemClicked(PyQt_PyObject=item.data)
-		@emits onItemDoubleClicked(PyQt_PyObject=item.data)
-
+	@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode,
+	PyQt_PyObject=itemID )
+	@emits onItemClicked(PyQt_PyObject=item.data)
+	@emits onItemDoubleClicked(PyQt_PyObject=item.data)
 	"""
 
 	def __init__(self, parent, modul, rootNode=None, *args, **kwargs):
+		""" CTOR
+
+		:param parent: Parent widget
+		:type parent: QWidgets.QWidget
+		:param modul: Name of the modul to show the elements for
+		:type modul: str
+		:param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose
+		one.
+		:type rootNode: str or None
 		"""
-			@param parent: Parent widget.
-			@type parent: QWidget
-			@param modul: Name of the modul to show the elements for
-			@type modul: String
-			@param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose
-			one.
-			@type rootNode: String or None
-		"""
-		super().__init__(**kwargs)
+		super(HierarchyTreeWidget, self).__init__(parent=parent)
 		self.modul = modul
 		self.rootNode = rootNode
 		self.loadingKey = None
@@ -100,7 +101,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		# First, save all expanded items
 		self.expandList = []
 		it = QtWidgets.QTreeWidgetItemIterator(self)
-		while (it.value()):
+		while it.value():
 			if it.value().isExpanded():
 				self.expandList.append(it.value().entryData["id"])
 			it += 1
@@ -122,15 +123,18 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		self.loadData()
 
 	def getRootNode(self):
-		return (self.rootNode)
+		return self.rootNode
 
 	def onItemExpanded(self, item, *args, **kwargs):
-		"""
-			An item has just been expanded.
-			Check, if we allready have information about the elements beneath, otherwhise load them.
+		""" An item has just been expanded.
+
+		Check, if we already have information about the elements beneath, otherwise load them.
+
+		:param item: our item which has expanded
+		:type item: HierarchyItem
 		"""
 		if not item.loaded:
-			while (item.takeChild(0)):
+			while item.takeChild(0):
 				pass
 			self.loadData(item.entryData["id"])
 
@@ -197,8 +201,9 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			for item in self.selectedItems():
 				urls.append(utils.urlForItem(self.modul, item.entryData))
 			mimeData.setUrls(urls)
-			event.mimeData().setData("viur/hierarchyDragData",
-			                         json.dumps({"entities": [x.entryData for x in self.selectedItems()]}))
+			event.mimeData().setData(
+					"viur/hierarchyDragData",
+					json.dumps({"entities": [x.entryData for x in self.selectedItems()]}).encode("utf-8"))
 		# event.accept()
 		# event.acceptProposedAction()
 		# self.emitDataChanged.emit(event.mimeData)
@@ -284,12 +289,14 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		"""
 			Delete the entity with the given id
 		"""
-		if QtWidgets.QMessageBox.question(self,
-		                                  QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
-		                                  QtCore.QCoreApplication.translate("HierarchyTreeWidget",
-		                                                                    "Delete %s entries and everything below?") % 1,
-		                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-		                                  QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
+		if QtWidgets.QMessageBox.question(
+				self,
+				QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
+						QtCore.QCoreApplication.translate(
+								"HierarchyTreeWidget",
+								"Delete %s entries and everything below?") % 1,
+						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
@@ -325,6 +332,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		self.overlay = Overlay(self)
 		self.setAcceptDrops(True)
 		self.ui.webView.hide()
+		self._currentActions = None
 		self.setActions(actions if actions is not None else ["add", "edit", "clone", "preview", "delete"])
 		self.hierarchy.itemClicked.connect(self.onItemClicked)
 		self.hierarchy.itemClicked.connect(self.itemClicked)
@@ -360,12 +368,17 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 			Returns a list of the currently activated actions on this widget.
 		"""
-		return (self._currentActions)
+		return self._currentActions
 
 	def onItemClicked(self, item, col):
+		""" An item has been selected. If we have a previewURL -> show it
+
+		:param item: the item which was clicked
+		:type item: HierarchyItem
+		:param col: the column index
+		:type col: int
 		"""
-			A item has been selected. If we have a previewURL -> show it
-		"""
+
 		config = conf.serverConfig["modules"][self.modul]
 		if "previewURL" in config.keys() and config["previewURL"]:
 			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])
@@ -374,15 +387,28 @@ class HierarchyWidget(QtWidgets.QWidget):
 			self.loadPreview(previewURL)
 
 	def onItemDoubleClicked(self, item, col):
+		""" Open a editor for this entry.
+
+		:param item: the item which was clicked
+		:type item: HierarchyItem
+		:param col: the column index
+		:type col: int
 		"""
-			Open a editor for this entry.
-		"""
-		widget = lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"])
-		handler = utils.WidgetHandler(widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
-		                              icon=QtGui.QIcon(":icons/actions/edit.svg"))
+
+		handler = utils.WidgetHandler(
+				lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"]),
+				descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
+				icon=QtGui.QIcon(":icons/actions/edit.svg"))
 		handler.stackHandler()
 
 	def loadPreview(self, url):
+		""" Tries to fetch the entry specified by url and shows it on success
+
+		Take a look in self.setHTML for the view part
+
+		:param url: the url of the item to preview in our webview
+		:type url: str
+		"""
 		NetworkService.request(url, successHandler=self.setHTML)
 
 	def setHTML(self, req=None):
@@ -394,7 +420,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		self.ui.webView.show()
 
 	def getModul(self):
-		return (self.modul)
+		return self.modul
 
 	def getRootNode(self):
-		return (self.hierarchy.getRootNode())
+		return self.hierarchy.getRootNode()
