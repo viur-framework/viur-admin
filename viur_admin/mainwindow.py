@@ -553,8 +553,6 @@ class MainWindow(QtWidgets.QMainWindow):
 				wrapperClass(module)
 			event.emit('modulHandlerInitialized', module)
 
-		# self.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
-
 		def subhandlerSorter(x):
 			return x.sortIndex
 
@@ -571,6 +569,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		for prefix, groupHandler in emptyGroups:
 			groupHandlers.pop(prefix)
 			del by_group[prefix]
+
+		self.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 
