@@ -305,18 +305,18 @@ class MainWindow(QtWidgets.QMainWindow):
 			if "widgets" in dir(node) and isinstance(node.widgets, list):
 				for w in node.widgets:
 					if w == wdg:
-						return (node)
+						return node
 			for x in range(0, node.childCount()):
 				res = findRekursive(wdg, node.child(x))
 				if res is not None:
-					return (res)
-			return (None)
+					return res
+			return None
 
 		if wdg is None:
 			wdg = self.stackedWidget.currentWidget()
 			if wdg is None:
-				return (None)
-		return (findRekursive(wdg, self.treeWidget.invisibleRootItem()))
+				return None
+		return findRekursive(wdg, self.treeWidget.invisibleRootItem())
 
 	def addHandler(self, handler, parent=None):
 		"""
@@ -571,6 +571,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			del by_group[prefix]
 
 		self.treeWidget.sortItems(1, QtCore.Qt.DescendingOrder)
+
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 
