@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtWebKitWidgets
 
-from network import NetworkService
-from config import conf
+from viur_admin.network import NetworkService
+from viur_admin.config import conf
 
 """
 	Displayes the specified webpage.

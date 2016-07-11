@@ -646,12 +646,15 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.ui = Ui_CsvExport()
 		self.ui.setupUi(self)
 		_translate = QtCore.QCoreApplication.translate
-		oldlang = conf.adminConfig["language"]
+		oldlang = conf.adminConfig.get("language", "de")
 		active = 0
-		for ix, (key, lang) in enumerate(conf.serverConfig["viur.defaultlangsvalues"].items()):
-			if key == oldlang:
-				active = ix
-			self.ui.langComboBox.addItem(lang, key)
+		if "viur.defaultlangsvalues" in conf.serverConfig:
+			for ix, (key, lang) in enumerate(conf.serverConfig["viur.defaultlangsvalues"].items()):
+				if key == oldlang:
+					active = ix
+				self.ui.langComboBox.addItem(lang, key)
+		else:
+			self.ui.langComboBox.addItem("Deutsch", "de")
 		self.ui.langComboBox.setCurrentIndex(active)
 
 		protoWrap = protocolWrapperInstanceSelector.select(module)
@@ -679,7 +682,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		# self.overlay = Overlay(self)
 		# self.overlay.inform(self.overlay.BUSY)
 		path = self.ui.filenameName.text()
-		self.logger.debug("path: %r", path)
+		logger.debug("path: %r", path)
 		if not path:
 			return
 
@@ -749,7 +752,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		delegates = []
 		fields = bones.keys()
 		headers = list()
-		oldlang = conf.adminConfig["language"]
+		oldlang = conf.adminConfig.get("language", "de")
 		newlang = self.ui.langComboBox.currentData()
 		try:
 			conf.adminConfig["language"] = newlang
@@ -773,7 +776,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 		except Exception as err:
 			self.logger.exception(err)
 		finally:
-			conf.adminConfig["language"] = oldlang
+			if "language" in conf.adminConfig:
+				conf.adminConfig["language"] = oldlang
 
 	def onBtnCloseReleased(self, *args, **kwargs):
 		event.emit("popWidget", self)
