@@ -44,7 +44,7 @@ shortcut_table = [
 
 msi_data = {"Shortcut": shortcut_table}
 bdist_msi_options = {
-	'upgrade_code': '{5A11CF14-7ADE-4F1F-9B1A-9B34F6AF9EED}',
+	'upgrade_code': '{1249ee8e-1696-48cf-aad9-81de7263f0d1}',
 	'data': msi_data,
 	'add_to_path': False,
 	'initial_target_dir': r'[ProgramFilesFolder]\%s\%s' % (company_name, product_name)
@@ -62,7 +62,7 @@ executables = [
 
 options = {
 	"build_exe": {
-		"includes": ["atexit", "re", "PyQt5.QtPrintSupport"],
+		"includes": ["atexit", "re", "PyQt5.QtPrintSupport", "html2text", "markdown2"],
 		"include_files": [
 			"viur_admin/icons",
 			"viur_admin/cacert.pem",
@@ -76,7 +76,7 @@ options = {
 
 setup(
 		name='Viur Admin',
-		version='0.99.1',
+		version='1.0.1',
 		description=viur_admin_descr,
 		author=company_name,
 		author_email='info@mausbrand.de',

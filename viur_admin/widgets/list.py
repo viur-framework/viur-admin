@@ -727,7 +727,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.loadingKey = None
 		count = len(skellist)
 		self.count += count
-		logger.debug("loaded entries: %r", self.count)
+		self.ui.countLabel.setText(str(self.count))
 		if count < 20:
 			self.completeList = True
 			self.serializeToCsv(self.dataCache, protoWrap.viewStructure)

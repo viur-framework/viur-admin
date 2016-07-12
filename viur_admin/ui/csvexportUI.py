@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'csvexport.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -62,7 +62,7 @@ class Ui_CsvExport(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.filenameDialogAction.sizePolicy().hasHeightForWidth())
         self.filenameDialogAction.setSizePolicy(sizePolicy)
-        # self.filenameDialogAction.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.filenameDialogAction.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.filenameDialogAction.setObjectName("filenameDialogAction")
         self.horizontalLayout_4.addWidget(self.filenameDialogAction)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
@@ -70,6 +70,18 @@ class Ui_CsvExport(object):
         self.verticalLayout.addItem(spacerItem1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.label = QtWidgets.QLabel(CsvExport)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.label.setFont(font)
+        self.label.setObjectName("label")
+        self.horizontalLayout_3.addWidget(self.label)
+        self.countLabel = QtWidgets.QLabel(CsvExport)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.countLabel.setFont(font)
+        self.countLabel.setObjectName("countLabel")
+        self.horizontalLayout_3.addWidget(self.countLabel)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
         self.buttonBox = QtWidgets.QDialogButtonBox(CsvExport)
@@ -91,5 +103,8 @@ class Ui_CsvExport(object):
         self.encodingComboBox.setItemText(1, _translate("CsvExport", "ISO-8859-15"))
         self.seperatorLabel.setText(_translate("CsvExport", "Sprache"))
         self.filenameLabel.setText(_translate("CsvExport", "Dateiname"))
+        self.filenameDialogAction.setText(_translate("CsvExport", "..."))
+        self.label.setText(_translate("CsvExport", "Datensätze:"))
+        self.countLabel.setText(_translate("CsvExport", "0"))
 
 import viur_admin.ui.icons_rc
