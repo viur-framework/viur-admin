@@ -667,6 +667,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		self.cursor = None
 		self.completeList = False
 		self.dataCache = list()
+		self.count = 0
 		okButton = self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok)
 		okButton.released.connect(self.onTriggered)
 		cancelButton = self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel)
@@ -693,7 +694,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 	def loadNext(self):
 		if self.isLoading:
-			self.logger.debug("stopping loadNext since it's already loading")
+			logger.debug("stopping loadNext since it's already loading")
 			return
 		self.isLoading += 1
 		rawFilter = self.model.filter.copy() or {}
@@ -724,7 +725,10 @@ class CsvExportWidget(QtWidgets.QWidget):
 			self.dataCache.append(item)
 		self.cursor = cursor
 		self.loadingKey = None
-		if len(skellist) < 20:
+		count = len(skellist)
+		self.count += count
+		logger.debug("loaded entries: %r", self.count)
+		if count < 20:
 			self.completeList = True
 			self.serializeToCsv(self.dataCache, protoWrap.viewStructure)
 			self.model.dataCache = self.dataCache
@@ -734,7 +738,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			self.loadNext()
 
 	def onChooseOutputFile(self, action=None):
-		self.logger.debug("onChooseOutputFile %r", action)
+		logger.debug("onChooseOutputFile %r", action)
 		dialog = QtWidgets.QFileDialog(self, directory=os.path.expanduser("~"))
 		dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
 		dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -743,7 +747,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			try:
 				self.ui.filenameName.setText(dialog.selectedFiles()[0])
 			except Exception as err:
-				self.logger.exception(err)
+				logger.exception(err)
 
 	def serializeToCsv(self, data, bones):
 		f = open(self.ui.filenameName.text(), "w")
@@ -768,13 +772,16 @@ class CsvExportWidget(QtWidgets.QWidget):
 				result = list()
 				for column, field in enumerate(fields):
 					delegate = delegates[column]
-					value = row[field]
-					result.append(delegate.displayText(value, QtCore.QLocale()))
+					value = row.get(field, "")
+					if value:
+						result.append(delegate.displayText(value, QtCore.QLocale()))
+					else:
+						result.append("")
 				writer.writerow(result)
 			for i in delegates:
 				i.deleteLater()
 		except Exception as err:
-			self.logger.exception(err)
+			logger.exception(err)
 		finally:
 			if "language" in conf.adminConfig:
 				conf.adminConfig["language"] = oldlang

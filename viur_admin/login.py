@@ -1,20 +1,53 @@
 import urllib.parse
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
 
+import json
 import re
 
-from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.accountmanager import Accountmanager
-from viur_admin.network import NetworkService, securityTokenProvider
+from viur_admin.network import NetworkService, securityTokenProvider, nam
 from viur_admin.event import event
 from viur_admin import config
 from viur_admin.utils import Overlay, showAbout
 from viur_admin.locales import ISO639CODES
 
+
+class GoogleLoginView(QtWidgets.QDialog):
+
+	def __init__(self, res, parent=None):
+		super(QtWidgets.QDialog, self).__init__(parent)
+		# self.jar = QtNetwork.QNetworkCookieJar()
+		self.webView = QtWebKitWidgets.QWebView()
+		self.setLayout(QtWidgets.QVBoxLayout())
+		self.layout().addWidget(self.webView)
+		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
+		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
+		self.webView.page().setNetworkAccessManager(nam)
+		self.webView.setUrl(QtCore.QUrl(res["url"]))
+		self.setModal(True)
+		self.webView.urlChanged.connect(self.onUrlChanged)
+		self.webView.loadFinished.connect(self.onLoadFinished)
+		self.resize(1024, 800)
+
+	def onUrlChanged(self, url):
+		logger.debug("urlChanged: %r", url)
+		if self.webView.findText("OKAY"):
+			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
+			self.close()
+			self.deleteLater()
+
+	def onLoadFinished(self, status):
+		logger.debug("loadFinished: %r", status)
+		if self.webView.findText("OKAY"):
+			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
+			self.close()
+			self.deleteLater()
 
 class LoginTask(QtCore.QObject):
 	loginFailed = QtCore.pyqtSignal((str,))
@@ -31,9 +64,11 @@ class LoginTask(QtCore.QObject):
 		config.conf.currentUsername = username
 		config.conf.currentPassword = password
 		self.req = None
+		self.webview = None
 		self.accountType = None
 		self.isLocalServer = False
 		self.hostName = urllib.parse.urlparse(NetworkService.url).hostname or NetworkService.url
+		self.parentWidget = kwargs["parent"]
 		if urllib.parse.urlparse(NetworkService.url).port:  # Assume local Development
 			logger.debug("Assuming local development Server")
 			self.isLocalServer = True
@@ -67,19 +102,10 @@ class LoginTask(QtCore.QObject):
 					self.hostName, urllib.parse.urlparse(NetworkService.url).port, self.username), None,
 				                       finishedHandler=self.onLocalAuth)
 			else:
-				credDict = {"Email": self.username,
-				            "Passwd": self.password,
-				            "source": "ViUR-Admin",
-				            "accountType": "HOSTED_OR_GOOGLE",
-				            "service": "ah"}
-				if self.captcha and self.captchaToken:
-					credDict["logintoken"] = self.captchaToken
-					credDict["logincaptcha"] = self.captcha
-				credStr = urllib.parse.urlencode(credDict)
-				NetworkService.request("https://www.google.com/accounts/ClientLogin", credStr.encode("UTF-8"),
-				                       successHandler=self.onGoogleAuthSuccess, failureHandler=self.onError)
+				NetworkService.request("/user/login", secure=True,
+				                       successHandler=self.onGoogleAuthLoginUrl, failureHandler=self.onError)
 
-	def onViurAuth(self, request):  # We recived an response to our auth request
+	def onViurAuth(self, request):  # We received an response to our auth request
 		logger.debug("Checkpoint: onViurAuth")
 		try:
 			res = NetworkService.decode(request)
@@ -98,47 +124,52 @@ class LoginTask(QtCore.QObject):
 			"http://%s:%s/admin/user/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port), None,
 			successHandler=self.onLoginSucceeded, failureHandler=self.onError)
 
-	def onGoogleAuthSuccess(self, request):
-		logger.debug("Checkpoint: onGoogleAuthSuccess")
+	def onGoogleAuthLoginUrl(self, request):
 		res = bytes(request.readAll().data()).decode("UTF-8")
-		authToken = None
-		for line in res.splitlines():
-			if line.lower().startswith("auth="):
-				authToken = line[5:].strip()
-		logger.debug("LoginTask got AuthToken: %s...", authToken[:6] if authToken else authToken)
-		if not authToken:
-			if "CaptchaRequired".lower() in res.lower():
-				logger.info("Need captcha")
-				captchaToken = None
-				captchaURL = None
-				for line in res.splitlines():
-					if line.lower().startswith("captchatoken"):
-						captchaToken = line[13:]
-					elif line.lower().startswith("captchaurl"):
-						captchaURL = line[11:]
-				assert captchaToken and captchaURL
-				self.captchaRequired.emit(captchaToken, captchaURL)
-				self.deleteLater()
-				return
-			else:
-				self.onError(msg="Found no authToken in response!")
-				return
-		# Normalizing the URL we use
-		url = NetworkService.url.lower()
-		if url.endswith("/"):  # Remove tailing /
-			url = url[: -1]
-		if not url.endswith("/admin"):
-			url = url + "/admin"
-		if not url.startswith("https://"):  # Assert that a secure protocol is specified
-			if url.startswith("http://"):
-				if not urllib.parse.urlparse(url).port:  # Dosnt look like development Server
-					url = "https://" + url[7:]  # Dont use insecure protocol on live server
-			else:
-				url = "https://" + url
-		argsStr = urllib.parse.urlencode({"continue": "{0}/user/login".format(url), "auth": authToken})
-		NetworkService.request("https://{0}/_ah/login?{1}".format(self.hostName, argsStr),
-		                       successHandler=self.onGAEAuth,
-		                       failureHandler=self.onError)
+		logger.debug("Checkpoint: onGoogleAuthSuccess: %r", res)
+		res = json.loads(res)
+		self.webview = GoogleLoginView(res, parent=self.parentWidget)
+		self.webview.exec()
+		self.webview = None
+		self.onLoginSucceeded(request)
+		# authToken = None
+		# for line in res.splitlines():
+		# 	if line.lower().startswith("auth="):
+		# 		authToken = line[5:].strip()
+		# logger.debug("LoginTask got AuthToken: %s...", authToken[:6] if authToken else authToken)
+		# if not authToken:
+		# 	if "CaptchaRequired".lower() in res.lower():
+		# 		logger.info("Need captcha")
+		# 		captchaToken = None
+		# 		captchaURL = None
+		# 		for line in res.splitlines():
+		# 			if line.lower().startswith("captchatoken"):
+		# 				captchaToken = line[13:]
+		# 			elif line.lower().startswith("captchaurl"):
+		# 				captchaURL = line[11:]
+		# 		assert captchaToken and captchaURL
+		# 		self.captchaRequired.emit(captchaToken, captchaURL)
+		# 		self.deleteLater()
+		# 		return
+		# 	else:
+		# 		self.onError(msg="Found no authToken in response!")
+		# 		return
+		# # Normalizing the URL we use
+		# url = NetworkService.url.lower()
+		# if url.endswith("/"):  # Remove tailing /
+		# 	url = url[: -1]
+		# if not url.endswith("/admin"):
+		# 	url = url + "/admin"
+		# if not url.startswith("https://"):  # Assert that a secure protocol is specified
+		# 	if url.startswith("http://"):
+		# 		if not urllib.parse.urlparse(url).port:  # Dosnt look like development Server
+		# 			url = "https://" + url[7:]  # Dont use insecure protocol on live server
+		# 	else:
+		# 		url = "https://" + url
+		# argsStr = urllib.parse.urlencode({"continue": "{0}/user/login".format(url), "auth": authToken})
+		# NetworkService.request("https://{0}/_ah/login?{1}".format(self.hostName, argsStr),
+		#                        successHandler=self.onGAEAuth,
+		#                        failureHandler=self.onError)
 
 	def onGAEAuth(self, request=None):
 		logger.debug("Checkpoint: onGAEAuth")
