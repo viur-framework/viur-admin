@@ -60,8 +60,8 @@ class Accountmanager(QtWidgets.QMainWindow):
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)
-		event.emit("accountListChanged()")
 		conf.saveConfig()
+		event.emit("accountListChanged()")
 		self.close()
 
 	def onAddAccBTNReleased(self):
