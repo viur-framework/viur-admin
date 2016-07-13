@@ -81,7 +81,6 @@ class EditWidget(QtWidgets.QWidget):
 		# 			or not conf.serverConfig["modules"][self.modul]["previewurls"]:
 		# 		self.ui.btnPreview.hide()
 		if modul == "_tasks":
-			self.ui.btnPreview.hide()
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Execute"))
 			self.ui.btnSaveContinue.hide()
 			self.ui.btnReset.hide()
@@ -340,6 +339,7 @@ class EditWidget(QtWidgets.QWidget):
 		"""
 			Adding/editing an entry just succeeded
 		"""
+		logger.debug("onSaveSuccess: %r, %r", editTaskID, self.editTaskID)
 		if editTaskID != self.editTaskID:  # Not our task
 			return
 		self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditWidget", "Entry saved"))
@@ -352,6 +352,7 @@ class EditWidget(QtWidgets.QWidget):
 		"""
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
+		logger.debug("onDataAvailable: %r, %r", editTaskID, self.editTaskID)
 		if editTaskID != self.editTaskID:  # Not our task
 			return
 		self.setData(data=data, ignoreMissing=wasInitial)

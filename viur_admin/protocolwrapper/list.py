@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from collections import OrderedDict
 
 from PyQt5 import QtCore
@@ -141,7 +145,9 @@ class ListWrapper(QtCore.QObject):
 		else:
 			req.wasInitial = False
 		self.checkBusyStatus()
-		return str(id(req))
+		addTaskId = str(id(req))
+		logger.debug("proto list add id: %r", addTaskId)
+		return addTaskId
 
 	def edit(self, key, **kwargs):
 		req = NetworkService.request("/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs.keys()) > 0),
@@ -152,7 +158,9 @@ class ListWrapper(QtCore.QObject):
 		else:
 			req.wasInitial = False
 		self.checkBusyStatus()
-		return str(id(req))
+		editTaskId = str(id(req))
+		logger.debug("proto list edit id: %r", editTaskId)
+		return editTaskId
 
 	def deleteEntities(self, ids):
 		if isinstance(ids, list):

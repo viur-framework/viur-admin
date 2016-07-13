@@ -62,6 +62,8 @@ class SelectOneEditBone(BoneEditInterface):
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"].items())
+		if "required" not in skelStructure[boneName] or not skelStructure[boneName]["required"]:
+			values.insert(0, ["", ""])
 		return SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):
