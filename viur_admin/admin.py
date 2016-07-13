@@ -12,9 +12,11 @@ http://docs.viur.is
 
 import sys
 import os
+import traceback
 min_version = (3, 2)
 if sys.version_info < min_version:
-	logger.error("You need python3.2 or newer! - found: %r", sys.version_info)
+	# no logger objects present here
+	sys.stderr.write("You need python3.2 or newer! - found: %r\n" % sys.version_info)
 	sys.exit(1)
 
 from viur_admin.log import prepareLogger
@@ -26,8 +28,8 @@ from viur_admin.bugsnag import Notification
 try:
 	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebKitWidgets
 except ImportError as err:
-	logger.exception(err)
-	logger.error("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets")
+	# no logger objects present here
+	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
 	sys.exit(1)
 
 from pkg_resources import resource_filename, resource_listdir
@@ -86,47 +88,46 @@ else:
 os.chdir(path)
 
 
-#
-# def reportError(type, value, tb):
-# 	print("*" * 40)
-# 	print(type)
-# 	print(value)
-# 	traceback.print_tb(tb)
-#
-# 	if os.path.exists(".git"):
-# 		releaseStage = "development"
-# 	else:
-# 		releaseStage = "production"
-# 	try:
-# 		import BUILD_CONSTANTS
-#
-# 		appVersion = BUILD_CONSTANTS.BUILD_RELEASE_STRING
-# 	except:  # Local development or not a freezed Version
-# 		appVersion = "unknown"
-# 		try:  # Reading the head-revision from git
-# 			gitHead = open(".git/FETCH_HEAD", "r").read()
-# 			for line in gitHead.splitlines():
-# 				line = line.replace("\t", " ")
-# 				if "branch 'master'" in line:
-# 					appVersion = line.split(" ")[0]
-# 		except:
-# 			pass
-#
-# 		n = Notification(
-# 			type,
-# 			value,
-# 			tb,
-# 			{
-# 				"appVersion": appVersion,
-# 				"apiKey": "9ceeab3886a9ff81c184a6d60d970421"  # Our API-Key for that project
-# 			}
-# 		)
-# 	n.deliver()
-#
-#
-# if (args.report == "auto" and not os.path.exists(
-# 		".git")) or args.report == "yes":  # Report errors only if not being a local development instance
-# 	sys.excepthook = reportError
+def reportError(type, value, tb):
+	print("*" * 40)
+	print(type)
+	print(value)
+	traceback.print_tb(tb)
+
+	if os.path.exists(".git"):
+		releaseStage = "development"
+	else:
+		releaseStage = "production"
+	try:
+		import BUILD_CONSTANTS
+
+		appVersion = BUILD_CONSTANTS.BUILD_RELEASE_STRING
+	except:  # Local development or not a freezed Version
+		appVersion = "unknown"
+		try:  # Reading the head-revision from git
+			gitHead = open(".git/FETCH_HEAD", "r").read()
+			for line in gitHead.splitlines():
+				line = line.replace("\t", " ")
+				if "branch 'master'" in line:
+					appVersion = line.split(" ")[0]
+		except:
+			pass
+
+		n = Notification(
+			type,
+			value,
+			tb,
+			{
+				"appVersion": appVersion,
+				"apiKey": "9ceeab3886a9ff81c184a6d60d970421"  # Our API-Key for that project
+			}
+		)
+	n.deliver()
+
+
+if (args.report == "auto" and not os.path.exists(
+		".git")) or args.report == "yes":  # Report errors only if not being a local development instance
+	sys.excepthook = reportError
 
 
 def main():

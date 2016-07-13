@@ -497,10 +497,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		if not self.startPage:
 			if "configuration" in conf.serverConfig.keys():
 				if "analyticsKey" in conf.serverConfig["configuration"].keys():
+					logger.debug("setting analytics widget as startpage")
 					self.startPage = startpages.AnalytisWidget()
 				elif "startPage" in conf.serverConfig["configuration"].keys():
+					logger.debug("retrieving startpage from server")
 					self.startPage = startpages.WebWidget()
 			if not self.startPage:  # Still not
+				logger.debug("setting default startpage")
 				self.startPage = DefaultWidget()
 			self.stackedWidget.addWidget(self.startPage)
 		self.treeWidget.clear()
