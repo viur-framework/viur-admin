@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 from viur_admin.log import getLogger
-from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
-from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.network import RemoteFile
-from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
+from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
+from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
+
 logger = getLogger(__name__)
 
 
@@ -205,6 +207,7 @@ class FileListView(TreeListView):
 		"""
 			Allow Drag&Drop'ing from the local filesystem into our fileview
 		"""
+		logger.debug("dropEvent")
 		if (all([str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or (
 						len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
 		         event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
@@ -214,10 +217,10 @@ class FileListView(TreeListView):
 			super(FileListView, self).dropEvent(event)
 
 	def dragEnterEvent(self, event):
+		"""Allow Drag&Drop'ing from the local filesystem into our fileview and dragging files out again
+		(drag directorys out isnt currently supported)
 		"""
-			Allow Drag&Drop'ing from the local filesystem into our fileview and dragging files out again
-			(drag directorys out isnt currently supported)
-		"""
+		logger.debug("dragEnterEvent")
 		if (all([file.toLocalFile() and (
 						str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or
 						str(file.toLocalFile())[1] == ":") for file in event.mimeData().urls()])) and len(

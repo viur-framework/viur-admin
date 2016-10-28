@@ -280,6 +280,7 @@ class TreeListView(QtWidgets.QListWidget):
 		"""
 			Allow Drag&Drop inside this widget (ie. moving files to subdirs)
 		"""
+		logger.debug("TreeListWidget.dragEnterEvent")
 		if event.source() == self:
 			event.accept()
 			nodes = []
@@ -298,12 +299,14 @@ class TreeListView(QtWidgets.QListWidget):
 					                                                         leafs])
 
 	def dragMoveEvent(self, event):
+		logger.debug("TreeListWidget.dragMoveEvent")
 		if isinstance(self.itemAt(event.pos()), self.leafItem):
 			event.ignore()
 		else:
 			event.accept()
 
 	def dropEvent(self, event):
+		logger.debug("TreeListWidget.dropEvent")
 		dataDict = json.loads(event.mimeData().data("viur/treeDragData").data().decode("UTF-8"))
 		if self.modul.endswith("_rootNode"):
 			realModule = self.modul.replace("_rootNode", "")
@@ -468,6 +471,11 @@ class TreeListView(QtWidgets.QListWidget):
 	def setIconMode(self, iconMode):
 		if iconMode:
 			self.setViewMode(self.IconMode)
+			self.setDragEnabled(True)
+			self.setAcceptDrops(True)
+			self.setSortingEnabled(True)
+			self.viewport().setAcceptDrops(True)
+			self.setDropIndicatorShown(True)
 			self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
 			self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
 		else:
