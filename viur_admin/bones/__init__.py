@@ -12,6 +12,6 @@ import viur_admin.bones.string
 import viur_admin.bones.text
 import viur_admin.bones.treedir
 import viur_admin.bones.treeitem
-import viur_admin.bones.extended_relational
+#import viur_admin.bones.extended_relational
 import viur_admin.bones.access_selectmulti
 import viur_admin.bones.password

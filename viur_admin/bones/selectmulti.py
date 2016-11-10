@@ -17,7 +17,7 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 
 	def displayText(self, value, locale):
 		# print("SelectMultiViewBoneDelegate.displayText", value, locale)
-		boneValues = {str(k): str(v) for k, v in self.skelStructure[self.boneName]["values"].items()}
+		boneValues = {str(k): str(v) for k, v in self.skelStructure[self.boneName]["values"]}
 		resStr = ", ".join([str(x) in boneValues and boneValues[str(x)] or str(x) for x in value])
 		# print("SelectMultiViewBoneDelegate res", repr(boneValues), repr(resStr))
 		return super(SelectMultiViewBoneDelegate, self).displayText(resStr, locale)
@@ -46,7 +46,7 @@ class SelectMultiEditBone(BoneEditInterface):
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"].items())
+		values = list(skelStructure[boneName]["values"])
 		return SelectMultiEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):

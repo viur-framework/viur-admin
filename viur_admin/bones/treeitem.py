@@ -50,7 +50,7 @@ class TreeBoneSelector(RelationalBoneSelector):
 
 
 def CheckForTreeItemBone(moduleName, boneName, skelStucture):
-	return skelStucture[boneName]["type"].startswith("treeitem.")
+	return skelStucture[boneName]["type"].startswith("relational.treeitem.")
 
 
 editBoneSelector.insert(2, CheckForTreeItemBone, TreeItemBone)

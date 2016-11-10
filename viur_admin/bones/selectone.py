@@ -10,7 +10,7 @@ from viur_admin.utils import wheelEventFilter
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale):
-		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"].items()])
+		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"]])
 		if str(value) in items.keys():
 			return items[str(value)]
 		else:
@@ -61,7 +61,7 @@ class SelectOneEditBone(BoneEditInterface):
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"].items())
+		values = list(skelStructure[boneName]["values"])
 		if "required" not in skelStructure[boneName] or not skelStructure[boneName]["required"]:
 			values.insert(0, ["", ""])
 		return SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)

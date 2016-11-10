@@ -103,7 +103,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		it = QtWidgets.QTreeWidgetItemIterator(self)
 		while it.value():
 			if it.value().isExpanded():
-				self.expandList.append(it.value().entryData["id"])
+				self.expandList.append(it.value().entryData["key"])
 			it += 1
 		# Now clear the treeview and reload data
 		self.clear()
@@ -136,7 +136,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		if not item.loaded:
 			while item.takeChild(0):
 				pass
-			self.loadData(item.entryData["id"])
+			self.loadData(item.entryData["key"])
 
 	def loadData(self, parent=None):
 		self.overlay.inform(self.overlay.BUSY)
@@ -158,7 +158,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 				self.addTopLevelItem(tvItem)
 			else:
 				self.insertItem(tvItem)
-			if tvItem.entryData["id"] in self.expandList:
+			if tvItem.entryData["key"] in self.expandList:
 				tvItem.setExpanded(True)
 		self.sortItems(0, QtCore.Qt.AscendingOrder)
 		self.setSortingEnabled(False)
@@ -172,7 +172,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			idx = 0
 			item = self.topLevelItem(idx)
 			while item:
-				if item.entryData["id"] == newItem.entryData["parententry"]:
+				if item.entryData["key"] == newItem.entryData["parententry"]:
 					item.addChild(newItem)
 					item.loaded = True
 					return
@@ -183,7 +183,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 			idx = 0
 			child = fromChildren.child(idx)
 			while child:
-				if child.entryData["id"] == newItem.entryData["parententry"]:
+				if child.entryData["key"] == newItem.entryData["parententry"]:
 					child.addChild(newItem)
 					child.loaded = True
 					return
@@ -223,30 +223,30 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		# event.accept()
 		super(HierarchyTreeWidget, self).dropEvent(event)
 		if not targetItem:  # Moved to the end of the list
-			self.reparent(draggedItem.entryData["id"], self.rootNode)
+			self.reparent(draggedItem.entryData["key"], self.rootNode)
 			if self.topLevelItemCount() > 1:
-				self.updateSortIndex(draggedItem.entryData["id"],
+				self.updateSortIndex(draggedItem.entryData["key"],
 				                     self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1)
 		else:
 			if draggedItem.parent() is targetItem:  # Moved to subitem
-				self.reparent(draggedItem.entryData["id"], targetItem.entryData["id"])
+				self.reparent(draggedItem.entryData["key"], targetItem.entryData["key"])
 			else:  # Moved within its parent list
 				while targetItem:
 					childIndex = 0
 					while childIndex < targetItem.childCount():
 						currChild = targetItem.child(childIndex)
 						if currChild is draggedItem:
-							self.reparent(draggedItem.entryData["id"], targetItem.entryData["id"])
+							self.reparent(draggedItem.entryData["key"], targetItem.entryData["key"])
 							if childIndex == 0 and targetItem.childCount() > 1:  # is now 1st item
-								self.updateSortIndex(draggedItem.entryData["id"],
+								self.updateSortIndex(draggedItem.entryData["key"],
 								                     targetItem.child(1).entryData["sortindex"] - 1)
 							elif childIndex == (targetItem.childCount() - 1) and childIndex > 0:  # is now lastitem
-								self.updateSortIndex(draggedItem.entryData["id"],
+								self.updateSortIndex(draggedItem.entryData["key"],
 								                     targetItem.child(childIndex - 1).entryData["sortindex"] + 1)
 							elif childIndex > 0 and childIndex < (targetItem.childCount() - 1):  # in between
 								newSortIndex = (targetItem.child(childIndex - 1).entryData["sortindex"] +
 								                targetItem.child(childIndex + 1).entryData["sortindex"]) / 2.0
-								self.updateSortIndex(draggedItem.entryData["id"], newSortIndex)
+								self.updateSortIndex(draggedItem.entryData["key"], newSortIndex)
 							else:  # We are the only one in this layer
 								pass
 							return
@@ -256,17 +256,17 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 				currChild = self.topLevelItem(childIndex)
 				while currChild:
 					if currChild is draggedItem:
-						self.reparent(draggedItem.entryData["id"], self.rootNode)
+						self.reparent(draggedItem.entryData["key"], self.rootNode)
 						if childIndex == 0 and self.topLevelItemCount() > 1:  # is now 1st item
-							self.updateSortIndex(draggedItem.entryData["id"],
+							self.updateSortIndex(draggedItem.entryData["key"],
 							                     self.topLevelItem(1).entryData["sortindex"] - 1)
 						elif childIndex == (self.topLevelItemCount() - 1) and childIndex > 0:  # is now lastitem
-							self.updateSortIndex(draggedItem.entryData["id"],
+							self.updateSortIndex(draggedItem.entryData["key"],
 							                     self.topLevelItem(childIndex - 1).entryData["sortindex"] + 1)
 						elif childIndex > 0 and childIndex < (self.topLevelItemCount() - 1):  # in between
 							newSortIndex = (self.topLevelItem(childIndex - 1).entryData["sortindex"] +
 							                self.topLevelItem(childIndex + 1).entryData["sortindex"]) / 2.0
-							self.updateSortIndex(draggedItem.entryData["id"], newSortIndex)
+							self.updateSortIndex(draggedItem.entryData["key"], newSortIndex)
 						else:  # We are the only one in this layer
 							pass
 						return
@@ -381,7 +381,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 
 		config = conf.serverConfig["modules"][self.modul]
 		if "previewURL" in config.keys() and config["previewURL"]:
-			previewURL = config["previewURL"].replace("{{id}}", item.entryData["id"])
+			previewURL = config["previewURL"].replace("{{key}}", item.entryData["key"])
 			if not previewURL.lower().startswith("http"):
 				previewURL = NetworkService.url.replace("/admin", "") + previewURL
 			self.loadPreview(previewURL)
@@ -396,7 +396,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 
 		handler = utils.WidgetHandler(
-				lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["id"]),
+				lambda: EditWidget(self.modul, EditWidget.appHierarchy, item.entryData["key"]),
 				descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
 				icon=QtGui.QIcon(":icons/actions/edit.svg"))
 		handler.stackHandler()

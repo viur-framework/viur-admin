@@ -141,10 +141,10 @@ class HierarchyWrapper(QtCore.QObject):
 		if data["action"] == "list":
 			self.dataCache[req.wrapperCbCacheKey] = (time(), data["skellist"], cursor)
 			for skel in data["skellist"]:
-				self.dataCache[skel["id"]] = skel
+				self.dataCache[skel["key"]] = skel
 			self.childrenAvailable.emit(req.node)
 		elif data["action"] == "view":
-			self.dataCache[data["values"]["id"]] = data["values"]
+			self.dataCache[data["values"]["key"]] = data["values"]
 			self.entityAvailable.emit(data["values"])
 		self.checkBusyStatus()
 

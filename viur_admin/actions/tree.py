@@ -55,7 +55,7 @@ class TreeEditAction(QtWidgets.QAction):
 			else:
 				skelType = "node"
 			modul = self.parent().modul
-			key = entry["id"]
+			key = entry["key"]
 			widget = lambda: EditWidget(modul, EditWidget.appTree, key, skelType=skelType)
 			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
 			handler.stackHandler()
@@ -145,9 +145,9 @@ class TreeDeleteAction(QtWidgets.QAction):
 		leafs = []
 		for item in self.parent().selectedItems():
 			if isinstance(item, self.parent().getNodeItemClass()):
-				nodes.append(item.entryData["id"])
+				nodes.append(item.entryData["key"])
 			else:
-				leafs.append(item.entryData["id"])
+				leafs.append(item.entryData["key"])
 		self.parent().requestDelete(nodes, leafs)
 
 	# self.parent().delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )

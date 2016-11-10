@@ -170,7 +170,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return self.dataCache
 
 	def sort(self, colum, order):
-		if self.fields[colum] == "id" \
+		if self.fields[colum] == "key" \
 				or ("cantSort" in dir(self.delegates[colum]) \
 						    and self.delegates[colum].cantSort):
 			return
@@ -323,7 +323,7 @@ class ListTableView(QtWidgets.QTableView):
 			idList = []
 			for row in rows:
 				data = self.model().getData()[row]
-				idList.append(data["id"])
+				idList.append(data["key"])
 			self.requestDelete(idList)
 		elif e.key() == QtCore.Qt.Key_Return:
 			for index in self.selectedIndexes():
@@ -614,7 +614,7 @@ class ListWidget(QtWidgets.QWidget):
 			else:
 				descr = QtCore.QCoreApplication.translate("List", "Edit entry")
 		modul = self.list.modul
-		key = item["id"]
+		key = item["key"]
 		handler = WidgetHandler(lambda: EditWidget(modul, EditWidget.appList, key, clone=clone), descr, icon)
 		handler.mainWindow.addHandler(handler, myHandler)
 		handler.focus()
@@ -743,7 +743,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 		dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
 		dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
 		dialog.setDefaultSuffix("csv")
-		if dialog.exec():
+		if dialog.exec_():
 			try:
 				self.ui.filenameName.setText(dialog.selectedFiles()[0])
 			except Exception as err:

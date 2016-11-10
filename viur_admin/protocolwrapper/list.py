@@ -128,9 +128,9 @@ class ListWrapper(QtCore.QObject):
 		if data["action"] == "list":
 			self.dataCache[req.wrapperCbCacheKey] = (time(), data["skellist"], cursor)
 			for skel in data["skellist"]:
-				self.dataCache[skel["id"]] = skel
+				self.dataCache[skel["key"]] = skel
 		elif data["action"] == "view":
-			self.dataCache[data["values"]["id"]] = data["values"]
+			self.dataCache[data["values"]["key"]] = data["values"]
 			self.entityAvailable.emit(data["values"])
 		if hasattr(req, "wrapperCbCacheKey"):
 			self.queryResultAvailable.emit(req.wrapperCbCacheKey)
@@ -165,8 +165,8 @@ class ListWrapper(QtCore.QObject):
 	def deleteEntities(self, ids):
 		if isinstance(ids, list):
 			req = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
-			for id in ids:
-				r = NetworkService.request("/%s/delete" % self.module, {"id": id}, secure=True, parent=req)
+			for key in ids:
+				r = NetworkService.request("/%s/delete" % self.module, {"key": key}, secure=True, parent=req)
 				req.addQuery(r)
 		else:  # We just delete one
 			NetworkService.request("/%s/delete/%s" % (self.module, id), secure=True,

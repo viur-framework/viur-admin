@@ -41,7 +41,7 @@ class ShopMarkPayedAction(QtWidgets.QAction):
                                       QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
             return
         for item in items:
-            protoWrap.execNetworkAction("/%s/markPayed" % self.parent().modul, {"id": item["id"]}, secure=True)
+            protoWrap.execNetworkAction("/%s/markPayed" % self.parent().modul, {"key": item["key"]}, secure=True)
 
     @staticmethod
     def isSuitableFor(modul, actionName):
@@ -84,7 +84,7 @@ class ShopMarkSendAction(QtWidgets.QAction):
                                                           item["bill_lastname"],
                                                           item["creationdate"] ))):
                     continue
-            protoWrap.execNetworkAction("/%s/markSend" % self.parent().modul, {"id": item["id"]}, secure=True)
+            protoWrap.execNetworkAction("/%s/markSend" % self.parent().modul, {"key": item["key"]}, secure=True)
 
     @staticmethod
     def isSuitableFor(modul, actionName):
@@ -126,7 +126,7 @@ class ShopMarkCanceledAction(QtWidgets.QAction):
                                                           item["bill_lastname"],
                                                           item["creationdate"] ))):
                     continue
-            protoWrap.execNetworkAction("/%s/markCanceled" % self.parent().modul, {"id": item["id"]}, secure=True)
+            protoWrap.execNetworkAction("/%s/markCanceled" % self.parent().modul, {"key": item["key"]}, secure=True)
 
     @staticmethod
     def isSuitableFor(modul, actionName):
@@ -156,7 +156,7 @@ class ShopDownloadBillAction(QtWidgets.QAction):
         if not destDir:
             return
         for item in items:
-            req = protoWrap.execNetworkAction("/%s/getBill" % self.parent().modul, {"id": item["id"]}, secure=True,
+            req = protoWrap.execNetworkAction("/%s/getBill" % self.parent().modul, {"key": item["key"]}, secure=True,
                                               successHandler=self.saveBill)
             req.destDir = destDir
             assert not any([x in str(item["idx"]) for x in "/\\\".:"])
@@ -196,7 +196,7 @@ class ShopDownloadDeliveryNoteAction(QtWidgets.QAction):
         if not destDir:
             return
         for item in items:
-            req = protoWrap.execNetworkAction("/%s/getDeliveryNote" % self.parent().modul, {"id": item["id"]},
+            req = protoWrap.execNetworkAction("/%s/getDeliveryNote" % self.parent().modul, {"key": item["key"]},
                                               secure=True, successHandler=self.saveBill)
             req.destDir = destDir
             assert not any([x in str(item["idx"]) for x in "/\\\".:"])

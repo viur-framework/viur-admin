@@ -26,7 +26,7 @@ class TaskEntryHandler(WidgetHandler):
 			if tasks:
 				taskDict = {}
 				for t in tasks["skellist"]:
-					taskDict[t["id"]] = t
+					taskDict[t["key"]] = t
 				try:
 					taskID = self.widgets[1].key
 				except:
@@ -68,7 +68,7 @@ class TaskViewer(QtWidgets.QWidget):
 		item = self.ui.listWidget.currentItem()
 		if not item:
 			return
-		taskID = item.task["id"]
+		taskID = item.task["key"]
 
 		for i in range(self.ui.horizontalLayout.count()):
 			if self.ui.horizontalLayout.itemAt(i).widget():
@@ -78,7 +78,7 @@ class TaskViewer(QtWidgets.QWidget):
 				self.ui.verticalLayout.itemAt(i).widget().close()
 		task = None
 		for t in self.tasks["skellist"]:
-			if t["id"] == taskID:
+			if t["key"] == taskID:
 				task = t
 				break
 		if not task:

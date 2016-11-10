@@ -60,7 +60,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		if not item:
 			return
 		if isinstance(item, dict):
-			id = item["id"]
+			id = item["key"]
 			if "_type" in item.keys():
 				self.entryFetches.append(protoWrap.queryEntry(id, item["_type"]))
 			else:
@@ -89,9 +89,9 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			realModule = self.modul
 		protoWrap = protocolWrapperInstanceSelector.select(realModule)
 		assert protoWrap is not None
-		if item is None or not item["id"] in self.entryFetches:
+		if item is None or not item["key"] in self.entryFetches:
 			return
-		self.entryFetches.remove(item["id"])
+		self.entryFetches.remove(item["key"])
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache.append(item)
 		self.layoutChanged.emit()

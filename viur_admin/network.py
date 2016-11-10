@@ -34,6 +34,7 @@ try:
 # certs = open(":icons/cacert.pem", "r").read()
 except:
 	certs = None
+
 if certs:
 	baseSslConfig = QSslConfiguration.defaultConfiguration()
 	baseSslConfig.setCaCertificates(QSslCertificate.fromData(certs))

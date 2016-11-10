@@ -511,8 +511,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		handlers = []
 		groupHandlers = {}
 		by_group = dict()
-		if "configuration" in data.keys() and "modulGroups" in data["configuration"].keys():
-			for group in data["configuration"]["modulGroups"]:
+		if "configuration" in data.keys() and "moduleGroups" in data["configuration"].keys():
+			for group in data["configuration"]["moduleGroups"]:
 				if not all([x in group.keys() for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue

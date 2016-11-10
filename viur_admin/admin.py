@@ -93,7 +93,7 @@ def reportError(type, value, tb):
 	print(type)
 	print(value)
 	traceback.print_tb(tb)
-
+	return
 	if os.path.exists(".git"):
 		releaseStage = "development"
 	else:
@@ -125,7 +125,7 @@ def reportError(type, value, tb):
 	n.deliver()
 
 
-if (args.report == "auto" and not os.path.exists(
+if 0 and (args.report == "auto" and not os.path.exists(
 		".git")) or args.report == "yes":  # Report errors only if not being a local development instance
 	sys.excepthook = reportError
 

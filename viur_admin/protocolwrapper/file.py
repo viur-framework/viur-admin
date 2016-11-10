@@ -240,7 +240,7 @@ class RecursiveUploader(QtCore.QObject):
 				# This directory allready exists
 				self.stats["dirsDone"] += 1
 				r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-				                      skel["id"], self.module, parent=self)
+				                      skel["key"], self.module, parent=self)
 				r.uploadProgress.connect(self.uploadProgress)
 				self.cancel.connect(r.cancel)
 				self.uploadProgress.emit(0, 1)
@@ -258,7 +258,7 @@ class RecursiveUploader(QtCore.QObject):
 		assert data["action"] == "addSuccess"
 		self.stats["dirsDone"] += 1
 		r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-		                      data["values"]["id"], self.module, parent=self)
+		                      data["values"]["key"], self.module, parent=self)
 		r.uploadProgress.connect(self.uploadProgress)
 		self.cancel.connect(r.cancel)
 		self.uploadProgress.emit(0, 1)
@@ -331,7 +331,7 @@ class RecursiveDownloader(QtCore.QObject):
 				self.remainingRequests += 1
 				if not os.path.exists(os.path.join(self.localTargetDir, directory["name"])):
 					os.mkdir(os.path.join(self.localTargetDir, directory["name"]))
-				request = NetworkService.request("/%s/list/%s/%s" % (self.modul, t, directory["id"]),
+				request = NetworkService.request("/%s/list/%s/%s" % (self.modul, t, directory["key"]),
 				                                 successHandler=self.onListDir, finishedHandler=self.onRequestFinished)
 				request.dname = directory["name"]
 				request.ntype = t

@@ -70,7 +70,7 @@ class TreeWrapper(QtCore.QObject):
 		for node in self.rootNodes:
 			node = node.copy()
 			node["_type"] = "node"
-			node["id"] = node["key"]
+			node["key"] = node["key"]
 			node["_isRootNode"] = 1
 			node["parentdir"] = None
 			self.dataCache[node["key"]] = node
@@ -195,7 +195,7 @@ class TreeWrapper(QtCore.QObject):
 				self.dataCache[key] = []
 			assert data["action"] == "list"
 			for skel in data["skellist"]:
-				if not skel["id"] in [x["id"] for x in self.dataCache[key]]:
+				if not skel["key"] in [x["key"] for x in self.dataCache[key]]:
 					skel["_type"] = req.skelType
 					self.dataCache[key].append(skel)
 			self.customQueryFinished.emit(key)
@@ -205,7 +205,7 @@ class TreeWrapper(QtCore.QObject):
 		if data["action"] == "list":
 			for skel in data["skellist"]:
 				skel["_type"] = req.skelType
-				self.dataCache[skel["id"]] = skel
+				self.dataCache[skel["key"]] = skel
 			if len(data["skellist"]) == self.batchSize:  # There might be more results
 				if "cursor" in data.keys() and cursor:  # We have a cursor (we can continue this query)
 					# Fetch the next batch
@@ -222,7 +222,7 @@ class TreeWrapper(QtCore.QObject):
 		elif data["action"] == "view":
 			skel = data["values"]
 			skel["_type"] = req.skelType
-			self.dataCache[skel["id"]] = skel
+			self.dataCache[skel["key"]] = skel
 			self.entityAvailable.emit(skel)
 		if req.wrapperCacheKey in self.dataCache.keys() and self.dataCache[req.wrapperCacheKey] is None:
 			del self.dataCache[req.wrapperCacheKey]
@@ -294,7 +294,7 @@ class TreeWrapper(QtCore.QObject):
 			request.addQuery(NetworkService.request(
 					"/%s/move" % self.module,
 					{
-						"id": node,
+						"key": node,
 						"skelType": "node",
 						"destNode": destNode
 					},
@@ -303,7 +303,7 @@ class TreeWrapper(QtCore.QObject):
 			request.addQuery(NetworkService.request(
 					"/%s/move" % self.module,
 					{
-						"id": leaf,
+						"key": leaf,
 						"skelType": "leaf",
 						"destNode": destNode
 					},
@@ -344,7 +344,7 @@ class TreeWrapper(QtCore.QObject):
 
 	def emitEntriesChanged(self, *args, **kwargs):
 		self.clearCache()
-		self.entitiesChanged.emit(None)
+		self.entitiesChanged.emit("")
 		self.checkBusyStatus()
 
 	def resetOnError(self, *args, **kwargs):

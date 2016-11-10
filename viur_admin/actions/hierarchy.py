@@ -51,7 +51,7 @@ class HierarchyCloneAction(QtWidgets.QAction):
 		parent = self.parent()
 		modul = self.parent().getModul()
 		for item in parent.hierarchy.selectedItems():
-			key = item.entryData["id"]
+			key = item.entryData["key"]
 
 			def widgetFactory():
 				node = parent.getRootNode()
@@ -84,7 +84,7 @@ class HierarchyEditAction(QtWidgets.QAction):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
 			modul = self.parent().getModul()
-			key = item.entryData["id"]
+			key = item.entryData["key"]
 			widget = lambda: EditWidget(modul, EditWidget.appHierarchy, key)
 			handler = WidgetHandler(
 					widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
@@ -112,7 +112,7 @@ class HierarchyDeleteAction(QtWidgets.QAction):
 	def onTriggered(self):
 		parent = self.parent()
 		for item in parent.hierarchy.selectedItems():
-			self.parent().hierarchy.requestDelete(item.entryData["id"])
+			self.parent().hierarchy.requestDelete(item.entryData["key"])
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):

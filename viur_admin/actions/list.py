@@ -137,7 +137,7 @@ class ListDeleteAction(QtWidgets.QAction):
 				rows.append(row)
 		deleteData = [self.parentWidget().list.model().getData()[row] for row in rows]
 		reqWrap = protocolWrapperInstanceSelector.select(self.parent().list.modul)
-		self.parent().requestDelete([x["id"] for x in deleteData])
+		self.parent().requestDelete([x["key"] for x in deleteData])
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
@@ -183,7 +183,7 @@ class Preview(QtWidgets.QDialog):
 			return
 		baseurl = NetworkService.url.replace("/admin", "")
 		url = self.urls[idx][1]
-		url = url.replace("{{id}}", self.data["id"]).replace("{{modul}}", self.modul)
+		url = url.replace("{{key}}", self.data["key"]).replace("{{module}}", self.modul)
 		QtGui.QDesktopServices.openUrl(QtCore.QUrl(baseurl + url))
 
 

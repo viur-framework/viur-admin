@@ -65,7 +65,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 
 class MultiItemWidget(QtWidgets.QWidget):
 	def __init__(self, text, parent=None):
-		super().__init__(parent)
+		super(MultiItemWidget, self).__init__(parent)
 		self.previewImage = QtWidgets.QLabel(self)
 		self.previewImage.hide()
 		self.label = QtWidgets.QLabel(self)
@@ -119,8 +119,8 @@ class FileItemBone(TreeItemBone):
 				for item in self.selection:
 					# print("format", self.format, structure, item)
 					lbl = MultiItemWidget(formatString(self.format, structure, item), parent=self.previewWidget)
-					if item["mimetype"].startswith("image/"):
-						RemoteFile(item["dlkey"], successHandler=lbl.loadIconFromRequest)
+					if item["dest"]["mimetype"].startswith("image/"):
+						RemoteFile(item["dest"]["dlkey"], successHandler=lbl.loadIconFromRequest)
 					self.previewLayout.addWidget(lbl)
 				self.addBtn.setText("Auswahl ändern")
 			else:
@@ -128,8 +128,8 @@ class FileItemBone(TreeItemBone):
 		else:
 			if self.selection:
 				logger.debug("selection: %r", self.selection)
-				if self.selection["mimetype"].startswith("image/"):
-					RemoteFile(self.selection["dlkey"], successHandler=self.loadIconFromRequest)
+				if self.selection["dest"]["mimetype"].startswith("image/"):
+					RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
 				self.entry.setText(formatString(self.format, structure, self.selection))
 			else:
 				self.entry.setText("")

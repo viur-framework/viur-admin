@@ -81,19 +81,20 @@ class LoginTask(QtCore.QObject):
 	def onWarmup(self, request=None):  # Warmup request has finished
 		logger.debug("Checkpoint: onWarmup")
 		if self.isLocalServer:
-			NetworkService.request("http://%s:%s/admin/user/getAuthMethod" % (
+			NetworkService.request("http://%s:%s/admin/user/getAuthMethods" % (
 				self.hostName, urllib.parse.urlparse(NetworkService.url).port,),
 			                       finishedHandler=self.onAuthMethodKnown)
 		else:
-			NetworkService.request("https://%s/admin/user/getAuthMethod" % (self.hostName,),
+			NetworkService.request("https://%s/admin/user/getAuthMethods" % (self.hostName,),
 			                       finishedHandler=self.onAuthMethodKnown)
 
 	def onAuthMethodKnown(self, request):
 		logger.debug("Checkpoint: onAuthMethodKnown")
 		method = request.readAll().data().decode("UTF-8").lower()
+		print(method)
 		if method == "x-viur-internal":
 			logger.debug("LoginTask using method x-viur-internal")
-			NetworkService.request("/user/login", {"name": self.username, "password": self.password}, secure=True,
+			NetworkService.request("/user/auth_userpassword/login", {"name": self.username, "password": self.password}, secure=True,
 			                       successHandler=self.onViurAuth, failureHandler=self.onError)
 		else:  # Fallback to google account auth
 			logger.debug("LoginTask using method x-google-account")
@@ -121,7 +122,7 @@ class LoginTask(QtCore.QObject):
 	def onLocalAuth(self, request):
 		logger.debug("Checkpoint: onLocalAuth")
 		NetworkService.request(
-			"http://%s:%s/admin/user/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port), None,
+			"http://%s:%s/admin/user/auth_googleaccount/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port), None,
 			successHandler=self.onLoginSucceeded, failureHandler=self.onError)
 
 	def onGoogleAuthLoginUrl(self, request):

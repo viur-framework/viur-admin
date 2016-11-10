@@ -44,7 +44,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 			else:
 				skelType = "node"
 			modul = self.parent().modul
-			key = entry["id"]
+			key = entry["key"]
 			widget = lambda: EditWidget(modul, EditWidget.appTree, key, skelType=skelType)
 			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
 			handler.stackHandler()
@@ -130,8 +130,8 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
 		assert protpWrap is not None
 		data = entry.entryData.copy()
 		data["name"] = name
-		key = data["id"]
-		del data["id"]
+		key = data["key"]
+		del data["key"]
 		protpWrap.edit(key, "node", **data)
 
 	@staticmethod

@@ -144,7 +144,7 @@ class PathListView(QtWidgets.QListWidget):
 		protoWrap.move(
 				dataDict["nodes"],
 				dataDict["leafs"],
-				destItem.entryData["id"])
+				destItem.entryData["key"])
 
 	@QtCore.pyqtSlot(str)
 	def setNode(self, node, isInitialCall=False):
@@ -160,7 +160,7 @@ class PathListView(QtWidgets.QListWidget):
 		self.rebuild()
 
 	def pathListItemClicked(self, item):
-		self.setNode(item.entryData["id"], isInitialCall=True)
+		self.setNode(item.entryData["key"], isInitialCall=True)
 
 	# self.setPath( self.path[ : clickeditem.i ] )
 	# self.pathChanged.emit( self.path )
@@ -274,7 +274,7 @@ class TreeListView(QtWidgets.QListWidget):
 
 	def onItemDoubleClicked(self, item):
 		if (isinstance(item, self.nodeItem)):
-			self.setNode(item.entryData["id"], isInitialCall=True)
+			self.setNode(item.entryData["key"], isInitialCall=True)
 
 	def dragEnterEvent(self, event):
 		"""
@@ -290,8 +290,8 @@ class TreeListView(QtWidgets.QListWidget):
 					nodes.append(item.entryData)
 				else:
 					leafs.append(item.entryData)
-			event.mimeData().setData("viur/treeDragData", json.dumps({"nodes": [x["id"] for x in nodes],
-			                                                          "leafs": [x["id"] for x in leafs]}).encode(
+			event.mimeData().setData("viur/treeDragData", json.dumps({"nodes": [x["key"] for x in nodes],
+			                                                          "leafs": [x["key"] for x in leafs]}).encode(
 					"utf-8"))
 			event.mimeData().setUrls(
 					[utils.urlForItem(self.getModul(), x) for x in nodes] + [utils.urlForItem(self.getModul(), x) for x
@@ -320,7 +320,7 @@ class TreeListView(QtWidgets.QListWidget):
 			return
 		protoWrap.move(dataDict["nodes"],
 		               dataDict["leafs"],
-		               destItem.entryData["id"]
+		               destItem.entryData["key"]
 		               )
 
 	def setDefaultRootNode(self):
@@ -338,6 +338,7 @@ class TreeListView(QtWidgets.QListWidget):
 			self.loadData()
 
 	def loadData(self, queryObj=None):
+		print("loadData")
 		if self.modul.endswith("_rootNode"):
 			realModule = self.modul.replace("_rootNode", "")
 		else:
@@ -378,6 +379,7 @@ class TreeListView(QtWidgets.QListWidget):
 			@param nodes: List of Nodes which we shall display
 			@type nodes: list of dict
 		"""
+		print("setDisplayData")
 		self.clear()
 		for entry in nodes:
 			if entry["_type"] == "node":
@@ -387,6 +389,7 @@ class TreeListView(QtWidgets.QListWidget):
 			else:
 				raise NotImplementedError()
 		self.sortItems()
+		print("end setDisplayData")
 
 	def onCustomContextMenuRequested(self, point):
 		menu = QtWidgets.QMenu(self)
@@ -413,9 +416,9 @@ class TreeListView(QtWidgets.QListWidget):
 			leafs = []
 			for item in self.selectedItems():
 				if isinstance(item, self.nodeItem):
-					nodes.append(item.entryData["id"])
+					nodes.append(item.entryData["key"])
 				else:
-					leafs.append(item.entryData["id"])
+					leafs.append(item.entryData["key"])
 			doMove = (action.task == "move")
 			mimeData = QtCore.QMimeData()
 			mimeData.setData("viur/treeDragData", json.dumps(
@@ -429,9 +432,9 @@ class TreeListView(QtWidgets.QListWidget):
 			leafs = []
 			for item in self.selectedItems():
 				if isinstance(item, self.nodeItem):
-					nodes.append(item.entryData["id"])
+					nodes.append(item.entryData["key"])
 				else:
-					leafs.append(item.entryData["id"])
+					leafs.append(item.entryData["key"])
 			self.requestDelete(nodes, leafs)
 		elif action.task == "paste":
 			# self.currentItem() ):
@@ -606,7 +609,7 @@ class TreeWidget(QtWidgets.QWidget):
 	def listWidgetItemDoubleClicked(self, item):
 		if isinstance(item, self.leafItem) and self.editOnDoubleClick:
 			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			handler = WidgetHandler(lambda: EditWidget(self.modul, EditWidget.appTree, item.entryData["id"]), descr)
+			handler = WidgetHandler(lambda: EditWidget(self.modul, EditWidget.appTree, item.entryData["key"]), descr)
 			handler.stackHandler()
 		elif isinstance(item, NodeItem):
 			self.path.append(item.dirName)

@@ -425,9 +425,9 @@ def urlForItem(modul, item):
 	else:
 		if "name" in item.keys():
 			return QtCore.QUrl(
-					"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"], item["name"]))
+					"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"], item["name"]))
 		else:  # Return a URL without a name appended
-			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["id"]))
+			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"]))
 
 
 def itemFromUrl(url):
