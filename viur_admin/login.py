@@ -10,6 +10,7 @@ import re
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
+from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 from viur_admin.accountmanager import Accountmanager
 from viur_admin.network import NetworkService, securityTokenProvider, nam
 from viur_admin.event import event
@@ -48,6 +49,57 @@ class GoogleLoginView(QtWidgets.QDialog):
 			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
 			self.close()
 			self.deleteLater()
+
+
+class AddPortalWizard(QtWidgets.QWizard):
+	def __init__(self, *args, **kwargs):
+		super(AddPortalWizard, self).__init__(*args, **kwargs)
+		self.ui = Ui_AddPortalWizard()
+		self.ui.setupUi(self)
+		self.forcePageFlip = False
+		self.choosenAuthMethod = None
+
+	def validateCurrentPage(self):
+		if self.forcePageFlip:
+			self.forcePageFlip = False
+			return True
+		if self.currentId()==0:
+			if not self.ui.editTitle.text():
+				print("Kein Title")
+				return False
+			server = self.ui.editServer.text()
+			if not server or not (server.startswith("http://") or server.startswith("https://")):
+				print("Invalid Server")
+				return False
+			if not server.endswith("/"):
+				server += "/"
+			NetworkService.url = server + "admin"
+			NetworkService.request(
+				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
+			self.setDisabled(True)
+			return False
+		return True
+
+	def nextId(self):
+		return self.currentId()+1
+
+	def onAuthMethodsKnown(self, req):
+		data = NetworkService.decode(req)
+		print(data)
+		self.ui.cbAuthSelector.clear()
+		seenList = []
+		for authMethod, verificationMethod in data:
+			if not authMethod in seenList:
+				seenList.append(authMethod)
+				self.ui.cbAuthSelector.addItem(authMethod)
+		self.setDisabled(False)
+		self.forcePageFlip = True
+		self.next()
+
+	def onError(self, req):
+		print("***ERROR***")
+		print(req)
+		self.setDisabled(False)
 
 class LoginTask(QtCore.QObject):
 	loginFailed = QtCore.pyqtSignal((str,))
@@ -208,11 +260,10 @@ class Login(QtWidgets.QMainWindow):
 		self.ui.setupUi(self)
 		self.accman = None  # Reference to our Account-MGR
 		self.helpBrowser = None
+		self.activeAccount = None
 		event.connectWithPriority('resetLoginWindow', self.enableForm, event.lowPriority)
 		event.connectWithPriority('accountListChanged', self.loadAccounts, event.lowPriority)
 		self.ui.cbPortal.currentRowChanged.connect(self.onCbPortalCurrentRowChanged)
-		self.ui.lblCaptcha.setText(QtCore.QCoreApplication.translate("Login", "Not required"))
-		self.ui.editCaptcha.hide()
 		self.captchaToken = None
 		self.loadAccounts()
 		self.overlay = Overlay(self)
@@ -269,9 +320,7 @@ class Login(QtWidgets.QMainWindow):
 			activeaccount = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
 			config.conf.adminConfig["currentPortalName"] = activeaccount["name"]
 			config.conf.saveConfig()
-		self.ui.editUsername.setText(activeaccount["user"])
-		self.ui.editPassword.setText(activeaccount["password"])
-		self.ui.editUrl.setText(activeaccount["url"])
+		self.activeAccount = activeaccount
 
 	def onLoginSucceeded(self):
 		logger.debug("onLoginSucceeded")
