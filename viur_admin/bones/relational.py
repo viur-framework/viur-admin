@@ -15,7 +15,7 @@ from viur_admin.utils import formatString, Overlay, WidgetHandler
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
 from viur_admin.widgets.edit import EditWidget
-from viur_admin.widgets.selectedExtendedEntities import SelectedExtendedEntitiesWidget
+from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
@@ -368,7 +368,7 @@ class RelationalEditBone(BoneEditInterface):
 class RelationalBoneSelector(QtWidgets.QWidget):
 	selectionChanged = QtCore.pyqtSignal((object,))
 	displaySourceWidget = ListWidget
-	displaySelectionWidget = SelectedExtendedEntitiesWidget
+	displaySelectionWidget = SelectedEntitiesWidget
 	GarbageTypeName = "ExtendedRelationalBoneSelector"
 
 	def __init__(self, moduleName, boneName, multiple, toModul, selection, *args, **kwargs):

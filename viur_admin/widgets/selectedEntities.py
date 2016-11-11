@@ -3,13 +3,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.event import event
-from viur_admin.utils import RegisterQueue, formatString, itemFromUrl
-from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
-from viur_admin.widgets.list import ListWidget
-from viur_admin.network import NetworkService
-from viur_admin.config import conf
-from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector
 
 
 class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
@@ -29,17 +23,14 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		super(SelectedEntitiesTableModel, self).__init__(parent, *args, **kwargs)
 		self.modul = modul
 		self.dataCache = []
-		self.fields = ["name"]
+		self.fields = ["name", "foo"]
 		self.headers = []
 		self.skelType = skelType
 		self.entryFetches = []  # List of fetch-Tasks we issued
-		if self.modul.endswith("_rootNode"):
-			realModule = self.modul.replace("_rootNode", "")
-		else:
-			realModule = self.modul
-		protoWrap = protocolWrapperInstanceSelector.select(realModule)
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
-
+		structureCache = protoWrap.editStructure
+		# print("model init structure", structureCache)
 		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
 			self.addItem(item)
@@ -47,15 +38,11 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 	def addItem(self, item):
 		"""
 			Adds an item to the model.
-			The only relevant information is item["id"], the rest if freshly fetched from the server.
+			The only relevant information is item["key"], the rest is freshly fetched from the server.
 			@param item: The new item
 			@type item: Dict or String
 		"""
-		if self.modul.endswith("_rootNode"):
-			realModule = self.modul.replace("_rootNode", "")
-		else:
-			realModule = self.modul
-		protoWrap = protocolWrapperInstanceSelector.select(realModule)
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		if not item:
 			return
@@ -68,26 +55,17 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 					self.entryFetches.append(protoWrap.queryEntry(id, self.skelType))
 				else:
 					self.entryFetches.append(protoWrap.queryEntry(id))
-		elif isinstance(item, str):
-			if self.skelType is not None:
-				self.entryFetches.append(protoWrap.queryEntry(item, self.skelType))
-			else:
-				self.entryFetches.append(protoWrap.queryEntry(item))
 		else:
 			raise NotImplementedError()
-			# self.entryFetches.append( protoWrap.queryEntry( id ) )
-			# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )
+		# self.entryFetches.append( protoWrap.queryEntry( id ) )
+		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )
 
 	def onItemDataAvailable(self, item):
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.
 		"""
-		if self.modul.endswith("_rootNode"):
-			realModule = self.modul.replace("_rootNode", "")
-		else:
-			realModule = self.modul
-		protoWrap = protocolWrapperInstanceSelector.select(realModule)
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		if item is None or not item["key"] in self.entryFetches:
 			return
@@ -169,11 +147,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
-		realModule = self.model().modul
-		if realModule.endswith("_rootNode"):
-			realModule = realModule.replace("_rootNode", "")
-
-		protoWrap = protocolWrapperInstanceSelector.select(realModule)
+		protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
 		assert protoWrap is not None
 		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected
 		if self.skelType is None:
