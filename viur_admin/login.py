@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
+from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
 from viur_admin.accountmanager import Accountmanager
 from viur_admin.network import NetworkService, securityTokenProvider, nam
 from viur_admin.event import event
@@ -50,6 +51,82 @@ class GoogleLoginView(QtWidgets.QDialog):
 			self.close()
 			self.deleteLater()
 
+class AuthUserPassword(QtWidgets.QWidget):
+	loginFailed = QtCore.pyqtSignal((str,))
+	loginSucceeded = QtCore.pyqtSignal()
+	secondFactorRequired = QtCore.pyqtSignal((str,))
+
+
+	def __init__(self, currentPortalConfig, *args, **kwargs):
+		super(AuthUserPassword, self).__init__(*args, **kwargs)
+		self.ui = Ui_AuthUserPassword()
+		self.ui.setupUi(self)
+		self.currentPortalConfig = currentPortalConfig
+
+		#config.conf.currentUsername = username
+		#config.conf.currentPassword = password
+
+	def getUpdatedPortalConfig(self):
+		self.currentPortalConfig["username"] = self.ui.editUsername.text()
+		if self.ui.cbSavePassword.checkState():
+			self.currentPortalConfig["password"] = self.ui.editPassword.text()
+		else:
+			self.currentPortalConfig["password"] = ""
+		return self.currentPortalConfig
+
+	def startAuthenticating(self):
+		logger.debug("LoginTask using method x-viur-internal")
+		NetworkService.request("/user/auth_userpassword/login", {"name": self.username, "password": self.password}, secure=True,
+		                       successHandler=self.onViurAuth, failureHandler=self.onError)
+
+	def onViurAuth(self, request):  # We received an response to our auth request
+		logger.debug("Checkpoint: onViurAuth")
+		try:
+			res = NetworkService.decode(request)
+		except:  # Something went wrong
+			self.onError(msg="Unable to decode response!")
+			return
+		if str(res).lower() == "okay":
+			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
+			self.onLoginSucceeded(request)
+		else:
+			self.onError(msg='Received response != "okay"!')
+
+	def onError(self, request=None, error=None, msg=None):
+		logger.debug("onerror: %r, %r, %r", request, error, msg)
+		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
+		self.deleteLater()
+
+
+class LoginTask(QtCore.QObject):
+	loginFailed = QtCore.pyqtSignal((str,))
+	loginSucceeded = QtCore.pyqtSignal()
+	captchaRequired = QtCore.pyqtSignal((str, str))
+
+	authenticationProvider = {
+		"X-VIUR-AUTH-User-Password": AuthUserPassword,
+	}
+
+	def __init__(self, currentPortalConfig, *args, **kwargs):
+		super(LoginTask, self).__init__(*args, **kwargs)
+		logger.debug("Starting LoginTask")
+		self.currentPortalConfig = currentPortalConfig
+		assert currentPortalConfig["authMethod"] in self.authenticationProvider.keys(), "Unknown authentication method"
+		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig)
+
+	def startAuthenticationFlow(self):
+		self.authenticationProvider.startAuthenticationFlow()
+
+
+	def startSetup(self):
+		return self.authProvider
+
+	def getUpdatedPortalConfig(self):
+		self.currentPortalConfig.update(self.authProvider.getUpdatedPortalConfig())
+		return self.currentPortalConfig
+
+
+
 
 class AddPortalWizard(QtWidgets.QWizard):
 	def __init__(self, *args, **kwargs):
@@ -57,7 +134,9 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.ui = Ui_AddPortalWizard()
 		self.ui.setupUi(self)
 		self.forcePageFlip = False
-		self.choosenAuthMethod = None
+		self.validAuthMethods = None
+		self.loginTask = None
+		self.currentPortalConfig = {"key": 1234.56}
 
 	def validateCurrentPage(self):
 		if self.forcePageFlip:
@@ -73,24 +152,47 @@ class AddPortalWizard(QtWidgets.QWizard):
 				return False
 			if not server.endswith("/"):
 				server += "/"
+			self.currentPortalConfig["server"] = server
+			self.currentPortalConfig["title"] = self.ui.editTitle.text()
 			NetworkService.url = server + "admin"
 			NetworkService.request(
 				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
 			self.setDisabled(True)
 			return False
+		elif self.currentId()==1:
+			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
+			print("SELECTED AUTH METHOD")
+			print(self.currentPortalConfig)
+		elif self.currentId()==2:
+			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
+			print("********")
+			print(self.currentPortalConfig)
 		return True
 
-	def nextId(self):
-		return self.currentId()+1
+	def initializePage(self, pageId):
+		super(AddPortalWizard, self).initializePage(pageId)
+		if pageId==2:
+			if self.loginTask:
+				self.loginTask.deleteLater()
+				self.loginTask = None
+			self.loginTask = LoginTask(self.currentPortalConfig)
+			self.tmp = self.loginTask.startSetup()
+			self.ui.scrollArea.setWidget(self.tmp)
+			#self.ui.wizardPage1.layout().addWidget(self.tmp)
+			self.tmp.show()
+			print("*****")
+			print(self.tmp)
 
 	def onAuthMethodsKnown(self, req):
 		data = NetworkService.decode(req)
 		print(data)
 		self.ui.cbAuthSelector.clear()
 		seenList = []
+		self.validAuthMethods = {}
 		for authMethod, verificationMethod in data:
 			if not authMethod in seenList:
 				seenList.append(authMethod)
+				self.validAuthMethods[authMethod] = authMethod
 				self.ui.cbAuthSelector.addItem(authMethod)
 		self.setDisabled(False)
 		self.forcePageFlip = True
@@ -101,7 +203,7 @@ class AddPortalWizard(QtWidgets.QWizard):
 		print(req)
 		self.setDisabled(False)
 
-class LoginTask(QtCore.QObject):
+class LoginTask_(QtCore.QObject):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
 	captchaRequired = QtCore.pyqtSignal((str, str))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addportalwizard.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.4.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -42,23 +42,16 @@ class Ui_AddPortalWizard(object):
         AddPortalWizard.addPage(self.wizardPage1)
         self.wizardPage2 = QtWidgets.QWizardPage()
         self.wizardPage2.setObjectName("wizardPage2")
-        self.formLayout_3 = QtWidgets.QFormLayout(self.wizardPage2)
-        self.formLayout_3.setObjectName("formLayout_3")
-        self.lblUsername = QtWidgets.QLabel(self.wizardPage2)
-        self.lblUsername.setObjectName("lblUsername")
-        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.lblUsername)
-        self.editUsername = QtWidgets.QLineEdit(self.wizardPage2)
-        self.editUsername.setObjectName("editUsername")
-        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.editUsername)
-        self.editPassword = QtWidgets.QLineEdit(self.wizardPage2)
-        self.editPassword.setObjectName("editPassword")
-        self.formLayout_3.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.editPassword)
-        self.lblPassword = QtWidgets.QLabel(self.wizardPage2)
-        self.lblPassword.setObjectName("lblPassword")
-        self.formLayout_3.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.lblPassword)
-        self.cbSavePw = QtWidgets.QCheckBox(self.wizardPage2)
-        self.cbSavePw.setObjectName("cbSavePw")
-        self.formLayout_3.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.cbSavePw)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.wizardPage2)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.scrollArea = QtWidgets.QScrollArea(self.wizardPage2)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 362, 219))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout_2.addWidget(self.scrollArea)
         AddPortalWizard.addPage(self.wizardPage2)
         self.wizardPage3 = QtWidgets.QWizardPage()
         self.wizardPage3.setObjectName("wizardPage3")
@@ -80,8 +73,5 @@ class Ui_AddPortalWizard(object):
         self.label.setText(_translate("AddPortalWizard", "Title"))
         self.editTitle.setText(_translate("AddPortalWizard", "test"))
         self.label_2.setText(_translate("AddPortalWizard", "Select Authentication"))
-        self.lblUsername.setText(_translate("AddPortalWizard", "Username"))
-        self.lblPassword.setText(_translate("AddPortalWizard", "Password"))
-        self.cbSavePw.setText(_translate("AddPortalWizard", "Save Password?"))
         self.label_3.setText(_translate("AddPortalWizard", "Success"))
 
