@@ -10,7 +10,6 @@ import re
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
-from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
 from viur_admin.accountmanager import Accountmanager
 from viur_admin.network import NetworkService, securityTokenProvider, nam
@@ -20,10 +19,15 @@ from viur_admin.utils import Overlay, showAbout
 from viur_admin.locales import ISO639CODES
 
 
-class GoogleLoginView(QtWidgets.QDialog):
+class AuthGoogle(QtWidgets.QWidget):
+	loginFailed = QtCore.pyqtSignal((str,))
+	loginSucceeded = QtCore.pyqtSignal()
+	secondFactorRequired = QtCore.pyqtSignal((str,))
+	advancesAutomatically = True  # No need to click the next-button; we'll detect changes inside the browser ourself
 
-	def __init__(self, res, parent=None):
-		super(QtWidgets.QDialog, self).__init__(parent)
+	def __init__(self, currentPortalConfig, parent=None):
+		super(AuthGoogle, self).__init__(parent)
+		self.currentPortalConfig = currentPortalConfig
 		# self.jar = QtNetwork.QNetworkCookieJar()
 		self.webView = QtWebKitWidgets.QWebView()
 		self.setLayout(QtWidgets.QVBoxLayout())
@@ -31,31 +35,52 @@ class GoogleLoginView(QtWidgets.QDialog):
 		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
 		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
 		self.webView.page().setNetworkAccessManager(nam)
-		self.webView.setUrl(QtCore.QUrl(res["url"]))
-		self.setModal(True)
+		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"]+"/admin/user/auth_googleaccount/login"))
 		self.webView.urlChanged.connect(self.onUrlChanged)
 		self.webView.loadFinished.connect(self.onLoadFinished)
-		self.resize(1024, 800)
+
+
+	def startAuthenticating(self):
+		logger.debug("LoginTask using method x-google")
+		self.show()
+		#username = self.currentPortalConfig["username"]
+		#password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
 
 	def onUrlChanged(self, url):
 		logger.debug("urlChanged: %r", url)
 		if self.webView.findText("OKAY"):
 			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
-			self.close()
-			self.deleteLater()
+			#self.close()
+			#self.deleteLater()
+			self.loginSucceeded.emit()
+		elif self.webView.findText("ONE-TIME-PASSWORD"):
+			print(self.webView.page().mainFrame().toHtml())
+			self.secondFactorRequired.emit(self.webView.page().mainFrame().toHtml())
 
 	def onLoadFinished(self, status):
 		logger.debug("loadFinished: %r", status)
 		if self.webView.findText("OKAY"):
 			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
-			self.close()
-			self.deleteLater()
+			#self.close()
+			#self.deleteLater()
+			self.loginSucceeded.emit()
+		elif self.webView.findText("ONE-TIME-PASSWORD"):
+			print(self.webView.page().mainFrame().toHtml())
+			self.secondFactorRequired.emit(self.webView.page().mainFrame().toHtml())
+
+	def onError(self, request=None, error=None, msg=None):
+		logger.debug("onerror: %r, %r, %r", request, error, msg)
+		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
+
+	def getUpdatedPortalConfig(self):
+		# We cant store anything for now
+		return {}
 
 class AuthUserPassword(QtWidgets.QWidget):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
 	secondFactorRequired = QtCore.pyqtSignal((str,))
-
+	advancesAutomatically = False
 
 	def __init__(self, currentPortalConfig, *args, **kwargs):
 		super(AuthUserPassword, self).__init__(*args, **kwargs)
@@ -76,7 +101,9 @@ class AuthUserPassword(QtWidgets.QWidget):
 
 	def startAuthenticating(self):
 		logger.debug("LoginTask using method x-viur-internal")
-		NetworkService.request("/user/auth_userpassword/login", {"name": self.username, "password": self.password}, secure=True,
+		username = self.currentPortalConfig["username"]
+		password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
+		NetworkService.request("/user/auth_userpassword/login", {"name": username, "password": password}, secure=True,
 		                       successHandler=self.onViurAuth, failureHandler=self.onError)
 
 	def onViurAuth(self, request):  # We received an response to our auth request
@@ -84,18 +111,61 @@ class AuthUserPassword(QtWidgets.QWidget):
 		try:
 			res = NetworkService.decode(request)
 		except:  # Something went wrong
+			print("onViurAuth: Except")
 			self.onError(msg="Unable to decode response!")
 			return
 		if str(res).lower() == "okay":
+			print("onViurAuth: okay")
 			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
-			self.onLoginSucceeded(request)
+			self.loginSucceeded.emit()
+		elif str(res).lower() == "one-time-password":
+			self.secondFactorRequired.emit(res)
 		else:
+			print("onViurAuth: else")
+			print(res)
 			self.onError(msg='Received response != "okay"!')
 
 	def onError(self, request=None, error=None, msg=None):
 		logger.debug("onerror: %r, %r, %r", request, error, msg)
 		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
-		self.deleteLater()
+
+
+class VerifyOtp(QtWidgets.QWidget):
+	loginFailed = QtCore.pyqtSignal((str,))
+	loginSucceeded = QtCore.pyqtSignal()
+
+
+	def __init__(self, currentPortalConfig, *args, **kwargs):
+		super(VerifyOtp, self).__init__(*args, **kwargs)
+		self.currentPortalConfig = currentPortalConfig
+
+	def startAuthenticating(self):
+		logger.debug("VerifyOtp start")#
+		self.startRun()
+
+
+	def startRun(self):
+		token, isOkay = QtWidgets.QInputDialog.getText(self, "Insert Token", "Token")
+		if not isOkay:
+			self.loginFailed.emit("Aborted")
+			return
+		NetworkService.request("/user/f2_otp2factor/otp", {"otptoken": token}, secure=True,
+		                       successHandler=self.onViurAuth, failureHandler=self.onError)
+
+	def onViurAuth(self, req):
+		res = NetworkService.decode(req)
+		if isinstance(res, dict) and "action" in res.keys() and res["action"]=="edit":
+			msg = QtWidgets.QMessageBox.warning(self, "Invalid token", "Your token did not verify. Please try again")
+			self.startRun()
+		elif isinstance(res, str) and res.lower()=="okay":
+			self.loginSucceeded.emit()
+		print("VerifyOtp.onViurAuth", res)
+
+	def onError(self, req):
+		res = NetworkService.decode(req)
+		print("VerifyOtp.onError", res)
+
+
 
 
 class LoginTask(QtCore.QObject):
@@ -105,6 +175,11 @@ class LoginTask(QtCore.QObject):
 
 	authenticationProvider = {
 		"X-VIUR-AUTH-User-Password": AuthUserPassword,
+		"X-VIUR-AUTH-Google-Account": AuthGoogle
+	}
+
+	verificationProvider = {
+		"X-VIUR-2Factor-Otp": VerifyOtp
 	}
 
 	def __init__(self, currentPortalConfig, *args, **kwargs):
@@ -113,9 +188,13 @@ class LoginTask(QtCore.QObject):
 		self.currentPortalConfig = currentPortalConfig
 		assert currentPortalConfig["authMethod"] in self.authenticationProvider.keys(), "Unknown authentication method"
 		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig)
+		self.authProvider.loginSucceeded.connect(self.onLoginSucceeded)
+		self.authProvider.loginFailed.connect(self.onLoginFailed)
+		self.authProvider.secondFactorRequired.connect(self.onSecondFactorRequired)
+		self.verificationProviderInstance = None
 
 	def startAuthenticationFlow(self):
-		self.authenticationProvider.startAuthenticationFlow()
+		self.authProvider.startAuthenticating()
 
 
 	def startSetup(self):
@@ -125,234 +204,23 @@ class LoginTask(QtCore.QObject):
 		self.currentPortalConfig.update(self.authProvider.getUpdatedPortalConfig())
 		return self.currentPortalConfig
 
-
-
-
-class AddPortalWizard(QtWidgets.QWizard):
-	def __init__(self, *args, **kwargs):
-		super(AddPortalWizard, self).__init__(*args, **kwargs)
-		self.ui = Ui_AddPortalWizard()
-		self.ui.setupUi(self)
-		self.forcePageFlip = False
-		self.validAuthMethods = None
-		self.loginTask = None
-		self.currentPortalConfig = {"key": 1234.56}
-
-	def validateCurrentPage(self):
-		if self.forcePageFlip:
-			self.forcePageFlip = False
-			return True
-		if self.currentId()==0:
-			if not self.ui.editTitle.text():
-				print("Kein Title")
-				return False
-			server = self.ui.editServer.text()
-			if not server or not (server.startswith("http://") or server.startswith("https://")):
-				print("Invalid Server")
-				return False
-			if not server.endswith("/"):
-				server += "/"
-			self.currentPortalConfig["server"] = server
-			self.currentPortalConfig["title"] = self.ui.editTitle.text()
-			NetworkService.url = server + "admin"
-			NetworkService.request(
-				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
-			self.setDisabled(True)
-			return False
-		elif self.currentId()==1:
-			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
-			print("SELECTED AUTH METHOD")
-			print(self.currentPortalConfig)
-		elif self.currentId()==2:
-			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
-			print("********")
-			print(self.currentPortalConfig)
-		return True
-
-	def initializePage(self, pageId):
-		super(AddPortalWizard, self).initializePage(pageId)
-		if pageId==2:
-			if self.loginTask:
-				self.loginTask.deleteLater()
-				self.loginTask = None
-			self.loginTask = LoginTask(self.currentPortalConfig)
-			self.tmp = self.loginTask.startSetup()
-			self.ui.scrollArea.setWidget(self.tmp)
-			#self.ui.wizardPage1.layout().addWidget(self.tmp)
-			self.tmp.show()
-			print("*****")
-			print(self.tmp)
-
-	def onAuthMethodsKnown(self, req):
-		data = NetworkService.decode(req)
-		print(data)
-		self.ui.cbAuthSelector.clear()
-		seenList = []
-		self.validAuthMethods = {}
-		for authMethod, verificationMethod in data:
-			if not authMethod in seenList:
-				seenList.append(authMethod)
-				self.validAuthMethods[authMethod] = authMethod
-				self.ui.cbAuthSelector.addItem(authMethod)
-		self.setDisabled(False)
-		self.forcePageFlip = True
-		self.next()
-
-	def onError(self, req):
-		print("***ERROR***")
-		print(req)
-		self.setDisabled(False)
-
-class LoginTask_(QtCore.QObject):
-	loginFailed = QtCore.pyqtSignal((str,))
-	loginSucceeded = QtCore.pyqtSignal()
-	captchaRequired = QtCore.pyqtSignal((str, str))
-
-	def __init__(self, username, password, captchaToken=None, captcha=None, *args, **kwargs):
-		super(LoginTask, self).__init__(*args, **kwargs)
-		logger.debug("Starting LoginTask")
-		self.username = username
-		self.password = password
-		self.captcha = captcha
-		self.captchaToken = captchaToken
-		config.conf.currentUsername = username
-		config.conf.currentPassword = password
-		self.req = None
-		self.webview = None
-		self.accountType = None
-		self.isLocalServer = False
-		self.hostName = urllib.parse.urlparse(NetworkService.url).hostname or NetworkService.url
-		self.parentWidget = kwargs["parent"]
-		if urllib.parse.urlparse(NetworkService.url).port:  # Assume local Development
-			logger.debug("Assuming local development Server")
-			self.isLocalServer = True
-			NetworkService.request(
-				"http://%s:%s/_ah/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port),
-				successHandler=self.onWarmup, failureHandler=self.onError)
-		else:
-			self.onWarmup()
-
-	def onWarmup(self, request=None):  # Warmup request has finished
-		logger.debug("Checkpoint: onWarmup")
-		if self.isLocalServer:
-			NetworkService.request("http://%s:%s/admin/user/getAuthMethods" % (
-				self.hostName, urllib.parse.urlparse(NetworkService.url).port,),
-			                       finishedHandler=self.onAuthMethodKnown)
-		else:
-			NetworkService.request("https://%s/admin/user/getAuthMethods" % (self.hostName,),
-			                       finishedHandler=self.onAuthMethodKnown)
-
-	def onAuthMethodKnown(self, request):
-		logger.debug("Checkpoint: onAuthMethodKnown")
-		method = request.readAll().data().decode("UTF-8").lower()
-		print(method)
-		if method == "x-viur-internal":
-			logger.debug("LoginTask using method x-viur-internal")
-			NetworkService.request("/user/auth_userpassword/login", {"name": self.username, "password": self.password}, secure=True,
-			                       successHandler=self.onViurAuth, failureHandler=self.onError)
-		else:  # Fallback to google account auth
-			logger.debug("LoginTask using method x-google-account")
-			if self.isLocalServer:
-				NetworkService.request("http://%s:%s/_ah/login?email=%s&admin=True&action=login" % (
-					self.hostName, urllib.parse.urlparse(NetworkService.url).port, self.username), None,
-				                       finishedHandler=self.onLocalAuth)
-			else:
-				NetworkService.request("/user/login", secure=True,
-				                       successHandler=self.onGoogleAuthLoginUrl, failureHandler=self.onError)
-
-	def onViurAuth(self, request):  # We received an response to our auth request
-		logger.debug("Checkpoint: onViurAuth")
-		try:
-			res = NetworkService.decode(request)
-		except:  # Something went wrong
-			self.onError(msg="Unable to decode response!")
-			return
-		if str(res).lower() == "okay":
-			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
-			self.onLoginSucceeded(request)
-		else:
-			self.onError(msg='Received response != "okay"!')
-
-	def onLocalAuth(self, request):
-		logger.debug("Checkpoint: onLocalAuth")
-		NetworkService.request(
-			"http://%s:%s/admin/user/auth_googleaccount/login" % (self.hostName, urllib.parse.urlparse(NetworkService.url).port), None,
-			successHandler=self.onLoginSucceeded, failureHandler=self.onError)
-
-	def onGoogleAuthLoginUrl(self, request):
-		res = bytes(request.readAll().data()).decode("UTF-8")
-		logger.debug("Checkpoint: onGoogleAuthSuccess: %r", res)
-		res = json.loads(res)
-		self.webview = GoogleLoginView(res, parent=self.parentWidget)
-		self.webview.exec()
-		self.webview = None
-		self.onLoginSucceeded(request)
-		# authToken = None
-		# for line in res.splitlines():
-		# 	if line.lower().startswith("auth="):
-		# 		authToken = line[5:].strip()
-		# logger.debug("LoginTask got AuthToken: %s...", authToken[:6] if authToken else authToken)
-		# if not authToken:
-		# 	if "CaptchaRequired".lower() in res.lower():
-		# 		logger.info("Need captcha")
-		# 		captchaToken = None
-		# 		captchaURL = None
-		# 		for line in res.splitlines():
-		# 			if line.lower().startswith("captchatoken"):
-		# 				captchaToken = line[13:]
-		# 			elif line.lower().startswith("captchaurl"):
-		# 				captchaURL = line[11:]
-		# 		assert captchaToken and captchaURL
-		# 		self.captchaRequired.emit(captchaToken, captchaURL)
-		# 		self.deleteLater()
-		# 		return
-		# 	else:
-		# 		self.onError(msg="Found no authToken in response!")
-		# 		return
-		# # Normalizing the URL we use
-		# url = NetworkService.url.lower()
-		# if url.endswith("/"):  # Remove tailing /
-		# 	url = url[: -1]
-		# if not url.endswith("/admin"):
-		# 	url = url + "/admin"
-		# if not url.startswith("https://"):  # Assert that a secure protocol is specified
-		# 	if url.startswith("http://"):
-		# 		if not urllib.parse.urlparse(url).port:  # Dosnt look like development Server
-		# 			url = "https://" + url[7:]  # Dont use insecure protocol on live server
-		# 	else:
-		# 		url = "https://" + url
-		# argsStr = urllib.parse.urlencode({"continue": "{0}/user/login".format(url), "auth": authToken})
-		# NetworkService.request("https://{0}/_ah/login?{1}".format(self.hostName, argsStr),
-		#                        successHandler=self.onGAEAuth,
-		#                        failureHandler=self.onError)
-
-	def onGAEAuth(self, request=None):
-		logger.debug("Checkpoint: onGAEAuth")
-		NetworkService.request("/user/login", successHandler=self.onLoginSucceeded, failureHandler=self.onError)
-
-	def onError(self, request=None, error=None, msg=None):
-		logger.debug("onerror: %r, %r, %r", request, error, msg)
-		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
-		self.deleteLater()
-
-	def onLoginSucceeded(self, req):
-		"""
-			Try to convince the server to send us its content in our language
-		"""
-		if "language" in config.conf.adminConfig.keys():
-			lang = config.conf.adminConfig["language"]
-		else:
-			lang = "en"
-		logger.debug("Logged in successfully")
-		NetworkService.request("/setLanguage/%s" % lang, secure=True, successHandler=self.onLanguageSet,
-		                       failureHandler=self.onError)
-
-	def onLanguageSet(self, req):
-		"""
-			The language has been set, we are done with this task
-		"""
+	def onLoginSucceeded(self, *args, **kwargs):
+		print("LoginTask: Login OKAY")
 		self.loginSucceeded.emit()
-		self.deleteLater()
+
+	def onSecondFactorRequired(self, factor):
+		if factor.lower()=="one-time-password":
+			factor = "otp"
+		self.verificationProviderInstance = self.verificationProvider["X-VIUR-2Factor-Otp"](self.currentPortalConfig)
+		self.verificationProviderInstance.loginSucceeded.connect(self.onLoginSucceeded)
+		self.verificationProviderInstance.loginFailed.connect(self.onLoginFailed)
+		self.verificationProviderInstance.startAuthenticating()
+
+	def onLoginFailed(self, msg, *args, **kwargs):
+		print("LoginTask.onLoginFailed", msg)
+		self.loginFailed.emit(msg)
+
+
 
 
 class Login(QtWidgets.QMainWindow):
@@ -363,6 +231,7 @@ class Login(QtWidgets.QMainWindow):
 		self.accman = None  # Reference to our Account-MGR
 		self.helpBrowser = None
 		self.activeAccount = None
+		self.loginTask = None
 		event.connectWithPriority('resetLoginWindow', self.enableForm, event.lowPriority)
 		event.connectWithPriority('accountListChanged', self.loadAccounts, event.lowPriority)
 		self.ui.cbPortal.currentRowChanged.connect(self.onCbPortalCurrentRowChanged)
@@ -439,48 +308,21 @@ class Login(QtWidgets.QMainWindow):
 
 	def onBtnLoginReleased(self):
 		logger.debug("onBtnLoginReleased")
-		url = self.ui.editUrl.displayText()
-		username = self.ui.editUsername.text()
-		password = self.ui.editPassword.text()
+		if self.loginTask:
+			self.loginTask.deleteLater()
 		cb = self.ui.cbPortal
-		if (cb.currentIndex() == -1):
-			reply = QtWidgets.QMessageBox.question(
-				self,
-				QtCore.QCoreApplication.translate("Login", "Save this account"),
-				QtCore.QCoreApplication.translate("Login", "Save this account permanently?"),
-				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-			if reply == QtWidgets.QMessageBox.Yes:
-				pw = password
-				accname, okaypressed = QtWidgets.QInputDialog.getText(
-					self,
-					QtCore.QCoreApplication.translate("Login", "Save this account"),
-					QtCore.QCoreApplication.translate("Login", "Enter a name for this account"))
-				if okaypressed:
-					reply = QtWidgets.QMessageBox.question(
-						self,
-						QtCore.QCoreApplication.translate("Login", "Save this account"),
-						QtCore.QCoreApplication.translate("Login", "Save the password, too?"),
-						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-						QtWidgets.QMessageBox.No)
-					if reply == QtWidgets.QMessageBox.No:
-						pw = ""
-					saveacc = {
-						"name": accname,
-						"user": username,
-						"password": pw,
-						"url": url
-					}
-					config.conf.accounts.append(saveacc)
-		elif cb.currentIndex() != 0:  # Move this account to the beginning, so it will be selected on the next start
+		currentPortalCfg = config.conf.accounts[cb.currentIndex().row()]
+		print(currentPortalCfg)
+		NetworkService.setup(currentPortalCfg["server"]+"admin")
+		if cb.currentIndex().row() != 0:
+			# Move this account to the beginning, so it will be selected on the next start
 			# of admin
 			account = config.conf.accounts[cb.currentIndex().row()]
 			config.conf.accounts.remove(account)
 			config.conf.accounts.insert(0, account)
-		NetworkService.setup(url)
-		if self.captchaToken:
-			captcha = self.ui.editCaptcha.text()
-		else:
-			captcha = None
+		self.loginTask = LoginTask(currentPortalCfg)
+		self.loginTask.loginSucceeded.connect(self.onLoginSucceeded)
+		self.loginTask.loginFailed.connect(self.onLoginFailed)
 		self.overlay.inform(self.overlay.BUSY, QtCore.QCoreApplication.translate("Login", "Login in progress"))
 		if self.accman:
 			self.accman.deleteLater()
@@ -488,7 +330,8 @@ class Login(QtWidgets.QMainWindow):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 			self.helpBrowser = None
-		self.login(username, password, captcha)
+		self.loginTask.startAuthenticationFlow()
+
 
 	def onStartAccManagerBTNReleased(self):
 		if self.accman:

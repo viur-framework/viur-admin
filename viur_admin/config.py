@@ -8,6 +8,7 @@ import os
 from hashlib import sha512
 from pprint import pprint
 from operator  import attrgetter
+from time import time, sleep
 
 
 class Config(object):
@@ -47,17 +48,14 @@ class Config(object):
 			cfg = json.loads(configData)
 			self.accounts = cfg
 		except:
-			try:  # Loading it from the old directory
-				configFileObject = open(os.path.join(os.path.join(os.path.expanduser("~"), ".fwadmin"), "accounts.dat"),
-				                        "rb")
-				configData = self.xor(configFileObject.read()).decode("UTF-8")
-				cfg = json.loads(configData)
-				self.accounts = cfg
-			except:
-				logger.error("Could not load accounts")
-				self.accounts = []
+			logger.error("Could not load accounts")
+			self.accounts = []
 
 		self.accounts.sort(key=lambda x: x["name"].lower())
+		for account in self.accounts:
+			if not "key" in account.keys():
+				account["key"] = int(time())
+				sleep(1)  # Bad hack to ensure key is unique; runs only once at first start
 		# Load rest of the config
 		configFileName = os.path.join(self.storagePath, "config.dat")
 		try:
@@ -71,6 +69,7 @@ class Config(object):
 
 	def saveConfig(self):
 		# Save accounts
+		return
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		configFileObject = open(configFileName, "w+b")
 		configData = self.xor(json.dumps(self.accounts).encode("UTF-8"))

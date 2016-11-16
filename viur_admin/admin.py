@@ -131,7 +131,6 @@ if 0 and (args.report == "auto" and not os.path.exists(
 
 
 def main():
-	from viur_admin.login import AddPortalWizard
 	transFiles = resource_listdir("viur_admin", "locales")
 	for file in transFiles:
 		if file.endswith(".qm"):
@@ -145,9 +144,7 @@ def main():
 
 	mainWindow = MainWindow()
 	l = Login()
-	#l.show()
-	p = AddPortalWizard()
-	p.show()
+	l.show()
 	app.exec_()
 
 	conf.savePortalConfig()

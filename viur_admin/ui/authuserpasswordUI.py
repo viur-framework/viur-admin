@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'authuserpassword.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -39,6 +39,6 @@ class Ui_AuthUserPassword(object):
         self.lblUsername.setText(_translate("AuthUserPassword", "Username"))
         self.lblPassword.setText(_translate("AuthUserPassword", "Password"))
         self.editUsername.setText(_translate("AuthUserPassword", "admin@hsk-2-test.appspot.com"))
-        self.editPassword.setText(_translate("AuthUserPassword", "KANmaGiIaD9Yi"))
+        self.editPassword.setText(_translate("AuthUserPassword", "qEYcWbKmZKVsV"))
         self.cbSavePassword.setText(_translate("AuthUserPassword", "Save Password?"))
 
