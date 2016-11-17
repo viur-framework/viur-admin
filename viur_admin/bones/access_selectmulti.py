@@ -141,7 +141,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"].items())
+		values = list(skelStructure[boneName]["values"])
 		return AccessSelectMultiEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
 
 	def unserialize(self, data):

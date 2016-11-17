@@ -43,10 +43,11 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale):
 		# print("ExtendedRelationalViewBoneDelegate.displayText", value)
 		relStructList = self.structure[self.boneName]["using"]
-		relStructDict = {k: v for k, v in relStructList}
+		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		try:
 			if isinstance(value, list):
-				value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
+				if relStructList:
+					value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
 				                                 relStructDict, x["rel"], prefix=["rel"]) or x["key"]) for x in value])
 			elif isinstance(value, dict):
 				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
