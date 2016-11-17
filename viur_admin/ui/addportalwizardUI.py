@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addportalwizard.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -17,6 +17,7 @@ class Ui_AddPortalWizard(object):
         self.formLayout = QtWidgets.QFormLayout(self.wizardPage0)
         self.formLayout.setObjectName("formLayout")
         self.editServer = QtWidgets.QLineEdit(self.wizardPage0)
+        self.editServer.setText("")
         self.editServer.setObjectName("editServer")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.editServer)
         self.lblServer = QtWidgets.QLabel(self.wizardPage0)
@@ -26,6 +27,7 @@ class Ui_AddPortalWizard(object):
         self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
         self.editTitle = QtWidgets.QLineEdit(self.wizardPage0)
+        self.editTitle.setText("")
         self.editTitle.setObjectName("editTitle")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.editTitle)
         AddPortalWizard.addPage(self.wizardPage0)
@@ -48,7 +50,7 @@ class Ui_AddPortalWizard(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 362, 219))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 372, 227))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout_2.addWidget(self.scrollArea)
@@ -64,14 +66,15 @@ class Ui_AddPortalWizard(object):
 
         self.retranslateUi(AddPortalWizard)
         QtCore.QMetaObject.connectSlotsByName(AddPortalWizard)
+        AddPortalWizard.setTabOrder(self.editTitle, self.editServer)
+        AddPortalWizard.setTabOrder(self.editServer, self.cbAuthSelector)
+        AddPortalWizard.setTabOrder(self.cbAuthSelector, self.scrollArea)
 
     def retranslateUi(self, AddPortalWizard):
         _translate = QtCore.QCoreApplication.translate
         AddPortalWizard.setWindowTitle(_translate("AddPortalWizard", "Wizard"))
-        self.editServer.setText(_translate("AddPortalWizard", "http://127.0.0.1:8080/"))
         self.lblServer.setText(_translate("AddPortalWizard", "Server"))
         self.label.setText(_translate("AddPortalWizard", "Title"))
-        self.editTitle.setText(_translate("AddPortalWizard", "test"))
         self.label_2.setText(_translate("AddPortalWizard", "Select Authentication"))
         self.label_3.setText(_translate("AddPortalWizard", "Success"))
 

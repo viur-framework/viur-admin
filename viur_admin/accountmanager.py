@@ -69,7 +69,7 @@ class AddPortalWizard(QtWidgets.QWizard):
 			if self.loginTask:
 				self.loginTask.deleteLater()
 				self.loginTask = None
-			self.loginTask = LoginTask(self.currentPortalConfig)
+			self.loginTask = LoginTask(self.currentPortalConfig, isWizard=True)
 			self.loginTask.loginSucceeded.connect(self.onloginSucceeded)
 			self.loginTask.loginFailed.connect(self.onLoginFailed)
 			self.tmp = self.loginTask.startSetup()
@@ -224,47 +224,8 @@ class Accountmanager(QtWidgets.QMainWindow):
 			self.ui.delAccBTN.setEnabled(True)
 
 
-	def onAccSavePWcheckBoxStateChanged(self, state):
-		self.ui.editPassword.setEnabled(state)
-		if state == 0:
-			self.ui.editPassword.setText("")
-
-	def saveAccount(self):
-		item = self.ui.acclistWidget.currentItem()
-		if not item:
-			return
-		url = self.ui.editUrl.text()
-		url = url.rstrip("/")
-		if url.find("http") == -1:
-			url = "https://" + url
-		if url.find("/admin") == -1:
-			url += "/admin"
-		account = {
-			"name": self.ui.editAccountName.text(),
-			"user": self.ui.editUserName.text(),
-			"password": self.ui.editPassword.text(),
-			"url": url
-		}
-		cpn = conf.adminConfig.get("currentPortalName")
-		name = account["name"]
-		if cpn == self.oldAccountName:
-			self.oldAccountName = conf.adminConfig["currentPortalName"] = name
-			conf.saveConfig()
-		item.update(account)
-
-	def onEditAccountNameTextChanged(self):
-		self.saveAccount()
-
-	def onEditUserNameTextChanged(self):
-		self.saveAccount()
-
-	def onEditPasswordTextChanged(self):
-		self.saveAccount()
-
-	def onEditUrlTextChanged(self):
-		self.saveAccount()
-
 	def onFinishedBTNReleased(self):
+		print("onFinishedBTNReleased")
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)

@@ -25,9 +25,11 @@ class AuthGoogle(QtWidgets.QWidget):
 	secondFactorRequired = QtCore.pyqtSignal((str,))
 	advancesAutomatically = True  # No need to click the next-button; we'll detect changes inside the browser ourself
 
-	def __init__(self, currentPortalConfig, parent=None):
+	def __init__(self, currentPortalConfig, isWizard=False, parent=None):
 		super(AuthGoogle, self).__init__(parent)
 		self.currentPortalConfig = currentPortalConfig
+		self.isWizard = isWizard
+		self.didSucceed = False
 		# self.jar = QtNetwork.QNetworkCookieJar()
 		self.webView = QtWebKitWidgets.QWebView()
 		self.setLayout(QtWidgets.QVBoxLayout())
@@ -42,31 +44,34 @@ class AuthGoogle(QtWidgets.QWidget):
 
 	def startAuthenticating(self):
 		logger.debug("LoginTask using method x-google")
-		self.show()
+		if not self.isWizard:
+			self.show()
 		#username = self.currentPortalConfig["username"]
 		#password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
 
 	def onUrlChanged(self, url):
 		logger.debug("urlChanged: %r", url)
-		if self.webView.findText("OKAY"):
-			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
-			#self.close()
-			#self.deleteLater()
-			self.loginSucceeded.emit()
-		elif self.webView.findText("ONE-TIME-PASSWORD"):
-			print(self.webView.page().mainFrame().toHtml())
-			self.secondFactorRequired.emit(self.webView.page().mainFrame().toHtml())
+		self.checkAuthenticationStatus()
 
 	def onLoadFinished(self, status):
 		logger.debug("loadFinished: %r", status)
+		self.checkAuthenticationStatus()
+
+	def checkAuthenticationStatus(self):
 		if self.webView.findText("OKAY"):
-			# logger.debug("cookies: %r", self.webView.page().networkAccessManager().cookieJar().allCookies())
-			#self.close()
-			#self.deleteLater()
+			if not self.isWizard:
+				self.close()
+				self.webView.deleteLater()
 			self.loginSucceeded.emit()
-		elif self.webView.findText("ONE-TIME-PASSWORD"):
-			print(self.webView.page().mainFrame().toHtml())
-			self.secondFactorRequired.emit(self.webView.page().mainFrame().toHtml())
+		elif self.webView.findText("X-VIUR-2FACTOR-"):
+			html = self.webView.page().mainFrame().toHtml()
+			startPos = html.find("X-VIUR-2FACTOR-")
+			secondFactorType = html[startPos, html.find("\"", startPos+1)]
+			secondFactorType = secondFactorType.replace("X-VIUR-2FACTOR-", "")
+			if not self.isWizard:
+				self.close()
+				self.webView.deleteLater()
+			self.secondFactorRequired.emit(secondFactorType)
 
 	def onError(self, request=None, error=None, msg=None):
 		logger.debug("onerror: %r, %r, %r", request, error, msg)
@@ -76,13 +81,17 @@ class AuthGoogle(QtWidgets.QWidget):
 		# We cant store anything for now
 		return {}
 
+	def closeEvent(self, event):
+		if not self.didSucceed:
+			self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", "Aborted"))
+
 class AuthUserPassword(QtWidgets.QWidget):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
 	secondFactorRequired = QtCore.pyqtSignal((str,))
 	advancesAutomatically = False
 
-	def __init__(self, currentPortalConfig, *args, **kwargs):
+	def __init__(self, currentPortalConfig, isWizard=False, *args, **kwargs):
 		super(AuthUserPassword, self).__init__(*args, **kwargs)
 		self.ui = Ui_AuthUserPassword()
 		self.ui.setupUi(self)
@@ -103,6 +112,11 @@ class AuthUserPassword(QtWidgets.QWidget):
 		logger.debug("LoginTask using method x-viur-internal")
 		username = self.currentPortalConfig["username"]
 		password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
+		if not password:
+			password, isOkay = QtWidgets.QInputDialog.getText(self, "Password", "Password")
+			if not isOkay:
+				self.loginFailed.emit("Aborted")
+				return
 		NetworkService.request("/user/auth_userpassword/login", {"name": username, "password": password}, secure=True,
 		                       successHandler=self.onViurAuth, failureHandler=self.onError)
 
@@ -118,8 +132,9 @@ class AuthUserPassword(QtWidgets.QWidget):
 			print("onViurAuth: okay")
 			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
 			self.loginSucceeded.emit()
-		elif str(res).lower() == "one-time-password":
-			self.secondFactorRequired.emit(res)
+		elif str(res).startswith("X-VIUR-2FACTOR-"):
+			secondFactor = str(res).replace("X-VIUR-2FACTOR-", "")
+			self.secondFactorRequired.emit(secondFactor)
 		else:
 			print("onViurAuth: else")
 			print(res)
@@ -130,13 +145,13 @@ class AuthUserPassword(QtWidgets.QWidget):
 		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
 
 
-class VerifyOtp(QtWidgets.QWidget):
+class VerifyTimeBasedOTP(QtWidgets.QWidget):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
 
 
-	def __init__(self, currentPortalConfig, *args, **kwargs):
-		super(VerifyOtp, self).__init__(*args, **kwargs)
+	def __init__(self, currentPortalConfig, isWizard=False, *args, **kwargs):
+		super(VerifyTimeBasedOTP, self).__init__(*args, **kwargs)
 		self.currentPortalConfig = currentPortalConfig
 
 	def startAuthenticating(self):
@@ -149,7 +164,7 @@ class VerifyOtp(QtWidgets.QWidget):
 		if not isOkay:
 			self.loginFailed.emit("Aborted")
 			return
-		NetworkService.request("/user/f2_otp2factor/otp", {"otptoken": token}, secure=True,
+		NetworkService.request("/user/f2_timebasedotp/otp", {"otptoken": token}, secure=True,
 		                       successHandler=self.onViurAuth, failureHandler=self.onError)
 
 	def onViurAuth(self, req):
@@ -179,15 +194,16 @@ class LoginTask(QtCore.QObject):
 	}
 
 	verificationProvider = {
-		"X-VIUR-2Factor-Otp": VerifyOtp
+		"TimeBasedOTP": VerifyTimeBasedOTP
 	}
 
-	def __init__(self, currentPortalConfig, *args, **kwargs):
+	def __init__(self, currentPortalConfig, isWizard=False, *args, **kwargs):
 		super(LoginTask, self).__init__(*args, **kwargs)
 		logger.debug("Starting LoginTask")
 		self.currentPortalConfig = currentPortalConfig
+		self.isWizard = isWizard
 		assert currentPortalConfig["authMethod"] in self.authenticationProvider.keys(), "Unknown authentication method"
-		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig)
+		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig, isWizard)
 		self.authProvider.loginSucceeded.connect(self.onLoginSucceeded)
 		self.authProvider.loginFailed.connect(self.onLoginFailed)
 		self.authProvider.secondFactorRequired.connect(self.onSecondFactorRequired)
@@ -209,9 +225,7 @@ class LoginTask(QtCore.QObject):
 		self.loginSucceeded.emit()
 
 	def onSecondFactorRequired(self, factor):
-		if factor.lower()=="one-time-password":
-			factor = "otp"
-		self.verificationProviderInstance = self.verificationProvider["X-VIUR-2Factor-Otp"](self.currentPortalConfig)
+		self.verificationProviderInstance = self.verificationProvider[factor](self.currentPortalConfig)
 		self.verificationProviderInstance.loginSucceeded.connect(self.onLoginSucceeded)
 		self.verificationProviderInstance.loginFailed.connect(self.onLoginFailed)
 		self.verificationProviderInstance.startAuthenticating()
@@ -236,6 +250,7 @@ class Login(QtWidgets.QMainWindow):
 		event.connectWithPriority('accountListChanged', self.loadAccounts, event.lowPriority)
 		self.ui.cbPortal.currentRowChanged.connect(self.onCbPortalCurrentRowChanged)
 		self.captchaToken = None
+		config.conf.loadConfig()
 		self.loadAccounts()
 		self.overlay = Overlay(self)
 		shortCut = QtWidgets.QShortcut(self)
@@ -266,7 +281,6 @@ class Login(QtWidgets.QMainWindow):
 	def loadAccounts(self):
 		cb = self.ui.cbPortal
 		cb.clear()
-		config.conf.loadConfig()
 		currentPortalName = config.conf.adminConfig.get("currentPortalName")
 		logger.debug("currentPortalName: %r", currentPortalName)
 		currentIndex = 0
@@ -307,12 +321,10 @@ class Login(QtWidgets.QMainWindow):
 		self.onBtnLoginReleased()
 
 	def onBtnLoginReleased(self):
-		logger.debug("onBtnLoginReleased")
 		if self.loginTask:
 			self.loginTask.deleteLater()
 		cb = self.ui.cbPortal
 		currentPortalCfg = config.conf.accounts[cb.currentIndex().row()]
-		print(currentPortalCfg)
 		NetworkService.setup(currentPortalCfg["server"]+"admin")
 		if cb.currentIndex().row() != 0:
 			# Move this account to the beginning, so it will be selected on the next start
@@ -351,22 +363,6 @@ class Login(QtWidgets.QMainWindow):
 	def onActionHelpTriggered(self):
 		QtGui.QDesktopServices.openUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
 
-	def setCaptcha(self, token, url):
-		self.captchaToken = token
-		self.captchaReq = NetworkService.request(
-			"https://www.google.com/accounts/{0}".format(url),
-			finishedHandler=self.onCaptchaAvailable)
-
-	def onCaptchaAvailable(self):
-		pixmap = QtGui.QPixmap()
-		data = bytes(self.captchaReq.readAll())
-		pixmap.loadFromData(data)
-		self.ui.lblCaptcha.setPixmap(pixmap)
-		self.ui.editCaptcha.show()
-		self.ui.editCaptcha.setText("")
-		self.overlay.inform(self.overlay.ERROR, QtCore.QCoreApplication.translate("Login", "Captcha required"))
-		self.captchaReq.deleteLater()
-		self.captchaReq = None
 
 	def login(self, username, password, captcha=None):
 		"""
@@ -383,12 +379,10 @@ class Login(QtWidgets.QMainWindow):
 		loginTask.captchaRequired.connect(self.setCaptcha)
 		loginTask.loginFailed.connect(self.onLoginFailed)
 
-	# self.connect( self.loginTask, QtCore.SIGNAL("reqCaptcha(PyQt_PyObject,PyQt_PyObject)"), self.setCaptcha )
-
-	# self.connect( self.loginTask, QtCore.SIGNAL("loginFailed(PyQt_PyObject)"), self.enableForm )
 
 	def onLoginFailed(self, msg):
 		self.overlay.inform(self.overlay.ERROR, msg)
+		self.loadAccounts()
 
 	def enableForm(self, msg=None):
 		if msg:
@@ -406,19 +400,3 @@ class Login(QtWidgets.QMainWindow):
 		QtCore.QCoreApplication.installTranslator(config.conf.availableLanguages[newLanguage])
 		config.conf.adminConfig["language"] = newLanguage
 
-	def onEditUsernameTextChanged(self, txt):
-		"""
-			Check if the Username given is a valid email-address, and warn
-			the user if it isnt
-		"""
-		regex = re.compile("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}")
-		res = regex.findall(txt.lower())
-		palette = self.ui.editUsername.palette()
-		if len(res) == 1:
-			palette.setColor(palette.Active, palette.Text, QtGui.QColor(0, 0, 0))
-			self.ui.editUsername.setToolTip(
-				QtCore.QCoreApplication.translate("Login", "This Email address looks valid"))
-		else:
-			palette.setColor(palette.Active, palette.Text, QtGui.QColor(255, 0, 0))
-			self.ui.editUsername.setToolTip(QtCore.QCoreApplication.translate("Login", "This Email address is invalid"))
-		self.ui.editUsername.setPalette(palette)

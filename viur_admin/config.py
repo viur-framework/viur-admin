@@ -69,7 +69,6 @@ class Config(object):
 
 	def saveConfig(self):
 		# Save accounts
-		return
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		configFileObject = open(configFileName, "w+b")
 		configData = self.xor(json.dumps(self.accounts).encode("UTF-8"))

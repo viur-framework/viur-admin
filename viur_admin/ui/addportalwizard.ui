@@ -18,7 +18,7 @@
     <item row="1" column="1">
      <widget class="QLineEdit" name="editServer">
       <property name="text">
-       <string>http://127.0.0.1:8080/</string>
+       <string/>
       </property>
      </widget>
     </item>
@@ -39,7 +39,7 @@
     <item row="0" column="1">
      <widget class="QLineEdit" name="editTitle">
       <property name="text">
-       <string>test</string>
+       <string/>
       </property>
      </widget>
     </item>
@@ -71,8 +71,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>362</width>
-         <height>219</height>
+         <width>372</width>
+         <height>227</height>
         </rect>
        </property>
       </widget>
@@ -92,6 +92,12 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>editTitle</tabstop>
+  <tabstop>editServer</tabstop>
+  <tabstop>cbAuthSelector</tabstop>
+  <tabstop>scrollArea</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

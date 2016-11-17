@@ -146,9 +146,10 @@ def main():
 	l = Login()
 	l.show()
 	app.exec_()
-
+	print("after AppExec")
 	conf.savePortalConfig()
 	conf.saveConfig()
+	print("after SaveConfig")
 
 
 if __name__ == '__main__':

@@ -552,7 +552,6 @@ class NetworkService():
 	@staticmethod
 	def decode(req):
 		data = req.readAll().data().decode("utf-8")
-		print("data %s", data)
 		# NetworkService.logger.debug("decoding request data %r", data)
 		return json.loads(data)
 
