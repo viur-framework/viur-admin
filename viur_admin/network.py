@@ -22,6 +22,7 @@ import time
 from viur_admin.config import conf
 from PyQt5.QtCore import QUrl, QObject
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
+from urllib import request
 
 import viur_admin.ui.icons_rc
 
@@ -452,6 +453,7 @@ class RemoteFile(QtCore.QObject):
 
 class NetworkService():
 	url = None
+	serverVersion = None
 	currentRequests = []  # A list of currently running requests
 
 	@staticmethod
@@ -558,4 +560,13 @@ class NetworkService():
 	@staticmethod
 	def setup(url, *args, **kwargs):
 		NetworkService.url = url
+		# This is the only request that is intentionally blocking
+		try:
+			req = request.urlopen(url+"/getVersion")
+			NetworkService.serverVersion = tuple(json.loads(req.read().decode("UTF-8")))
+			assert isinstance(NetworkService.serverVersion, tuple) and len(NetworkService.serverVersion)==3
+		except:
+			NetworkService.serverVersion = (1, 0, 0)  # The first version of ViUR didn't support that
+		logger.info("Attached to an instance running ViUR %s", NetworkService.serverVersion)
 		securityTokenProvider.reset()
+

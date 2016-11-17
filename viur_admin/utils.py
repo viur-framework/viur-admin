@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from viur_admin.log import getLogger
@@ -17,7 +16,7 @@ class RegisterQueue:
 	"""
 
 	def __init__(self):
-		super().__init__()
+		super(RegisterQueue, self).__init__()
 		self.queue = {}
 
 	def registerHandler(self, priority, handler):
