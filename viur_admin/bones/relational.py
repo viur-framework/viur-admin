@@ -20,6 +20,7 @@ from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin import config
 
 
 class BaseBone:
@@ -38,25 +39,24 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.structure = structure
 		self.boneName = boneName
 
-	# print("ExtendedRelationalViewBoneDelegate.init", boneName)
-
 	def displayText(self, value, locale):
-		# print("ExtendedRelationalViewBoneDelegate.displayText", value)
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		try:
 			if isinstance(value, list):
 				if relStructList:
-					value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
-				                                 relStructDict, x["rel"], prefix=["rel"]) or x["key"]) for x in value])
+					value = ", ".join([(formatString(
+						formatString(self.format, x["dest"], self.structure["relskel"], prefix=["dest"], language=config.conf.adminConfig["language"]),
+						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x["key"]) for x in value])
+				else:
+					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],  language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
-				                     relStructDict, value["rel"], prefix=["rel"]) or value["key"]
+				value = formatString(formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],  language=config.conf.adminConfig["language"]),
+				                     relStructDict, value["rel"], prefix=["rel"],  language=config.conf.adminConfig["language"]) or value["key"]
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage
 			value = ""
-		# print("formatString result", value)
 		return value
 
 
