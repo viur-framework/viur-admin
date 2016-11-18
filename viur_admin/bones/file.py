@@ -60,7 +60,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		painter.restore()
 
 	def displayText(self, value, locale):
-		return formatString(self.format, self.structure, value)
+		return formatString(self.format, value, self.structure)
 
 
 class MultiItemWidget(QtWidgets.QWidget):
@@ -118,7 +118,7 @@ class FileItemBone(TreeItemBone):
 			if self.selection and len(self.selection) > 0:
 				for item in self.selection:
 					# print("format", self.format, structure, item)
-					lbl = MultiItemWidget(formatString(self.format, structure, item), parent=self.previewWidget)
+					lbl = MultiItemWidget(formatString(self.format, item, structure), parent=self.previewWidget)
 					if item["dest"]["mimetype"].startswith("image/"):
 						RemoteFile(item["dest"]["dlkey"], successHandler=lbl.loadIconFromRequest)
 					self.previewLayout.addWidget(lbl)
@@ -130,7 +130,7 @@ class FileItemBone(TreeItemBone):
 				logger.debug("selection: %r", self.selection)
 				if self.selection["dest"]["mimetype"].startswith("image/"):
 					RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-				self.entry.setText(formatString(self.format, structure, self.selection))
+				self.entry.setText(formatString(self.format, self.selection, structure))
 			else:
 				self.entry.setText("")
 
