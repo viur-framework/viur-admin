@@ -20,6 +20,7 @@ from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin import config
 
 
 class BaseBone:
@@ -38,25 +39,24 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.structure = structure
 		self.boneName = boneName
 
-	# print("ExtendedRelationalViewBoneDelegate.init", boneName)
-
 	def displayText(self, value, locale):
-		# print("ExtendedRelationalViewBoneDelegate.displayText", value)
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		try:
 			if isinstance(value, list):
 				if relStructList:
-					value = ", ".join([(formatString(formatString(self.format, self.structure, x["dest"], prefix=["dest"]),
-				                                 relStructDict, x["rel"], prefix=["rel"]) or x["key"]) for x in value])
+					value = ", ".join([(formatString(
+						formatString(self.format, x["dest"], self.structure["relskel"], prefix=["dest"], language=config.conf.adminConfig["language"]),
+						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x["key"]) for x in value])
+				else:
+					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],  language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				value = formatString(formatString(self.format, self.structure, value["dest"], prefix=["dest"]),
-				                     relStructDict, value["rel"], prefix=["rel"]) or value["key"]
+				value = formatString(formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],  language=config.conf.adminConfig["language"]),
+				                     relStructDict, value["rel"], prefix=["rel"],  language=config.conf.adminConfig["language"]) or value["key"]
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage
 			value = ""
-		# print("formatString result", value)
 		return value
 
 
@@ -228,8 +228,8 @@ class RelationalEditBone(BoneEditInterface):
 	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
-		if "modul" in skelStructure[boneName].keys():
-			destModul = skelStructure[boneName]["modul"]
+		if "module" in skelStructure[boneName].keys():
+			destModul = skelStructure[boneName]["module"]
 		else:
 			destModul = skelStructure[boneName]["type"].split(".")[1]
 		fmt = "$(name)"
@@ -255,7 +255,7 @@ class RelationalEditBone(BoneEditInterface):
 
 	def updateVisiblePreview(self):
 		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)
-		assert protoWrap is not None
+		assert protoWrap is not None, "Unknown module: %s" % self.toModul
 		if self.skelType is None:
 			structure = protoWrap.viewStructure
 		elif self.skelType == "leaf":
@@ -272,7 +272,7 @@ class RelationalEditBone(BoneEditInterface):
 				if self.selection and len(self.selection) > 0:
 					for item in self.selection:
 						# print("update item", item)
-						item = InternalEdit(self, self.using, formatString(self.format, structure, item), item, {})
+						item = InternalEdit(self, self.using, formatString(self.format, item, structure), item, {})
 						item.show()
 						self.previewLayout.addWidget(item)
 						self.internalEdits.append(item)
@@ -287,11 +287,11 @@ class RelationalEditBone(BoneEditInterface):
 				if self.selection and len(self.selection) > 0:
 					for item in self.selection:
 						lbl = QtWidgets.QLabel(self.previewWidget)
-						lbl.setText(formatString(self.format, structure, item))
+						lbl.setText(formatString(self.format, item, structure))
 						self.previewLayout.addWidget(lbl)
 			else:
 				if self.selection:
-					self.entry.setText(formatString(self.format, structure, self.selection))
+					self.entry.setText(formatString(self.format, self.selection, structure))
 				else:
 					self.entry.setText("")
 
@@ -305,7 +305,6 @@ class RelationalEditBone(BoneEditInterface):
 			self.setSelection([res])
 
 	def setSelection(self, selection):
-		print("setSelection", selection)
 		#assert all(["dest" in item.keys() and "rel" in item.keys() for item in selection])
 		data = [{"dest": x, "rel": {}} for x in selection]
 		if self.multiple:
