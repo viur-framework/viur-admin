@@ -269,11 +269,9 @@ class TreeWrapper(QtCore.QObject):
 		"""
 		request = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
 		for leaf in leafs:
-			request.addQuery(
-					NetworkService.request("/{0}/delete/leaf/{1}".format(self.module, leaf), secure=True, parent=self))
+			request.addRequest("/{0}/delete/leaf/{1}".format(self.module, leaf), secure=True)
 		for node in nodes:
-			request.addQuery(
-					NetworkService.request("/{0}/delete/node/{1}".format(self.module, node), secure=True, parent=self))
+			request.addRequest("/{0}/delete/node/{1}".format(self.module, node), secure=True)
 		# request.flushList = [ lambda *args, **kwargs:  self.flushCache( rootNode, path ) ]
 		request.queryType = "delete"
 		self.checkBusyStatus()

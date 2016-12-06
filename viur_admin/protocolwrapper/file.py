@@ -147,9 +147,12 @@ class RecursiveUploader(QtCore.QObject):
 			@type module: str
 		"""
 		super(RecursiveUploader, self).__init__(*args, **kwargs)
+		print("RecursiveUploader", files, node)
 		self.node = node
 		self.module = module
 		self.hasFinished = False
+		self.taskQueue = []
+		self.runningTasks = 0
 		filteredFiles = [
 			x for x in files if
 			conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
@@ -171,31 +174,63 @@ class RecursiveUploader(QtCore.QObject):
 				# We can ignore that file
 				continue
 			if os.path.isdir(fileName.encode(sys.getfilesystemencoding())):
-				r = NetworkService.request("/%s/list/node/%s" % (self.module, self.node),
-				                           successHandler=self.onDirListAvailable)
-				r.uploadDirName = fileName
+				task = {"type":"netreq",
+				        "args" : ["/%s/list/node/%s" % (self.module, self.node),],
+				        "kwargs": {"successHandler": self.onDirListAvailable},
+				        "uploadDirName": fileName}
+				self.taskQueue.append(task)
 				self.stats["dirsTotal"] += 1
 			else:
-				r = FileUploader(fileName, self.node, parent=self)
-				r.uploadProgress.connect(self.onUploadProgress)
-				self.cancel.connect(r.cancel)
+				task = {"type": "upload",
+				        "args": [fileName, self.node,],
+				        "kwargs": {"parent": self}}
+				self.taskQueue.append(task)
+				self.stats["filesTotal"] += 1
 		logger.debug("RecursiveUploader.init: %r", self.stats)
 		# self.uploadProgress.emit(0, 0)
+		self.launchNextRequest()
 		self.tid = self.startTimer(150)
+
+	def launchNextRequest(self):
+		if not len(self.taskQueue):
+			return
+		if self.runningTasks > 1:
+			return
+		self.runningTasks += 1
+		task = self.taskQueue.pop(0)
+		if task["type"] == "netreq":
+			r = NetworkService.request(*task["args"], **task["kwargs"])
+			r.uploadDirName = task["uploadDirName"]
+		elif task["type"] == "upload":
+			r = FileUploader(*task["args"], **task["kwargs"])
+			r.uploadProgress.connect(self.onUploadProgress)
+			r.succeeded.connect(self.onRequestFinished)
+			self.cancel.connect(r.cancel)
+		elif task["type"] == "rekul":
+			r = RecursiveUploader(*task["args"], **task["kwargs"])
+			r.uploadProgress.connect(self.uploadProgress)
+			r.finished.connect(self.onRequestFinished)
+			self.cancel.connect(r.cancel)
+		else:
+			raise NotImplementedError()
+
+	def onRequestFinished(self, *args, **kwargs):
+		self.runningTasks -= 1
+		self.launchNextRequest()
 
 	def timerEvent(self, e):
 		"""
 			Check if we have busy tasks left
 		"""
 		super(RecursiveUploader, self).timerEvent(e)
-		busy = False
-		for child in self.children():
-			if isinstance(child, RequestWrapper) or isinstance(child, RequestGroup) or isinstance(child,
-			                                                                                      FileUploader) or isinstance(
-					child, RecursiveUploader):
-				if not child.hasFinished:
-					busy = True
-					break
+		busy = self.runningTasks > 0
+		#for child in self.children():
+		#	if isinstance(child, RequestWrapper) or isinstance(child, RequestGroup) or isinstance(child,
+		#	                                                                                      FileUploader) or isinstance(
+		#			child, RecursiveUploader):
+		#		if not child.hasFinished:
+		#			busy = True
+		#			break
 		if not busy:
 			self.hasFinished = True
 			self.finished.emit(self)
@@ -216,21 +251,25 @@ class RecursiveUploader(QtCore.QObject):
 			try:
 				tmp = child.getStats()
 				for k in stats.keys():
+					if isinstance(child, FileUploader) and k=="filesTotal":
+						# We count files in advance; don't include FileUpload-Class while counting
+						continue
 					try:
 						stats[k] += tmp[k]
 					except TypeError as err:
 						logger.error(
 							"RecursiveUploader.getStats - error occurred while collecting stats from child: %r, %r, %r, %r",
 							stats, tmp, child, k)
-						logger.exception(err)
+						#logger.exception(err)
 			except AttributeError as err:
-				logger.exception(err)
+				#logger.exception(err)
 				pass
 		logger.debug("RecursiveUploader.getStats: %r", stats)
 		return stats
 
 	def onDirListAvailable(self, req):
 		logger.debug("onDirListAvailable")
+		self.runningTasks -= 1
 		if self.isCanceled:
 			return
 		data = NetworkService.decode(req)
@@ -239,16 +278,19 @@ class RecursiveUploader(QtCore.QObject):
 				logger.debug("onDirListAvailable dir: %r", skel["name"])
 				# This directory allready exists
 				self.stats["dirsDone"] += 1
-				r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-				                      skel["key"], self.module, parent=self)
-				r.uploadProgress.connect(self.uploadProgress)
-				self.cancel.connect(r.cancel)
-				self.uploadProgress.emit(0, 1)
-				return
-		r = NetworkService.request("/%s/add/" % self.module,
-		                           {"node": self.node, "name": self.getDirName(req.uploadDirName), "skelType": "node"},
-		                           secure=True, finishedHandler=self.onMkDir)
-		r.uploadDirName = req.uploadDirName
+
+				task = {"type": "rekul",
+				        "args": [[os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
+				                      skel["key"], self.module],
+				        "kwargs": {"parent": self}}
+				self.taskQueue.append(task)
+		else:
+			task = {"type": "netreq",
+			        "args": ["/%s/add/" % self.module, {"node": self.node, "name": self.getDirName(req.uploadDirName), "skelType": "node"}],
+			        "kwargs": {"secure": True, "finishedHandler": self.onMkDir},
+			        "uploadDirName": req.uploadDirName}
+			self.taskQueue.append(task)
+		self.launchNextRequest()
 		self.uploadProgress.emit(0, 1)
 
 	def onMkDir(self, req):
@@ -257,10 +299,19 @@ class RecursiveUploader(QtCore.QObject):
 		data = NetworkService.decode(req)
 		assert data["action"] == "addSuccess"
 		self.stats["dirsDone"] += 1
-		r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
-		                      data["values"]["key"], self.module, parent=self)
-		r.uploadProgress.connect(self.uploadProgress)
-		self.cancel.connect(r.cancel)
+		self.runningTasks -= 1
+
+		task = {"type": "rekul",
+		        "args": [[os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
+		                      data["values"]["key"], self.module],
+		        "kwargs": {"parent": self}}
+		self.taskQueue.append(task)
+
+		#r = RecursiveUploader([os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
+		#                      data["values"]["key"], self.module, parent=self)
+		#r.uploadProgress.connect(self.uploadProgress)
+		#self.cancel.connect(r.cancel)
+		self.launchNextRequest()
 		self.uploadProgress.emit(0, 1)
 
 	def onCanceled(self, *args, **kwargs):

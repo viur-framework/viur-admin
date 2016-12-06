@@ -296,6 +296,8 @@ class RequestGroup(QtCore.QObject):
 		self.setParent(parent)
 		self.queryCount = 0  # Total amount of subqueries remaining
 		self.maxQueryCount = 0  # Total amount of all queries
+		self.pendingRequests = []
+		self.runningRequests = 0
 		self.hadErrors = False
 		self.hasFinished = False
 
@@ -310,6 +312,24 @@ class RequestGroup(QtCore.QObject):
 		self.cancel.connect(query.abort)
 		self.queryCount += 1
 		self.maxQueryCount += 1
+		self.runningRequests += 1
+
+	def addRequest(self, *args, **kwargs):
+		self.pendingRequests.append((args, kwargs))
+		self.launchNextRequest()
+
+	def launchNextRequest(self):
+		if not len(self.pendingRequests):
+			return
+		if self.runningRequests > 2:
+			return
+		args, kwargs = self.pendingRequests.pop(0)
+		if "parent" in kwargs.keys():
+			del kwargs["parent"]
+		req = NetworkService.request(*args, parent=self, **kwargs)
+		self.addQuery(req)
+
+
 
 	def onProgress(self, request, bytesReceived, bytesTotal):
 		if bytesReceived == bytesTotal:
@@ -320,11 +340,15 @@ class RequestGroup(QtCore.QObject):
 	def onError(self, request, error):
 		self.requestFailed.emit(self)
 		self.progessUpdate.emit(self, self.maxQueryCount - self.queryCount, self.maxQueryCount)
+		self.runningRequests -= 1
+		self.launchNextRequest()
 
 	def onFinished(self, queryWrapper):
 		self.queryCount -= 1
+		self.runningRequests -= 1
+		self.launchNextRequest()
 		if self.queryCount == 0:
-			QtCore.QTimer.singleShot(25, self.recheckFinished)
+			QtCore.QTimer.singleShot(1000, self.recheckFinished)
 
 	def recheckFinished(self):
 		"""
@@ -374,10 +398,12 @@ class RemoteFile(QtCore.QObject):
 		self.dlKey = dlKey
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
 		if os.path.isfile(fileName):
+			print("File exists: ", fileName)
 			# self.logger.debug("We already have that file :)")
 			self._delayTimer = QtCore.QTimer(self)
 			self._delayTimer.singleShot(250, self.onTimerEvent)
 		else:
+			print("Files missing: ", fileName)
 			# self.logger.debug("Need to fetch that file")
 			self.loadFile()
 		NetworkService.currentRequests.append(self)
@@ -419,6 +445,7 @@ class RemoteFile(QtCore.QObject):
 	def onFileAvailable(self, request):
 		# self.logger.debug("Checkpoint: onFileAvailable")
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(self.dlKey.encode("UTF-8")).hexdigest())
+		print("onFileAvailable", fileName)
 		data = request.readAll()
 		open(fileName, "w+b").write(data.data())
 		s = self.successHandlerSelf()
