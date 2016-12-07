@@ -420,6 +420,7 @@ class RemoteFile(QtCore.QObject):
 
 	def onTimerEvent(self):
 		# self.logger.debug("Checkpoint: onTimerEvent")
+		
 		if "successHandlerSelf" in dir(self):
 			s = self.successHandlerSelf()
 			if s:

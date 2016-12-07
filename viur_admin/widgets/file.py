@@ -3,13 +3,74 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.log import getLogger
-from viur_admin.network import RemoteFile
+from viur_admin.network import RemoteFile, NetworkService
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
+import urllib.request
+from viur_admin.config import conf
+import os
+from hashlib import sha1
 
 logger = getLogger(__name__)
+
+class PreviewThread(QtCore.QThread):
+	requestPreviewImage = QtCore.pyqtSignal((str))
+	previewImageAvailable = QtCore.pyqtSignal((str, str, QtGui.QIcon))
+
+	def __init__(self):
+		super(PreviewThread, self).__init__()
+		self.shouldTerminate = False
+		self.taskQueue = []
+		self.requestPreviewImage.connect(self.onRequestPreviewImage)
+		self.threadThread = None
+		self.start(QtCore.QThread.IdlePriority)
+		while self.threadThread is None:
+			self.usleep(5)
+		#self.moveToThread(self.threadThread)
+
+	def run(self):
+		self.threadThread = self.currentThread()
+		while not self.shouldTerminate:
+			try:
+				dlKey = self.taskQueue.pop(0)
+				fileName = os.path.join(conf.currentPortalConfigDirectory,
+				                        sha1(dlKey.encode("UTF-8")).hexdigest())
+				wasDownloaded = False
+				if not os.path.isfile(fileName):
+					wasDownloaded = True
+					req = urllib.request.Request(NetworkService.url.replace("/admin","")+"/file/download/"+dlKey)
+					try:
+						response = urllib.request.urlopen(req)
+					except:
+						print("File not found")
+						continue
+					fileData = response.read()
+				else:
+					fileData = open(fileName, "rb").read()
+				pixmap = QtGui.QPixmap()
+				pixmap.loadFromData(fileData)
+				if not pixmap.isNull():
+					icon = QtGui.QIcon(pixmap.scaled(104, 104))
+					self.previewImageAvailable.emit(dlKey, fileName, icon)
+					if wasDownloaded:
+						# Store the file sothat it won't be downloaded again next time
+						open(fileName, "wb+").write(fileData)
+				self.msleep(25)
+				#self.sleep(1)
+			except IndexError:
+				self.sleep(1)
+
+	def onRequestPreviewImage(self, dlkey):
+		if not dlkey in self.taskQueue:
+			self.taskQueue.append(dlkey)
+
+	def requestPreview(self, dlkey):
+		self.requestPreviewImage.emit(dlkey)
+
+previewer = PreviewThread()
+
 
 
 class FileItem(LeafItem):
@@ -32,20 +93,25 @@ class FileItem(LeafItem):
 		self.setIcon(icon)
 		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
 							extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
-			RemoteFile(data["dlkey"], successHandler=self.updateIcon)
+			previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
+			previewer.requestPreview(data["dlkey"])
 		self.setText(self.entryData["name"][:20])
 
+	def onPreviewImageAvailable(self, dlkey, fileName, icon):
+		if self.entryData["dlkey"] != dlkey:
+			# Not our Image
+			return
+		self.setIcon(icon)
+		#width = max(400, min(pixmap.width(), 500))
+		width = 400
+		self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
+			fileName, width, str(self.entryData["name"])))
+
+		previewer.previewImageAvailable.disconnect(self.onPreviewImageAvailable)
+
 	def updateIcon(self, remoteFile):
-		pixmap = QtGui.QPixmap()
-		pixmap.loadFromData(remoteFile.getFileContents())
-		if not pixmap.isNull():
-			icon = QtGui.QIcon(pixmap.scaled(104, 104))
-			self.setIcon(icon)
-			width = max(400, min(pixmap.width(), 500))
-			self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
-				remoteFile.getFileName(), width, str(self.entryData["name"])))
-		self.listWidget().setViewMode(0)
-		self.listWidget().setViewMode(1)
+		previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
+		previewer.requestPreview(remoteFile.getFileName(), remoteFile._dlKey)
 
 
 class UploadStatusWidget(QtWidgets.QWidget):
