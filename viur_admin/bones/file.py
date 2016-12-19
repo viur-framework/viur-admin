@@ -33,7 +33,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			self.cache[remoteFile.dlKey] = QtGui.QImage(fn)
 		except:
 			pass
-		self.request_repaint[int, QtCore.QObject].emit()
+		self.request_repaint.emit()
 
 	def paint(self, painter, option, index):
 		model = index.model()
@@ -49,14 +49,15 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			record = None
 		if not record:
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
-		if not record["dlkey"] in self.cache.keys():
-			self.cache[record["dlkey"]] = None
-			RemoteFile(record["dlkey"], successHandler=self.setImage)
+
+		if record["dest"]["dlkey"] not in self.cache.keys():
+			self.cache[record["dest"]["dlkey"]] = None
+			RemoteFile(record["dest"]["dlkey"], successHandler=self.setImage)
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
-		elif not self.cache[record["dlkey"]]:  # Image not loaded yet
+		elif not self.cache[record["dest"]["dlkey"]]:  # Image not loaded yet
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
 		painter.save()
-		painter.drawImage(option.rect, self.cache[record["dlkey"]])
+		painter.drawImage(option.rect, self.cache[record["dest"]["dlkey"]])
 		painter.restore()
 
 	def displayText(self, value, locale):
