@@ -2,10 +2,10 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from viur_admin.log import getLogger
 
 from viur_admin import utils
 from viur_admin.config import conf
+from viur_admin.log import getLogger
 from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.treeUI import Ui_Tree
@@ -23,8 +23,8 @@ class NodeItem(QtWidgets.QListWidgetItem):
 
 	def __init__(self, data, parent):
 		super(NodeItem, self).__init__(
-				QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent,
-				type=1200)
+			QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent,
+			type=1200)
 		self.entryData = data
 
 	def __gt__(self, other):
@@ -57,6 +57,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 			name = " - "
 		super(LeafItem, self).__init__(QtGui.QIcon(":icons/filetypes/unknown.png"), str(name), parent=parent, type=1100)
 		self.entryData = data
+		self._parent = parent
 
 	def __gt__(self, other):
 		if isinstance(other, self.listWidget().nodeItem):
@@ -142,9 +143,9 @@ class PathListView(QtWidgets.QListWidget):
 		assert protoWrap is not None
 		destItem = self.itemAt(event.pos())
 		protoWrap.move(
-				dataDict["nodes"],
-				dataDict["leafs"],
-				destItem.entryData["key"])
+			dataDict["nodes"],
+			dataDict["leafs"],
+			destItem.entryData["key"])
 
 	@QtCore.pyqtSlot(str)
 	def setNode(self, node, isInitialCall=False):
@@ -240,12 +241,11 @@ class TreeListView(QtWidgets.QListWidget):
 			self.nodeChanged.emit(self.node)
 
 	def setRootNode(self, rootNode, isInitialCall=False):
-		"""
-			Switch to the given RootNode of our modul and start displaying these items.
-			@param rootNode: Key of the new rootNode.
-			@type rootNode: String
-			@param isInitialCall: If this is the initial call, we remit the signal
-			@type repoName: bool
+		"""Switch to the given RootNode of our modul and start displaying these items.
+
+		@param rootNode: Key of the new rootNode.
+		@type rootNode: String
+		@param isInitialCall: If this is the initial call, we remit the signal
 		"""
 		self.customQueryKey = None
 		if rootNode == self.rootNode:
@@ -292,11 +292,11 @@ class TreeListView(QtWidgets.QListWidget):
 					leafs.append(item.entryData)
 			event.mimeData().setData("viur/treeDragData", json.dumps({"nodes": [x["key"] for x in nodes],
 			                                                          "leafs": [x["key"] for x in leafs]}).encode(
-					"utf-8"))
+				"utf-8"))
 			event.mimeData().setUrls(
-					[utils.urlForItem(self.getModul(), x) for x in nodes] + [utils.urlForItem(self.getModul(), x) for x
-					                                                         in
-					                                                         leafs])
+				[utils.urlForItem(self.getModul(), x) for x in nodes] + [utils.urlForItem(self.getModul(), x) for x
+				                                                         in
+				                                                         leafs])
 
 	def dragMoveEvent(self, event):
 		logger.debug("TreeListWidget.dragMoveEvent")
@@ -422,10 +422,10 @@ class TreeListView(QtWidgets.QListWidget):
 			doMove = (action.task == "move")
 			mimeData = QtCore.QMimeData()
 			mimeData.setData("viur/treeDragData", json.dumps(
-					{
-						"nodes": nodes,
-						"leafs": leafs,
-						"domove": doMove}).encode("utf-8"))
+				{
+					"nodes": nodes,
+					"leafs": leafs,
+					"domove": doMove}).encode("utf-8"))
 			QtWidgets.QApplication.clipboard().setMimeData(mimeData)
 		elif action.task == "delete":
 			nodes = []
@@ -439,7 +439,7 @@ class TreeListView(QtWidgets.QListWidget):
 		elif action.task == "paste":
 			# self.currentItem() ):
 			data = json.loads(
-					QtWidgets.QApplication.clipboard().mimeData().data("viur/treeDragData").data().decode("UTF-8"))
+				QtWidgets.QApplication.clipboard().mimeData().data("viur/treeDragData").data().decode("UTF-8"))
 			# srcRootNode, srcPath, files, dirs, destRootNode, destPath, doMove ):
 			protoWrap.move(data["nodes"], data["leafs"], self.getNode())
 		# self.copy( self.clipboard, self.rootNode, self.getPath() )
@@ -449,7 +449,7 @@ class TreeListView(QtWidgets.QListWidget):
 				self,
 				QtCore.QCoreApplication.translate("TreeListView", "Confirm delete"),
 						QtCore.QCoreApplication.translate(
-								"TreeListView", "Delete %s nodes and %s leafs?") % (len(nodes), len(leafs)),
+							"TreeListView", "Delete %s nodes and %s leafs?") % (len(nodes), len(leafs)),
 						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
 				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return False
@@ -473,7 +473,6 @@ class TreeListView(QtWidgets.QListWidget):
 
 	def setIconMode(self, iconMode):
 		if iconMode:
-			self.setViewMode(self.IconMode)
 			self.setDragEnabled(True)
 			self.setAcceptDrops(True)
 			self.setSortingEnabled(True)
@@ -481,11 +480,13 @@ class TreeListView(QtWidgets.QListWidget):
 			self.setDropIndicatorShown(True)
 			self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
 			self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
+			self.setViewMode(self.IconMode)
 		else:
-			self.setViewMode(self.ListMode)
 			self.setGridSize(QtCore.QSize(*self.gridSizeList))
 			self.setIconSize(QtCore.QSize(*[x - 8 for x in self.gridSizeList]))
-
+			self.setViewMode(self.ListMode)
+		for ix in range(self.count()):
+			logger.debug("item sizeHint: %r", self.item(ix).sizeHint())
 
 class TreeWidget(QtWidgets.QWidget):
 	"""
@@ -562,14 +563,13 @@ class TreeWidget(QtWidgets.QWidget):
 		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
 		self.setActions(
-				actions if actions is not None else ["dirup", "mkdir", "add", "edit", "clone", "preview", "delete",
-				                                     "switchview"])
+			actions if actions is not None else ["dirup", "mkdir", "add", "edit", "clone", "preview", "delete",
+			                                     "switchview"])
 
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
 		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)
 		self.tree.itemDoubleClicked.connect(self.itemDoubleClicked)
 		self.tree.itemClicked.connect(self.itemClicked)
-
 
 		if modul.endswith("_rootNode"):
 			realModule = modul.replace("_rootNode", "")

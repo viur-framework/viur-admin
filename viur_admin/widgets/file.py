@@ -63,7 +63,7 @@ class PreviewThread(QtCore.QThread):
 				self.sleep(1)
 
 	def onRequestPreviewImage(self, dlkey):
-		if not dlkey in self.taskQueue:
+		if dlkey not in self.taskQueue:
 			self.taskQueue.append(dlkey)
 
 	def requestPreview(self, dlkey):
@@ -102,12 +102,13 @@ class FileItem(LeafItem):
 			# Not our Image
 			return
 		self.setIcon(icon)
-		#width = max(400, min(pixmap.width(), 500))
 		width = 400
 		self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
 			fileName, width, str(self.entryData["name"])))
 
 		previewer.previewImageAvailable.disconnect(self.onPreviewImageAvailable)
+		if not len(previewer.taskQueue):
+			self._parent.setIconMode(self._parent.isIconMode())
 
 	def updateIcon(self, remoteFile):
 		previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
