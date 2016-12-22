@@ -261,7 +261,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			self.mainWindow = mainWindow
 		if self.mainWindow is None:
 			raise UnboundLocalError(
-					"You either have to create the mainwindow before using this class or specifiy an replacement.")
+				"You either have to create the mainwindow before using this class or specifiy an replacement.")
 		self.widgets = []
 		self.widgetGenerator = widgetGenerator
 		try:
@@ -424,7 +424,7 @@ def urlForItem(modul, item):
 	else:
 		if "name" in item.keys():
 			return QtCore.QUrl(
-					"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"], item["name"]))
+				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"], item["name"]))
 		else:  # Return a URL without a name appended
 			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"]))
 
@@ -457,7 +457,7 @@ def itemFromUrl(url):
 		return modul, parts[2], ""
 
 
-def formatString(format, data, structure = None, prefix = None, language = "de", _rec = 0):
+def formatString(format, data, structure=None, prefix=None, language="de", _rec=0):
 	"""
 	Parses a string given by format and substitutes placeholders using values specified by data.
 
@@ -481,54 +481,65 @@ def formatString(format, data, structure = None, prefix = None, language = "de",
 	:param structure: Parses along the structure of the given skeleton.
 	:type structure: dict
 
+	:param prefix: a key which will be used to lookup information in a dict under data
+	:type prefix: list
+
+	:param language: the 2 char name of a language which should be used for translated data, e.g 'de'
+	:type language: str
+
+	:param _rec: a counter for internal debugging purposes, whichs holds the number of recursive calls
+	:type _rec: int
+
 	:return: The traversed string with the replaced values.
 	:rtype: str
 	"""
 
 	if structure and isinstance(structure, list):
-		structure = {k:v for k, v in structure}
+		structure = {k: v for k, v in structure}
 
 	prefix = prefix or []
 	res = format
 
-	if isinstance(data,  list):
-		return ", ".join([formatString(format, x, structure, prefix, language, _rec = _rec + 1) for x in data])
+	try:
+		if isinstance(data, list):
+			return ", ".join([formatString(format, x, structure, prefix, language, _rec=_rec + 1) for x in data])
 
-	elif isinstance(data, str):
-		return data
+		elif isinstance(data, str):
+			return data
 
-	elif not data:
-		return res
+		elif not data:
+			return res
 
-	for key in data.keys():
-		val = data[key]
-		struct = structure.get(key) if structure else None
+		for key in data.keys():
+			val = data[key]
+			struct = structure.get(key) if structure else None
 
-		#print("%s%s: %s" % (_rec * " ", key, val))
-		#print("%s%s: %s" % (_rec * " ", key, struct))
+			logger.debug("key: %r, val: %r", key, val)
+			# print("%s%s: %s" % (_rec * " ", key, struct))
 
-		if isinstance(val, dict):
-			if struct and ("$(%s)" % ".".join(prefix + [key])) in res:
-				langs = struct.get("languages")
-				if langs:
-					if language and language in langs and language in val.keys():
-						val = val[language]
+			if isinstance(val, dict):
+				if struct and ("$(%s)" % ".".join(prefix + [key])) in res:
+					langs = struct.get("languages")
+					if langs:
+						if language and language in langs and language in val.keys():
+							val = val[language]
+						else:
+							val = ", ".join(val.values())
+
 					else:
-						val = ", ".join(val.values())
+						continue
 
 				else:
-					continue
+					res = formatString(res, val, structure, prefix + [key], language, _rec=_rec + 1)
 
-			else:
-				res = formatString(res, val, structure, prefix + [key], language, _rec = _rec + 1)
+			elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
+				res = formatString(res, val[0], structure, prefix + [key], language, _rec=_rec + 1)
+			elif isinstance(val, list):
+				val = ", ".join(val)
 
-		elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
-			res = formatString(res, val[0], structure, prefix + [key], language, _rec = _rec + 1)
-		elif isinstance(val, list):
-			val = ", ".join(val)
-
-		res = res.replace("$(%s)" % (".".join(prefix + [key])), str(val))
-
+			res = res.replace("$(%s)" % (".".join(prefix + [key])), str(val))
+	except Exception as err:
+		logger.debug("in formatString: %r, %r, %r", format, data, err)
 	return res
 
 
