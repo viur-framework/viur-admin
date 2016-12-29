@@ -102,7 +102,7 @@ class Config(object):
 			cfg = json.loads(configData)
 			self.portal = cfg
 			if withCookies:
-				cookies = list(7)
+				cookies = list()
 				now = datetime.now()
 				for plainCookie in self.portal.get("cookies", list()):
 					logger.debug("cookieRaw: %r", plainCookie)
