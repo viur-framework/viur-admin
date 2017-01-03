@@ -5,13 +5,14 @@ from viur_admin.log import getLogger
 logger = getLogger(__name__)
 from html.parser import HTMLParser
 
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.config import conf
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.utils import wheelEventFilter, ViurTabBar
 
 
 def unescapeHtml(html):
@@ -113,6 +114,7 @@ class StringEditBone(BoneEditInterface):
 		if self.languages and self.multiple:  # FIXME: Multiple and readOnly...
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.tabWidget = QtWidgets.QTabWidget(self)
+			self.tabWidget.setTabBar(ViurTabBar(self))
 			self.tabWidget.blockSignals(True)
 			self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 			event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
@@ -135,6 +137,7 @@ class StringEditBone(BoneEditInterface):
 		elif self.languages and not self.multiple:
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.tabWidget = QtWidgets.QTabWidget(self)
+			self.tabWidget.setTabBar(ViurTabBar(self))
 			self.tabWidget.blockSignals(True)
 			self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 			event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
@@ -158,6 +161,8 @@ class StringEditBone(BoneEditInterface):
 			self.layout().addWidget(self.lineEdit)
 			self.lineEdit.show()
 			self.lineEdit.setReadOnly(self.readOnly)
+		self.setFocusPolicy(QtCore.Qt.StrongFocus)
+		self.installEventFilter(wheelEventFilter)
 
 	@staticmethod
 	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):

@@ -10,6 +10,7 @@ from viur_admin.config import conf
 from viur_admin.network import NetworkService, RemoteFile
 
 
+
 class RegisterQueue:
 	"""
 	Propagates through the QT-Eventqueue and collects all Handlers able to scope with the current request
@@ -396,13 +397,22 @@ class WheelEventFilter(QtCore.QObject):
 	"""
 
 	def eventFilter(self, obj, event):
-		if event.type() == QtCore.QEvent.Wheel and obj.focusPolicy() == QtCore.Qt.StrongFocus:
+		if event.type() == QtCore.QEvent.Wheel:
 			event.ignore()
 			return True
 		return False
 
 
 wheelEventFilter = WheelEventFilter()
+
+
+class ViurTabBar(QtWidgets.QTabBar):
+	"""Used in conjunction with WheelEventFilter especially for QTabWidget
+
+	"""
+	def __init__(self, parent=None):
+		super(ViurTabBar, self).__init__(parent)
+		self.installEventFilter(wheelEventFilter)
 
 
 def urlForItem(modul, item):

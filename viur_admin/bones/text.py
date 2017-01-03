@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 import html.parser
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
@@ -13,6 +18,9 @@ from viur_admin.network import RemoteFile
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
 from viur_admin.bones.file import FileBoneSelector
+from viur_admin.utils import wheelEventFilter, ViurTabBar
+
+
 
 rsrcPath = ":icons/actions/text"
 
@@ -1049,6 +1057,7 @@ class TextEditBone(BoneEditInterface):
 			self.languageContainer = {}
 			self.html = {}
 			self.tabWidget = QtWidgets.QTabWidget(self)
+			self.tabWidget.setTabBar(ViurTabBar())
 			self.tabWidget.blockSignals(True)
 			self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 			event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
@@ -1090,6 +1099,7 @@ class TextEditBone(BoneEditInterface):
 			self.html = ""
 		self.setSizePolicy(
 			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
+		self.installEventFilter(wheelEventFilter)
 
 	@staticmethod
 	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
