@@ -1,18 +1,13 @@
-import urllib.parse
-
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
 
-import json
-import re
-
-from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit, QtNetwork
+from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
 from viur_admin.accountmanager import Accountmanager
-from viur_admin.network import NetworkService, securityTokenProvider, nam
+from viur_admin.network import NetworkService, securityTokenProvider, nam, MyCookieJar
 from viur_admin.event import event
 from viur_admin import config
 from viur_admin.utils import Overlay, showAbout
@@ -37,17 +32,16 @@ class AuthGoogle(QtWidgets.QWidget):
 		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
 		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
 		self.webView.page().setNetworkAccessManager(nam)
-		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"]+"/admin/user/auth_googleaccount/login"))
+		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "/admin/user/auth_googleaccount/login"))
 		self.webView.urlChanged.connect(self.onUrlChanged)
 		self.webView.loadFinished.connect(self.onLoadFinished)
-
 
 	def startAuthenticating(self):
 		logger.debug("LoginTask using method x-google")
 		if not self.isWizard:
 			self.show()
-		#username = self.currentPortalConfig["username"]
-		#password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
+		# username = self.currentPortalConfig["username"]
+		# password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
 
 	def onUrlChanged(self, url):
 		logger.debug("urlChanged: %r", url)
@@ -66,7 +60,7 @@ class AuthGoogle(QtWidgets.QWidget):
 		elif self.webView.findText("X-VIUR-2FACTOR-"):
 			html = self.webView.page().mainFrame().toHtml()
 			startPos = html.find("X-VIUR-2FACTOR-")
-			secondFactorType = html[startPos, html.find("\"", startPos+1)]
+			secondFactorType = html[startPos, html.find("\"", startPos + 1)]
 			secondFactorType = secondFactorType.replace("X-VIUR-2FACTOR-", "")
 			if not self.isWizard:
 				self.close()
@@ -85,6 +79,7 @@ class AuthGoogle(QtWidgets.QWidget):
 		if not self.didSucceed:
 			self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", "Aborted"))
 
+
 class AuthUserPassword(QtWidgets.QWidget):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
@@ -97,8 +92,8 @@ class AuthUserPassword(QtWidgets.QWidget):
 		self.ui.setupUi(self)
 		self.currentPortalConfig = currentPortalConfig
 
-		#config.conf.currentUsername = username
-		#config.conf.currentPassword = password
+	# config.conf.currentUsername = username
+	# config.conf.currentPassword = password
 
 	def getUpdatedPortalConfig(self):
 		self.currentPortalConfig["username"] = self.ui.editUsername.text()
@@ -149,15 +144,13 @@ class VerifyTimeBasedOTP(QtWidgets.QWidget):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
 
-
 	def __init__(self, currentPortalConfig, isWizard=False, *args, **kwargs):
 		super(VerifyTimeBasedOTP, self).__init__(*args, **kwargs)
 		self.currentPortalConfig = currentPortalConfig
 
 	def startAuthenticating(self):
-		logger.debug("VerifyOtp start")#
+		logger.debug("VerifyOtp start")  #
 		self.startRun()
-
 
 	def startRun(self):
 		token, isOkay = QtWidgets.QInputDialog.getText(self, "Insert Token", "Token")
@@ -169,18 +162,16 @@ class VerifyTimeBasedOTP(QtWidgets.QWidget):
 
 	def onViurAuth(self, req):
 		res = NetworkService.decode(req)
-		if isinstance(res, dict) and "action" in res.keys() and res["action"]=="edit":
+		if isinstance(res, dict) and "action" in res.keys() and res["action"] == "edit":
 			msg = QtWidgets.QMessageBox.warning(self, "Invalid token", "Your token did not verify. Please try again")
 			self.startRun()
-		elif isinstance(res, str) and res.lower()=="okay":
+		elif isinstance(res, str) and res.lower() == "okay":
 			self.loginSucceeded.emit()
 		print("VerifyOtp.onViurAuth", res)
 
 	def onError(self, req):
 		res = NetworkService.decode(req)
 		print("VerifyOtp.onError", res)
-
-
 
 
 class LoginTask(QtCore.QObject):
@@ -203,7 +194,8 @@ class LoginTask(QtCore.QObject):
 		self.currentPortalConfig = currentPortalConfig
 		self.isWizard = isWizard
 		assert currentPortalConfig["authMethod"] in self.authenticationProvider.keys(), "Unknown authentication method"
-		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig, isWizard)
+		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](currentPortalConfig,
+		                                                                                   isWizard)
 		self.authProvider.loginSucceeded.connect(self.onLoginSucceeded)
 		self.authProvider.loginFailed.connect(self.onLoginFailed)
 		self.authProvider.secondFactorRequired.connect(self.onSecondFactorRequired)
@@ -211,7 +203,6 @@ class LoginTask(QtCore.QObject):
 
 	def startAuthenticationFlow(self):
 		self.authProvider.startAuthenticating()
-
 
 	def startSetup(self):
 		return self.authProvider
@@ -233,8 +224,6 @@ class LoginTask(QtCore.QObject):
 	def onLoginFailed(self, msg, *args, **kwargs):
 		print("LoginTask.onLoginFailed", msg)
 		self.loginFailed.emit(msg)
-
-
 
 
 class Login(QtWidgets.QMainWindow):
@@ -325,7 +314,8 @@ class Login(QtWidgets.QMainWindow):
 			self.loginTask.deleteLater()
 		cb = self.ui.cbPortal
 		currentPortalCfg = config.conf.accounts[cb.currentIndex().row()]
-		NetworkService.setup(currentPortalCfg["server"]+"admin")
+		NetworkService.setup(currentPortalCfg["server"] + "admin")
+
 		if cb.currentIndex().row() != 0:
 			# Move this account to the beginning, so it will be selected on the next start
 			# of admin
@@ -342,8 +332,34 @@ class Login(QtWidgets.QMainWindow):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 			self.helpBrowser = None
-		self.loginTask.startAuthenticationFlow()
+		config.conf.loadPortalConfig(NetworkService.url, withCookies=True)
+		# now we're going to test if we're still logged in via restored and valid cookies
+		# or have to start the login task
+		NetworkService.request(
+			"/user/view/self",
+			secure=True,
+			failSilent=True,
+			successHandler=self.onSkipAuth,
+			failureHandler=self.onNotLoggedInYet
+		)
 
+	def onSkipAuth(self, req):
+		"""Login credentials aka cookies are still valid, so we can progress with admin startup
+
+		:param req:
+		:return:
+		"""
+		self.loginTask.loginSucceeded.emit()
+
+	def onNotLoggedInYet(self, req):
+		"""Login credentials aka cookies are neither present nor valid anymore, so cleanup the cookiejar of our networking subsystem
+		and proceed with login
+
+		:param req:
+		:return:
+		"""
+		nam.setCookieJar(MyCookieJar())
+		self.loginTask.startAuthenticationFlow()
 
 	def onStartAccManagerBTNReleased(self):
 		if self.accman:
@@ -363,7 +379,6 @@ class Login(QtWidgets.QMainWindow):
 	def onActionHelpTriggered(self):
 		QtGui.QDesktopServices.openUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
 
-
 	def login(self, username, password, captcha=None):
 		"""
 		Then:
@@ -378,7 +393,6 @@ class Login(QtWidgets.QMainWindow):
 		loginTask.loginSucceeded.connect(self.onLoginSucceeded)
 		loginTask.captchaRequired.connect(self.setCaptcha)
 		loginTask.loginFailed.connect(self.onLoginFailed)
-
 
 	def onLoginFailed(self, msg):
 		self.overlay.inform(self.overlay.ERROR, msg)
@@ -399,4 +413,3 @@ class Login(QtWidgets.QMainWindow):
 		newLanguage = self.langKeys[index]
 		QtCore.QCoreApplication.installTranslator(config.conf.availableLanguages[newLanguage])
 		config.conf.adminConfig["language"] = newLanguage
-

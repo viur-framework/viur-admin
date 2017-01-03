@@ -21,7 +21,7 @@ import sys
 import time
 from viur_admin.config import conf
 from PyQt5.QtCore import QUrl, QObject
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply, QNetworkCookieJar
 from urllib import request
 
 import viur_admin.ui.icons_rc
@@ -55,6 +55,15 @@ else:
 	_SSLFIX = SSLFIX()
 	nam.sslErrors.connect(_SSLFIX.onSSLError)
 	_isSecureSSL = False
+
+
+class MyCookieJar(QNetworkCookieJar):
+	"""Needed for accessing protected methods"""
+
+	pass
+
+nam.setCookieJar(MyCookieJar())
+
 
 mimetypes.init()
 if os.path.exists("mime.types"):

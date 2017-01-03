@@ -379,7 +379,6 @@ class TreeListView(QtWidgets.QListWidget):
 			@param nodes: List of Nodes which we shall display
 			@type nodes: list of dict
 		"""
-		print("setDisplayData")
 		self.clear()
 		for entry in nodes:
 			if entry["_type"] == "node":
@@ -389,7 +388,6 @@ class TreeListView(QtWidgets.QListWidget):
 			else:
 				raise NotImplementedError()
 		self.sortItems()
-		print("end setDisplayData")
 
 	def onCustomContextMenuRequested(self, point):
 		menu = QtWidgets.QMenu(self)
@@ -485,8 +483,7 @@ class TreeListView(QtWidgets.QListWidget):
 			self.setGridSize(QtCore.QSize(*self.gridSizeList))
 			self.setIconSize(QtCore.QSize(*[x - 8 for x in self.gridSizeList]))
 			self.setViewMode(self.ListMode)
-		for ix in range(self.count()):
-			logger.debug("item sizeHint: %r", self.item(ix).sizeHint())
+
 
 class TreeWidget(QtWidgets.QWidget):
 	"""
