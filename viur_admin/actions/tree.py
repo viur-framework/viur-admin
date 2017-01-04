@@ -24,7 +24,7 @@ class TreeAddAction(QtWidgets.QAction):
 		node = self.parent().getNode()
 		widget = lambda: EditWidget(modul, EditWidget.appTree, node=node)
 		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/add.svg"))
-		event.emit(QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler)
+		event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
