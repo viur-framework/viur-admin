@@ -359,6 +359,7 @@ class Login(QtWidgets.QMainWindow):
 		:return:
 		"""
 		nam.setCookieJar(MyCookieJar())
+		securityTokenProvider.reset()
 		self.loginTask.startAuthenticationFlow()
 
 	def onStartAccManagerBTNReleased(self):
