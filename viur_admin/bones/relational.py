@@ -395,6 +395,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			self.selection.hide()
 			self.ui.lblSelected.hide()
 		self.list.itemDoubleClicked.connect(self.onSourceItemDoubleClicked)
+		self.list.itemClicked.connect(self.onSourceItemClicked)
 		self.ui.btnSelect.clicked.connect(self.onBtnSelectReleased)
 		self.ui.btnCancel.clicked.connect(self.onBtnCancelReleased)
 		event.emit('stackWidget', self)
@@ -423,6 +424,9 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		assert self.boneName in skel.keys()
 		return QtCore.QCoreApplication.translate("ExtendedRelationalBoneSelector", "Select %s") % skel[self.boneName][
 			"descr"], QtGui.QIcon(":icons/actions/change_selection.svg")
+
+	def onSourceItemClicked(self, item):
+		pass
 
 	def onSourceItemDoubleClicked(self, item):
 		"""

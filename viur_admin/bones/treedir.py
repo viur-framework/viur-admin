@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
@@ -42,7 +46,7 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 		"""
 		return
 
-	def onItemClicked(self, item):
+	def onSourceItemClicked(self, item):
 		if not isinstance(item, self.list.getNodeItemClass()):
 			return
 

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
 from viur_admin.event import event
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
