@@ -6,6 +6,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector
 
 
+from viur_admin.log import getLogger
+logger = getLogger(__name__)
+
+
 class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 	"""
 		The model holding the currently selected entities.
@@ -55,7 +59,13 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 					self.entryFetches.append(protoWrap.queryEntry(id, self.skelType))
 				else:
 					self.entryFetches.append(protoWrap.queryEntry(id))
+		elif isinstance(item, str):
+			if self.skelType is not None:
+				self.entryFetches.append(protoWrap.queryEntry(item, self.skelType))
+			else:
+				self.entryFetches.append(protoWrap.queryEntry(item))
 		else:
+			logger.debug("SelectedEntities.addItem: unhandled instance type: %r", item, type(item))
 			raise NotImplementedError()
 		# self.entryFetches.append( protoWrap.queryEntry( id ) )
 		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )

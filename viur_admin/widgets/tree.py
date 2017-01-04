@@ -273,7 +273,8 @@ class TreeListView(QtWidgets.QListWidget):
 			self.loadData()
 
 	def onItemDoubleClicked(self, item):
-		if (isinstance(item, self.nodeItem)):
+		logger.debug("TreeListView.onItemDoubleClicked: %r, %r", item, self.nodeItem)
+		if isinstance(item, self.nodeItem):
 			self.setNode(item.entryData["key"], isInitialCall=True)
 
 	def dragEnterEvent(self, event):

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 
-from event import event
-from utils import RegisterQueue, formatString, itemFromUrl
-from network import NetworkService
-from config import conf
-from widgets.file import FileItem
+from viur_admin.utils import itemFromUrl
+from viur_admin.log import getLogger
+from viur_admin.widgets.file import FileItem
+
+logger = getLogger(__name__)
 
 
 class SelectedFilesWidget(QtWidgets.QListWidget):
@@ -13,7 +13,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		Displays the currently selected files of one fileBone.
 	"""
 
-	def __init__(self, parent, modul, selection=None, *args, **kwargs):
+	def __init__(self, modul, selection=None, *args, **kwargs):
 		"""
 			@param parent: Parent-Widget
 			@type parent: QWidget
@@ -28,7 +28,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		if isinstance(self.selection, dict):  # This was a singleSelection before
 			self.selection = [self.selection]
 		for s in self.selection:
-			self.addItem(FileItem(s))
+			self.addItem(FileItem(s, self))
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
@@ -37,10 +37,15 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			One of our Items has been double-clicked.
 			Remove it from the selection
 		"""
-		self.selection.remove(item.data)
+		logger.debug("selectedFiles.onItemDoubleClicked: %r, %r", item, self.selection)
+		try:
+			self.selection.remove(item.entryData)
+		except ValueError as err:
+			logger.debug("selectedItem should be in the selection list")
+			pass
 		self.clear()
 		for s in self.selection:
-			self.addItem(FileItem(s))
+			self.addItem(FileItem(s, self))
 
 	def dropEvent(self, event):
 		"""
@@ -49,6 +54,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			Well check the events.source widget for more informations about the files,
 			and add them only if we succed.
 		"""
+		logger.debug("selectedFiles.dropEvent: %r", event)
 		mime = event.mimeData()
 		if not mime.hasUrls():
 			return
@@ -79,7 +85,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		if isinstance(self.selection, dict):
 			self.selection = [self.selection]
 		for s in self.selection:
-			self.addItem(FileItem(s))
+			self.addItem(FileItem(s, self))
 
 	def extend(self, selection):
 		"""
@@ -89,7 +95,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		"""
 		self.selection += selection
 		for s in selection:
-			self.addItem(FileItem(s))
+			self.addItem(FileItem(s, self))
 
 	def get(self):
 		"""
@@ -118,6 +124,6 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 				self.selection.remove(item.data)
 			self.clear()
 			for s in self.selection:
-				self.addItem(FileItem(s))
+				self.addItem(FileItem(s, self))
 		else:
 			super(SelectedFilesWidget, self).keyPressEvent(e)
