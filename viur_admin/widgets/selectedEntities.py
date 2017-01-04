@@ -47,14 +47,19 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		if not item:
 			return
 		if isinstance(item, dict):
-			id = item["key"]
+			if "dest" in item.keys():
+				key = item["dest"]["key"]
+			elif "key" in item.keys():
+				key = item["key"]
+			else:
+				raise NotImplementedError("Unknown item format: %s" % item)
 			if "_type" in item.keys():
-				self.entryFetches.append(protoWrap.queryEntry(id, item["_type"]))
+				self.entryFetches.append(protoWrap.queryEntry(key, item["_type"]))
 			else:
 				if self.skelType:
-					self.entryFetches.append(protoWrap.queryEntry(id, self.skelType))
+					self.entryFetches.append(protoWrap.queryEntry(key, self.skelType))
 				else:
-					self.entryFetches.append(protoWrap.queryEntry(id))
+					self.entryFetches.append(protoWrap.queryEntry(key))
 		else:
 			raise NotImplementedError()
 		# self.entryFetches.append( protoWrap.queryEntry( id ) )
