@@ -12,7 +12,9 @@ from viur_admin.network import RemoteFile
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.utils import formatString
-from viur_admin.widgets.file import FileWidget
+from viur_admin.widgets.file import FileWidget, FileItem
+from viur_admin.widgets.selectedFiles import SelectedFilesWidget
+
 
 
 class FileViewBoneDelegate(BaseViewBoneDelegate):
@@ -138,6 +140,18 @@ class FileItemBone(TreeItemBone):
 
 class FileBoneSelector(TreeBoneSelector):
 	displaySourceWidget = FileWidget
+	displaySelectionWidget = SelectedFilesWidget
+
+	def keyPressEvent(self, e):
+		"""Handle multiple selection via return or enter key press"""
+
+		if self.multiple and e.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
+			for item in self.list.selectedItems():
+				logger.debug("selected item: %r", item)
+				data = item.entryData
+				self.selection.extend([data])
+		else:
+			super(FileBoneSelector, self).keyPressEvent(e)
 
 
 def CheckForFileBone(moduleName, boneName, skelStucture):

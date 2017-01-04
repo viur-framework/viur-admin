@@ -95,7 +95,7 @@ class FileItem(LeafItem):
 							extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
 			previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
 			previewer.requestPreview(data["dlkey"])
-		self.setText(self.entryData["name"][:20])
+		self.setText(self.entryData["name"])
 
 	def onPreviewImageAvailable(self, dlkey, fileName, icon):
 		if self.entryData["dlkey"] != dlkey:
@@ -107,7 +107,7 @@ class FileItem(LeafItem):
 			fileName, width, str(self.entryData["name"])))
 
 		previewer.previewImageAvailable.disconnect(self.onPreviewImageAvailable)
-		if not len(previewer.taskQueue):
+		if not len(previewer.taskQueue) and hasattr(self._parent, "setIconMode"):
 			self._parent.setIconMode(self._parent.isIconMode())
 
 	def updateIcon(self, remoteFile):
@@ -296,6 +296,8 @@ class FileListView(TreeListView):
 		else:
 			super(FileListView, self).dragEnterEvent(event)
 
+	def onItemDoubleClicked(self, item):
+		pass
 
 class FileWidget(TreeWidget):
 	"""
