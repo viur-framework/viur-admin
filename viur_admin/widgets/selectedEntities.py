@@ -63,7 +63,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 				if self.skelType:
 					self.entryFetches.append(protoWrap.queryEntry(key, self.skelType))
 				else:
-					self.entryFetches.append(protoWrap.queryEntry(id))
+					self.entryFetches.append(protoWrap.queryEntry(key))
 		elif isinstance(item, str):
 			if self.skelType is not None:
 				self.entryFetches.append(protoWrap.queryEntry(item, self.skelType))

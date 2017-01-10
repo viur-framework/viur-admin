@@ -96,9 +96,9 @@ class AuthUserPassword(QtWidgets.QWidget):
 	# config.conf.currentPassword = password
 
 	def getUpdatedPortalConfig(self):
-		self.currentPortalConfig["username"] = self.ui.editUsername.text()
+		self.currentPortalConfig["username"] = self.ui.editUsername.text().strip("\n").strip()
 		if self.ui.cbSavePassword.checkState():
-			self.currentPortalConfig["password"] = self.ui.editPassword.text()
+			self.currentPortalConfig["password"] = self.ui.editPassword.text().strip("\n").strip()
 		else:
 			self.currentPortalConfig["password"] = ""
 		return self.currentPortalConfig

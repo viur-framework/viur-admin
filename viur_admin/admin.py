@@ -67,9 +67,13 @@ import viur_admin.handler
 import viur_admin.widgets
 import viur_admin.bones
 import viur_admin.actions
+
+
 from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
 import viur_admin.ui.icons_rc
+
+import viur_admin.plugins
 
 app.setStyle("cleanlooks")
 css = QtCore.QFile(":icons/app.css")

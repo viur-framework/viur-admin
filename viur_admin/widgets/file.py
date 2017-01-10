@@ -296,8 +296,9 @@ class FileListView(TreeListView):
 		else:
 			super(FileListView, self).dragEnterEvent(event)
 
-	def onItemDoubleClicked(self, item):
-		pass
+	# def onItemDoubleClicked(self, item):
+	# 	logger.debug("onItemDoubleClicked")
+	# 	pass
 
 class FileWidget(TreeWidget):
 	"""
