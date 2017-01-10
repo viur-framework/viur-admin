@@ -42,6 +42,7 @@ class TreeWrapper(QtCore.QObject):
 		self.editNodeStructure = None
 		self.rootNodes = None
 		self.busy = True
+		self._requestGroups = list()  # we must keep a reference to request groups until all child requests are done
 		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvailable)
 		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvailable)
 		protocolWrapperInstanceSelector.insert(self.protocolWrapperInstancePriority, self.checkForOurModul, self)
@@ -268,6 +269,7 @@ class TreeWrapper(QtCore.QObject):
 		:return:
 		"""
 		request = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
+		self._requestGroups.append(request)
 		for leaf in leafs:
 			request.addRequest("/{0}/delete/leaf/{1}".format(self.module, leaf), secure=True)
 		for node in nodes:
@@ -288,6 +290,7 @@ class TreeWrapper(QtCore.QObject):
 		:type destNode: str
 		"""
 		request = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
+		self._requestGroups.append(request)
 		for node in nodes:
 			request.addQuery(NetworkService.request(
 					"/%s/move" % self.module,
@@ -323,7 +326,12 @@ class TreeWrapper(QtCore.QObject):
 				logger.debug(NetworkService.decode(req))
 			except:
 				pass
-			# print("error decoding response")
+			try:
+				self._requestGroups.remove(req)
+				logger.debug("request group removed")
+			except Exception as err:
+				logger.error("request group could not be removed")
+				pass
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 
 	def onSaveResult(self, req):
