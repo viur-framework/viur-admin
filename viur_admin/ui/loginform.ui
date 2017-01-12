@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoginWindow</class>
+ <widget class="QMainWindow" name="LoginWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>707</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>480</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>480</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>ViurAdmin – Login</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
+  </property>
+  <widget class="QWidget" name="logincentralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QFormLayout" name="formLayout">
+      <property name="fieldGrowthPolicy">
+       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+      </property>
+      <property name="formAlignment">
+       <set>Qt::AlignHCenter|Qt::AlignTop</set>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Language</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cbLanguages"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="portalLabel">
+        <property name="text">
+         <string>Portal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QListWidget" name="cbPortal">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>4</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="accountManagerLabel">
+        <property name="text">
+         <string>Account Manager</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="startAccManagerBTN">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Accountmannager</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/accounts.svg</normaloff>icons/accounts.svg</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Minimum</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <widget class="QPushButton" name="btnLogin">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>64</height>
+       </size>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="text">
+       <string>Login</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>icons/actions/login.png</normaloff>icons/actions/login.png</iconset>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>480</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
+   </property>
+   <widget class="QMenu" name="menuInfo">
+    <property name="title">
+     <string>&amp;Info</string>
+    </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuEinstellungen">
+    <property name="title">
+     <string>Setti&amp;ngs</string>
+    </property>
+    <addaction name="actionAccountmanager"/>
+   </widget>
+   <addaction name="menuInfo"/>
+   <addaction name="menuEinstellungen"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionErste_Schritte">
+   <property name="text">
+    <string>Erste Schritte</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>&amp;Help</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About this Software</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Generel settigs</string>
+   </property>
+  </action>
+  <action name="actionAccountmanager">
+   <property name="text">
+    <string>&amp;Accountmanager</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
