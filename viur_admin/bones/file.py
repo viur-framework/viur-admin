@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from viur_admin.log import getLogger
+
 logger = getLogger(__name__)
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
+from viur_admin.bones.relational import InternalEdit
 from viur_admin.network import RemoteFile
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.utils import formatString
-from viur_admin.widgets.file import FileWidget, FileItem
+from viur_admin.widgets.file import FileWidget
 from viur_admin.widgets.selectedFiles import SelectedFilesWidget
-
 
 
 class FileViewBoneDelegate(BaseViewBoneDelegate):
@@ -114,28 +114,50 @@ class FileItemBone(TreeItemBone):
 			structure = protoWrap.viewNodeStructure
 		if structure is None:
 			return
-		if self.multiple:
-			widgetItem = self.previewLayout.takeAt(0)
-			while widgetItem:
+		if self.using:
+			if self.multiple:
 				widgetItem = self.previewLayout.takeAt(0)
-			if self.selection and len(self.selection) > 0:
-				for item in self.selection:
-					# print("format", self.format, structure, item)
-					lbl = MultiItemWidget(formatString(self.format, item, structure), parent=self.previewWidget)
-					if item["dest"]["mimetype"].startswith("image/"):
-						RemoteFile(item["dest"]["dlkey"], successHandler=lbl.loadIconFromRequest)
-					self.previewLayout.addWidget(lbl)
-				self.addBtn.setText("Auswahl ändern")
+				while widgetItem:
+					widgetItem = self.previewLayout.takeAt(0)
+				if self.selection and len(self.selection) > 0:
+					for item in self.selection:
+						item = InternalEdit(self, self.using, formatString(self.format, item, structure), item, {})
+						item.show()
+						self.previewLayout.addWidget(item)
+						self.internalEdits.append(item)
+					self.addBtn.setText("Auswahl ändern")
+				else:
+					self.addBtn.setText("Dateien auswählen")
 			else:
-				self.addBtn.setText("Dateien auswählen")
+				if self.selection:
+					logger.debug("selection: %r", self.selection)
+					if self.selection["dest"]["mimetype"].startswith("image/"):
+						RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
+					self.entry.setText(formatString(self.format, self.selection, structure))
+				else:
+					self.entry.setText("")
 		else:
-			if self.selection:
-				logger.debug("selection: %r", self.selection)
-				if self.selection["dest"]["mimetype"].startswith("image/"):
-					RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-				self.entry.setText(formatString(self.format, self.selection, structure))
+			if self.multiple:
+				widgetItem = self.previewLayout.takeAt(0)
+				while widgetItem:
+					widgetItem = self.previewLayout.takeAt(0)
+				if self.selection and len(self.selection) > 0:
+					for item in self.selection:
+						lbl = MultiItemWidget(formatString(self.format, item, structure), parent=self.previewWidget)
+						if item["dest"]["mimetype"].startswith("image/"):
+							RemoteFile(item["dest"]["dlkey"], successHandler=lbl.loadIconFromRequest)
+						self.previewLayout.addWidget(lbl)
+					self.addBtn.setText("Auswahl ändern")
+				else:
+					self.addBtn.setText("Dateien auswählen")
 			else:
-				self.entry.setText("")
+				if self.selection:
+					logger.debug("selection: %r", self.selection)
+					if self.selection["dest"]["mimetype"].startswith("image/"):
+						RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
+					self.entry.setText(formatString(self.format, self.selection, structure))
+				else:
+					self.entry.setText("")
 
 
 class FileBoneSelector(TreeBoneSelector):
@@ -146,10 +168,7 @@ class FileBoneSelector(TreeBoneSelector):
 		"""Handle multiple selection via return or enter key press"""
 
 		if self.multiple and e.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
-			for item in self.list.selectedItems():
-				logger.debug("selected item: %r", item)
-				data = item.entryData
-				self.selection.extend([data])
+			self.selection.extend([item.entryData for item in self.list.selectedItems()])
 		else:
 			super(FileBoneSelector, self).keyPressEvent(e)
 

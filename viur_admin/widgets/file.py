@@ -81,13 +81,14 @@ class FileItem(LeafItem):
 	def __init__(self, data, parent):
 		super(FileItem, self).__init__(data, parent)
 		self.entryData = data
+
 		extension = self.entryData["name"].split(".")[-1].lower()
 		fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
 		fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
 		if fileInfo2.exists():
-			icon = QtGui.QIcon(":icons/filetypes/%s.svg" % (extension))
+			icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
 		elif fileInfo.exists():
-			icon = QtGui.QIcon(":icons/filetypes/%s.png" % (extension))
+			icon = QtGui.QIcon(":icons/filetypes/%s.png" % extension)
 		else:
 			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		self.setIcon(icon)
@@ -141,7 +142,6 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi(self)
 		self.uploader = uploader
-		logger.debug("UploadStatusWidget.init: %r", uploader)
 		self.uploader.uploadProgress.connect(self.onUploadProgress)
 		self.uploader.finished.connect(self.onFinished)
 
@@ -180,7 +180,6 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		return None
 
 	def onFinished(self, req):
-		logger.debug("UploadStatusWidget.onFinished")
 		self.deleteLater()
 
 
@@ -271,10 +270,8 @@ class FileListView(TreeListView):
 		self.parent().layout().addWidget(DownloadStatusWidget(downloader))
 
 	def dropEvent(self, event):
+		"""Allow Drag&Drop'ing from the local filesystem into our fileview
 		"""
-			Allow Drag&Drop'ing from the local filesystem into our fileview
-		"""
-		logger.debug("dropEvent")
 		if (all([str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or (
 						len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
 		         event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
@@ -287,7 +284,6 @@ class FileListView(TreeListView):
 		"""Allow Drag&Drop'ing from the local filesystem into our fileview and dragging files out again
 		(drag directorys out isnt currently supported)
 		"""
-		logger.debug("dragEnterEvent")
 		if (all([file.toLocalFile() and (
 						str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or
 						str(file.toLocalFile())[1] == ":") for file in event.mimeData().urls()])) and len(
@@ -296,13 +292,9 @@ class FileListView(TreeListView):
 		else:
 			super(FileListView, self).dragEnterEvent(event)
 
-	# def onItemDoubleClicked(self, item):
-	# 	logger.debug("onItemDoubleClicked")
-	# 	pass
 
 class FileWidget(TreeWidget):
-	"""
-		Extension for TreeWidget to handle the specialities of files like Up&Downloading.
+	"""Extension for TreeWidget to handle the specialities of files like Up&Downloading.
 	"""
 
 	treeWidget = FileListView

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtGui, QtWidgets
 
-from viur_admin.utils import itemFromUrl
 from viur_admin.log import getLogger
+from viur_admin.utils import itemFromUrl
 from viur_admin.widgets.file import FileItem
 
 logger = getLogger(__name__)
@@ -15,46 +15,52 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 
 	def __init__(self, modul, selection=None, *args, **kwargs):
 		"""
-			@param parent: Parent-Widget
-			@type parent: QWidget
-			@param modul: Modul which entities we'll display. (usually "file" in this context)
-			@type modul: String
-			@param selection: Currently selected Items.
-			@type selection: List-of-Dict, Dict or None
+
+		:param parent: Parent-Widget
+		:type parent: QWidget
+		:param modul: Modul which entities we'll display. (usually "file" in this context)
+		:type modul: str
+		:param selection: Currently selected Items.
+		:type selection: list of dict, dict or None
 		"""
 		super(SelectedFilesWidget, self).__init__(*args, **kwargs)
-		self.selection = selection or []
+		if isinstance(selection, list):
+			self.selection = selection and [s["dest"] for s in selection]
+		elif isinstance(selection, dict):  # This was a singleSelection before
+			self.selection = [self.selection["dest"]]
+		else:
+			self.selection = list()
 		self.modul = modul
-		if isinstance(self.selection, dict):  # This was a singleSelection before
-			self.selection = [self.selection]
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
 	def onItemDoubleClicked(self, item):
+		"""One of our Items has been double-clicked.
+
+		Remove it from the selection
 		"""
-			One of our Items has been double-clicked.
-			Remove it from the selection
-		"""
-		logger.debug("selectedFiles.onItemDoubleClicked: %r, %r", item, self.selection)
 		try:
-			self.selection.remove(item.entryData)
+			itemKey = item.entryData["key"]
+			for obj in self.selection[:]:
+				logger.debug("obj: %r", obj)
+				if obj["key"] == itemKey:
+					self.selection.remove(obj)
+					break
 		except ValueError as err:
-			logger.debug("selectedItem should be in the selection list")
 			pass
 		self.clear()
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 
 	def dropEvent(self, event):
+		"""We got a Drop! Add them to the selection if possible.
+
+		Files contain their dlkey instead of an id.
+		Well check the events.source widget for more informations about the files,
+		and add them only if we succed.
 		"""
-			We got a Drop! Add them to the selection if possible.
-			Files contain their dlkey instead of an id.
-			Well check the events.source widget for more informations about the files,
-			and add them only if we succed.
-		"""
-		logger.debug("selectedFiles.dropEvent: %r", event)
 		mime = event.mimeData()
 		if not mime.hasUrls():
 			return
@@ -63,22 +69,22 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			if not res:
 				continue
 			modul, dlkey, name = res
-			if not id or modul != self.modul:
+			if dlkey and modul != self.modul:
 				continue
 			srcWidget = event.source()
 			if not srcWidget:  # Not dragged from this application
 				continue
 			items = srcWidget.selectedItems()
 			for item in items:
-				if "dlkey" in item.data.keys() and dlkey == item.data["dlkey"]:
-					self.extend([item.data])
+				if "dlkey" in item.entryData and dlkey == item.entryData["dlkey"]:
+					self.extend([item.entryData])
 					break
 
 	def set(self, selection):
-		"""
-			Set our current selection to "selection".
-			@param selection: The new selection
-			@type selection: List-of-Dict, Dict or None
+		"""Set our current selection to "selection".
+
+		:param selection: The new selection
+		:type selection: list of dict, dict or None
 		"""
 		self.clear()
 		self.selection = selection
@@ -88,19 +94,19 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			self.addItem(FileItem(s, self))
 
 	def extend(self, selection):
+		"""Append the given items to our selection.
+
+		:param selection: new items
+		:type selection: list
 		"""
-			Append the given items to our selection.
-			@param selection: New items
-			@type selection: List
-		"""
-		self.selection += selection
+		self.selection.extend(selection)
 		for s in selection:
 			self.addItem(FileItem(s, self))
 
 	def get(self):
-		"""
-			Returns the currently selected items.
-			@returns: List or None
+		"""Returns the currently selected items.
+
+		:returns: list or None
 		"""
 		return self.selection
 
@@ -116,12 +122,16 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		event.accept()
 
 	def keyPressEvent(self, e):
+		"""Catch and handle QKeySequence.Delete.
 		"""
-			Catch and handle QKeySequence.Delete.
-		"""
+
 		if e.matches(QtGui.QKeySequence.Delete):
 			for item in self.selectedItems():
-				self.selection.remove(item.data)
+				itemKey = item.entryData["key"]
+				for obj in self.selection[:]:
+					logger.debug("obj: %r", obj)
+					if obj["key"] == itemKey:
+						self.selection.remove(obj)
 			self.clear()
 			for s in self.selection:
 				self.addItem(FileItem(s, self))
