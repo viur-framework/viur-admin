@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
 
-
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -46,13 +45,19 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 			if isinstance(value, list):
 				if relStructList:
 					value = ", ".join([(formatString(
-						formatString(self.format, x["dest"], self.structure["relskel"], prefix=["dest"], language=config.conf.adminConfig["language"]),
-						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x["key"]) for x in value])
+						formatString(self.format, x["dest"], self.structure["relskel"], prefix=["dest"],
+						             language=config.conf.adminConfig["language"]),
+						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x[
+						                    "key"]) for x in value])
 				else:
-					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],  language=config.conf.adminConfig["language"]) for x in value])
+					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],
+					                                language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				value = formatString(formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],  language=config.conf.adminConfig["language"]),
-				                     relStructDict, value["rel"], prefix=["rel"],  language=config.conf.adminConfig["language"]) or value["key"]
+				value = formatString(
+					formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+					             language=config.conf.adminConfig["language"]),
+					relStructDict, value["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or value[
+					        "key"]
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage
@@ -97,7 +102,6 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache = []
 		for skel in data["skellist"]:
-			# print("addCompletionData", skel)
 			self.dataCache.append(skel)
 		self.layoutChanged.emit()
 
@@ -161,13 +165,10 @@ class InternalEdit(QtWidgets.QWidget):
 	def unserialize(self, data):
 		try:
 			for bone in self.bones.values():
+				logger.debug("unserialize bone: %r", bone)
 				bone.unserialize(data)
 		except AssertionError as err:
 			pass
-		# self.parent().parent().logger.error(err)
-		# self.overlay.inform(self.overlay.ERROR, str(err))
-		# self.ui.btnSaveClose.setDisabled(True)
-		# self.ui.btnSaveContinue.setDisabled(True)
 
 	def serializeForPost(self):
 		res = {}
@@ -175,7 +176,6 @@ class InternalEdit(QtWidgets.QWidget):
 			data = bone.serializeForPost()
 			# print("InternalEdit.serializeForPost: key, value", key, data)
 			res.update(data)
-		# print("InternalEdit.serializeForPost: values", self.values)
 		res["key"] = self.values["dest"]["key"]
 		return res
 
@@ -185,8 +185,8 @@ class RelationalEditBone(BoneEditInterface):
 	skelType = None
 
 	def __init__(self, moduleName, boneName, readOnly, destModul, multiple, using=None, format="$(name)",
-			editWidget=None, *args,
-			**kwargs):
+	             editWidget=None, *args,
+	             **kwargs):
 		super(RelationalEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
 		self.toModul = destModul
 		self.multiple = multiple
@@ -202,8 +202,8 @@ class RelationalEditBone(BoneEditInterface):
 			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
 			self.layout.addWidget(self.previewWidget)
 		self.addBtn = QtWidgets.QPushButton(
-				QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
-				parent=self)
+			QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
+			parent=self)
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
@@ -244,7 +244,6 @@ class RelationalEditBone(BoneEditInterface):
 		"""
 		if not self.multiple:
 			self.autoCompletionModel = AutocompletionModel(self.toModul, self.format, {})  # FIXME: {} was
-			# self.skelStructure
 			self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
 			self.autoCompleter.setModel(self.autoCompletionModel)
 			self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -271,7 +270,6 @@ class RelationalEditBone(BoneEditInterface):
 					widgetItem = self.previewLayout.takeAt(0)
 				if self.selection and len(self.selection) > 0:
 					for item in self.selection:
-						# print("update item", item)
 						item = InternalEdit(self, self.using, formatString(self.format, item, structure), item, {})
 						item.show()
 						self.previewLayout.addWidget(item)
@@ -305,8 +303,7 @@ class RelationalEditBone(BoneEditInterface):
 			self.setSelection([res])
 
 	def setSelection(self, selection):
-		#assert all(["dest" in item.keys() and "rel" in item.keys() for item in selection])
-		data = [{"dest": x, "rel": {}} for x in selection]
+		data = [{"dest": x, "rel": {}} if "dest" not in x else x for x in selection]
 		if self.multiple:
 			self.selection = data
 		elif len(selection) > 0:
@@ -316,13 +313,12 @@ class RelationalEditBone(BoneEditInterface):
 		self.updateVisiblePreview()
 
 	def onAddBtnReleased(self, *args, **kwargs):
-		# print("onAddBtnReleased")
 		editWidget = RelationalBoneSelector(
-				self.moduleName,
-				self.boneName,
-				self.multiple,
-				self.toModul,
-				self.selection)
+			self.moduleName,
+			self.boneName,
+			self.multiple,
+			self.toModul,
+			self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def onDelBtnReleased(self, *args, **kwargs):
@@ -333,14 +329,10 @@ class RelationalEditBone(BoneEditInterface):
 		self.updateVisiblePreview()
 
 	def unserialize(self, data):
-		# print("unserialize", data)
 		self.selection = data[self.boneName]
-		# print("new selection", data[self.boneName])
 		self.updateVisiblePreview()
 
 	def serializeForPost(self):
-		print( "self.selection", self.selection)
-		print( "self.iternalEdits", self.internalEdits)
 		if not self.selection:
 			return {self.boneName: None}
 		res = {}
@@ -373,6 +365,8 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 
 	def __init__(self, moduleName, boneName, multiple, toModul, selection, *args, **kwargs):
 		super(RelationalBoneSelector, self).__init__(*args, **kwargs)
+		logger.debug("RelationalBoneSelector.init: %r, %r, %r, %r, %r", moduleName, boneName, multiple, toModul,
+		             selection)
 		self.moduleName = moduleName
 		self.boneName = boneName
 		self.multiple = multiple
@@ -433,6 +427,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 				An item has been doubleClicked in our listWidget.
 				Read its properties and add them to our selection.
 		"""
+		logger.debug("RelationalEditBone.onSourceItemDoubleClicked: %r", item)
 		data = item
 		if self.multiple:
 			self.selection.extend([data])
