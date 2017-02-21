@@ -27,7 +27,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		if isinstance(selection, list):
 			self.selection = selection and [s["dest"] for s in selection]
 		elif isinstance(selection, dict):  # This was a singleSelection before
-			self.selection = [self.selection["dest"]]
+			self.selection = [selection["dest"]]
 		else:
 			self.selection = list()
 		self.modul = modul
