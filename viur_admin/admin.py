@@ -32,6 +32,11 @@ except ImportError as err:
 	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
 	sys.exit(1)
 
+from PyQt5.QtWidgets import QStyleFactory
+
+styleKeys = QStyleFactory.keys()
+styleKeys.append("Viur")
+
 from pkg_resources import resource_filename, resource_listdir
 
 parser = ArgumentParser()
@@ -49,7 +54,11 @@ parser.add_argument(
 parser.add_argument(
 		'-s', '--show_sortindex', action="store_true",
 		help="Shows Handler sortIndex (helpful for reordering modules)")
-
+parser.add_argument(
+	"-t", "--theme", dest="theme", default="Viur",
+	help="Choose your prefered widget style from the list",
+	choices=styleKeys
+)
 
 
 args = parser.parse_args()
@@ -60,7 +69,6 @@ from viur_admin.config import conf
 conf.cmdLineOpts = args
 
 app = QtWidgets.QApplication(sys.argv)
-
 
 import viur_admin.protocolwrapper
 import viur_admin.handler
@@ -75,12 +83,18 @@ import viur_admin.ui.icons_rc
 
 import viur_admin.plugins
 
-app.setStyle("cleanlooks")
-css = QtCore.QFile(":icons/app.css")
-css.open(QtCore.QFile.ReadOnly)
-data = str(css.readAll(), encoding='ascii')
-# data = str(open("app.css", "rb").read(), encoding="ascii")
-app.setStyleSheet(data)
+if args.theme != "Viur":
+	try:
+		QtWidgets.QApplication.setStyle(QStyleFactory.create(args.theme))
+		QtWidgets.QApplication.setPalette(QtWidgets.QApplication.style().standardPalette())
+	except Exception as err:
+		print(err)
+else:
+	css = QtCore.QFile(":icons/app.css")
+	css.open(QtCore.QFile.ReadOnly)
+	data = str(css.readAll(), encoding='ascii')
+	data = str(open("app.css", "rb").read(), encoding="ascii")
+	app.setStyleSheet(data)
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
