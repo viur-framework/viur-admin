@@ -121,7 +121,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.dockWidget = QtWidgets.QDockWidget(self)
 		self.dockWidget.setWindowFlags(QtCore.Qt.Window)
 		# self.dockWidget.setMinimumSize(QtCore.QSize(300, 35))
-		self.dockWidget.setFloating(False)
 		self.dockWidget.setObjectName("dockWidget")
 		self.treeWidget = QtWidgets.QTreeWidget(self)
 		self.treeWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
@@ -253,6 +252,9 @@ class MainWindow(QtWidgets.QMainWindow):
 			# print(err)
 			pass
 
+		if self.dockWidget.isFloating():
+			self.dockWidget.hide()
+
 	def loadConfig(self, request=None):
 		# self.show()
 		self.preloader = Preloader()
@@ -261,6 +263,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# logger.debug("Checkpoint: loadConfig")
 		NetworkService.request("/user/view/self", successHandler=self.onLoadUser, failureHandler=self.onError)
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError)
+		if self.dockWidget.isFloating():
+			self.dockWidget.show()
 
 	def onPreloaderFinished(self):
 		self.preloader.deleteLater()
