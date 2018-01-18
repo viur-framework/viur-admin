@@ -1,36 +1,48 @@
+from time import time
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
 from viur_admin.config import conf
 from viur_admin.event import event
+from viur_admin.log import getLogger
+from viur_admin.network import NetworkService
 from viur_admin.ui.accountmanagerUI import Ui_MainWindow
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
-from viur_admin.network import NetworkService
 
 """
 	Allows editing the local accountlist.
 """
 
+logger = getLogger(__name__)
+
 
 class AddPortalWizard(QtWidgets.QWizard):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, currentPortalConfig=None, *args, **kwargs):
 		super(AddPortalWizard, self).__init__(*args, **kwargs)
 		self.ui = Ui_AddPortalWizard()
 		self.ui.setupUi(self)
 		self.forcePageFlip = False
 		self.validAuthMethods = None
 		self.loginTask = None
-		self.currentPortalConfig = {"key": 1234.56}
+		if "currentPortalConfig":
+			self.editMode = True
+			self.currentPortalConfig = currentPortalConfig
+		else:
+			self.currentPortalConfig = {
+				"name": "",
+				"key": int(time()),
+				"server": "",
+				"authMethod": ""
+			}
+			self.editMode = False
 
 	def validateCurrentPage(self):
 		if self.forcePageFlip:
 			self.forcePageFlip = False
 			return True
-		if self.currentId()==2 and self.tmp.advancesAutomatically:
+		if self.currentId() == 2 and self.tmp.advancesAutomatically:
 			return False
-		if self.currentId()==0:
+		if self.currentId() == 0:
 			if not self.ui.editTitle.text():
 				print("Kein Title")
 				return False
@@ -47,16 +59,16 @@ class AddPortalWizard(QtWidgets.QWizard):
 				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
 			self.setDisabled(True)
 			return False
-		elif self.currentId()==1:
+		elif self.currentId() == 1:
 			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
 			print("SELECTED AUTH METHOD")
 			print(self.currentPortalConfig)
-		elif self.currentId()==2:
+		elif self.currentId() == 2:
 			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
 			print("********")
 			print(self.currentPortalConfig)
 			self.loginTask.startAuthenticationFlow()
-			#self.setDisabled(True)
+			# self.setDisabled(True)
 			return False
 		return True
 
@@ -64,8 +76,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 		from viur_admin.login import LoginTask
 		print("initializePage", pageId)
 		super(AddPortalWizard, self).initializePage(pageId)
-		#self.button(QtWidgets.QWizard.NextButton).setEnabled(True)
-		if pageId==2:
+		# self.button(QtWidgets.QWizard.NextButton).setEnabled(True)
+		if pageId == 0:
+			self.ui.editTitle.setText(self.currentPortalConfig["name"])
+			self.ui.editServer.setText(self.currentPortalConfig["server"])
+		if pageId == 1:
+			logger.debug(self.validAuthMethods)
+			try:
+				self.ui.cbAuthSelector.setCurrentText(self.currentPortalConfig["authMethod"])
+			except Exception as err:
+				logger.exception(err)
+		if pageId == 2:
 			if self.loginTask:
 				self.loginTask.deleteLater()
 				self.loginTask = None
@@ -76,17 +97,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 			self.ui.scrollArea.setWidget(self.tmp)
 			if self.tmp.advancesAutomatically:
 				self.button(QtWidgets.QWizard.NextButton).setDisabled(True)
-			#self.ui.wizardPage1.layout().addWidget(self.tmp)
+			# self.ui.wizardPage1.layout().addWidget(self.tmp)
 			self.tmp.show()
 
 	def onAuthMethodsKnown(self, req):
 		data = NetworkService.decode(req)
-		print(data)
+		logger.debug("onAuthMethodsKnown: %r", data)
 		self.ui.cbAuthSelector.clear()
 		seenList = []
 		self.validAuthMethods = {}
 		for authMethod, verificationMethod in data:
-			if not authMethod in seenList:
+			if authMethod not in seenList:
 				seenList.append(authMethod)
 				self.validAuthMethods[authMethod] = authMethod
 				self.ui.cbAuthSelector.addItem(authMethod)
@@ -112,9 +133,9 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.setDisabled(False)
 
 	def accept(self):
-		conf.accounts.insert(0, self.currentPortalConfig)
+		if not self.editMode:
+			conf.accounts.insert(0, self.currentPortalConfig)
 		super(AddPortalWizard, self).accept()
-
 
 
 class AccountItem(QtWidgets.QListWidgetItem):
@@ -129,7 +150,7 @@ class AccountItem(QtWidgets.QListWidgetItem):
 
 class Accountmanager(QtWidgets.QMainWindow):
 	def __init__(self, *args, **kwargs):
-		QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
+		super(Accountmanager, self).__init__(*args, **kwargs)
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 		self.loadAccountList()
@@ -137,6 +158,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 		self.portalWizard = None
 		self.ui.addAccBTN.released.connect(self.onAddAccBTNReleased)
 		self.ui.acclistWidget.itemClicked.connect(self.onAcclistWidgetItemClicked)
+		self.ui.acclistWidget.itemDoubleClicked.connect(self.onEditAccount)
 		self.ui.delAccBTN.released.connect(self.onDelAccBTNReleased)
 		self.ui.FinishedBTN.released.connect(self.onFinishedBTNReleased)
 		if len(conf.accounts) == 0:
@@ -174,19 +196,19 @@ class Accountmanager(QtWidgets.QMainWindow):
 		self.portalWizard.show()
 		self.setDisabled(True)
 		self.portalWizard.finished.connect(self.onPortalWizardFinished)
-		"""
-		guiList = self.ui.acclistWidget
-		item = AccountItem(
-				{
-					"name": QtCore.QCoreApplication.translate("Accountmanager", "New"),
-					"user": "", "password": "",
-					"url": ""
-				}
-		)
-		guiList.addItem(item)
-		guiList.setCurrentItem(item)
-		self.updateUI()
-		"""
+
+	# guiList = self.ui.acclistWidget
+	# item = AccountItem(
+	# 		{
+	# 			"name": QtCore.QCoreApplication.translate("Accountmanager", "New"),
+	# 			"user": "",
+	# 			"password": "",
+	# 			"server": ""
+	# 		}
+	# )
+	# guiList.addItem(item)
+	# guiList.setCurrentItem(item)
+	# self.updateUI()
 
 	def onPortalWizardFinished(self, *args, **kwargs):
 		print("onPortalWizardFinished")
@@ -201,17 +223,27 @@ class Accountmanager(QtWidgets.QMainWindow):
 		if not item:
 			return
 		reply = QtWidgets.QMessageBox.question(
-				self,
-				QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
-				QtCore.QCoreApplication.translate("Accountmanager",
-				                                  "Really delete the account \"%s\"?") %
-				item.account["name"],
-				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-				QtWidgets.QMessageBox.No)
+			self,
+			QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
+			QtCore.QCoreApplication.translate("Accountmanager",
+			                                  "Really delete the account \"%s\"?") %
+			item.account["name"],
+			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+			QtWidgets.QMessageBox.No)
 		if reply == QtWidgets.QMessageBox.No:
 			return
 		self.ui.acclistWidget.takeItem(self.ui.acclistWidget.row(item))
 		self.updateUI()
+
+	def onEditAccount(self, clickedItem):
+		logger.debug("onEditAccount")
+		if self.portalWizard:
+			self.portalWizard.deleteLater()
+			self.portalWizard = None
+		self.portalWizard = AddPortalWizard(currentPortalConfig=self.ui.acclistWidget.currentItem().account)
+		self.portalWizard.show()
+		self.setDisabled(True)
+		self.portalWizard.finished.connect(self.onPortalWizardFinished)
 
 	def updateUI(self):
 		item = self.ui.acclistWidget.currentItem()
@@ -222,7 +254,6 @@ class Accountmanager(QtWidgets.QMainWindow):
 
 			self.oldAccountName = item.account["name"]
 			self.ui.delAccBTN.setEnabled(True)
-
 
 	def onFinishedBTNReleased(self):
 		print("onFinishedBTNReleased")

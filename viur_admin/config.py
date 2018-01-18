@@ -46,21 +46,35 @@ class Config(object):
 
 	def loadConfig(self):
 		# Load stored accounts
+		logger.debug("loadConfig")
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		try:
 			configFileObject = open(configFileName, "rb")
 			configData = self.xor(configFileObject.read()).decode("UTF-8")
 			cfg = json.loads(configData)
+			logger.debug("accounts: %r", cfg)
 			self.accounts = cfg
-		except:
-			logger.error("Could not load accounts")
+		except Exception as err:
+			logger.exception(err)
 			self.accounts = []
 
 		self.accounts.sort(key=lambda x: x["name"].lower())
+		changed = False
+		# ensure account data conforms to our latest data scheme
+		# TODO:  later also validated via json-schema
 		for account in self.accounts:
-			if "key" not in account.keys():
+			if "key" not in account:
 				account["key"] = int(time())
 				sleep(1)  # Bad hack to ensure key is unique; runs only once at first start
+				changed = True
+			if "url" in account and "server" not in account:
+				account["server"] = account["url"]
+				del account["url"]
+				changed = True
+			if "authMethod" not in account:
+				account["authMethod"] = 'X-VIUR-AUTH-User-Password'
+				changed = True
+
 		# Load rest of the config
 		configFileName = os.path.join(self.storagePath, "config.dat")
 		try:
@@ -71,6 +85,9 @@ class Config(object):
 		except Exception as err:
 			logger.exception(err)
 			self.adminConfig = {}
+
+		if changed:
+			self.saveConfig()
 
 	def saveConfig(self):
 		# Save accounts
@@ -104,10 +121,12 @@ class Config(object):
 			if withCookies:
 				cookies = list()
 				now = datetime.now()
-				for plainCookie in self.portal.get("cookies", list()):
+				rawCookies = self.portal.get("cookies", list())
+				logger.debug("rawCookies: %r for now: %r", len(rawCookies), now)
+				for plainCookie in rawCookies:
 					logger.debug("cookieRaw: %r", plainCookie)
 					restoredCookie = QtNetwork.QNetworkCookie.parseCookies(bytearray(plainCookie, "ascii"))[0]
-					if restoredCookie.expirationDate() > now:
+					if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
 						logger.debug("restored cookie accepted: %r", restoredCookie)
 						cookies.append(restoredCookie)
 				network.nam.cookieJar().setAllCookies(cookies)

@@ -91,9 +91,10 @@ class AuthUserPassword(QtWidgets.QWidget):
 		self.ui = Ui_AuthUserPassword()
 		self.ui.setupUi(self)
 		self.currentPortalConfig = currentPortalConfig
-
-	# config.conf.currentUsername = username
-	# config.conf.currentPassword = password
+		self.ui.editUsername.setText(currentPortalConfig.get("username", ""))
+		password = currentPortalConfig.get("password", "")
+		self.ui.editPassword.setText(password)
+		self.ui.cbSavePassword.setChecked(bool(password))
 
 	def getUpdatedPortalConfig(self):
 		self.currentPortalConfig["username"] = self.ui.editUsername.text().strip("\n").strip()
@@ -123,6 +124,7 @@ class AuthUserPassword(QtWidgets.QWidget):
 			print("onViurAuth: Except")
 			self.onError(msg="Unable to decode response!")
 			return
+		logger.debug("onViurAuth: %r", res)
 		if str(res).lower() == "okay":
 			print("onViurAuth: okay")
 			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
@@ -289,7 +291,7 @@ class Login(QtWidgets.QMainWindow):
 		if isinstance(index, str):
 			return
 		if self.ui.cbPortal.currentIndex() == -1:
-			activeaccount = {"name": "", "user": "", "password": "", "url": ""}
+			activeaccount = {"name": "", "user": "", "password": "", "server": ""}
 		else:
 			activeaccount = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
 			config.conf.adminConfig["currentPortalName"] = activeaccount["name"]
