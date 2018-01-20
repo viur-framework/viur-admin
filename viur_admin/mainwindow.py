@@ -145,17 +145,18 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.moduleSearch = QtWidgets.QLineEdit(self)
 		self.moduleSearch.setMinimumSize(QtCore.QSize(0, 32))
 		self.moduleSearch.setObjectName("moduleSearch")
+		self.moduleSearch.textChanged.connect(self.searchHandler)
 		self.handlerSearchLayout.addWidget(self.moduleSearch)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		self.searchAction = QtWidgets.QAction(icon, "Handler Search", self)
 		self.searchAction.setShortcut(QtGui.QKeySequence.Find)
 		self.searchAction.triggered.connect(self.moduleSearch.setFocus)
-		self.searchBTN = QtWidgets.QPushButton(self)
-		self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
-		self.searchBTN.setIcon(icon)
-		self.searchBTN.setObjectName("searchBTN")
-		self.handlerSearchLayout.addWidget(self.searchBTN)
+		# self.searchBTN = QtWidgets.QPushButton(self)
+		# self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
+		# self.searchBTN.setIcon(icon)
+		# self.searchBTN.setObjectName("searchBTN")
+		# self.handlerSearchLayout.addWidget(self.searchBTN)
 
 		self.handlerLayout.addWidget(self.treeWidget)
 		self.handlerLayout.addLayout(self.handlerSearchLayout)
@@ -239,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
 		self.actionTasks.triggered.connect(self.onActionTasksTriggered)
 		self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
-		self.searchBTN.released.connect(self.searchHandler)
+		# self.searchBTN.released.connect(self.searchHandler)
 		self.moduleSearch.returnPressed.connect(self.searchHandler)
 		self.currentWidget = None
 		self.helpBrowser = None
@@ -268,7 +269,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.show()
 
 	def onLoadConfig(self, request):
-		# logger.debug("Checkpoint: onLoadConfig")
+		logger.debug("Checkpoint: onLoadConfig")
 		try:
 			conf.serverConfig = NetworkService.decode(request)
 		except:
@@ -281,7 +282,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	def onLoadUser(self, request):
 		try:
 			conf.currentUserEntry = NetworkService.decode(request)["values"]
-			logger.debug("userConfigLoaded: %r", conf.currentUserEntry)
+			logger.debug(repr(conf.currentUserEntry))
 		except Exception as err:
 			logger.exception(err)
 			self.onError(msg="Unable to parse user entry!")
@@ -407,7 +408,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		currentHandler = self.handlerForWidget(widget)
 		if currentHandler is None:
 			logger.error("Stale widget: " + str(widget))
-			raise
+			# TODO: why the former raise here without Exception instance?
+			raise Exception("stale Widget: %r", widget)
 		currentHandler.close()
 		self.rebuildBreadCrumbs()
 
