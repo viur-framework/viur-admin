@@ -330,6 +330,7 @@ class TreeWrapper(QtCore.QObject):
 				self._requestGroups.remove(req)
 				logger.debug("request group removed")
 			except Exception as err:
+				logger.exception(err)
 				logger.error("request group could not be removed")
 				pass
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
