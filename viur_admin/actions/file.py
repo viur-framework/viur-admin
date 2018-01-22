@@ -17,7 +17,9 @@ class FileUploadAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self, e):
-		files, other = QtWidgets.QFileDialog.getOpenFileNames()
+		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
+		logger.debug("homeDirs: %r", homeDirs)
+		files, other = QtWidgets.QFileDialog.getOpenFileNames(directory=homeDirs[0])
 		print("file on triggered", files, repr(other))
 		self.parent().doUpload(files, self.parent().getNode())
 

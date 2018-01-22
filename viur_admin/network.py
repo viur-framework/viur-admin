@@ -523,7 +523,7 @@ class NetworkService():
 				filePart = QHttpPart()
 				filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
 				filePart.setHeader(QNetworkRequest.ContentDispositionHeader,
-				                   'form-data; name="{0}"; filename="{1}"'.format(key, value.fileName()))
+				                   'form-data; name="{0}"; filename="{1}"'.format(key, os.path.basename(value.fileName())))
 				filePart.setBodyDevice(value)
 				value.setParent(multiPart)
 				multiPart.append(filePart)

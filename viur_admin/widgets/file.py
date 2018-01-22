@@ -43,7 +43,7 @@ class PreviewThread(QtCore.QThread):
 				wasDownloaded = False
 				if not os.path.isfile(fileName):
 					wasDownloaded = True
-					req = urllib.request.Request("{0}{1]{2}".format(NetworkService.url.replace("/admin", ""), "/file/download/", dlKey))
+					req = urllib.request.Request("{0}{1}{2}".format(NetworkService.url.replace("/admin", ""), "/file/download/", dlKey))
 					try:
 						response = urllib.request.urlopen(req)
 					except:
