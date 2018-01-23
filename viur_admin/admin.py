@@ -93,7 +93,7 @@ else:
 	css = QtCore.QFile(":icons/app.css")
 	css.open(QtCore.QFile.ReadOnly)
 	data = str(css.readAll(), encoding='ascii')
-	data = str(open("app.css", "rb").read(), encoding="ascii")
+	# data = str(open("app.css", "rb").read(), encoding="ascii")
 	app.setStyleSheet(data)
 
 cwd = os.getcwd()
@@ -111,7 +111,6 @@ def reportError(type, value, tb):
 	print(type)
 	print(value)
 	traceback.print_tb(tb)
-	return
 	if os.path.exists(".git"):
 		releaseStage = "development"
 	else:
