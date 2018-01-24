@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
+import os
+import urllib.request
+from hashlib import sha1
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from viur_admin.config import conf
 from viur_admin.log import getLogger
-from viur_admin.network import RemoteFile, NetworkService
+from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
-import urllib.request
-from viur_admin.config import conf
-import os
-from hashlib import sha1
 
 logger = getLogger(__name__)
+
 
 class PreviewThread(QtCore.QThread):
 	requestPreviewImage = QtCore.pyqtSignal((str))
@@ -28,7 +30,8 @@ class PreviewThread(QtCore.QThread):
 		self.start(QtCore.QThread.IdlePriority)
 		while self.threadThread is None:
 			self.usleep(5)
-		#self.moveToThread(self.threadThread)
+
+	# self.moveToThread(self.threadThread)
 
 	def run(self):
 		self.threadThread = self.currentThread()
@@ -40,7 +43,7 @@ class PreviewThread(QtCore.QThread):
 				wasDownloaded = False
 				if not os.path.isfile(fileName):
 					wasDownloaded = True
-					req = urllib.request.Request(NetworkService.url.replace("/admin","")+"/file/download/"+dlKey)
+					req = urllib.request.Request("{0}{1}{2}".format(NetworkService.url.replace("/admin", ""), "/file/download/", dlKey))
 					try:
 						response = urllib.request.urlopen(req)
 					except:
@@ -58,7 +61,7 @@ class PreviewThread(QtCore.QThread):
 						# Store the file sothat it won't be downloaded again next time
 						open(fileName, "wb+").write(fileData)
 				self.msleep(25)
-				#self.sleep(1)
+			# self.sleep(1)
 			except IndexError:
 				self.sleep(1)
 
@@ -69,8 +72,8 @@ class PreviewThread(QtCore.QThread):
 	def requestPreview(self, dlkey):
 		self.requestPreviewImage.emit(dlkey)
 
-previewer = PreviewThread()
 
+previewer = PreviewThread()
 
 
 class FileItem(LeafItem):
@@ -93,7 +96,7 @@ class FileItem(LeafItem):
 			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		self.setIcon(icon)
 		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
-							extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
+				extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
 			previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
 			previewer.requestPreview(data["dlkey"])
 		self.setText(self.entryData["name"])
@@ -125,49 +128,53 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		If downloading has finished, finished(PyQt_PyObject=self) is emited.
 	"""
 
-	directorySize = 15  # Let's count an directory as 15 Bytes
+	def __init__(self, *args, **kwargs):
+		"""Copy paste error
 
-	def __init__(self, uploader, *args, **kwargs):
+		TODO: fix the docs
+
+		@param files: List of local files or directories (including thier absolute path) which will be uploaded.
+		@type files: List
+		@param rootNode: Destination rootNode
+		@type rootNode: String
+		@param path: Remote destination path, relative to rootNode.
+		@type path: String
+		@param modul: Modulname to upload to (usually "file")
+		@type modul: String
 		"""
-			@param files: List of local files or directories (including thier absolute path) which will be uploaded.
-			@type files: List
-			@param rootNode: Destination rootNode
-			@type rootNode: String
-			@param path: Remote destination path, relative to rootNode.
-			@type path: String
-			@param modul: Modulname to upload to (usually "file")
-			@type modul: String
-		"""
+
 		super(UploadStatusWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi(self)
+		logger.debug("UploadStatusWidget.init: %r, %r", args, kwargs)
+
+	def setUploader(self, uploader):
 		self.uploader = uploader
 		self.uploader.uploadProgress.connect(self.onUploadProgress)
 		self.uploader.finished.connect(self.onFinished)
+		self.ui.pbarTotal.setRange(0, uploader.stats["filesTotal"])
 
 	def onBtnCancelReleased(self, *args, **kwargs):
 		self.uploader.cancelUpload()
 
-	def onUploadProgress(self, bytesSend, bytesTotal):
-		"""Updates the process widget
-
-		:param bytesSend:
-		:type bytesSend: int
-		:param bytesTotal:
-		:type bytesTotal: int
-		:return:
-		"""
-
+	def onUploadProgress(self, currentFileDone, currentFileTotal):
 		stats = self.uploader.getStats()
-		logger.debug("UploadStatusWidget.onUploadProgress: %r, %r, %r", bytesSend, bytesTotal, stats)
+		logger.debug("UploadStatusWidget.onUploadProgress: %r", stats)
 		self.ui.lblProgress.setText(
-			QtCore.QCoreApplication.translate("FileHandler", "Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % (
-				stats["filesDone"], stats["filesTotal"], stats["dirsDone"], stats["dirsTotal"], stats["bytesDone"],
-				stats["bytesTotal"]))
-		self.ui.pbarTotal.setRange(0, stats["filesTotal"])
+			QtCore.QCoreApplication.translate(
+				"FileHandler",
+				"Files: %s/%s, Directories: %s/%s, Bytes: %s/%s") % (
+				stats["filesDone"],
+				stats["filesTotal"],
+				stats["dirsDone"],
+				stats["dirsTotal"],
+				stats["bytesDone"],
+				stats["bytesTotal"])
+		)
+
+		self.ui.pbarFile.setRange(0, currentFileTotal)
+		self.ui.pbarFile.setValue(currentFileDone)
 		self.ui.pbarTotal.setValue(stats["filesDone"])
-		self.ui.pbarFile.setRange(0, stats["bytesTotal"])
-		self.ui.pbarFile.setValue(stats["bytesDone"])
 
 	def askOverwriteFile(self, title, text):
 		res = QtWidgets.QMessageBox.question(self, title, text,
@@ -207,6 +214,7 @@ class DownloadStatusWidget(QtWidgets.QWidget):
 			@param modul: Modulname to download from (usually "file")
 			@type modul: String
 		"""
+		logger.debug("DownloadStatusWidget.init: %r, %r, %r", downloader, args, kwargs)
 		super(DownloadStatusWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_FileDownloadProgress()
 		self.ui.setupUi(self)
@@ -251,9 +259,11 @@ class FileListView(TreeListView):
 		"""
 		if not files:
 			return
+		uploadStatusWidget = UploadStatusWidget()
+		self.parent().layout().addWidget(uploadStatusWidget)
 		protoWrap = protocolWrapperInstanceSelector.select(self.getModul())
 		uploader = protoWrap.upload(files, node)
-		self.parent().layout().addWidget(UploadStatusWidget(uploader))
+		uploadStatusWidget.setUploader(uploader)
 
 	def doDownload(self, targetDir, files, dirs):
 		"""
@@ -273,7 +283,7 @@ class FileListView(TreeListView):
 		"""Allow Drag&Drop'ing from the local filesystem into our fileview
 		"""
 		if (all([str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or (
-						len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
+				len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
 		         event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
 			# Its an upload (files/dirs dragged from the local filesystem into our fileview)
 			self.doUpload([file.toLocalFile() for file in event.mimeData().urls()], self.getNode())
@@ -285,8 +295,8 @@ class FileListView(TreeListView):
 		(drag directorys out isnt currently supported)
 		"""
 		if (all([file.toLocalFile() and (
-						str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or
-						str(file.toLocalFile())[1] == ":") for file in event.mimeData().urls()])) and len(
+				str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or
+				str(file.toLocalFile())[1] == ":") for file in event.mimeData().urls()])) and len(
 			event.mimeData().urls()) > 0:
 			event.accept()
 		else:

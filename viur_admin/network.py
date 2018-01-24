@@ -20,11 +20,14 @@ from PyQt5 import QtCore, QtWidgets
 import sys
 import time
 from viur_admin.config import conf
-from PyQt5.QtCore import QUrl, QObject
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply, QNetworkCookieJar
+from PyQt5.QtCore import QUrl, QObject, QVariant
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply, \
+	QNetworkCookieJar, QHttpPart, QHttpMultiPart
 from urllib import request
 
 import viur_admin.ui.icons_rc
+
+viur_admin.ui.icons_rc  ## import guard
 
 ##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
@@ -62,8 +65,8 @@ class MyCookieJar(QNetworkCookieJar):
 
 	pass
 
-nam.setCookieJar(MyCookieJar())
 
+nam.setCookieJar(MyCookieJar())
 
 mimetypes.init()
 if os.path.exists("mime.types"):
@@ -153,7 +156,8 @@ class SecurityTokenProvider(QObject):
 		# self.logger.warning("Error fetching skey: %r", error)
 		SecurityTokenProvider.errorCount += 1
 		self.isRequesting = False
-		raise ValueError("onError")
+
+	# raise ValueError("onError")
 
 	def onSkeyAvailable(self, request=None):
 		"""
@@ -177,7 +181,8 @@ class SecurityTokenProvider(QObject):
 			self.queue.put((skey, time.time()), False)
 		except QFull:
 			pass
-			# print("Err: Queue FULL")
+
+	# print("Err: Queue FULL")
 
 	def getKey(self):
 		"""
@@ -194,9 +199,11 @@ class SecurityTokenProvider(QObject):
 					# self.logger.debug("Discarding old skey")
 					skey = None
 					raise QEmpty()
-			except QEmpty:
-				# self.logger.debug("Empty cache! Please wait...")
+			except QEmpty as err:
+				logger.debug("Empty cache! Please wait...")
 				QtCore.QCoreApplication.processEvents()
+			except ValueError as err:
+				logger.exception(err)
 		# self.logger.debug("Using skey: %s", skey)
 		return (skey)
 
@@ -236,18 +243,24 @@ class RequestWrapper(QtCore.QObject):
 		request.downloadProgress.connect(self.onDownloadProgress)
 		request.uploadProgress.connect(self.onUploadProgress)
 		request.finished.connect(self.onFinished)
+		logger.debug("RequestWrapper exit")
 
 	def onDownloadProgress(self, bytesReceived, bytesTotal):
+		logger.debug("onDownloadProgress")
 		if bytesReceived == bytesTotal:
 			self.requestStatus = True
 		self.downloadProgress.emit(self, bytesReceived, bytesTotal)
+		logger.debug("onDownloadProgress done")
 
 	def onUploadProgress(self, bytesSend, bytesTotal):
+		logger.debug("onUploadProgress")
 		if bytesSend == bytesTotal:
 			self.requestStatus = True
 		self.uploadProgress.emit(self, bytesSend, bytesTotal)
+		logger.debug("onUploadProgress done")
 
 	def onFinished(self):
+		logger.debug("onFinished")
 		self.hasFinished = True
 		if self.request.error() == self.request.NoError:
 			self.requestSucceeded.emit(self)
@@ -269,11 +282,14 @@ class RequestWrapper(QtCore.QObject):
 		self.failureHandler = None
 		self.finishedHandler = None
 		self.deleteLater()
+		logger.debug("onFinished exit")
 
 	def readAll(self):
-		return (self.request.readAll())
+		logger.debug("readAll")
+		return self.request.readAll()
 
 	def abort(self):
+		logger.debug("abort")
 		self.request.abort()
 
 
@@ -338,13 +354,12 @@ class RequestGroup(QtCore.QObject):
 		req = NetworkService.request(*args, parent=self, **kwargs)
 		self.addQuery(req)
 
-
-
 	def onProgress(self, request, bytesReceived, bytesTotal):
 		if bytesReceived == bytesTotal:
 			self.progessUpdate.emit(self, self.maxQueryCount - self.queryCount, self.maxQueryCount)
-		# self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self,
-		# self.maxQueryCount-len( self.querys ), self.maxQueryCount )
+
+	# self.emit( QtCore.SIGNAL("progessUpdate(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self,
+	# self.maxQueryCount-len( self.querys ), self.maxQueryCount )
 
 	def onError(self, request, error):
 		self.requestFailed.emit(self)
@@ -429,7 +444,7 @@ class RemoteFile(QtCore.QObject):
 
 	def onTimerEvent(self):
 		# self.logger.debug("Checkpoint: onTimerEvent")
-		
+
 		if "successHandlerSelf" in dir(self):
 			s = self.successHandlerSelf()
 			if s:
@@ -464,7 +479,7 @@ class RemoteFile(QtCore.QObject):
 				getattr(s, self.successHandlerName)(self)
 			except Exception as err:
 				pass
-				# self.logger.exception(err)
+		# self.logger.exception(err)
 		self._delayTimer = QtCore.QTimer(self)
 		# Queue our deletion giving our child (networkReply) chance to finish
 		self._delayTimer.singleShot(250, self.remove)
@@ -495,6 +510,44 @@ class NetworkService():
 
 	@staticmethod
 	def genReqStr(params):
+		multiPart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+		for key, value in params.items():
+			logger.debug("key, value: %r, %r", key, value)
+			if isinstance(value, QtCore.QFile):  # file content must be a QFile object
+				try:
+					(mimetype, encoding) = mimetypes.guess_type(value.fileName(), strict=False)
+					logger.debug("guessing mimetype: %r, %r", mimetype, encoding)
+					mimetype = mimetype or "application/octet-stream"
+				except:
+					mimetype = "application/octet-stream"
+				filePart = QHttpPart()
+				filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
+				filePart.setHeader(QNetworkRequest.ContentDispositionHeader,
+				                   'form-data; name="{0}"; filename="{1}"'.format(key, os.path.basename(value.fileName())))
+				filePart.setBodyDevice(value)
+				value.setParent(multiPart)
+				multiPart.append(filePart)
+				logger.debug("file part: %r", filePart)
+			elif isinstance(value, list):
+				for val in value:
+					textPart = QHttpPart()
+					textPart.setHeader(QNetworkRequest.ContentTypeHeader, QVariant(b"application/octet-stream"))
+					textPart.setHeader(QNetworkRequest.ContentDispositionHeader,
+					                   'form-data; name="{0}"'.format(key.encode("utf-8")))
+					textPart.setBody(str(val).encode("utf-8"))
+					multiPart.append(textPart)
+					logger.debug("list part: %r", textPart)
+			else:
+				otherPart = QHttpPart()
+				otherPart.setHeader(QNetworkRequest.ContentTypeHeader, "application/octet-stream")
+				otherPart.setHeader(QNetworkRequest.ContentDispositionHeader, 'form-data; name="{0}"'.format(key))
+				otherPart.setBody(str(value).encode("utf-8"))
+				multiPart.append(otherPart)
+				logger.debug("other part: %r", otherPart)
+		return multiPart
+
+	@staticmethod
+	def genReqStr_old(params):
 		boundary_str = "---" + ''.join(
 			[random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for x in range(13)])
 		boundary = boundary_str.encode("UTF-8")
@@ -565,45 +618,59 @@ class NetworkService():
 			reqURL = QUrl(url)
 		else:
 			reqURL = QUrl(NetworkService.url + url)
+		logger.debug("preparing request: %r", reqURL)
 		req = QNetworkRequest(reqURL)
 		if extraHeaders:
 			for k, v in extraHeaders.items():
 				req.setRawHeader(k, v)
 		if params:
 			if isinstance(params, dict):
-				multipart, boundary = NetworkService.genReqStr(params)
-				req.setRawHeader(b"Content-Type", b'multipart/form-data; boundary=' + boundary + b'; charset=utf-8')
+				multipart = NetworkService.genReqStr(params)
+				reply = nam.post(req, multipart)
+				multipart.setParent(reply)
+				logger.debug("after reply setparent")
 			elif isinstance(params, bytes):
 				req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
-				multipart = params
+				reply = nam.post(req, params)
+				logger.debug("after nam post")
 			else:
-				raise ValueError("cannot diffentiate headers to that param type")
-			# print(params)
-			# print(type(params))
-			return (
-				RequestWrapper(nam.post(req, multipart), successHandler, failureHandler, finishedHandler, parent,
-				               url=url,
-				               failSilent=failSilent))
+				raise ValueError("cannot differentiate headers to that param type")
+			logger.debug("params: %r", params)
+			logger.debug("reply: %r", reply)
+			return RequestWrapper(
+				reply,
+				successHandler,
+				failureHandler,
+				finishedHandler,
+				parent,
+				url=url,
+				failSilent=failSilent)
 		else:
-			return (RequestWrapper(nam.get(req), successHandler, failureHandler, finishedHandler, parent, url=url,
-			                       failSilent=failSilent))
+			return RequestWrapper(
+				nam.get(req),
+				successHandler,
+				failureHandler,
+				finishedHandler,
+				parent,
+				url=url,
+				failSilent=failSilent)
 
 	@staticmethod
 	def decode(req):
+		logger.debug("request.decode: %r", req)
 		data = req.readAll().data().decode("utf-8")
-		# NetworkService.logger.debug("decoding request data %r", data)
 		return json.loads(data)
 
 	@staticmethod
 	def setup(url, *args, **kwargs):
+		logger.debug("request.setup: %r, %r", args, kwargs)
 		NetworkService.url = url
 		# This is the only request that is intentionally blocking
 		try:
-			req = request.urlopen(url+"/getVersion")
+			req = request.urlopen(url + "/getVersion")
 			NetworkService.serverVersion = tuple(json.loads(req.read().decode("UTF-8")))
-			assert isinstance(NetworkService.serverVersion, tuple) and len(NetworkService.serverVersion)==3
+			assert isinstance(NetworkService.serverVersion, tuple) and len(NetworkService.serverVersion) == 3
 		except:
 			NetworkService.serverVersion = (1, 0, 0)  # The first version of ViUR didn't support that
 		logger.info("Attached to an instance running ViUR %s", NetworkService.serverVersion)
 		securityTokenProvider.reset()
-

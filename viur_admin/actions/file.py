@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from viur_admin.log import getLogger
 
 from viur_admin.priorityqueue import actionDelegateSelector
+
+logger = getLogger(__name__)
 
 
 class FileUploadAction(QtWidgets.QAction):
@@ -14,9 +17,28 @@ class FileUploadAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self, e):
-		files, other = QtWidgets.QFileDialog.getOpenFileNames()
-		# print("file on triggered", files, repr(other))
+		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
+		logger.debug("homeDirs: %r", homeDirs)
+		files, other = QtWidgets.QFileDialog.getOpenFileNames(directory=homeDirs[0])
+		print("file on triggered", files, repr(other))
 		self.parent().doUpload(files, self.parent().getNode())
+
+		# TODO: all this shit would be needed for being able to select both dirs and files, but it's also buggy.
+		# TODO: if you go down into a directory hierarchy, all directories on the path and the files get selected. SO SAD!
+		# dlg = QtWidgets.QFileDialog()
+		# dlg.setFileMode(QtWidgets.QFileDialog.Directory)
+		# dlg.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
+		# listView = dlg.findChild(QtWidgets.QListView, "listView")
+		# if listView:
+		# 	listView.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+		# treeView = dlg.findChild(QtWidgets.QTreeView)
+		# if treeView:
+		# 	treeView.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+		# status = dlg.exec()
+		# if status:
+		# 	files = dlg.selectedFiles()
+		# 	logger.debug("FileUploadAction upload instance: %r", self.parent())
+		# 	self.parent().doUpload(files, self.parent().getNode())
 
 	@staticmethod
 	def isSuitableFor(modul, actionName):
