@@ -40,15 +40,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 		if self.forcePageFlip:
 			self.forcePageFlip = False
 			return True
-		if self.currentId() == 2 and self.tmp.advancesAutomatically:
+
+		currentId = self.currentId()
+		if currentId == 2 and self.tmp.advancesAutomatically:
 			return False
-		if self.currentId() == 0:
+		if currentId == 0:
 			if not self.ui.editTitle.text():
-				print("Kein Title")
+				logger.error("AddPortalWizard.validateCurrentPage: no title")
 				return False
 			server = self.ui.editServer.text()
 			if not server or not (server.startswith("http://") or server.startswith("https://")):
-				print("Invalid Server")
+				logger.error("AddPortalWizard.validateCurrentPage: invalid url")
 				return False
 			if not server.endswith("/"):
 				server += "/"
@@ -59,16 +61,13 @@ class AddPortalWizard(QtWidgets.QWizard):
 				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
 			self.setDisabled(True)
 			return False
-		elif self.currentId() == 1:
+		elif currentId == 1:
 			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
-			print("SELECTED AUTH METHOD")
-			print(self.currentPortalConfig)
-		elif self.currentId() == 2:
+			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
+		elif currentId == 2:
 			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
-			print("********")
-			print(self.currentPortalConfig)
+			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
 			self.loginTask.startAuthenticationFlow()
-			# self.setDisabled(True)
 			return False
 		return True
 
@@ -257,7 +256,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 			self.ui.delAccBTN.setEnabled(True)
 
 	def onFinishedBTNReleased(self):
-		print("onFinishedBTNReleased")
+		logger.debug("onFinishedBTNReleased")
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)

@@ -97,7 +97,6 @@ def reportError(type, value, tb):
 	print(type)
 	print(value)
 	traceback.print_tb(tb)
-	return
 	if os.path.exists(".git"):
 		releaseStage = "development"
 	else:
