@@ -24,7 +24,7 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.forcePageFlip = False
 		self.validAuthMethods = None
 		self.loginTask = None
-		if "currentPortalConfig":
+		if currentPortalConfig:
 			self.editMode = True
 			self.currentPortalConfig = currentPortalConfig
 		else:
@@ -74,12 +74,15 @@ class AddPortalWizard(QtWidgets.QWizard):
 
 	def initializePage(self, pageId):
 		from viur_admin.login import LoginTask
-		print("initializePage", pageId)
+		logger.debug("initializePage: %r", pageId)
 		super(AddPortalWizard, self).initializePage(pageId)
 		# self.button(QtWidgets.QWizard.NextButton).setEnabled(True)
 		if pageId == 0:
-			self.ui.editTitle.setText(self.currentPortalConfig["name"])
-			self.ui.editServer.setText(self.currentPortalConfig["server"])
+			try:
+				self.ui.editTitle.setText(self.currentPortalConfig["name"])
+				self.ui.editServer.setText(self.currentPortalConfig["server"])
+			except Exception as err:
+				logger.exception(err)
 		if pageId == 1:
 			logger.debug(self.validAuthMethods)
 			try:
@@ -116,19 +119,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.next()
 
 	def onError(self, req):
-		print("***ERROR***")
-		print(req)
+		logger.error("AddPortalWizard.onError: %s", req)
 		self.setDisabled(False)
 
 	def onloginSucceeded(self, *args, **kwargs):
-		print("xxxxxxxxxxxxxxxxxxxxxxxxxx")
-		print("AddPortalWizard: onloginSucceeded")
+		logger.debug("AddPortalWizard: onloginSucceeded")
 		self.setDisabled(False)
 		self.forcePageFlip = True
 		self.next()
 
 	def onLoginFailed(self, msg, *args, **kwargs):
-		print("AddPortalWizard.onLoginFailed", msg)
+		logger.error("AddPortalWizard.onLoginFailed: %r", msg)
 		tmp = QtWidgets.QMessageBox.warning(self, "Login failed", msg)
 		self.setDisabled(False)
 
@@ -211,7 +212,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 	# self.updateUI()
 
 	def onPortalWizardFinished(self, *args, **kwargs):
-		print("onPortalWizardFinished")
+		logger.debug("AddPortalWizard.onPortalWizardFinished: %r, %r", args, kwargs)
 		self.setDisabled(False)
 		self.loadAccountList()
 
