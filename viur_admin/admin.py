@@ -2,7 +2,7 @@
 """
 Viur Admin
 
-Copyright 2012-2013 Mausbrand Informationssysteme GmbH
+Copyright 2012-2018 Mausbrand Informationssysteme GmbH
 Licensed under GPL Version 3.
 http://www.gnu.org/licenses/gpl-3.0
 
@@ -26,10 +26,10 @@ from argparse import ArgumentParser
 from viur_admin.bugsnag import Notification
 
 try:
-	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebKitWidgets
+	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebEngineWidgets
 except ImportError as err:
 	# no logger objects present here
-	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
+	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebEngineWidgets" + "\n")
 	sys.exit(1)
 
 from pkg_resources import resource_filename, resource_listdir

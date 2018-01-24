@@ -2,7 +2,7 @@ from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
 
-from PyQt5 import QtCore, QtWidgets, QtGui, QtWebKitWidgets, QtWebKit
+from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
@@ -25,16 +25,26 @@ class AuthGoogle(QtWidgets.QWidget):
 		self.currentPortalConfig = currentPortalConfig
 		self.isWizard = isWizard
 		self.didSucceed = False
-		# self.jar = QtNetwork.QNetworkCookieJar()
-		self.webView = QtWebKitWidgets.QWebView()
+		self.webView = QtWebEngineWidgets.QWebEngineView()
 		self.setLayout(QtWidgets.QVBoxLayout())
 		self.layout().addWidget(self.webView)
-		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
-		self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
-		self.webView.page().setNetworkAccessManager(nam)
+		# self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
+		# self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
+		# self.webView.page().setNetworkAccessManager(nam)
+		self.chromeCookieJar = self.webView.page().profile().cookieStore()
+		self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
+		self.chromeCookieJar.loadAllCookies()
+		for cookie in nam.cookieJar().allCookies():
+			self.chromeCookieJar.setCookie(cookie)
 		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "/admin/user/auth_googleaccount/login"))
 		self.webView.urlChanged.connect(self.onUrlChanged)
 		self.webView.loadFinished.connect(self.onLoadFinished)
+
+	def onCookieAdded(self, cookie):
+		# rawCookie = cookie.toRawForm(QtNetwork.QNetworkCookie.Full)
+		# logger.debug("onCookieAdded: %r", rawCookie)
+		namCookieJar = nam.cookieJar()
+		namCookieJar.insertCookie(cookie)
 
 	def startAuthenticating(self):
 		logger.debug("LoginTask using method x-google")
@@ -51,21 +61,26 @@ class AuthGoogle(QtWidgets.QWidget):
 		logger.debug("loadFinished: %r", status)
 		self.checkAuthenticationStatus()
 
-	def checkAuthenticationStatus(self):
-		if self.webView.findText("OKAY"):
+	def authStatusCallback(self, data):
+		logger.debug("authStatusCallback: %r", data)
+		okayFound = data.find("OKAY")
+		logger.debug("checkAuthenticationStatus: %r", okayFound)
+		if okayFound != -1:
 			if not self.isWizard:
 				self.close()
-				self.webView.deleteLater()
 			self.loginSucceeded.emit()
-		elif self.webView.findText("X-VIUR-2FACTOR-"):
+		elif data.find("X-VIUR-2FACTOR-") != -1:
 			html = self.webView.page().mainFrame().toHtml()
 			startPos = html.find("X-VIUR-2FACTOR-")
 			secondFactorType = html[startPos, html.find("\"", startPos + 1)]
 			secondFactorType = secondFactorType.replace("X-VIUR-2FACTOR-", "")
 			if not self.isWizard:
 				self.close()
-				self.webView.deleteLater()
 			self.secondFactorRequired.emit(secondFactorType)
+
+	def checkAuthenticationStatus(self):
+		page = self.webView.page()
+		page.toPlainText(self.authStatusCallback)
 
 	def onError(self, request=None, error=None, msg=None):
 		logger.debug("onerror: %r, %r, %r", request, error, msg)
