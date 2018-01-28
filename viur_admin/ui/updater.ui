@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/viup.png</normaloff>icons/viup.png</iconset>
+    <normaloff>:icons/viup.png</normaloff>:icons/viup.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -25,7 +25,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>icons/viur-updater.png</pixmap>
+       <pixmap>:icons/viur-updater.png</pixmap>
       </property>
      </widget>
     </item>
@@ -50,7 +50,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/search.svg</normaloff>icons/actions/search.svg</iconset>
+        <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
       </property>
      </widget>
     </item>
@@ -61,7 +61,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
+        <normaloff>:icons/actions/accept.svg</normaloff>:icons/actions/accept.svg</iconset>
       </property>
      </widget>
     </item>
@@ -72,7 +72,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/exit_small.png</normaloff>icons/actions/exit_small.png</iconset>
+        <normaloff>:icons/actions/exit_small.png</normaloff>:icons/actions/exit_small.png</iconset>
       </property>
      </widget>
     </item>
@@ -90,6 +90,8 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+    <resources>
+        <include location="../icons/icons.qrc"/>
+    </resources>
  <connections/>
 </ui>

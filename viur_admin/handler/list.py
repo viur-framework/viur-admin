@@ -24,7 +24,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 			else:
 				icon = loadIcon(myview["icon"])
 		else:
-			icon = loadIcon("icons/modules/list.svg")
+			icon = loadIcon(":icons/modules/list.svg")
 		super(PredefinedViewHandler, self).__init__(widgetFactory, descr=myview["name"], icon=icon, vanishOnClose=False, *args, **kwargs)
 		self.viewName = viewName
 

@@ -47,8 +47,8 @@
         <string>Reset</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/actions/undo_small.png</normaloff>icons/actions/undo_small.png</iconset>
+        <iconset resource="../icons/icons.qrc">
+         <normaloff>:/icons/actions/undo.svg</normaloff>:/icons/actions/undo.svg</iconset>
        </property>
       </widget>
      </item>
@@ -58,8 +58,8 @@
         <string>Close</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/actions/cancel_small.png</normaloff>icons/actions/cancel_small.png</iconset>
+        <iconset resource="../icons/icons.qrc">
+         <normaloff>:/icons/actions/cancel.svg</normaloff>:/icons/actions/cancel.svg</iconset>
        </property>
       </widget>
      </item>
@@ -82,8 +82,8 @@
         <string>Save and close</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/actions/save_new.svg</normaloff>icons/actions/save_new.svg</iconset>
+        <iconset resource="../icons/icons.qrc">
+         <normaloff>:/icons/actions/save_new.svg</normaloff>:/icons/actions/save_new.svg</iconset>
        </property>
       </widget>
      </item>
@@ -93,8 +93,8 @@
         <string>Save and continue</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/actions/save_continue.svg</normaloff>icons/actions/save_continue.svg</iconset>
+        <iconset resource="../icons/icons.qrc">
+         <normaloff>:/icons/actions/save_continue.svg</normaloff>:/icons/actions/save_continue.svg</iconset>
        </property>
       </widget>
      </item>
@@ -102,6 +102,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

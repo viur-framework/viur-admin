@@ -67,7 +67,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/search.svg</normaloff>icons/actions/search.svg</iconset>
+         <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
        </property>
       </widget>
      </item>
@@ -84,7 +84,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>icons/actions/search.svg</normaloff>icons/actions/search.svg</iconset>
+         <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
        </property>
       </widget>
      </item>
@@ -95,6 +95,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+<resources>
+<include location="../icons/icons.qrc"/>
+</resources>
  <connections/>
 </ui>
