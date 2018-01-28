@@ -59,7 +59,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>:icons/actions/cancel_small.png</normaloff>:icons/actions/cancel_small.png</iconset>
+             <normaloff>:icons/actions/cancel.svg</normaloff>:icons/actions/cancel.svg</iconset>
            </property>
           </widget>
          </item>

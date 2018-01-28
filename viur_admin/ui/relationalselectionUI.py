@@ -41,7 +41,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnCancel = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":icons/actions/cancel_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/cancel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnCancel.setIcon(icon)
         self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout_2.addWidget(self.btnCancel)
