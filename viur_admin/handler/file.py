@@ -31,7 +31,7 @@ class FileBaseHandler(WidgetHandler):
 		event.connectWithPriority("preloadingFinished", self.setRepos, event.lowPriority)
 
 	# self.tmpObj = QtCore.QObject()
-	# fetchTask = NetworkService.request("/%s/listRootNodes" % modul, parent=self.tmpObj )
+	# fetchTask = NetworkService.request("/%s/listRootNodes" % module, parent=self.tmpObj )
 	# self.tmpObj.connect( fetchTask, QtCore.SIGNAL("finished(PyQt_PyObject)"), self.setRepos)
 
 	def setRepos(self):

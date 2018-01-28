@@ -53,7 +53,7 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
 class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 	""" Provides an interface for Data structured as a hierarchy on the server.
 
-	@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode,
+	@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=module, PyQt_PyObject=rootNode,
 	PyQt_PyObject=itemID )
 	@emits onItemClicked(PyQt_PyObject=item.data)
 	@emits onItemDoubleClicked(PyQt_PyObject=item.data)
@@ -64,7 +64,7 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 
 		:param parent: Parent widget
 		:type parent: QWidgets.QWidget
-		:param modul: Name of the modul to show the elements for
+		:param modul: Name of the module to show the elements for
 		:type modul: str
 		:param rootNode: Key of the rootNode which data should be displayed. If None, this widget tries to choose
 		one.

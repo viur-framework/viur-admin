@@ -16,7 +16,7 @@ class HierarchyAddAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self):
-		# config = conf.serverConfig["modules"][ self.parent().modul ]
+		# config = conf.serverConfig["modules"][ self.parent().module ]
 		modul = self.parent().getModul()
 		node = self.parent().hierarchy.rootNode
 

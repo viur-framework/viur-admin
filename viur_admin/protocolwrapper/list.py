@@ -24,7 +24,7 @@ class ListWrapper(QtCore.QObject):
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
+	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this module and that data is now
 	# avaiable
 
 	def __init__(self, module, *args, **kwargs):
@@ -176,7 +176,7 @@ class ListWrapper(QtCore.QObject):
 	def delayEmitEntriesChanged(self, *args, **kwargs):
 		"""
 			Give the GAE a chance to apply recent changes and then
-			force all open views of that modul to reload its data
+			force all open views of that module to reload its data
 		"""
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 		self.checkBusyStatus()

@@ -14,7 +14,7 @@ class TaskWrapper(QtCore.QObject):
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
+	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this module and that data is now
 	# avaiable
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
 

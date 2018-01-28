@@ -54,7 +54,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 
 	def setFilterbyName(self, filterName):
 		self.name = filterName
-		config = None  # getListConfig( self.modul, filterName )
+		config = None  # getListConfig( self.module, filterName )
 		if config:
 			if "columns" in config.keys():
 				self.fields = config["columns"]
@@ -224,7 +224,7 @@ class ListTableView(QtWidgets.QTableView):
 	"""
 		Provides an interface for Data structured as a simple list.
 
-		@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=modul, PyQt_PyObject=rootNode,
+		@emits hierarchyChanged( PyQt_PyObject=emitter, PyQt_PyObject=module, PyQt_PyObject=rootNode,
 		PyQt_PyObject=itemID )
 		@emits onItemClicked(PyQt_PyObject=item.data)
 		@emits onItemDoubleClicked(PyQt_PyObject=item.data)
@@ -279,7 +279,7 @@ class ListTableView(QtWidgets.QTableView):
 		"""
 		if emitter == self:  # We issued this event - ignore it as we allready knew
 			return
-		if modul and modul != self.modul:  # Not our modul
+		if modul and modul != self.modul:  # Not our module
 			return
 		# Well, seems to affect us, refresh our view
 		self.model().reload()
@@ -634,8 +634,8 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 	def __init__(self, module, model, *args, **kwargs):
 		"""
-			Initialize a new Edit or Add-Widget for the given modul.
-			@param module: Name of the modul
+			Initialize a new Edit or Add-Widget for the given module.
+			@param module: Name of the module
 			@type module: str
 			@param model: The ListTableModel instance
 			@type model: ListTableModel

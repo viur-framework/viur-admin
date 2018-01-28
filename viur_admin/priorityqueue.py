@@ -24,6 +24,6 @@ class PriorityQueue(object):
 
 editBoneSelector = PriorityQueue()  # Queried by editWidget to locate its bones
 viewDelegateSelector = PriorityQueue()  # Queried by listWidget to determine the viewDelegates for the table
-actionDelegateSelector = PriorityQueue()  # Locates an QAction for a given modul/action-name
+actionDelegateSelector = PriorityQueue()  # Locates an QAction for a given module/action-name
 protocolWrapperClassSelector = PriorityQueue()  # Used during startup to select an Wrapper-Class
 protocolWrapperInstanceSelector = PriorityQueue()  # Used afterwards to get a specific instance

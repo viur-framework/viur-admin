@@ -29,12 +29,12 @@ class BaseBone:
 class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, modul, boneName, structure):
-		super(RelationalViewBoneDelegate, self).__init__(modul, boneName, structure)
+	def __init__(self, module, boneName, structure):
+		super(RelationalViewBoneDelegate, self).__init__(module, boneName, structure)
 		self.format = "$(name)"
 		if "format" in structure[boneName].keys():
 			self.format = structure[boneName]["format"]
-		self.modul = modul
+		self.module = module
 		self.structure = structure
 		self.boneName = boneName
 
@@ -188,7 +188,10 @@ class RelationalEditBone(BoneEditInterface):
 	             editWidget=None, *args,
 	             **kwargs):
 		super(RelationalEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
-		self.toModul = destModul
+		logger.debug("RelationalEditBone: %r, %r, %r, %r", moduleName, boneName, readOnly, destModul)
+		self.toModul = self.realModule = destModul
+		if self.toModul.endswith("_rootNode"):
+			self.realModule = destModul[:-9]
 		self.multiple = multiple
 		self.using = using
 		self.format = format
@@ -196,6 +199,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.internalEdits = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
+			self.previewIcon = None
 		else:
 			self.layout = QtWidgets.QVBoxLayout(self)
 			self.previewWidget = QtWidgets.QWidget(self)
@@ -253,8 +257,8 @@ class RelationalEditBone(BoneEditInterface):
 			self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
 	def updateVisiblePreview(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)
-		assert protoWrap is not None, "Unknown module: %s" % self.toModul
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
+		assert protoWrap is not None, "Unknown module: %s" % self.realModule
 		if self.skelType is None:
 			structure = protoWrap.viewStructure
 		elif self.skelType == "leaf":
@@ -370,18 +374,18 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		self.moduleName = moduleName
 		self.boneName = boneName
 		self.multiple = multiple
-		self.modul = toModul
+		self.module = toModul
 		self.selection = selection
 		self.ui = Ui_relationalSelector()
 		self.ui.setupUi(self)
 		layout = QtWidgets.QHBoxLayout(self.ui.tableWidget)
 		self.ui.tableWidget.setLayout(layout)
-		self.list = self.displaySourceWidget(self.modul, editOnDoubleClick=False, parent=self)
+		self.list = self.displaySourceWidget(self.module, editOnDoubleClick=False, parent=self)
 		layout.addWidget(self.list)
 		self.list.show()
 		layout = QtWidgets.QHBoxLayout(self.ui.listSelected)
 		self.ui.listSelected.setLayout(layout)
-		self.selection = self.displaySelectionWidget(self.modul, selection, parent=self)
+		self.selection = self.displaySelectionWidget(self.module, selection, parent=self)
 		layout.addWidget(self.selection)
 		self.selection.show()
 		if not self.multiple:

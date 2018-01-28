@@ -13,24 +13,25 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		Displays the currently selected files of one fileBone.
 	"""
 
-	def __init__(self, modul, selection=None, *args, **kwargs):
+	def __init__(self, module, selection=None, *args, **kwargs):
 		"""
 
 		:param parent: Parent-Widget
 		:type parent: QWidget
-		:param modul: Modul which entities we'll display. (usually "file" in this context)
-		:type modul: str
+		:param module: Modul which entities we'll display. (usually "file" in this context)
+		:type module: str
 		:param selection: Currently selected Items.
 		:type selection: list of dict, dict or None
 		"""
 		super(SelectedFilesWidget, self).__init__(*args, **kwargs)
+		logger.debug("SelectedFilesWidget.init: %r, %r", module, selection)
 		if isinstance(selection, list):
 			self.selection = selection and [s["dest"] for s in selection]
 		elif isinstance(selection, dict):  # This was a singleSelection before
-			self.selection = [self.selection["dest"]]
+			self.selection = [selection["dest"]]
 		else:
 			self.selection = list()
-		self.modul = modul
+		self.modul = module
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 		self.setAcceptDrops(True)

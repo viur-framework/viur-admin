@@ -15,23 +15,26 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		The model holding the currently selected entities.
 	"""
 
-	def __init__(self, parent, modul, selection, skelType=None, *args, **kwargs):
+	def __init__(self, parent, module, selection, skelType=None, *args, **kwargs):
 		"""
 			@param parent: Our parent widget.
 			@type parent: QWidget.
-			@param modul: Name of the modul which items were going to display.
-			@type modul: String
+			@param module: Name of the module which items were going to display.
+			@type module: str
 			@param selection: Currently selected items.
 			@type selection: List-of-Dict, Dict or None
 		"""
 		super(SelectedEntitiesTableModel, self).__init__(parent, *args, **kwargs)
-		self.modul = modul
+		logger.debug("SelectedEntitiesTableModel.init: %r, %r, %r, %r", parent, module, selection, skelType)
+		self.module = self.realModule = module
+		if module.endswith("_rootNode"):
+			self.realModule = module[:-9]
 		self.dataCache = []
 		self.fields = ["name", "foo"]
 		self.headers = []
 		self.skelType = skelType
 		self.entryFetches = []  # List of fetch-Tasks we issued
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		structureCache = protoWrap.editStructure
 		# print("model init structure", structureCache)
@@ -46,7 +49,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			@param item: The new item
 			@type item: Dict or String
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		if not item:
 			return
@@ -73,14 +76,14 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			logger.debug("SelectedEntities.addItem: unhandled instance type: %r", item, type(item))
 			raise NotImplementedError()
 		# self.entryFetches.append( protoWrap.queryEntry( id ) )
-		# NetworkService.request("/%s/view/%s" % (self.modul, id), successHandler= self.onItemDataAvailable )
+		# NetworkService.request("/%s/view/%s" % (self.module, id), successHandler= self.onItemDataAvailable )
 
 	def onItemDataAvailable(self, item):
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		if item is None or not item["key"] in self.entryFetches:
 			return
@@ -132,22 +135,25 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 	"""
 	skelType = None
 
-	def __init__(self, modul, selection=None, skelType=None, *args, **kwargs):
+	def __init__(self, module, selection=None, skelType=None, *args, **kwargs):
 		"""
 			@param parent: Parent-Widget
 			@type parent: QWidget
-			@param modul: Modul which entities we'll display. (usually "file" in this context)
-			@type modul: String
+			@param module: Modul which entities we'll display. (usually "file" in this context)
+			@type module: String
 			@param selection: Currently selected Items.
 			@type selection: List-of-Dict, Dict or None
 		"""
 		assert skelType in [None, "node", "leaf"]
 		super(SelectedEntitiesWidget, self).__init__(*args, **kwargs)
+		self.module = self.realModule = module
+		if module.endswith("_rootNode"):
+			self.realModule = module[:-9]
 		self.selection = selection or []
 		# self.skelType = skelType
 		if selection and not isinstance(self.selection, list):  # This was a singleSelection before
 			self.selection = [self.selection]
-		self.setModel(SelectedEntitiesTableModel(self, modul, self.selection, self.skelType))
+		self.setModel(SelectedEntitiesTableModel(self, self.module, self.selection, self.skelType))
 		self.setAcceptDrops(True)
 		self.doubleClicked.connect(self.onItemDoubleClicked)
 		self.rebuildDelegates()
@@ -155,14 +161,13 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 	# self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
 	# self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 
-
 	def rebuildDelegates(self):
 		"""
 			(Re)Attach the viewdelegates to the table.
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
-		protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected
 		if self.skelType is None:
@@ -177,8 +182,8 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		for field in fields:
 			self.model().headers.append(structureCache[field]["descr"])
 			# Locate the best ViewDeleate for this colum
-			delegateFactory = viewDelegateSelector.select(self.model().modul, field, structureCache)
-			delegate = delegateFactory(self.model().modul, field, structureCache)
+			delegateFactory = viewDelegateSelector.select(self.realModule, field, structureCache)
+			delegate = delegateFactory(self.realModule, field, structureCache)
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)

@@ -9,7 +9,7 @@ from viur_admin.widgets.list import ListWidget
 
 
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler
-	"""Holds one view for this modul (preconfigured from Server)"""
+	"""Holds one view for this module (preconfigured from Server)"""
 
 	def __init__(self, modul, viewName, *args, **kwargs):
 		config = conf.serverConfig["modules"][modul]

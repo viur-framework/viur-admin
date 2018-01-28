@@ -97,10 +97,13 @@ class FileItemBone(TreeItemBone):
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def loadIconFromRequest(self, request):
-		preview = QtGui.QIcon(request.getFileName())
-		label = QtWidgets.QLabel(self)
-		label.setPixmap(preview.pixmap(QtCore.QSize(32, 32)))
-		self.layout.insertWidget(0, label)
+		icon = QtGui.QIcon(request.getFileName())
+		if not self.previewIcon:
+			self.previewIcon = QtWidgets.QLabel(self)
+			self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
+			self.layout.insertWidget(0, self.previewIcon)
+		else:
+			self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
 
 	def updateVisiblePreview(self):
 		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)

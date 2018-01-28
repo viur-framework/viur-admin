@@ -24,7 +24,7 @@ class TreeItemBone(RelationalEditBone):
 
 	def installAutoCompletion(self):
 		"""
-			Prevent installing an autoCompletion for this modul (not implementet yet)
+			Prevent installing an autoCompletion for this module (not implementet yet)
 		"""
 		if not self.multiple:
 			self.entry.setReadOnly(True)

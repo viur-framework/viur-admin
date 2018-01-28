@@ -29,8 +29,8 @@ class EditWidget(QtWidgets.QWidget):
 
 	def __init__(self, modul, applicationType, key=None, node=None, skelType=None, clone=False, *args, **kwargs):
 		"""
-			Initialize a new Edit or Add-Widget for the given modul.
-			@param modul: Name of the modul
+			Initialize a new Edit or Add-Widget for the given module.
+			@param modul: Name of the module
 			@type modul: String
 			@param applicationType: Defines for what application this Add / Edit should be created. This hides
 			additional complexity introduced by the hierarchy / tree-application
@@ -76,9 +76,9 @@ class EditWidget(QtWidgets.QWidget):
 		self.editTaskID = None
 		self.reloadData()
 		# Hide Previewbuttons if no PreviewURLs are set
-		# if modul in conf.serverConfig["modules"].keys():
-		# 	if not "previewurls" in conf.serverConfig["modules"][self.modul].keys() \
-		# 			or not conf.serverConfig["modules"][self.modul]["previewurls"]:
+		# if module in conf.serverConfig["modules"].keys():
+		# 	if not "previewurls" in conf.serverConfig["modules"][self.module].keys() \
+		# 			or not conf.serverConfig["modules"][self.module]["previewurls"]:
 		# 		self.ui.btnPreview.hide()
 		if modul == "_tasks":
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Execute"))
@@ -147,7 +147,7 @@ class EditWidget(QtWidgets.QWidget):
 		assert protoWrap is not None
 		if self.modul == "_tasks":
 			self.editTaskID = protoWrap.edit(self.key, **data)
-		# request = NetworkService.request("/%s/execute/%s" % ( self.modul, self.id ), data, secure=True,
+		# request = NetworkService.request("/%s/execute/%s" % ( self.module, self.id ), data, secure=True,
 		# successHandler=self.onSaveResult )
 		elif self.applicationType == EditWidget.appList:  ## Application: List
 			if self.key and (not self.clone or not data):
@@ -262,7 +262,7 @@ class EditWidget(QtWidgets.QWidget):
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
 			# queue = RegisterQueue()
 			# event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,
-			# PyQt_PyObject)'),queue, self.modul, key, tmpDict )
+			# PyQt_PyObject)'),queue, self.module, key, tmpDict )
 			# widget = queue.getBest()
 			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
 			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict, editWidget=self)

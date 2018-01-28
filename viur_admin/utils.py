@@ -246,7 +246,7 @@ class Overlay(QtWidgets.QWidget):
 class WidgetHandler(QtWidgets.QTreeWidgetItem):
 	"""
 	Holds the items displayed top-left within the admin.
-	Each of these provides access to one modul and holds the references
+	Each of these provides access to one module and holds the references
 	to the widgets shown inside L{MainWindow.ui.stackedWidget}
 	"""
 	mainWindow = None
@@ -255,7 +255,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 	             **kwargs):
 		"""
 		@type modul: string
-		@param modul: Name of the modul handled
+		@param modul: Name of the module handled
 		"""
 		super(WidgetHandler, self).__init__(*args, **kwargs)
 		if mainWindow:
@@ -374,7 +374,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 
 class GroupHandler(WidgetHandler):
 	"""
-		Toplevel widget for one modul-group
+		Toplevel widget for one module-group
 	"""
 
 	def clicked(self):
@@ -419,7 +419,7 @@ def urlForItem(modul, item):
 	"""
 		Returns a QUrl for the given item.
 		Usefull for creating a QDrag which can be dropped outside the application.
-		@param modul: Name of the modul, this item belongs to.
+		@param modul: Name of the module, this item belongs to.
 		@type modul: String
 		@param item: Data-Dictionary of the item. Must contain at least an "id" key.
 		@type item: Dict
@@ -442,10 +442,10 @@ def urlForItem(modul, item):
 def itemFromUrl(url):
 	"""
 		Parses a URL constructed by urlForItem.
-		Returns a tuple (modul, id, name ) if parsing is successfull, None otherwise.
+		Returns a tuple (module, id, name ) if parsing is successfull, None otherwise.
 		@param url: Url which should be parsed.
 		@type url: QUrl or String
-		@returns: Tuple (modul, id, name ) or None
+		@returns: Tuple (module, id, name ) or None
 	"""
 	if isinstance(url, QtCore.QUrl):
 		url = url.toString()
@@ -459,7 +459,7 @@ def itemFromUrl(url):
 	if parts[1].lower() != "view":
 		return None
 	modul = parts[0]
-	if modul not in conf.serverConfig["modules"].keys():  # Unknown modul
+	if modul not in conf.serverConfig["modules"].keys():  # Unknown module
 		return None
 	if len(parts) > 3:
 		return modul, parts[2], parts[3]

@@ -50,7 +50,7 @@ class TreeHandler(QtCore.QObject):
 
 		@type queue: RegisterQueue
 		@type modul: string
-		@param modul: Name of the modul which should be handled
+		@param modul: Name of the module which should be handled
 		"""
 		config = conf.serverConfig["modules"][modul]
 		if (config["handler"] == "tree" or config["handler"].startswith("tree.")):

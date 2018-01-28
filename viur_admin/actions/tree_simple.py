@@ -5,6 +5,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.mainwindow import WidgetHandler
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.widgets.edit import EditWidget
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
 
 
 class TreeSimpleEditAction(QtWidgets.QAction):
@@ -72,7 +75,8 @@ class TreeMkDirAction(QtWidgets.QAction):
 		                                                 QtCore.QCoreApplication.translate("TreeHandler",
 		                                                                                   "Directory name"))
 		if dirName and okay:
-			reqWrap = protocolWrapperInstanceSelector.select(self.parent().modul)
+			logger.debug("TreeMkDirAction.onTriggered: %r, %r", self.parent(), self.parent().realModule)
+			reqWrap = protocolWrapperInstanceSelector.select(self.parent().realModule)
 			assert reqWrap is not None
 			reqWrap.add(self.parent().getNode(), "node", name=dirName)
 
