@@ -24,7 +24,8 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.forcePageFlip = False
 		self.validAuthMethods = None
 		self.loginTask = None
-		if "currentPortalConfig":
+		self.authProvider = None
+		if currentPortalConfig:
 			self.editMode = True
 			self.currentPortalConfig = currentPortalConfig
 		else:
@@ -40,15 +41,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 		if self.forcePageFlip:
 			self.forcePageFlip = False
 			return True
-		if self.currentId() == 2 and self.tmp.advancesAutomatically:
+
+		currentId = self.currentId()
+		if currentId == 2 and self.authProvider.advancesAutomatically:
 			return False
-		if self.currentId() == 0:
+		if currentId == 0:
 			if not self.ui.editTitle.text():
-				print("Kein Title")
+				logger.error("AddPortalWizard.validateCurrentPage: no title")
 				return False
 			server = self.ui.editServer.text()
 			if not server or not (server.startswith("http://") or server.startswith("https://")):
-				print("Invalid Server")
+				logger.error("AddPortalWizard.validateCurrentPage: invalid url")
 				return False
 			if not server.endswith("/"):
 				server += "/"
@@ -59,27 +62,27 @@ class AddPortalWizard(QtWidgets.QWizard):
 				"/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onError)
 			self.setDisabled(True)
 			return False
-		elif self.currentId() == 1:
+		elif currentId == 1:
 			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
-			print("SELECTED AUTH METHOD")
-			print(self.currentPortalConfig)
-		elif self.currentId() == 2:
+			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
+		elif currentId == 2:
 			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
-			print("********")
-			print(self.currentPortalConfig)
+			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
 			self.loginTask.startAuthenticationFlow()
-			# self.setDisabled(True)
 			return False
 		return True
 
 	def initializePage(self, pageId):
 		from viur_admin.login import LoginTask
-		print("initializePage", pageId)
+		logger.debug("initializePage: %r", pageId)
 		super(AddPortalWizard, self).initializePage(pageId)
 		# self.button(QtWidgets.QWizard.NextButton).setEnabled(True)
 		if pageId == 0:
-			self.ui.editTitle.setText(self.currentPortalConfig["name"])
-			self.ui.editServer.setText(self.currentPortalConfig["server"])
+			try:
+				self.ui.editTitle.setText(self.currentPortalConfig["name"])
+				self.ui.editServer.setText(self.currentPortalConfig["server"])
+			except Exception as err:
+				logger.exception(err)
 		if pageId == 1:
 			logger.debug(self.validAuthMethods)
 			try:
@@ -93,12 +96,12 @@ class AddPortalWizard(QtWidgets.QWizard):
 			self.loginTask = LoginTask(self.currentPortalConfig, isWizard=True)
 			self.loginTask.loginSucceeded.connect(self.onloginSucceeded)
 			self.loginTask.loginFailed.connect(self.onLoginFailed)
-			self.tmp = self.loginTask.startSetup()
-			self.ui.scrollArea.setWidget(self.tmp)
-			if self.tmp.advancesAutomatically:
+			self.authProvider = self.loginTask.startSetup()
+			self.ui.scrollArea.setWidget(self.authProvider)
+			if self.authProvider.advancesAutomatically:
 				self.button(QtWidgets.QWizard.NextButton).setDisabled(True)
-			# self.ui.wizardPage1.layout().addWidget(self.tmp)
-			self.tmp.show()
+			# self.ui.wizardPage1.layout().addWidget(self.authProvider)
+			self.authProvider.show()
 
 	def onAuthMethodsKnown(self, req):
 		data = NetworkService.decode(req)
@@ -116,19 +119,17 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.next()
 
 	def onError(self, req):
-		print("***ERROR***")
-		print(req)
+		logger.error("AddPortalWizard.onError: %s", req)
 		self.setDisabled(False)
 
 	def onloginSucceeded(self, *args, **kwargs):
-		print("xxxxxxxxxxxxxxxxxxxxxxxxxx")
-		print("AddPortalWizard: onloginSucceeded")
+		logger.debug("AddPortalWizard: onloginSucceeded")
 		self.setDisabled(False)
 		self.forcePageFlip = True
 		self.next()
 
 	def onLoginFailed(self, msg, *args, **kwargs):
-		print("AddPortalWizard.onLoginFailed", msg)
+		logger.error("AddPortalWizard.onLoginFailed: %r", msg)
 		tmp = QtWidgets.QMessageBox.warning(self, "Login failed", msg)
 		self.setDisabled(False)
 
@@ -211,7 +212,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 	# self.updateUI()
 
 	def onPortalWizardFinished(self, *args, **kwargs):
-		print("onPortalWizardFinished")
+		logger.debug("AddPortalWizard.onPortalWizardFinished: %r, %r", args, kwargs)
 		self.setDisabled(False)
 		self.loadAccountList()
 
@@ -256,7 +257,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 			self.ui.delAccBTN.setEnabled(True)
 
 	def onFinishedBTNReleased(self):
-		print("onFinishedBTNReleased")
+		logger.debug("onFinishedBTNReleased")
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)

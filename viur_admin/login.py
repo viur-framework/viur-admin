@@ -28,9 +28,6 @@ class AuthGoogle(QtWidgets.QWidget):
 		self.webView = QtWebEngineWidgets.QWebEngineView()
 		self.setLayout(QtWidgets.QVBoxLayout())
 		self.layout().addWidget(self.webView)
-		# self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
-		# self.webView.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
-		# self.webView.page().setNetworkAccessManager(nam)
 		self.chromeCookieJar = self.webView.page().profile().cookieStore()
 		self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
 		self.chromeCookieJar.loadAllCookies()
@@ -135,21 +132,20 @@ class AuthUserPassword(QtWidgets.QWidget):
 		logger.debug("Checkpoint: onViurAuth")
 		try:
 			res = NetworkService.decode(request)
-		except:  # Something went wrong
-			print("onViurAuth: Except")
+		except Exception as err:  # Something went wrong
+			logger.error("onViurAuth: Except")
 			self.onError(msg="Unable to decode response!")
 			return
 		logger.debug("onViurAuth: %r", res)
 		if str(res).lower() == "okay":
-			print("onViurAuth: okay")
+			logger.debug("onViurAuth: okay")
 			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
 			self.loginSucceeded.emit()
 		elif str(res).startswith("X-VIUR-2FACTOR-"):
 			secondFactor = str(res).replace("X-VIUR-2FACTOR-", "")
 			self.secondFactorRequired.emit(secondFactor)
 		else:
-			print("onViurAuth: else")
-			print(res)
+			logger.debug("onViurAuth: else: %r", res)
 			self.onError(msg='Received response != "okay"!')
 
 	def onError(self, request=None, error=None, msg=None):
@@ -184,11 +180,11 @@ class VerifyTimeBasedOTP(QtWidgets.QWidget):
 			self.startRun()
 		elif isinstance(res, str) and res.lower() == "okay":
 			self.loginSucceeded.emit()
-		print("VerifyOtp.onViurAuth", res)
+		logger.debug("VerifyOtp.onViurAuth: %r", res)
 
 	def onError(self, req):
 		res = NetworkService.decode(req)
-		print("VerifyOtp.onError", res)
+		logger.debug("VerifyOtp.onError: %r", res)
 
 
 class LoginTask(QtCore.QObject):
@@ -229,7 +225,7 @@ class LoginTask(QtCore.QObject):
 		return self.currentPortalConfig
 
 	def onLoginSucceeded(self, *args, **kwargs):
-		print("LoginTask: Login OKAY")
+		logger.debug("LoginTask: Login OKAY")
 		self.loginSucceeded.emit()
 
 	def onSecondFactorRequired(self, factor):
@@ -239,7 +235,7 @@ class LoginTask(QtCore.QObject):
 		self.verificationProviderInstance.startAuthenticating()
 
 	def onLoginFailed(self, msg, *args, **kwargs):
-		print("LoginTask.onLoginFailed", msg)
+		logger.debug("LoginTask.onLoginFailed: %r", msg)
 		self.loginFailed.emit(msg)
 
 
