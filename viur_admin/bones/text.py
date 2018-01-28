@@ -368,7 +368,7 @@ class TextEdit(QtWidgets.QMainWindow):
 
 	def getBreadCrumb(self):
 		return (QtCore.QCoreApplication.translate("TextEditBone", "Text edit"),
-		        QtGui.QIcon(QtGui.QPixmap("icons/actions/text-edit.png")))
+		        QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")))
 
 	def setupEditActions(self):
 		tb = QtWidgets.QToolBar(self)
@@ -1095,7 +1095,7 @@ class TextEditBone(BoneEditInterface):
 			btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"),
 			                            self)
 			iconbtn = QtGui.QIcon()
-			iconbtn.addPixmap(QtGui.QPixmap("icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
+			iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
 			                  QtGui.QIcon.Off)
 			btn.setIcon(iconbtn)
 			btn.lang = None

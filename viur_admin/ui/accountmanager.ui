@@ -26,8 +26,8 @@
    <string>Viur Accountmanager</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
+   <iconset resource="../icons/icons.qrc">
+    <normaloff>:/icons/viur_logo.png</normaloff>:/icons/viur_logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -51,8 +51,8 @@
            <string>New Account</string>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>icons/actions/add_white.svg</normaloff>icons/actions/add_white.svg</iconset>
+           <iconset resource="../icons/icons.qrc">
+            <normaloff>:/icons/actions/add.svg</normaloff>:/icons/actions/add.svg</iconset>
           </property>
          </widget>
         </item>
@@ -65,8 +65,8 @@
            <string>Delete Account</string>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>icons/actions/delete_white.svg</normaloff>icons/actions/delete_white.svg</iconset>
+           <iconset resource="../icons/icons.qrc">
+            <normaloff>:/icons/actions/delete.svg</normaloff>:/icons/actions/delete.svg</iconset>
           </property>
          </widget>
         </item>
@@ -82,8 +82,8 @@
          <string>Back to Loginscreen</string>
         </property>
         <property name="icon">
-         <iconset>
-          <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
+         <iconset resource="../icons/icons.qrc">
+          <normaloff>:/icons/actions/accept.svg</normaloff>:/icons/actions/accept.svg</iconset>
         </property>
        </widget>
       </item>
@@ -97,12 +97,14 @@
      <x>0</x>
      <y>0</y>
      <width>480</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

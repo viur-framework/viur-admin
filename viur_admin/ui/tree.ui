@@ -72,8 +72,8 @@
            <string>Search</string>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>icons/actions/search.svg</normaloff>icons/actions/search.svg</iconset>
+           <iconset resource="../icons/icons.qrc">
+            <normaloff>:/icons/actions/search.svg</normaloff>:/icons/actions/search.svg</iconset>
           </property>
          </widget>
         </item>
@@ -90,6 +90,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
+    <normaloff>:icons/viur_logo.png</normaloff>:icons/viur_logo.png</iconset>
   </property>
   <widget class="QWidget" name="logincentralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -89,7 +89,7 @@
         </property>
         <property name="icon">
          <iconset>
-          <normaloff>icons/accounts.svg</normaloff>icons/accounts.svg</iconset>
+          <normaloff>:icons/accounts.svg</normaloff>:icons/accounts.svg</iconset>
         </property>
        </widget>
       </item>
@@ -127,7 +127,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>icons/actions/login.png</normaloff>icons/actions/login.png</iconset>
+        <normaloff>:icons/actions/login.png</normaloff>:icons/actions/login.png</iconset>
       </property>
      </widget>
     </item>
@@ -189,6 +189,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+   <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>
