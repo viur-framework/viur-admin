@@ -6,7 +6,7 @@ logger = getLogger(__name__)
 
 import html.parser
 
-from PyQt5 import QtCore, QtGui, QtWidgets, QtWebKitWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.bone_interface import BoneEditInterface
@@ -14,15 +14,15 @@ from viur_admin.bones.string import chooseLang
 from viur_admin.event import event
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
-from viur_admin.network import RemoteFile
+from viur_admin.network import RemoteFile, nam
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from html.entities import entitydefs
 from viur_admin.bones.file import FileBoneSelector
 from viur_admin.utils import wheelEventFilter, ViurTabBar
 
 
-
 rsrcPath = ":icons/actions/text"
+
 
 class HtmlStripper(html.parser.HTMLParser):
 	def __init__(self):
@@ -1035,12 +1035,20 @@ _defaultTags = {
 del _attrsDescr, _attrsSpacing, _attrsMargins
 
 
-class ClickableWebView(QtWebKitWidgets.QWebView):
+class ClickableWebView(QtWebEngineWidgets.QWebEngineView):
 	clicked = QtCore.pyqtSignal()
 
 	def mousePressEvent(self, ev):
 		super(ClickableWebView, self).mousePressEvent(ev)
+		self.chromeCookieJar = self.page().profile().cookieStore()
+		self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
+		self.chromeCookieJar.loadAllCookies()
+		for cookie in nam.cookieJar().allCookies():
+			self.chromeCookieJar.setCookie(cookie)
 		self.clicked.emit()
+
+	def onCookieAdded(self, cookie):
+		logger.error("WebWidget.onCookieAdded not yet handled properly: %r", cookie)
 
 
 class TextEditBone(BoneEditInterface):

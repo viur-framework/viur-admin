@@ -26,7 +26,7 @@ from argparse import ArgumentParser
 from viur_admin.bugsnag import Notification
 
 try:
-	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebEngineWidgets
+	from PyQt5 import QtGui, QtCore, QtWidgets, QtSvg, QtWebEngineWidgets
 except ImportError as err:
 	# no logger objects present here
 	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebEngineWidgets" + "\n")
