@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'loginform.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -15,7 +15,7 @@ class Ui_LoginWindow(object):
         LoginWindow.setMinimumSize(QtCore.QSize(480, 0))
         LoginWindow.setMaximumSize(QtCore.QSize(480, 16777215))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         LoginWindow.setWindowIcon(icon)
         self.logincentralwidget = QtWidgets.QWidget(LoginWindow)
         self.logincentralwidget.setObjectName("logincentralwidget")
@@ -49,7 +49,7 @@ class Ui_LoginWindow(object):
         self.startAccManagerBTN = QtWidgets.QPushButton(self.logincentralwidget)
         self.startAccManagerBTN.setMinimumSize(QtCore.QSize(0, 32))
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("icons/accounts.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":icons/accounts.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.startAccManagerBTN.setIcon(icon1)
         self.startAccManagerBTN.setObjectName("startAccManagerBTN")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.startAccManagerBTN)
@@ -60,7 +60,7 @@ class Ui_LoginWindow(object):
         self.btnLogin.setMinimumSize(QtCore.QSize(0, 64))
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("icons/actions/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(":icons/actions/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnLogin.setIcon(icon2)
         self.btnLogin.setObjectName("btnLogin")
         self.verticalLayout_2.addWidget(self.btnLogin)
@@ -113,3 +113,4 @@ class Ui_LoginWindow(object):
         self.actionSettings.setText(_translate("LoginWindow", "Generel settigs"))
         self.actionAccountmanager.setText(_translate("LoginWindow", "&Accountmanager"))
 
+import viur_admin.ui.icons_rc

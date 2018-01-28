@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'preloader.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Preloader(object):
     def setupUi(self, Preloader):
@@ -34,3 +32,4 @@ class Ui_Preloader(object):
         _translate = QtCore.QCoreApplication.translate
         Preloader.setWindowTitle(_translate("Preloader", "Loading..."))
 
+import viur_admin.ui.icons_rc

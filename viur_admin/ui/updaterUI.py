@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'updater.ui'
 #
-# Created: Mon Nov 24 18:30:25 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Updater(object):
     def setupUi(self, Updater):
@@ -48,7 +46,7 @@ class Ui_Updater(object):
         self.verticalLayout.addWidget(self.btnUpdate)
         self.btnExit = QtWidgets.QPushButton(self.centralwidget)
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":icons/actions/exit_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnExit.setIcon(icon3)
         self.btnExit.setObjectName("btnExit")
         self.verticalLayout.addWidget(self.btnExit)
@@ -71,3 +69,4 @@ class Ui_Updater(object):
         self.btnUpdate.setText(_translate("Updater", "Update now"))
         self.btnExit.setText(_translate("Updater", "Exit"))
 
+import viur_admin.ui.icons_rc

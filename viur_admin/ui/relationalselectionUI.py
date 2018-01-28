@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_relationalSelector(object):
     def setupUi(self, relationalSelector):
@@ -69,3 +67,4 @@ class Ui_relationalSelector(object):
         self.btnCancel.setText(_translate("relationalSelector", "Abort"))
         self.btnSelect.setText(_translate("relationalSelector", "Apply"))
 
+import viur_admin.ui.icons_rc

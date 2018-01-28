@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'hierarchySelector.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_HierarchySelector(object):
     def setupUi(self, HierarchySelector):
@@ -42,3 +40,4 @@ class Ui_HierarchySelector(object):
         self.lblSelected.setText(_translate("HierarchySelector", "Selected:"))
         self.btnSelect.setText(_translate("HierarchySelector", "Apply"))
 
+import viur_admin.ui.icons_rc

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/list.ui'
+# Form implementation generated from reading ui file 'list.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -28,7 +28,7 @@ class Ui_List(object):
         self.layoutToolBar.addWidget(self.editSearch)
         self.btnPrefixSearch = QtWidgets.QPushButton(List)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnPrefixSearch.setIcon(icon)
         self.btnPrefixSearch.setObjectName("btnPrefixSearch")
         self.layoutToolBar.addWidget(self.btnPrefixSearch)
@@ -52,3 +52,4 @@ class Ui_List(object):
         self.btnPrefixSearch.setText(_translate("List", "Prefix search"))
         self.searchBTN.setText(_translate("List", "Fulltext search"))
 
+import viur_admin.ui.icons_rc
