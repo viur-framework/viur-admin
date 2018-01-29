@@ -46,14 +46,14 @@ class Config(object):
 
 	def loadConfig(self):
 		# Load stored accounts
-		logger.debug("loadConfig")
+		logger.debug("Config.loadConfig")
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		try:
 			configFileObject = open(configFileName, "rb")
 			configData = self.xor(configFileObject.read()).decode("UTF-8")
-			cfg = json.loads(configData)
-			logger.debug("accounts: %r", cfg)
-			self.accounts = cfg
+			self.accounts = json.loads(configData)
+			for account in self.accounts:
+				logger.debug("account: %r", account)
 		except Exception as err:
 			logger.exception(err)
 			self.accounts = []
@@ -105,9 +105,9 @@ class Config(object):
 		configFileObject.flush()
 		configFileObject.close()
 
-	def loadPortalConfig(self, url, withCookies=False, forceReload=False):
+	def loadPortalConfig(self, url, withCookies=True, forceReload=True):
 		from viur_admin import network
-		logger.debug("loading portal config for url=%r with cookies=%r and forcingReload=%r", url, withCookies, forceReload)
+		logger.debug("Config.loadPortalConfig for url:%r, withCookies:%r, forcingReload:%r", url, withCookies, forceReload)
 		if self.portal and not forceReload:
 			return
 		self.currentPortalConfigDirectory = os.path.join(self.storagePath, sha512(url.encode("UTF-8")).hexdigest())
@@ -148,4 +148,8 @@ class Config(object):
 		configFileObject.close()
 
 
-conf = Config()
+conf = None
+
+if not conf:
+	conf = Config()
+

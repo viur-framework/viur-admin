@@ -1,41 +1,35 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
-
-import os
-import os.path
 import json
 import mimetypes
+import os
+import os.path
 import random
-from queue import Queue, Empty as QEmpty, Full as QFull
-from hashlib import sha1
-import weakref
 import string
-
-from PyQt5 import QtCore, QtWidgets
-
 import sys
 import time
-from viur_admin.config import conf
+import weakref
+from hashlib import sha1
+from queue import Queue, Empty as QEmpty, Full as QFull
+from urllib import request
+
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QUrl, QObject, QVariant
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply, \
 	QNetworkCookieJar, QHttpPart, QHttpMultiPart
-from urllib import request
 
 import viur_admin.ui.icons_rc
+from viur_admin.config import conf
+from viur_admin.log import getLogger
 
-viur_admin.ui.icons_rc  ## import guard
+logger = getLogger(__name__)
+logger.debug("icons_rc found: %r", viur_admin.ui.icons_rc)  # import guard
 
-##Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
+# Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 try:
 	css = QtCore.QFile(":icons/cacert.pem")
 	css.open(QtCore.QFile.ReadOnly)
 	certs = css.readAll()
-# print(type(certs), certs)
-# certs = open(":icons/cacert.pem", "r").read()
 except:
 	certs = None
 
@@ -157,6 +151,7 @@ class SecurityTokenProvider(QObject):
 		SecurityTokenProvider.errorCount += 1
 		self.isRequesting = False
 
+	# TODO: should we raise an error here?
 	# raise ValueError("onError")
 
 	def onSkeyAvailable(self, request=None):
@@ -182,8 +177,6 @@ class SecurityTokenProvider(QObject):
 		except QFull:
 			pass
 
-	# print("Err: Queue FULL")
-
 	def getKey(self):
 		"""
 			Returns a fresh, valid SKey from the pool.
@@ -200,12 +193,12 @@ class SecurityTokenProvider(QObject):
 					skey = None
 					raise QEmpty()
 			except QEmpty as err:
-				logger.debug("Empty cache! Please wait...")
+				# logger.debug("Empty cache! Please wait...")
 				QtCore.QCoreApplication.processEvents()
 			except ValueError as err:
 				logger.exception(err)
 		# self.logger.debug("Using skey: %s", skey)
-		return (skey)
+		return skey
 
 
 securityTokenProvider = SecurityTokenProvider()
@@ -228,6 +221,9 @@ class RequestWrapper(QtCore.QObject):
 		self.failSilent = failSilent
 		request.setParent(self)
 		self.hasFinished = False
+		self.successHandler = None
+		self.failureHandler = None
+		self.finishedHandler = None
 		if successHandler and "__self__" in dir(successHandler) and isinstance(successHandler.__self__, QtCore.QObject):
 			parent = parent or successHandler.__self__
 			self.requestSucceeded.connect(successHandler)
@@ -344,7 +340,7 @@ class RequestGroup(QtCore.QObject):
 		self.launchNextRequest()
 
 	def launchNextRequest(self):
-		if not len(self.pendingRequests):
+		if not self.pendingRequests:
 			return
 		if self.runningRequests > 2:
 			return
@@ -390,7 +386,7 @@ class RequestGroup(QtCore.QObject):
 			Check whenever no more querys are pending.
 			@returns: Bool
 		"""
-		return (self.queryCount == 0)
+		return self.queryCount == 0
 
 	def abort(self):
 		"""
@@ -413,6 +409,8 @@ class RemoteFile(QtCore.QObject):
 	def __init__(self, dlKey, successHandler=None, failureHandler=None, *args, **kwargs):
 		super(RemoteFile, self).__init__(*args, **kwargs)
 		logger.debug("New RemoteFile: %s for %s", str(self), str(dlKey))
+		self.successHandler = None
+		self.failureHandler = None
 		if successHandler:
 			self.successHandlerSelf = weakref.ref(successHandler.__self__)
 			self.successHandlerName = successHandler.__name__
@@ -422,12 +420,12 @@ class RemoteFile(QtCore.QObject):
 		self.dlKey = dlKey
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
 		if os.path.isfile(fileName):
-			print("File exists: ", fileName)
+			logger.debug("RemoteFile: file exists %r", fileName)
 			# self.logger.debug("We already have that file :)")
 			self._delayTimer = QtCore.QTimer(self)
 			self._delayTimer.singleShot(250, self.onTimerEvent)
 		else:
-			print("Files missing: ", fileName)
+			logger.debug("RemoteFile: file missing %r", fileName)
 			# self.logger.debug("Need to fetch that file")
 			self.loadFile()
 		NetworkService.currentRequests.append(self)
@@ -468,9 +466,8 @@ class RemoteFile(QtCore.QObject):
 		req = NetworkService.request(dlKey, successHandler=self.onFileAvailable, failSilent=True)
 
 	def onFileAvailable(self, request):
-		# self.logger.debug("Checkpoint: onFileAvailable")
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(self.dlKey.encode("UTF-8")).hexdigest())
-		print("onFileAvailable", fileName)
+		logger.debug("RemoteFile.onFileAvailable: %r", fileName)
 		data = request.readAll()
 		open(fileName, "w+b").write(data.data())
 		s = self.successHandlerSelf()
@@ -479,7 +476,6 @@ class RemoteFile(QtCore.QObject):
 				getattr(s, self.successHandlerName)(self)
 			except Exception as err:
 				pass
-		# self.logger.exception(err)
 		self._delayTimer = QtCore.QTimer(self)
 		# Queue our deletion giving our child (networkReply) chance to finish
 		self._delayTimer.singleShot(250, self.remove)
@@ -490,8 +486,8 @@ class RemoteFile(QtCore.QObject):
 		"""
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(self.dlKey.encode("UTF-8")).hexdigest())
 		if os.path.isfile(fileName):
-			return (fileName)
-		return ("")
+			return fileName
+		return ""
 
 	def getFileContents(self):
 		"""
@@ -499,11 +495,11 @@ class RemoteFile(QtCore.QObject):
 		"""
 		fileName = self.getFileName()
 		if not fileName:
-			return (b"")
-		return (open(fileName, "rb").read())
+			return b""
+		return open(fileName, "rb").read()
 
 
-class NetworkService():
+class NetworkService:
 	url = None
 	serverVersion = None
 	currentRequests = []  # A list of currently running requests
@@ -523,7 +519,8 @@ class NetworkService():
 				filePart = QHttpPart()
 				filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
 				filePart.setHeader(QNetworkRequest.ContentDispositionHeader,
-				                   'form-data; name="{0}"; filename="{1}"'.format(key, os.path.basename(value.fileName())))
+				                   'form-data; name="{0}"; filename="{1}"'.format(key,
+				                                                                  os.path.basename(value.fileName())))
 				filePart.setBodyDevice(value)
 				value.setParent(multiPart)
 				multiPart.append(filePart)
@@ -545,42 +542,6 @@ class NetworkService():
 				multiPart.append(otherPart)
 				logger.debug("other part: %r", otherPart)
 		return multiPart
-
-	@staticmethod
-	def genReqStr_old(params):
-		boundary_str = "---" + ''.join(
-			[random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for x in range(13)])
-		boundary = boundary_str.encode("UTF-8")
-		res = b'Content-Type: multipart/mixed; boundary="' + boundary + b'"\r\nMIME-Version: 1.0\r\n'
-		res += b'\r\n--' + boundary
-		for (key, value) in list(params.items()):
-			if all([x in dir(value) for x in ["name", "read"]]):  # File
-				try:
-					(type, encoding) = mimetypes.guess_type(value.name.decode(sys.getfilesystemencoding()),
-					                                        strict=False)
-					type = type or "application/octet-stream"
-				except:
-					type = "application/octet-stream"
-				res += b'\r\nContent-Type: ' + type.encode(
-					"UTF-8") + b'\r\nMIME-Version: 1.0\r\nContent-Disposition: form-data; name="' + key.encode(
-					"UTF-8") + b'"; filename="' + os.path.basename(value.name).decode(
-					sys.getfilesystemencoding()).encode("UTF-8") + b'"\r\n\r\n'
-				res += value.read()
-				res += b'\r\n--' + boundary
-			elif isinstance(value, list):
-				for val in value:
-					res += b'\r\nContent-Type: application/octet-stream\r\nMIME-Version: 1.0\r\nContent-Disposition: ' \
-					       b'form-data; name="' + key.encode(
-						"UTF-8") + b'"\r\n\r\n'
-					res += str(val).encode("UTF-8")
-					res += b'\r\n--' + boundary
-			else:
-				res += b'\r\nContent-Type: application/octet-stream\r\nMIME-Version: 1.0\r\nContent-Disposition: form-data; name="' + key.encode(
-					"UTF-8") + b'"\r\n\r\n'
-				res += str(value).encode("UTF-8")
-				res += b'\r\n--' + boundary
-		res += b'--\r\n'
-		return (res, boundary)
 
 	@staticmethod
 	def request(url, params=None, secure=False, extraHeaders=None, successHandler=None, failureHandler=None,

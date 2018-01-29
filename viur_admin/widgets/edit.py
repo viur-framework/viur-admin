@@ -27,11 +27,11 @@ class EditWidget(QtWidgets.QWidget):
 	appTree = "tree"
 	appSingleton = "singleton"
 
-	def __init__(self, modul, applicationType, key=None, node=None, skelType=None, clone=False, *args, **kwargs):
+	def __init__(self, module, applicationType, key=None, node=None, skelType=None, clone=False, *args, **kwargs):
 		"""
 			Initialize a new Edit or Add-Widget for the given module.
-			@param modul: Name of the module
-			@type modul: String
+			@param module: Name of the module
+			@type module: String
 			@param applicationType: Defines for what application this Add / Edit should be created. This hides
 			additional complexity introduced by the hierarchy / tree-application
 			@type applicationType: Any of EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree or
@@ -49,9 +49,9 @@ class EditWidget(QtWidgets.QWidget):
 		super(EditWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_Edit()
 		self.ui.setupUi(self)
-		protoWrap = protocolWrapperInstanceSelector.select(modul)
+		protoWrap = protocolWrapperInstanceSelector.select(module)
 		assert protoWrap is not None
-		self.modul = modul
+		self.module = module
 		# A Bunch of santy-checks, as there is a great chance to mess around with this widget
 		assert applicationType in [EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree,
 		                           EditWidget.appSingleton]  # Invalid Application-Type?
@@ -72,7 +72,7 @@ class EditWidget(QtWidgets.QWidget):
 		self.overlay = Overlay(self)
 		self.overlay.inform(self.overlay.BUSY)
 		self.closeOnSuccess = False
-		self._lastData = {}  # Dict of structure and values recived
+		# self._lastData = {}  # Dict of structure and values recived
 		self.editTaskID = None
 		self.reloadData()
 		# Hide Previewbuttons if no PreviewURLs are set
@@ -80,7 +80,7 @@ class EditWidget(QtWidgets.QWidget):
 		# 	if not "previewurls" in conf.serverConfig["modules"][self.module].keys() \
 		# 			or not conf.serverConfig["modules"][self.module]["previewurls"]:
 		# 		self.ui.btnPreview.hide()
-		if modul == "_tasks":
+		if module == "_tasks":
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Execute"))
 			self.ui.btnSaveContinue.hide()
 			self.ui.btnReset.hide()
@@ -107,32 +107,16 @@ class EditWidget(QtWidgets.QWidget):
 			self.overlay.clear()
 
 	def getBreadCrumb(self):
-		if self._lastData:
-			config = conf.serverConfig["modules"][self.modul]
-			if "format" in config.keys():
-				format = config["format"]
-			else:
-				format = "$(name)"
-			itemName = formatString(format, self._lastData["structure"], self._lastData["values"])
-		else:
-			itemName = ""
 		if self.clone:
-			if itemName:
-				descr = QtCore.QCoreApplication.translate("EditWidget", "Clone: %s") % itemName
-			else:
-				descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
+			descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
 			icon = QtGui.QIcon(":icons/actions/clone.svg")
-		elif self.key or self.applicationType == EditWidget.appSingleton:  # Were editing
-			if itemName:
-				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit: %s") % itemName
-			else:
-				descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
+		elif self.key or self.applicationType == EditWidget.appSingleton:  # We're editing
+			descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
 			icon = QtGui.QIcon(":icons/actions/edit.svg")
-		else:  # Were adding
-			descr = QtCore.QCoreApplication.translate("EditWidget",
-			                                          "Add entry")  # We know that we cant know the name yet
+		else:
+			descr = QtCore.QCoreApplication.translate("EditWidget", "Add entry")
 			icon = QtGui.QIcon(":icons/actions/add.svg")
-		return (descr, icon)
+		return descr, icon
 
 	def onBtnCloseReleased(self, *args, **kwargs):
 		event.emit("popWidget", self)
@@ -143,9 +127,9 @@ class EditWidget(QtWidgets.QWidget):
 		return
 
 	def save(self, data):
-		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
-		if self.modul == "_tasks":
+		if self.module == "_tasks":
 			self.editTaskID = protoWrap.edit(self.key, **data)
 		# request = NetworkService.request("/%s/execute/%s" % ( self.module, self.id ), data, secure=True,
 		# successHandler=self.onSaveResult )
@@ -264,8 +248,8 @@ class EditWidget(QtWidgets.QWidget):
 			# event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,
 			# PyQt_PyObject)'),queue, self.module, key, tmpDict )
 			# widget = queue.getBest()
-			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict, editWidget=self)
+			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
+			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict, editWidget=self)
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
@@ -303,7 +287,8 @@ class EditWidget(QtWidgets.QWidget):
 			dataWidget.show()
 			self.bones[key] = widget
 		self.unserialize(data["values"])
-		self._lastData = data
+		# self._lastData = data
+		# logger.debug("setData _lastData: %r", self._lastData)
 		event.emit("rebuildBreadCrumbs()")
 
 	# if self.overlay.status==self.overlay.BUSY:

@@ -662,7 +662,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 		self.bones = {}
 		self.closeOnSuccess = False
-		self._lastData = {}  # Dict of structure and values recived
+		self._lastData = {}  # Dict of structure and values received
 		self.isLoading = 0
 		self.cursor = None
 		self.completeList = False

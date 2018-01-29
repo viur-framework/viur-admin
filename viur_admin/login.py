@@ -38,10 +38,8 @@ class AuthGoogle(QtWidgets.QWidget):
 		self.webView.loadFinished.connect(self.onLoadFinished)
 
 	def onCookieAdded(self, cookie):
-		# rawCookie = cookie.toRawForm(QtNetwork.QNetworkCookie.Full)
-		# logger.debug("onCookieAdded: %r", rawCookie)
-		namCookieJar = nam.cookieJar()
-		namCookieJar.insertCookie(cookie)
+		logger.debug("onCookieAdded: %r", cookie)
+		nam.cookieJar().insertCookie(cookie)
 
 	def startAuthenticating(self):
 		logger.debug("LoginTask using method x-google")
@@ -139,7 +137,7 @@ class AuthUserPassword(QtWidgets.QWidget):
 		logger.debug("onViurAuth: %r", res)
 		if str(res).lower() == "okay":
 			logger.debug("onViurAuth: okay")
-			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
+			# securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
 			self.loginSucceeded.emit()
 		elif str(res).startswith("X-VIUR-2FACTOR-"):
 			secondFactor = str(res).replace("X-VIUR-2FACTOR-", "")
@@ -252,7 +250,6 @@ class Login(QtWidgets.QMainWindow):
 		event.connectWithPriority('accountListChanged', self.loadAccounts, event.lowPriority)
 		self.ui.cbPortal.currentRowChanged.connect(self.onCbPortalCurrentRowChanged)
 		self.captchaToken = None
-		config.conf.loadConfig()
 		self.loadAccounts()
 		self.overlay = Overlay(self)
 		shortCut = QtWidgets.QShortcut(self)
@@ -312,7 +309,7 @@ class Login(QtWidgets.QMainWindow):
 	def onLoginSucceeded(self):
 		logger.debug("onLoginSucceeded")
 		self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful"))
-		config.conf.loadPortalConfig(NetworkService.url)
+		# config.conf.loadPortalConfig(NetworkService.url, withCookies=False)
 		event.emit("loginSucceeded")
 		self.hide()
 
@@ -345,24 +342,31 @@ class Login(QtWidgets.QMainWindow):
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 			self.helpBrowser = None
-		config.conf.loadPortalConfig(NetworkService.url, withCookies=True)
+		config.conf.loadPortalConfig(NetworkService.url)
 		# now we're going to test if we're still logged in via restored and valid cookies
 		# or have to start the login task
 		NetworkService.request(
 			"/user/view/self",
 			secure=True,
 			failSilent=True,
-			successHandler=self.onSkipAuth,
+			successHandler=self.onCheckSuccessAuth,
 			failureHandler=self.onNotLoggedInYet
 		)
 
-	def onSkipAuth(self, req):
+	def onCheckSuccessAuth(self, request):
 		"""Login credentials aka cookies are still valid, so we can progress with admin startup
 
 		:param req:
 		:return:
 		"""
-		self.loginTask.loginSucceeded.emit()
+		try:
+			currentUserEntry = NetworkService.decode(request)["values"]
+			logger.debug("MainWindow.onLoadUser: %r", currentUserEntry)
+		except Exception as err:
+			return self.onNotLoggedInYet(request)
+		else:
+			logger.debug("onCheckSuccessAuth success: %r", request)
+			self.loginTask.loginSucceeded.emit()
 
 	def onNotLoggedInYet(self, req):
 		"""Login credentials aka cookies are neither present nor valid anymore, so cleanup the cookiejar of our networking subsystem
@@ -371,6 +375,7 @@ class Login(QtWidgets.QMainWindow):
 		:param req:
 		:return:
 		"""
+		logger.debug("onNotLoggedInYet: %r", req)
 		nam.setCookieJar(MyCookieJar())
 		securityTokenProvider.reset()
 		self.loginTask.startAuthenticationFlow()
