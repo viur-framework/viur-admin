@@ -26,6 +26,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 			QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent,
 			type=1200)
 		self.entryData = data
+		self.setToolTip('<strong>{0}</strong>'.format(data["name"]))
 
 	def __gt__(self, other):
 		if isinstance(other, self.listWidget().leafItem):
@@ -193,12 +194,13 @@ class TreeListView(QtWidgets.QListWidget):
 		protoWrap.entitiesChanged.connect(self.onTreeChanged)
 		protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
 		protoWrap.entitiesChanged.connect(self.onTreeChanged)
+		protoWrap.entitiesAppended.connect(self.onAppendedData)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 		self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)
-		self.setSortingEnabled(True)
+		self.setSortingEnabled(False)
 		self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
 		self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
 		self.setSelectionMode(self.ExtendedSelection)
@@ -311,10 +313,12 @@ class TreeListView(QtWidgets.QListWidget):
 		               )
 
 	def setDefaultRootNode(self):
-		NetworkService.request("/%s/listRootNodes" % (self.module), successHandler=self.onSetDefaultRootNode)
+		logger.info("setDefaultRootNode")
+		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onSetDefaultRootNode)
 
 	def onSetDefaultRootNode(self, request):
 		data = NetworkService.decode(request)
+		logger.info("onSetDefaultRootNode: %r", data)
 		self.rootNodes = data
 		if not self.rootNode:
 			try:
@@ -325,11 +329,17 @@ class TreeListView(QtWidgets.QListWidget):
 			self.loadData()
 
 	def loadData(self, queryObj=None):
-		print("loadData")
+		logger.info("loadData: %r", queryObj)
+		try:
+			self.itemCache.clear()
+		except:
+			pass
+		self.clear()
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		protoWrap.queryData(self.node)
 
 	def onTreeChanged(self, node):
+		logger.info("onTreeChanged: %r", node)
 		if not node:
 			self.loadData()
 		if node != self.node:  # Not our part of that tree
@@ -339,6 +349,7 @@ class TreeListView(QtWidgets.QListWidget):
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		res = protoWrap.childrenForNode(self.node)
+		raise NotImplementedError("check this out again!!!")
 		self.setDisplayData(res)
 
 	def onCustomQueryFinished(self, queryKey):
@@ -354,11 +365,10 @@ class TreeListView(QtWidgets.QListWidget):
 			@param nodes: List of Nodes which we shall display
 			@type nodes: list of dict
 		"""
-		try:
-			self.itemCache.clear()
-		except:
-			pass
-		self.clear()
+
+		self.setSortingEnabled(False)
+		lenNodes = len(nodes)
+		logger.info("TreeListView.setDisplayData: sort off: %r", len(nodes))
 		for entry in nodes:
 			if entry["_type"] == "node":
 				self.addItem(self.nodeItem(entry, self))
@@ -366,6 +376,28 @@ class TreeListView(QtWidgets.QListWidget):
 				self.addItem(self.leafItem(entry, self))
 			else:
 				raise NotImplementedError()
+		self.setSortingEnabled(True)
+		logger.info("TreeListView.setDisplayData: sort on: %r", len(nodes))
+		self.sortItems()
+
+	def onAppendedData(self, node, items):
+		"""
+			Clear the current view and display the items in nodes
+			@param nodes: List of Nodes which we shall display
+			@type nodes: list of dict
+		"""
+		self.setSortingEnabled(False)
+		lenItems = len(items)
+		logger.info("TreeListView.onAppendedData: sort off: %r, %r", node, lenItems)
+		for entry in items:
+			if entry["_type"] == "node":
+				self.addItem(self.nodeItem(entry, self))
+			elif entry["_type"] == "leaf":
+				self.addItem(self.leafItem(entry, self))
+			else:
+				raise NotImplementedError()
+		self.setSortingEnabled(True)
+		logger.info("TreeListView.onAppendedData: sort on: %r, %r", node, lenItems)
 		self.sortItems()
 
 	def onCustomContextMenuRequested(self, point):
@@ -444,7 +476,6 @@ class TreeListView(QtWidgets.QListWidget):
 		if iconMode:
 			self.setDragEnabled(True)
 			self.setAcceptDrops(True)
-			self.setSortingEnabled(True)
 			self.viewport().setAcceptDrops(True)
 			self.setDropIndicatorShown(True)
 			self.setGridSize(QtCore.QSize(*self.gridSizeIcon))

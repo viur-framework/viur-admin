@@ -104,14 +104,11 @@ iconByExtension = dict()
 
 
 class FileItem(LeafItem):
-	"""
-		Displayes a file (including its preview if possible) inside a QListWidget.
+	"""Displays a file (including its preview if possible) inside a QListWidget.
 	"""
 
 	def __init__(self, data, parent):
 		super(FileItem, self).__init__(data, parent)
-		self.entryData = data
-
 		extension = self.entryData["name"].split(".")[-1].lower()
 		icon = iconByExtension.get(extension)
 		if not icon:
@@ -125,6 +122,7 @@ class FileItem(LeafItem):
 				icon = QtGui.QIcon(":icons/filetypes/document.png")
 			iconByExtension[extension] = icon
 		self.setIcon(icon)
+		self.setToolTip('<strong>{0}</strong>'.format(data["name"]))
 		if ("metamime" in data and str(data["metamime"]).lower().startswith("image")) or (
 				extension in ["jpg", "jpeg", "png"] and "servingurl" in data and data["servingurl"]):
 			previewer.requestPreview(data["dlkey"])
@@ -132,12 +130,12 @@ class FileItem(LeafItem):
 
 
 class UploadStatusWidget(QtWidgets.QWidget):
-	"""
-		Upload files and/or directories from the the local filesystem to the server.
-		This one is recursive, it supports uploading of files in subdirectories as well.
-		Subdirectories on the server are created as needed.
-		The functionality is bound to a widget displaying the current progress.
-		If downloading has finished, finished(PyQt_PyObject=self) is emited.
+	"""Upload files and/or directories from the the local filesystem to the server.
+
+	This one is recursive, it supports uploading of files in subdirectories as well.
+	Subdirectories on the server are created as needed.
+	The functionality is bound to a widget displaying the current progress.
+	If downloading has finished, finished(PyQt_PyObject=self) is emited.
 	"""
 
 	def __init__(self, *args, **kwargs):
@@ -275,7 +273,7 @@ class FileListView(TreeListView):
 		fileItem = self.itemCache[dlkey]
 		fileItem.setIcon(icon)
 		width = 400
-		fileItem.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
+		fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
 			fileName, width, str(fileItem.entryData["name"])))
 
 	def doUpload(self, files, node):
