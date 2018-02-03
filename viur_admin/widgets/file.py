@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import os
-import urllib.request
+
+import shutil
+from collections import deque
+
+from requests import Session, utils
 from hashlib import sha1
+from urllib.parse import quote
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
 from viur_admin.log import getLogger
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, nam
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
@@ -24,56 +29,78 @@ class PreviewThread(QtCore.QThread):
 	def __init__(self):
 		super(PreviewThread, self).__init__()
 		self.shouldTerminate = False
-		self.taskQueue = []
+		self.taskQueue = deque()
 		self.requestPreviewImage.connect(self.onRequestPreviewImage)
 		self.threadThread = None
 		self.start(QtCore.QThread.IdlePriority)
 		while self.threadThread is None:
 			self.usleep(5)
 
-	# self.moveToThread(self.threadThread)
+		self.baseUrl = None
+		self.session = Session()
+
+	def onLoginSuccess(self):
+		cookies = nam.cookieJar().allCookies()
+
+		cookieJar = self.session.cookies
+		for cookie in cookies:
+			logger.debug("raw cookie: %r, sessionCookie: %r", cookie.toRawForm(), cookie.isSessionCookie())
+			dictCookie = {
+				"name": bytes(cookie.name()).decode(),
+				"value": bytes(cookie.value()).decode(),
+				"secure": cookie.isSecure(),
+				"path": cookie.path(),
+				"domain": cookie.domain()
+			}
+			if not cookie.isSessionCookie():
+				dictCookie["expires"] = cookie.expirationDate().toPyDateTime().timestamp()
+			cookieJar.set(**dictCookie)
+
+		self.baseUrl = NetworkService.url.replace("/admin", "")
+
+	def downloadFile(self, url, absFilename):
+		response = self.session.get(url, stream=True)
+		newfile = open(absFilename, "wb+")
+		shutil.copyfileobj(response.raw, newfile)
+		newfile.seek(0)
+		return newfile.read()
 
 	def run(self):
 		self.threadThread = self.currentThread()
 		while not self.shouldTerminate:
 			try:
-				dlKey = self.taskQueue.pop(0)
-				fileName = os.path.join(conf.currentPortalConfigDirectory,
-				                        sha1(dlKey.encode("UTF-8")).hexdigest())
-				wasDownloaded = False
+				dlKey = self.taskQueue.popleft()
+				fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
+				logger.debug("fileName: %r", fileName)
 				if not os.path.isfile(fileName):
-					wasDownloaded = True
-					req = urllib.request.Request("{0}{1}{2}".format(NetworkService.url.replace("/admin", ""), "/file/download/", dlKey))
-					try:
-						response = urllib.request.urlopen(req)
-					except:
-						print("File not found")
-						continue
-					fileData = response.read()
+					fileData = self.downloadFile(
+						"{0}{1}{2}".format(self.baseUrl, "/file/download/", quote(dlKey)),
+						fileName
+					)
 				else:
 					fileData = open(fileName, "rb").read()
 				pixmap = QtGui.QPixmap()
 				pixmap.loadFromData(fileData)
+
 				if not pixmap.isNull():
 					icon = QtGui.QIcon(pixmap.scaled(104, 104))
 					self.previewImageAvailable.emit(dlKey, fileName, icon)
-					if wasDownloaded:
-						# Store the file sothat it won't be downloaded again next time
-						open(fileName, "wb+").write(fileData)
 				self.msleep(25)
-			# self.sleep(1)
 			except IndexError:
 				self.sleep(1)
 
 	def onRequestPreviewImage(self, dlkey):
+		logger.debug("PreviewThread.onRequestPreviewImage: %r", dlkey)
 		if dlkey not in self.taskQueue:
 			self.taskQueue.append(dlkey)
 
 	def requestPreview(self, dlkey):
+		logger.debug("PreviewThread.requestPreview: %r", dlkey)
 		self.requestPreviewImage.emit(dlkey)
 
 
 previewer = PreviewThread()
+iconByExtension = dict()
 
 
 class FileItem(LeafItem):
@@ -86,37 +113,22 @@ class FileItem(LeafItem):
 		self.entryData = data
 
 		extension = self.entryData["name"].split(".")[-1].lower()
-		fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
-		fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
-		if fileInfo2.exists():
-			icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
-		elif fileInfo.exists():
-			icon = QtGui.QIcon(":icons/filetypes/%s.png" % extension)
-		else:
-			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
+		icon = iconByExtension.get(extension)
+		if not icon:
+			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
+			fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
+			if fileInfo2.exists():
+				icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
+			elif fileInfo.exists():
+				icon = QtGui.QIcon(":icons/filetypes/%s.png" % extension)
+			else:
+				icon = QtGui.QIcon(":icons/filetypes/document.png")
+			iconByExtension[extension] = icon
 		self.setIcon(icon)
-		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
-				extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
-			previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
+		if ("metamime" in data and str(data["metamime"]).lower().startswith("image")) or (
+				extension in ["jpg", "jpeg", "png"] and "servingurl" in data and data["servingurl"]):
 			previewer.requestPreview(data["dlkey"])
 		self.setText(self.entryData["name"])
-
-	def onPreviewImageAvailable(self, dlkey, fileName, icon):
-		if self.entryData["dlkey"] != dlkey:
-			# Not our Image
-			return
-		self.setIcon(icon)
-		width = 400
-		self.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
-			fileName, width, str(self.entryData["name"])))
-
-		previewer.previewImageAvailable.disconnect(self.onPreviewImageAvailable)
-		if not len(previewer.taskQueue) and hasattr(self._parent, "setIconMode"):
-			self._parent.setIconMode(self._parent.isIconMode())
-
-	def updateIcon(self, remoteFile):
-		previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
-		previewer.requestPreview(remoteFile.getFileName(), remoteFile._dlKey)
 
 
 class UploadStatusWidget(QtWidgets.QWidget):
@@ -247,6 +259,25 @@ class DownloadStatusWidget(QtWidgets.QWidget):
 class FileListView(TreeListView):
 	leafItem = FileItem
 
+	def __init__(self, module, rootNode=None, node=None, *args, **kwargs):
+		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
+		previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
+
+	def addItem(self, aitem):
+		try:
+			self.itemCache[aitem.entryData["dlkey"]] = aitem
+		except:
+			pass
+		super(FileListView, self).addItem(aitem)
+
+	def onPreviewImageAvailable(self, dlkey, fileName, icon):
+		logger.debug("FileListView.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
+		fileItem = self.itemCache[dlkey]
+		fileItem.setIcon(icon)
+		width = 400
+		fileItem.setToolTip('<img src="{0}" width="{1}"><br>{2}'.format(
+			fileName, width, str(fileItem.entryData["name"])))
+
 	def doUpload(self, files, node):
 		"""
 			Uploads a list of files to the Server and adds them to the given path on the server.
@@ -310,6 +341,7 @@ class FileWidget(TreeWidget):
 	treeWidget = FileListView
 
 	def __init__(self, *args, **kwargs):
+		previewer.onLoginSuccess()
 		super(FileWidget, self).__init__(
 			actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete", "switchview"], *args, **kwargs)
 

@@ -209,6 +209,7 @@
         <file>filetypes/tar.png</file>
         <file>filetypes/tga.png</file>
         <file>filetypes/tiff.svg</file>
+        <file>filetypes/tif.svg</file>
         <file>filetypes/txt.png</file>
         <file>filetypes/unknown.png</file>
         <file>filetypes/vcd.png</file>

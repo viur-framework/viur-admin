@@ -46,9 +46,9 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 				skelType = "leaf"
 			else:
 				skelType = "node"
-			modul = self.parent().modul
+			module = self.parent().module
 			key = entry["key"]
-			widget = lambda: EditWidget(modul, EditWidget.appTree, key, skelType=skelType)
+			widget = lambda: EditWidget(module, EditWidget.appTree, key, skelType=skelType)
 			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
 			handler.stackHandler()
 

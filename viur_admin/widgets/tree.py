@@ -209,6 +209,7 @@ class TreeListView(QtWidgets.QListWidget):
 		self.setResizeMode(QtWidgets.QListWidget.Adjust)
 		self.setViewMode(0)
 		self.setViewMode(1)
+		self.itemCache = dict()
 
 	## Getters & Setters
 
@@ -353,6 +354,10 @@ class TreeListView(QtWidgets.QListWidget):
 			@param nodes: List of Nodes which we shall display
 			@type nodes: list of dict
 		"""
+		try:
+			self.itemCache.clear()
+		except:
+			pass
 		self.clear()
 		for entry in nodes:
 			if entry["_type"] == "node":
