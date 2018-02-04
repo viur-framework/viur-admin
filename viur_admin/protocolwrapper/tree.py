@@ -110,7 +110,7 @@ class TreeWrapper(QtCore.QObject):
 		self.clearCache()
 		self.rootNodesAvailable.emit()
 		self.checkBusyStatus()
-		logger.info("TreeWrapper.onRootNodesAvailable: %r", tmp)
+		logger.debug("TreeWrapper.onRootNodesAvailable: %r", tmp)
 
 	def childrenForNode(self, node):
 		assert isinstance(node, str)
@@ -118,7 +118,6 @@ class TreeWrapper(QtCore.QObject):
 		for item in self.dataCache.values():
 			if isinstance(item, dict):  # It's a "normal" item, not a customQuery result
 				if item["parentdir"] == node:
-					logger.info("TreeWrapper.childrenForNode: %r, %r", item["name"], item["_type"])
 					res.append(item)
 		return res
 
@@ -130,7 +129,7 @@ class TreeWrapper(QtCore.QObject):
 		return "&".join(["%s=%s" % (k, v) for (k, v) in tmpList])
 
 	def queryData(self, node, **kwargs):
-		logger.info("TreeWrapper.queryData: %r, %r", node, kwargs)
+		logger.debug("TreeWrapper.queryData: %r, %r", node, kwargs)
 		key = self.cacheKeyFromFilter(node, kwargs)
 		if key in self.dataCache:
 			if self.dataCache[key] is None:
@@ -162,7 +161,7 @@ class TreeWrapper(QtCore.QObject):
 		return key
 
 	def queryEntry(self, key, skelType):
-		logger.info("TreeWrapper.queryEntry: %r, %r", key, skelType)
+		logger.debug("TreeWrapper.queryEntry: %r, %r", key, skelType)
 		if key in self.dataCache:
 			self.deferredTaskQueue.append(("entityAvailable", key))
 			QtCore.QTimer.singleShot(25, self.execDefered)
@@ -175,7 +174,7 @@ class TreeWrapper(QtCore.QObject):
 		return key
 
 	def execDefered(self, *args, **kwargs):
-		logger.info("TreeWrapper.execDefered: %r, %r", args, kwargs)
+		logger.debug("TreeWrapper.execDefered: %r, %r", args, kwargs)
 		m, key = self.deferredTaskQueue.pop(0)
 		if m == "entitiesChanged":
 			self.entitiesChanged.emit(key)
@@ -184,7 +183,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 
 	def getNode(self, node):
-		logger.info("TreeWrapper.getNode: %r", node)
+		logger.debug("TreeWrapper.getNode: %r", node)
 		if node in self.dataCache:
 			return self.dataCache[node]
 		return None
@@ -197,7 +196,7 @@ class TreeWrapper(QtCore.QObject):
 
 	def addCacheData(self, req):
 		data = NetworkService.decode(req)
-		logger.info("TreeWrapper.addCacheData: %r, %r", req.skelType, req.queryArgs)
+		logger.debug("TreeWrapper.addCacheData: %r, %r", req.skelType, req.queryArgs)
 		if req.queryArgs:  # This was a custom request
 			key = self.cacheKeyFromFilter(req.node, req.queryArgs)
 			if key not in self.dataCache or not self.dataCache[key]:
@@ -220,7 +219,7 @@ class TreeWrapper(QtCore.QObject):
 				skel["_type"] = req.skelType
 				self.dataCache[skel["key"]] = skel
 				addedData.append(skel)
-				logger.info("TreeWrapper.addCacheData: %r, %r", skel["name"], req.skelType)
+				# logger.debug("TreeWrapper.addCacheData: %r, %r", skel["name"], req.skelType)
 			if len(data["skellist"]) == self.batchSize:  # There might be more results
 				if "cursor" in data.keys() and cursor:  # We have a cursor (we can continue this query)
 					# Fetch the next batch
@@ -336,7 +335,7 @@ class TreeWrapper(QtCore.QObject):
 		:param kwargs:
 		:return:
 		"""
-		logger.info("TreeWrapper.deferredTaskQueue: %r", req)
+		logger.debug("TreeWrapper.deferredTaskQueue: %r", req)
 		if req is not None:
 			try:
 				logger.debug(NetworkService.decode(req))
@@ -366,7 +365,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 
 	def emitEntriesChanged(self, *args, **kwargs):
-		logger.info("TreeWrapper.emitEntriesChanged: %r, %r", args, kwargs)
+		logger.debug("TreeWrapper.emitEntriesChanged: %r, %r", args, kwargs)
 		self.clearCache()
 		self.entitiesChanged.emit("")
 		self.checkBusyStatus()

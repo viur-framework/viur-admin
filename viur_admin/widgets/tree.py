@@ -313,12 +313,12 @@ class TreeListView(QtWidgets.QListWidget):
 		               )
 
 	def setDefaultRootNode(self):
-		logger.info("setDefaultRootNode")
+		logger.debug("setDefaultRootNode")
 		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onSetDefaultRootNode)
 
 	def onSetDefaultRootNode(self, request):
 		data = NetworkService.decode(request)
-		logger.info("onSetDefaultRootNode: %r", data)
+		logger.debug("onSetDefaultRootNode: %r", data)
 		self.rootNodes = data
 		if not self.rootNode:
 			try:
@@ -329,7 +329,7 @@ class TreeListView(QtWidgets.QListWidget):
 			self.loadData()
 
 	def loadData(self, queryObj=None):
-		logger.info("loadData: %r", queryObj)
+		logger.debug("loadData: %r", queryObj)
 		try:
 			self.itemCache.clear()
 		except:
@@ -339,7 +339,7 @@ class TreeListView(QtWidgets.QListWidget):
 		protoWrap.queryData(self.node)
 
 	def onTreeChanged(self, node):
-		logger.info("onTreeChanged: %r", node)
+		logger.debug("onTreeChanged: %r", node)
 		if not node:
 			self.loadData()
 		if node != self.node:  # Not our part of that tree
@@ -368,7 +368,7 @@ class TreeListView(QtWidgets.QListWidget):
 
 		self.setSortingEnabled(False)
 		lenNodes = len(nodes)
-		logger.info("TreeListView.setDisplayData: sort off: %r", len(nodes))
+		logger.debug("TreeListView.setDisplayData: sort off: %r", len(nodes))
 		for entry in nodes:
 			if entry["_type"] == "node":
 				self.addItem(self.nodeItem(entry, self))
@@ -377,7 +377,7 @@ class TreeListView(QtWidgets.QListWidget):
 			else:
 				raise NotImplementedError()
 		self.setSortingEnabled(True)
-		logger.info("TreeListView.setDisplayData: sort on: %r", len(nodes))
+		logger.debug("TreeListView.setDisplayData: sort on: %r", len(nodes))
 		self.sortItems()
 
 	def onAppendedData(self, node, items):
@@ -388,7 +388,7 @@ class TreeListView(QtWidgets.QListWidget):
 		"""
 		self.setSortingEnabled(False)
 		lenItems = len(items)
-		logger.info("TreeListView.onAppendedData: sort off: %r, %r", node, lenItems)
+		logger.debug("TreeListView.onAppendedData: sort off: %r, %r", node, lenItems)
 		for entry in items:
 			if entry["_type"] == "node":
 				self.addItem(self.nodeItem(entry, self))
@@ -397,7 +397,7 @@ class TreeListView(QtWidgets.QListWidget):
 			else:
 				raise NotImplementedError()
 		self.setSortingEnabled(True)
-		logger.info("TreeListView.onAppendedData: sort on: %r, %r", node, lenItems)
+		logger.debug("TreeListView.onAppendedData: sort on: %r, %r", node, lenItems)
 		self.sortItems()
 
 	def onCustomContextMenuRequested(self, point):

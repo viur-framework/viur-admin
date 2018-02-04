@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import os
-
 import shutil
 from collections import deque
-
-from requests import Session, utils
 from hashlib import sha1
 from urllib.parse import quote
 
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
+from requests import Session
 
 from viur_admin.config import conf
 from viur_admin.log import getLogger
@@ -20,27 +19,16 @@ from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
 
 logger = getLogger(__name__)
+iconByExtension = dict()
 
 
-class PreviewThread(QtCore.QThread):
-	requestPreviewImage = QtCore.pyqtSignal((str))
-	previewImageAvailable = QtCore.pyqtSignal((str, str, QtGui.QIcon))
+class PreviewDownloadWorker(QtCore.QObject):
+	previewImageAvailable = QtCore.pyqtSignal(str, str, QtGui.QIcon)
 
-	def __init__(self):
-		super(PreviewThread, self).__init__()
-		self.shouldTerminate = False
+	def __init__(self, cookies):
+		super(PreviewDownloadWorker, self).__init__()
 		self.taskQueue = deque()
-		self.requestPreviewImage.connect(self.onRequestPreviewImage)
-		self.threadThread = None
-		self.start(QtCore.QThread.IdlePriority)
-		while self.threadThread is None:
-			self.usleep(5)
-
-		self.baseUrl = None
 		self.session = Session()
-
-	def onLoginSuccess(self):
-		cookies = nam.cookieJar().allCookies()
 
 		cookieJar = self.session.cookies
 		for cookie in cookies:
@@ -58,49 +46,33 @@ class PreviewThread(QtCore.QThread):
 
 		self.baseUrl = NetworkService.url.replace("/admin", "")
 
-	def downloadFile(self, url, absFilename):
-		response = self.session.get(url, stream=True)
-		newfile = open(absFilename, "wb+")
-		shutil.copyfileobj(response.raw, newfile)
-		newfile.seek(0)
-		return newfile.read()
+	@QtCore.pyqtSlot(str)
+	def onRequestPreviewImage(self, dlKey: str):
+		logger.debug("PreviewDownloadWorker.onRequestPreviewImage: %r", dlKey)
+		self.taskQueue.append(dlKey)
 
-	def run(self):
-		self.threadThread = self.currentThread()
-		while not self.shouldTerminate:
+	@QtCore.pyqtSlot()
+	def work(self):
+		while True:
 			try:
 				dlKey = self.taskQueue.popleft()
 				fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
-				logger.debug("fileName: %r", fileName)
 				if not os.path.isfile(fileName):
-					fileData = self.downloadFile(
-						"{0}{1}{2}".format(self.baseUrl, "/file/download/", quote(dlKey)),
-						fileName
-					)
+					response = self.session.get("{0}{1}{2}".format(self.baseUrl, "/file/download/", quote(dlKey)), stream=True)
+					newfile = open(fileName, "wb+")
+					shutil.copyfileobj(response.raw, newfile)
+					newfile.seek(0)
+					fileData = newfile.read()
 				else:
 					fileData = open(fileName, "rb").read()
+
 				pixmap = QtGui.QPixmap()
 				pixmap.loadFromData(fileData)
-
 				if not pixmap.isNull():
 					icon = QtGui.QIcon(pixmap.scaled(104, 104))
 					self.previewImageAvailable.emit(dlKey, fileName, icon)
-				self.msleep(25)
 			except IndexError:
-				self.sleep(1)
-
-	def onRequestPreviewImage(self, dlkey):
-		logger.debug("PreviewThread.onRequestPreviewImage: %r", dlkey)
-		if dlkey not in self.taskQueue:
-			self.taskQueue.append(dlkey)
-
-	def requestPreview(self, dlkey):
-		logger.debug("PreviewThread.requestPreview: %r", dlkey)
-		self.requestPreviewImage.emit(dlkey)
-
-
-previewer = PreviewThread()
-iconByExtension = dict()
+				time.sleep(1)
 
 
 class FileItem(LeafItem):
@@ -125,7 +97,7 @@ class FileItem(LeafItem):
 		self.setToolTip('<strong>{0}</strong>'.format(data["name"]))
 		if ("metamime" in data and str(data["metamime"]).lower().startswith("image")) or (
 				extension in ["jpg", "jpeg", "png"] and "servingurl" in data and data["servingurl"]):
-			previewer.requestPreview(data["dlkey"])
+			self._parent.previewDownloadWorker.onRequestPreviewImage(data["dlkey"])
 		self.setText(self.entryData["name"])
 
 
@@ -156,6 +128,7 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		super(UploadStatusWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_FileUploadProgress()
 		self.ui.setupUi(self)
+		self.uploader = None
 		logger.debug("UploadStatusWidget.init: %r, %r", args, kwargs)
 
 	def setUploader(self, uploader):
@@ -187,9 +160,12 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		self.ui.pbarTotal.setValue(stats["filesDone"])
 
 	def askOverwriteFile(self, title, text):
-		res = QtWidgets.QMessageBox.question(self, title, text,
-		                                     buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
-		                                             QtWidgets.QMessageBox.Cancel)
+		res = QtWidgets.QMessageBox.question(
+			self,
+			title,
+			text,
+			buttons=QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
+			        QtWidgets.QMessageBox.Cancel)
 		if res == QtWidgets.QMessageBox.Yes:
 			return True
 		elif res == QtWidgets.QMessageBox.Cancel:
@@ -257,9 +233,20 @@ class DownloadStatusWidget(QtWidgets.QWidget):
 class FileListView(TreeListView):
 	leafItem = FileItem
 
+	requestPreview = QtCore.pyqtSignal(str)
+
 	def __init__(self, module, rootNode=None, node=None, *args, **kwargs):
 		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
-		previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
+		self.thread = QtCore.QThread()
+		self.thread.setObjectName('previewDownloadWorker')
+
+		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
+		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
+		self.previewDownloadWorker.moveToThread(self.thread)
+		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
+		self.thread.started.connect(self.previewDownloadWorker.work)
+		self.thread.start(QtCore.QThread.IdlePriority)
+		logger.debug("FileListView.__init__: thread started")
 
 	def addItem(self, aitem):
 		try:
@@ -267,6 +254,11 @@ class FileListView(TreeListView):
 		except:
 			pass
 		super(FileListView, self).addItem(aitem)
+
+	@QtCore.pyqtSlot(str)
+	def onRequestPreview(self, dlKey: str):
+		logger.debug("FileListView.onRequestPreview: %r", dlKey)
+		self.requestPreview.emit(dlKey)
 
 	def onPreviewImageAvailable(self, dlkey, fileName, icon):
 		logger.debug("FileListView.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
@@ -339,7 +331,6 @@ class FileWidget(TreeWidget):
 	treeWidget = FileListView
 
 	def __init__(self, *args, **kwargs):
-		previewer.onLoginSuccess()
 		super(FileWidget, self).__init__(
 			actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete", "switchview"], *args, **kwargs)
 
