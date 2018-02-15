@@ -238,8 +238,7 @@ class FileListView(TreeListView):
 	def __init__(self, module, rootNode=None, node=None, *args, **kwargs):
 		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
 		self.thread = QtCore.QThread()
-		self.thread.setObjectName('previewDownloadWorker')
-
+		self.thread.setObjectName('FileListView.previewDownloadThread')
 		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
 		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
 		self.previewDownloadWorker.moveToThread(self.thread)

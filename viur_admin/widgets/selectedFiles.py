@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
+
+from viur_admin.network import nam
 from viur_admin.log import getLogger
 from viur_admin.utils import itemFromUrl
-from viur_admin.widgets.file import FileItem
+from viur_admin.widgets.file import FileItem, PreviewDownloadWorker
 
 logger = getLogger(__name__)
 
@@ -12,6 +14,8 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 	"""
 		Displays the currently selected files of one fileBone.
 	"""
+
+	requestPreview = QtCore.pyqtSignal(str)
 
 	def __init__(self, module, selection=None, *args, **kwargs):
 		"""
@@ -32,10 +36,39 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		else:
 			self.selection = list()
 		self.modul = module
-		for s in self.selection:
-			self.addItem(FileItem(s, self))
+		self.itemCache = dict()
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
+		self.thread = QtCore.QThread()
+		self.thread.setObjectName('FileListView.previewDownloadThread')
+		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
+		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
+		self.previewDownloadWorker.moveToThread(self.thread)
+		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
+		self.thread.started.connect(self.previewDownloadWorker.work)
+		self.thread.start(QtCore.QThread.IdlePriority)
+		for s in self.selection:
+			self.addItem(FileItem(s, self))
+
+	@QtCore.pyqtSlot(str)
+	def onRequestPreview(self, dlKey: str):
+		logger.debug("SelectedFilesWidget.onRequestPreview: %r", dlKey)
+		self.requestPreview.emit(dlKey)
+
+	def onPreviewImageAvailable(self, dlkey, fileName, icon):
+		logger.debug("SelectedFilesWidget.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
+		fileItem = self.itemCache[dlkey]
+		fileItem.setIcon(icon)
+		width = 400
+		fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
+			fileName, width, str(fileItem.entryData["name"])))
+
+	def addItem(self, aitem):
+		try:
+			self.itemCache[aitem.entryData["dlkey"]] = aitem
+		except:
+			pass
+		super(SelectedFilesWidget, self).addItem(aitem)
 
 	def onItemDoubleClicked(self, item):
 		"""One of our Items has been double-clicked.
