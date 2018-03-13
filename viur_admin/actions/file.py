@@ -67,7 +67,8 @@ class FileDownloadAction(QtWidgets.QAction):
 				files.append(item.entryData)
 		if not files and not dirs:
 			return
-		targetDir = QtWidgets.QFileDialog.getExistingDirectory(self.parentWidget())
+		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
+		targetDir = QtWidgets.QFileDialog.getExistingDirectory(self.parentWidget(), directory=homeDirs[0])
 		if not targetDir:
 			return
 		self.parent().doDownload(targetDir, files, dirs)

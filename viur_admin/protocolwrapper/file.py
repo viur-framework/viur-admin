@@ -353,6 +353,7 @@ class RecursiveDownloader(QtCore.QObject):
 	directorySize = 15  # Let's count an directory as 15 Bytes
 	finished = QtCore.pyqtSignal(QtCore.QObject)
 	failed = QtCore.pyqtSignal(QtCore.QObject)
+	canceled = QtCore.pyqtSignal(QtCore.QObject)
 	downloadProgress = QtCore.pyqtSignal((int, int))
 
 	def __init__(self, localTargetDir, files, dirs, modul, *args, **kwargs):
@@ -373,7 +374,7 @@ class RecursiveDownloader(QtCore.QObject):
 		super(RecursiveDownloader, self).__init__(*args, **kwargs)
 		self.localTargetDir = localTargetDir
 		self.modul = modul
-		self.cancel = False
+		self._cancel = False
 		self.stats = {
 			"dirsTotal": 0,
 			"dirsDone": 0,
@@ -392,6 +393,7 @@ class RecursiveDownloader(QtCore.QObject):
 			request.fname = file["name"]
 			request.fsize = file["size"]
 			request.downloadProgress.connect(self.onDownloadProgress)
+			self.canceled.connect(request.abort)
 			self.stats["filesTotal"] += 1
 			self.stats["bytesTotal"] += file["size"]
 		for directory in dirs:
@@ -412,6 +414,8 @@ class RecursiveDownloader(QtCore.QObject):
 			self.stats["bytesTotal"] += self.directorySize
 
 	def onRequestFinished(self, req):
+		if self._cancel:
+			return
 		self.remainingRequests -= 1  # Decrease our request counter
 		if self.remainingRequests == 0:
 			QtCore.QTimer.singleShot(100, self.onFinished)
@@ -421,6 +425,8 @@ class RecursiveDownloader(QtCore.QObject):
 		self.finished.emit(self)
 
 	def saveFile(self, req):
+		if self._cancel:
+			return
 		fh = open(os.path.join(self.localTargetDir, req.fname), "wb+")
 		fh.write(req.readAll().data())
 		self.stats["filesDone"] += 1
@@ -434,6 +440,8 @@ class RecursiveDownloader(QtCore.QObject):
 	# self.ui.pbarTotal.setValue( bytesDone )
 
 	def onListDir(self, req):
+		if self._cancel:
+			return
 		data = NetworkService.decode(req)
 		if len(data["skellist"]) == 0:  # Nothing to do here
 			return
@@ -447,6 +455,7 @@ class RecursiveDownloader(QtCore.QObject):
 				parent=self)
 			r.downloadProgress.connect(self.downloadProgress)
 			r.finished.connect(self.onRequestFinished)
+			self.canceled.connect(r.cancel)
 		else:
 			self.remainingRequests += 1
 			self.stats["dirsDone"] += 1
@@ -477,6 +486,10 @@ class RecursiveDownloader(QtCore.QObject):
 				for k in stats.keys():
 					stats[k] += tmp[k]
 		return stats
+
+	def cancel(self):
+		self._cancel = True
+		self.canceled.emit(self)
 
 
 class FileWrapper(TreeWrapper):
@@ -548,7 +561,7 @@ class FileWrapper(TreeWrapper):
 			@type dirs: list
 		"""
 		downloader = RecursiveDownloader(targetDir, files, dirs, self.module)
-		self.downloader.finished.connect(self.delayEmitEntriesChanged)
+		downloader.finished.connect(self.delayEmitEntriesChanged)
 		return downloader
 
 

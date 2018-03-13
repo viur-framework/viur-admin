@@ -261,11 +261,13 @@ class FileListView(TreeListView):
 
 	def onPreviewImageAvailable(self, dlkey, fileName, icon):
 		logger.debug("FileListView.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
-		fileItem = self.itemCache[dlkey]
-		fileItem.setIcon(icon)
-		width = 400
-		fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
-			fileName, width, str(fileItem.entryData["name"])))
+		fileItem = self.itemCache.get(dlkey)
+		# FIXME: why the fileitem was not found???
+		if fileItem:
+			fileItem.setIcon(icon)
+			width = 400
+			fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
+				fileName, width, str(fileItem.entryData["name"])))
 
 	def doUpload(self, files, node):
 		"""
