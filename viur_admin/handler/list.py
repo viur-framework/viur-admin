@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
+
 from PyQt5 import QtCore
 
 from viur_admin.config import conf
@@ -14,10 +19,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 	def __init__(self, modul, viewName, *args, **kwargs):
 		config = conf.serverConfig["modules"][modul]
 		myview = [x for x in config["views"] if x["name"] == viewName][0]
-		if all([(x in myview.keys()) for x in ["filter", "columns"]]):
-			widgetFactory = lambda: ListWidget(modul, myview["columns"], myview["filter"])
-		else:
-			widgetFactory = lambda: ListWidget(modul)
+		widgetFactory = lambda: ListWidget(modul, myview.get("columns", list()), myview.get("filter", list()))
 		if "icon" in myview.keys():
 			if myview["icon"].lower().startswith("http://") or myview["icon"].lower().startswith("https://"):
 				icon = myview["icon"]
@@ -35,19 +37,14 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 	def __init__(self, modul, *args, **kwargs):
 		# Config parsen
 		config = conf.serverConfig["modules"][modul]
+		# logger.debug("ListCoreHandler.init: %r", config.get("name", "NoListCoreHandlerName"), config.get("columns"))
 		actions = config.get("actions")
-		# print("actions", actions)
-		if "columns" in config.keys():
-			if "filter" in config.keys():
-				widgetGen = lambda: ListWidget(
-						modul,
-						fields=config["columns"],
-						filter=config["filter"],
-						actions=actions)
-			else:
-				widgetGen = lambda: ListWidget(modul, fields=config["columns"], actions=actions)
-		else:
-			widgetGen = lambda: ListWidget(modul)
+		widgetGen = lambda: ListWidget(
+			modul,
+			fields=config.get("columns", list()),
+			filter=config.get("filter", list()),
+			actions=actions
+		)
 		icon = None
 		if "icon" in config.keys() and config["icon"]:
 			icon = loadIcon(config["icon"])

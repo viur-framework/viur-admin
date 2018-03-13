@@ -31,6 +31,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 
 	def __init__(self, module, boneName, structure):
 		super(RelationalViewBoneDelegate, self).__init__(module, boneName, structure)
+		# logger.debug("RelationalViewBoneDelegate.init: %r", boneName)
 		self.format = "$(name)"
 		if "format" in structure[boneName].keys():
 			self.format = structure[boneName]["format"]
@@ -41,11 +42,13 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value, locale):
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
+		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
 				if relStructList:
+					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure.keys())
 					value = ", ".join([(formatString(
-						formatString(self.format, x["dest"], self.structure["relskel"], prefix=["dest"],
+						formatString(self.format, x["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
 						             language=config.conf.adminConfig["language"]),
 						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x[
 						                    "key"]) for x in value])

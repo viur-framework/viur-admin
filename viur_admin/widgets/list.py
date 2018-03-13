@@ -101,8 +101,10 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			return None
 		if index.row() >= 0 and (index.row() < len(self.dataCache)):
 			try:
+				# logger.debug("data role: %r, %r, %r", index.row(), index.column(), self._validFields)
 				return self.dataCache[index.row()][self._validFields[index.column()]]
-			except:
+			except Exception as err:
+				logger.exception(err)
 				return ""
 		else:
 			if not self.completeList:
@@ -145,15 +147,16 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
+		# logger.debug("ListTableModule.addData: %r", len(skellist))
 		self.layoutAboutToBeChanged.emit()
-		self.rebuildDelegates.emit(protoWrap.viewStructure)
+
 		# Rebuild our local cache of valid fields
 		bones = {}
 		for key, bone in protoWrap.viewStructure.items():
 			bones[key] = bone
 		self._validFields = [x for x in self.fields if x in bones.keys()]
-		for item in skellist:  # Insert the new Data at the coresponding Position
-			self.dataCache.append(item)
+		self.rebuildDelegates.emit(protoWrap.viewStructure)
+		self.dataCache.extend(skellist)
 		if len(skellist) < self._chunkSize:
 			self.completeList = True
 		self.cursor = cursor
@@ -239,6 +242,7 @@ class ListTableView(QtWidgets.QTableView):
 
 	def __init__(self, parent, modul, fields=None, filter=None, *args, **kwargs):
 		super(ListTableView, self).__init__(parent, *args, **kwargs)
+		logger.debug("ListTableView.init: %r, %r, %r, %r", parent, modul, fields, filter)
 		self.missingImage = QtGui.QImage(":icons/status/missing.png")
 		self.modul = modul
 		filter = filter or {}
@@ -298,13 +302,18 @@ class ListTableView(QtWidgets.QTableView):
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
-		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected
+		self.delegates = []  # Qt doesn't take ownership of view delegates -> garbarge collected
 		self.structureCache = bones
-		self.model().headers = []
+		modelHeaders = self.model().headers = []
 		colum = 0
-		fields = [x for x in self.model().fields if x in bones.keys()]
+		modulFields = self.model().fields
+		# logger.debug("rebuildDelegates: %r, %r", bones, modulFields)
+		if not modulFields or modulFields == ["name"]:
+			self.model()._validFields = fields = [key for key, value in bones.items()]
+		else:
+			fields = [x for x in modulFields if x in bones.keys()]
 		for field in fields:
-			self.model().headers.append(bones[field]["descr"])
+			modelHeaders.append(bones[field]["descr"])
 			# Locate the best ViewDeleate for this colum
 			delegateFactory = viewDelegateSelector.select(self.modul, field, self.structureCache)
 			delegate = delegateFactory(self.modul, field, self.structureCache)
@@ -312,6 +321,7 @@ class ListTableView(QtWidgets.QTableView):
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)
 			colum += 1
+		# logger.debug("ListTableModule.rebuildDelegates headers and fields: %r, %r, %r", modelHeaders, fields, colum)
 
 	def keyPressEvent(self, e):
 		if e.matches(QtGui.QKeySequence.Delete):
@@ -456,6 +466,7 @@ class ListWidget(QtWidgets.QWidget):
 
 	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs):
 		super(ListWidget, self).__init__(*args, **kwargs)
+		# logger.debug("ListWidget.init: %r, %r, %r", modul, fields, filter)
 		self.modul = modul
 		self.ui = Ui_List()
 		self.ui.setupUi(self)

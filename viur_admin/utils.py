@@ -524,7 +524,7 @@ def formatString(format, data, structure=None, prefix=None, language="de", _rec=
 			val = data[key]
 			struct = structure.get(key) if structure else None
 
-			logger.debug("key: %r, val: %r", key, val)
+			# logger.debug("key: %r, val: %r", key, val)
 			# print("%s%s: %s" % (_rec * " ", key, struct))
 
 			if isinstance(val, dict):
@@ -549,7 +549,8 @@ def formatString(format, data, structure=None, prefix=None, language="de", _rec=
 
 			res = res.replace("$(%s)" % (".".join(prefix + [key])), str(val))
 	except Exception as err:
-		logger.debug("in formatString: %r, %r, %r", format, data, err)
+		pass
+		# logger.debug("in formatString: %r, %r, %r", format, data, err)
 	return res
 
 

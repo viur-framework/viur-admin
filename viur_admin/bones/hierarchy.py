@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 from viur_admin.event import event
 from viur_admin.bones.relational import RelationalViewBoneDelegate, RelationalEditBone, RelationalBoneSelector
 from viur_admin.widgets.hierarchy import HierarchyWidget
-from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 
@@ -44,4 +49,5 @@ def CheckForHierarchyItemBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"].startswith("hierarchy."))
 
 
+viewDelegateSelector.insert(1, CheckForHierarchyItemBone, HierarchyItemViewBoneDelegate)
 editBoneSelector.insert(1, CheckForHierarchyItemBone, HierarchyItemBone)
