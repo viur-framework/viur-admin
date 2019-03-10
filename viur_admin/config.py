@@ -104,10 +104,12 @@ class Config(object):
 			if withCookies:
 				cookies = list()
 				now = datetime.now()
-				for plainCookie in self.portal.get("cookies", list()):
+				rawCookies = self.portal.get("cookies", list())
+				logger.debug("rawCookies: %r for now: %r", len(rawCookies), now)
+				for plainCookie in rawCookies:
 					logger.debug("cookieRaw: %r", plainCookie)
 					restoredCookie = QtNetwork.QNetworkCookie.parseCookies(bytearray(plainCookie, "ascii"))[0]
-					if restoredCookie.expirationDate() > now:
+					if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
 						logger.debug("restored cookie accepted: %r", restoredCookie)
 						cookies.append(restoredCookie)
 				network.nam.cookieJar().setAllCookies(cookies)
