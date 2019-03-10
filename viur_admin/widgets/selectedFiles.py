@@ -23,6 +23,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		:param selection: Currently selected Items.
 		:type selection: list of dict, dict or None
 		"""
+		logger.debug("SelectedFilesWidget: %r, %r, %r, %r", modul, selection, args, kwargs)
 		super(SelectedFilesWidget, self).__init__(*args, **kwargs)
 		if isinstance(selection, list):
 			self.selection = selection and [s["dest"] for s in selection]
