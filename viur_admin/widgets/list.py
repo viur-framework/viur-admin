@@ -476,7 +476,7 @@ class ListWidget(QtWidgets.QWidget):
 		layout.addWidget(self.list)
 		self.list.show()
 		self.toolBar = QtWidgets.QToolBar(self)
-		self.toolBar.setIconSize(QtCore.QSize(32, 32))
+		self.toolBar.setIconSize(QtCore.QSize(16, 16))
 		self.ui.boxActions.addWidget(self.toolBar)
 		# FIXME: testing changing to placeholder text
 		# if filter is not None and "search" in filter.keys():
