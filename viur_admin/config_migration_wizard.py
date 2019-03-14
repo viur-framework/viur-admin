@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from viur_admin.config import conf
 
 from viur_admin.log import getLogger
@@ -23,6 +24,8 @@ class ConfigMigrationWizard(QtWidgets.QWizard):
 		self.ui = Ui_configMigrationWizard()
 		self.ui.setupUi(self)
 		self.forcePageFlip = False
+		self.ui.pathSelector.currentIndexChanged.connect(self._setData)
+		self.currentConfigIndex = 0
 
 	def validateCurrentPage(self):
 		return True
@@ -32,8 +35,7 @@ class ConfigMigrationWizard(QtWidgets.QWizard):
 		if pageId == 0:
 			try:
 				self.ui.pathSelector.addItems([item["displayedName"] for item in conf.payload])
-				self.ui.changedInput.setDateTime(conf.payload[0]["lastUsed"])
-				self.ui.versionInput.setText(conf.payload[0]["version"])
+				self._setData(0)
 			except Exception as err:
 				logger.exception(err)
 		if pageId == 1:
@@ -44,5 +46,19 @@ class ConfigMigrationWizard(QtWidgets.QWizard):
 			# except Exception as err:
 			# 	logger.exception(err)
 
-	def accept(self):
-		pass
+	def validateCurrentPage(self):
+		currentId = self.currentId()
+		if currentId == 0:
+			logger.debug("migration config: %r, %r", conf.payload[self.currentConfigIndex]["path"], conf.storagePath)
+			shutil.copytree(conf.payload[self.currentConfigIndex]["path"], conf.storagePath)
+			conf.loadConfig()
+		if currentId == 1:
+			self.finished.emit(True)
+			return True
+		return True
+
+	@QtCore.pyqtSlot(int)
+	def _setData(self, index):
+		self.currentConfigIndex = index
+		self.ui.changedInput.setDateTime(conf.payload[index]["lastUsed"])
+		self.ui.versionInput.setText(conf.payload[index]["version"])

@@ -43,7 +43,7 @@ class Config(object):
 		for path in oldDirectoriesRaw:
 			itemData = {
 				"lastUsed": datetime.fromtimestamp(os.stat("/home/stefan/.viuradmin/accounts.dat").st_mtime),
-				"version": (0, 0),
+				"version": "1.0",
 				"path": path,
 				"displayedName": ""
 			}
