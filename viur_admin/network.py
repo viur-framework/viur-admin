@@ -215,7 +215,7 @@ class RequestWrapper(QtCore.QObject):
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
 	             failSilent=False):
 		super(QtCore.QObject, self).__init__()
-		logger.debug("New network request: %s", str(self))
+		# logger.debug("New network request: %s", str(self))
 		self.request = request
 		self.url = url
 		self.failSilent = failSilent
@@ -239,24 +239,24 @@ class RequestWrapper(QtCore.QObject):
 		request.downloadProgress.connect(self.onDownloadProgress)
 		request.uploadProgress.connect(self.onUploadProgress)
 		request.finished.connect(self.onFinished)
-		logger.debug("RequestWrapper exit")
+		# logger.debug("RequestWrapper exit")
 
 	def onDownloadProgress(self, bytesReceived, bytesTotal):
-		logger.debug("onDownloadProgress")
+		# logger.debug("onDownloadProgress")
 		if bytesReceived == bytesTotal:
 			self.requestStatus = True
 		self.downloadProgress.emit(self, bytesReceived, bytesTotal)
-		logger.debug("onDownloadProgress done")
+		# logger.debug("onDownloadProgress done")
 
 	def onUploadProgress(self, bytesSend, bytesTotal):
-		logger.debug("onUploadProgress")
+		# logger.debug("onUploadProgress")
 		if bytesSend == bytesTotal:
 			self.requestStatus = True
 		self.uploadProgress.emit(self, bytesSend, bytesTotal)
-		logger.debug("onUploadProgress done")
+		# logger.debug("onUploadProgress done")
 
 	def onFinished(self):
-		logger.debug("onFinished")
+		# logger.debug("onFinished")
 		self.hasFinished = True
 		if self.request.error() == self.request.NoError:
 			self.requestSucceeded.emit(self)
@@ -280,14 +280,14 @@ class RequestWrapper(QtCore.QObject):
 		self.failureHandler = None
 		self.finishedHandler = None
 		self.deleteLater()
-		logger.debug("onFinished exit")
+		# logger.debug("onFinished exit")
 
 	def readAll(self):
-		logger.debug("readAll")
+		# logger.debug("readAll")
 		return self.request.readAll()
 
 	def abort(self):
-		logger.debug("abort")
+		# logger.debug("abort")
 		self.request.abort()
 
 
@@ -614,7 +614,7 @@ class NetworkService:
 
 	@staticmethod
 	def decode(req):
-		logger.debug("NetworkService.decode: %r", req)
+		# logger.debug("NetworkService.decode: %r", req)
 		data = req.readAll().data().decode("utf-8")
 		return json.loads(data)
 
@@ -625,9 +625,12 @@ class NetworkService:
 		# This is the only request that is intentionally blocking
 		try:
 			req = request.urlopen(url + "/getVersion")
-			NetworkService.serverVersion = tuple(json.loads(req.read().decode("UTF-8")))
+			rawData = req.read().decode("UTF-8")
+			logger.debug("version raw data: %r", rawData)
+			NetworkService.serverVersion = tuple(json.loads(rawData))
 			assert isinstance(NetworkService.serverVersion, tuple) and len(NetworkService.serverVersion) == 3
-		except:
+		except Exception as err:
+			logger.exception(err)
 			NetworkService.serverVersion = (1, 0, 0)  # The first version of ViUR didn't support that
 		logger.info("Attached to an instance running ViUR %s", NetworkService.serverVersion)
 		securityTokenProvider.reset()

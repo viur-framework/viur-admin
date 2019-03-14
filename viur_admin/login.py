@@ -33,12 +33,12 @@ class AuthGoogle(QtWidgets.QWidget):
 		self.chromeCookieJar.loadAllCookies()
 		for cookie in nam.cookieJar().allCookies():
 			self.chromeCookieJar.setCookie(cookie)
-		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "/admin/user/auth_googleaccount/login"))
+		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "admin/user/auth_googleaccount/login"))
 		self.webView.urlChanged.connect(self.onUrlChanged)
 		self.webView.loadFinished.connect(self.onLoadFinished)
 
 	def onCookieAdded(self, cookie):
-		logger.debug("onCookieAdded: %r", cookie)
+		# logger.debug("onCookieAdded: %r", cookie)
 		nam.cookieJar().insertCookie(cookie)
 
 	def startAuthenticating(self):

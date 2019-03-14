@@ -172,8 +172,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 
 
 def CheckForAccessSelectMultiBone(moduleName, boneName, skelStucture):
-	return skelStucture[boneName]["type"] == "selectmulti.access" or skelStucture[boneName]["type"].startswith(
-		"selectmulti.access")
+	return skelStucture[boneName]["type"] in ("select.access", "selectmulti.access")
 
 
 # Register this Bone in the global queue

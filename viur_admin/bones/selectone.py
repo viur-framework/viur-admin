@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtWidgets
-from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector
 from viur_admin.utils import wheelEventFilter
 
@@ -87,7 +87,10 @@ class SelectOneEditBone(BoneEditInterface):
 
 
 def CheckForSelectOneBone(moduleName, boneName, skelStucture):
-	return skelStucture[boneName]["type"] == "selectone"
+	return (
+			(skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.") and not
+			skelStucture[boneName].get("multiple", False)) or
+			skelStucture[boneName]["type"] == "selectone" or skelStucture[boneName]["type"].startswith("selectone."))
 
 
 # Register this Bone in the global queue

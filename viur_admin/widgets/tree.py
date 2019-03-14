@@ -522,6 +522,7 @@ class TreeWidget(QtWidgets.QWidget):
 			@param leafItem: If set, use this class for displaying Directories inside the QListWidget.
 			@param leafItem: QListWidgetItem
 		"""
+		logger.debug("TreeWidget(): %r, %r, %r, %r, %r, %r", module, rootNode, node, actions, args, kwargs)
 		super(TreeWidget, self).__init__(*args, **kwargs)
 		self.ui = Ui_Tree()
 		self.ui.setupUi(self)

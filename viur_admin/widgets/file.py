@@ -23,12 +23,13 @@ iconByExtension = dict()
 
 
 class PreviewDownloadWorker(QtCore.QObject):
-	previewImageAvailable = QtCore.pyqtSignal(str, str, QtGui.QIcon)
+	previewImageAvailable = QtCore.pyqtSignal(str, str, QtGui.QIcon, QtCore.QSize)
 
 	def __init__(self, cookies):
 		super(PreviewDownloadWorker, self).__init__()
 		self.taskQueue = deque()
 		self.session = Session()
+		self.running = True
 
 		cookieJar = self.session.cookies
 		for cookie in cookies:
@@ -52,8 +53,13 @@ class PreviewDownloadWorker(QtCore.QObject):
 		self.taskQueue.append(dlKey)
 
 	@QtCore.pyqtSlot()
+	def onRequestStopRunning(self):
+		logger.debug("previewTask request finishing...")
+		self.running = False
+
+	@QtCore.pyqtSlot()
 	def work(self):
-		while True:
+		while self.running:
 			try:
 				dlKey = self.taskQueue.popleft()
 				fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
@@ -69,10 +75,12 @@ class PreviewDownloadWorker(QtCore.QObject):
 				pixmap = QtGui.QPixmap()
 				pixmap.loadFromData(fileData)
 				if not pixmap.isNull():
-					icon = QtGui.QIcon(pixmap.scaled(104, 104))
-					self.previewImageAvailable.emit(dlKey, fileName, icon)
+					icon = QtGui.QIcon()
+					icon.addPixmap(pixmap.scaled(104, 104), QtGui.QIcon.Normal, QtGui.QIcon.On)
+					self.previewImageAvailable.emit(dlKey, fileName, icon, pixmap.size())
 			except IndexError:
 				time.sleep(1)
+		logger.debug("previewTask finished...")
 
 
 class FileItem(LeafItem):
@@ -245,6 +253,7 @@ class FileListView(TreeListView):
 		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
 		self.thread.started.connect(self.previewDownloadWorker.work)
 		self.thread.start(QtCore.QThread.IdlePriority)
+		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
 		logger.debug("FileListView.__init__: thread started")
 
 	def addItem(self, aitem):
@@ -259,15 +268,21 @@ class FileListView(TreeListView):
 		logger.debug("FileListView.onRequestPreview: %r", dlKey)
 		self.requestPreview.emit(dlKey)
 
-	def onPreviewImageAvailable(self, dlkey, fileName, icon):
+	def onPreviewImageAvailable(self, dlkey, fileName, icon, iconDims):
 		logger.debug("FileListView.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
 		fileItem = self.itemCache.get(dlkey)
 		# FIXME: why the fileitem was not found???
 		if fileItem:
 			fileItem.setIcon(icon)
-			width = 400
-			fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
-				fileName, width, str(fileItem.entryData["name"])))
+			landScapeOrPortrait = iconDims.height() < iconDims.width()
+			if landScapeOrPortrait:
+				fileItem.setToolTip('<img src="{0}" height="{1}"><br><strong>{2}</strong>'.format(
+					fileName, 400, str(fileItem.entryData["name"])))
+			else:
+				fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
+					fileName, 400, str(fileItem.entryData["name"])))
+		else:
+			logger.warning("fileItem could not be found: dlkey=%r, filename=%r, icon=%r", dlkey, fileName, icon)
 
 	def doUpload(self, files, node):
 		"""

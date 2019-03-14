@@ -4,10 +4,12 @@
 import json
 from datetime import datetime
 
+import viur_admin
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
 import os
+import glob
 from hashlib import sha512
 from time import time, sleep
 
@@ -17,9 +19,11 @@ from PyQt5 import QtNetwork
 class Config(object):
 	def __init__(self):
 		object.__init__(self)
-		self.storagePath = os.path.join(os.path.expanduser("~"), ".viuradmin")
+		self.storagePath = os.path.join(os.path.expanduser("~"), ".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2]))
+		self.payload = list()
+		self.migrateConfig = False
 		if not os.path.isdir(self.storagePath):
-			os.mkdir(self.storagePath)
+			self._checkConfigurationMigration()
 		self.accounts = []
 		self.portal = {}
 		self.adminConfig = {}
@@ -31,6 +35,27 @@ class Config(object):
 		self.availableLanguages = {}
 		self.cmdLineOpts = None
 		self.loadConfig()
+
+	def _checkConfigurationMigration(self):
+		oldDirectoriesRaw = glob.glob("{0}/.viuradmin*".format(os.path.expanduser("~")))
+		if oldDirectoriesRaw:
+			self.migrateConfig = True
+		for path in oldDirectoriesRaw:
+			itemData = {
+				"lastUsed": datetime.fromtimestamp(os.stat("/home/stefan/.viuradmin/accounts.dat").st_mtime),
+				"version": (0, 0),
+				"path": path,
+				"displayedName": ""
+			}
+			try:
+				pathParts = path.rsplit("-", 1)
+				list(map(int, pathParts[1].split(".")))
+				itemData["version"] = pathParts[1]
+			except:
+				pass
+			itemData["displayedName"] = "{0}".format(path)
+			self.payload.append(itemData)
+		logger.debug("old configs: %r", self.payload)
 
 	def xor(self, data, key=None):
 		"""This applies at least some *VERY BASIC* obscuring to saved passwords
@@ -126,9 +151,10 @@ class Config(object):
 				for plainCookie in rawCookies:
 					logger.debug("cookieRaw: %r", plainCookie)
 					restoredCookie = QtNetwork.QNetworkCookie.parseCookies(bytearray(plainCookie, "ascii"))[0]
-					if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
-						logger.debug("restored cookie accepted: %r", restoredCookie)
-						cookies.append(restoredCookie)
+					# TODO: for now we restore all saved cookies
+					# if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
+					logger.debug("restored cookie accepted: %r", restoredCookie)
+					cookies.append(restoredCookie)
 				network.nam.cookieJar().setAllCookies(cookies)
 		except Exception as err:
 			logger.error("Could not load Portal Config")

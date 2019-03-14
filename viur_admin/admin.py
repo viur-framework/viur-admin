@@ -13,6 +13,8 @@ http://docs.viur.is
 import sys
 import os
 import traceback
+
+
 min_version = (3, 2)
 if sys.version_info < min_version:
 	# no logger objects present here
@@ -159,6 +161,10 @@ def main():
 			if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
 				app.installTranslator(translator)
 
+	if conf.migrateConfig:
+		from viur_admin.config_migration_wizard import ConfigMigrationWizard
+		wizard = ConfigMigrationWizard()
+		wizard.exec()
 	mainWindow = MainWindow()
 	l = Login()
 	l.show()

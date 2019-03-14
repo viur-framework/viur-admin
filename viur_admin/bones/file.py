@@ -97,13 +97,24 @@ class FileItemBone(TreeItemBone):
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def loadIconFromRequest(self, request):
-		icon = QtGui.QIcon(request.getFileName())
-		if not self.previewIcon:
-			self.previewIcon = QtWidgets.QLabel(self)
-			self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
-			self.layout.insertWidget(0, self.previewIcon)
+		# this former code should be inspected where and why we attached a icon to self
+		# TODO: where self.previewIcon was defined before?
+		# icon = QtGui.QIcon(request.getFileName())
+		# if not self.previewIcon:
+		# 	self.previewIcon = QtWidgets.QLabel(self)
+		# 	self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
+		# 	self.layout.insertWidget(0, self.previewIcon)
+		# else:
+		# 	self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
+
+		preview = QtGui.QIcon(request.getFileName())
+		label = self.layout.itemAt(0).widget()
+		if not isinstance(label, QtWidgets.QLabel):
+			label = QtWidgets.QLabel(self)
+			label.setPixmap(preview.pixmap(QtCore.QSize(32, 32)))
+			self.layout.insertWidget(0, label)
 		else:
-			self.previewIcon.setPixmap(icon.pixmap(QtCore.QSize(32, 32)))
+			label.setPixmap(preview.pixmap(QtCore.QSize(32, 32)))
 
 	def updateVisiblePreview(self):
 		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)

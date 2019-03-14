@@ -231,7 +231,6 @@
         <file>is_loading32.gif</file>
         <file>is_uploading.gif</file>
         <file>login.png</file>
-        <file>mdedit.html</file>
         <file>menu/arrow_down.svg</file>
         <file>menu/arrow_left.svg</file>
         <file>menu/arrow_right.svg</file>
@@ -380,6 +379,5 @@
         <file>viur_updater_win.ico</file>
         <file>viur_win.ico</file>
         <file>cacert.pem</file>
-        <file>mdedit_docs_de.md</file>
     </qresource>
 </RCC>
