@@ -10,19 +10,44 @@ http://www.viur.is
 http://docs.viur.is
 """
 
-import sys
 import os
+import sys
 import traceback
+from collections import namedtuple
 
-
-min_version = (3, 2)
+min_version = (3, 6)
 if sys.version_info < min_version:
 	# no logger objects present here
-	sys.stderr.write("You need python3.2 or newer! - found: %r\n" % sys.version_info)
+	sys.stderr.write("You need python3.6 or newer! - found: %r\n" % sys.version_info)
 	sys.exit(1)
 
-from viur_admin.log import prepareLogger
+# got this from https://fman.io/blog/pyqt-excepthook/ - very helpful
 
+def excepthook(exc_type, exc_value, exc_tb):
+	enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
+	# Note: sys.__excepthook__(...) would not work here.
+	# We need to use print_exception(...):
+	traceback.print_exception(exc_type, exc_value, enriched_tb)
+
+
+def _add_missing_frames(tb):
+	result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
+	frame = tb.tb_frame.f_back
+	while frame:
+		result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
+		frame = frame.f_back
+	return result
+
+
+fake_tb = namedtuple(
+	'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
+)
+
+sys.excepthook = excepthook
+
+# end of extended error handling
+
+from viur_admin.log import prepareLogger
 
 from argparse import ArgumentParser
 from viur_admin.bugsnag import Notification
@@ -31,7 +56,8 @@ try:
 	from PyQt5 import QtGui, QtCore, QtWidgets, QtSvg, QtWebEngineWidgets
 except ImportError as err:
 	# no logger objects present here
-	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebEngineWidgets" + "\n")
+	sys.stderr.write(
+		"QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
 	sys.exit(1)
 
 from PyQt5.QtWidgets import QStyleFactory
@@ -43,16 +69,16 @@ from pkg_resources import resource_filename, resource_listdir
 
 parser = ArgumentParser()
 parser.add_argument(
-		'-d', '--debug', dest='debug', default='info',
-		help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
-		choices=["debug", "info", "warning", "critical"])
+	'-d', '--debug', dest='debug', default='info',
+	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+	choices=["debug", "info", "warning", "critical"])
 parser.add_argument(
-		'-r', '--report', dest='report', default='auto',
-		help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
-		choices=["yes", "no", "auto"])
+	'-r', '--report', dest='report', default='auto',
+	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
+	choices=["yes", "no", "auto"])
 parser.add_argument(
-		'-i', '--no-ignore', dest='noignore', default=False,
-		help="Disable automatic exclusion of temporary files on upload", action="store_true")
+	'-i', '--no-ignore', dest='noignore', default=False,
+	help="Disable automatic exclusion of temporary files on upload", action="store_true")
 parser.add_argument(
 		'-s', '--show_sortindex', action="store_true",
 		help="Shows Handler sortIndex (helpful for reordering modules)")
@@ -61,7 +87,6 @@ parser.add_argument(
 	help="Choose your prefered widget style from the list",
 	choices=styleKeys
 )
-
 
 args = parser.parse_args()
 args = args
@@ -81,9 +106,6 @@ import viur_admin.actions
 
 from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
-import viur_admin.ui.icons_rc
-
-import viur_admin.plugins
 
 if args.theme != "Viur":
 	try:
