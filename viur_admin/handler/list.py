@@ -11,6 +11,7 @@ from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.utils import loadIcon, WidgetHandler
 from viur_admin.widgets.list import ListWidget
+import viur_admin.ui.icons_rc
 
 
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler
@@ -26,6 +27,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 			else:
 				icon = loadIcon(myview["icon"])
 		else:
+
 			icon = loadIcon(":icons/modules/list.svg")
 		super(PredefinedViewHandler, self).__init__(widgetFactory, descr=myview["name"], icon=icon, vanishOnClose=False, *args, **kwargs)
 		self.viewName = viewName

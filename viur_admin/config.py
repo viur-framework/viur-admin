@@ -26,7 +26,7 @@ class Config(object):
 			self._checkConfigurationMigration()
 		self.accounts = []
 		self.portal = {}
-		self.adminConfig = {}
+		self.adminConfig = {"language": "en"}
 		self.serverConfig = {"modules": {}}
 		self.currentPortalConfigDirectory = None
 		self.currentUsername = None  # Store the current Username/Password sothat

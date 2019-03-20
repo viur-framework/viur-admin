@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
 from viur_admin.network import NetworkService, RemoteFile
-
+import viur_admin.ui.icons_rc
 
 
 class RegisterQueue:
@@ -563,11 +563,14 @@ def loadIcon(icon):
 		return icon
 	elif isinstance(icon, str) and not icon.startswith("/") and ".." not in icon and not icon.startswith(
 			"https://") and not icon.startswith("http://"):
-		return QtGui.QIcon(":{0}".format(icon))
+		if icon.startswith(":"):
+			return QtGui.QIcon(icon)
+		else:
+			return QtGui.QIcon(":{0}".format(icon))
 	elif isinstance(icon, str):
 		return icon
 	else:
-		return QtGui.QIcon(":icons/modules/list.svg")
+		return QtGui.QIcon(":/icons/modules/list.svg")
 
 
 def showAbout(parent=None):

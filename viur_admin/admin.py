@@ -15,6 +15,8 @@ import sys
 import traceback
 from collections import namedtuple
 
+from PyQt5.QtCore import QDirIterator
+
 min_version = (3, 6)
 if sys.version_info < min_version:
 	# no logger objects present here
@@ -102,6 +104,12 @@ import viur_admin.handler
 import viur_admin.widgets
 import viur_admin.bones
 import viur_admin.actions
+import viur_admin.ui.icons_rc
+
+
+it = QDirIterator(":", QDirIterator.Subdirectories);
+while it.hasNext():
+	print("resource item:", it.next())
 
 
 from viur_admin.login import Login
