@@ -8,6 +8,10 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.utils import WidgetHandler
 from viur_admin.widgets.file import FileWidget
 
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 
 class FileRepoHandler(WidgetHandler):
 	def __init__(self, modul, repo, *args, **kwargs):
@@ -19,6 +23,7 @@ class FileRepoHandler(WidgetHandler):
 
 class FileBaseHandler(WidgetHandler):
 	def __init__(self, modul, *args, **kwargs):
+		logger.debug("modul: %r, %r, %r", modul, args, kwargs)
 		self.modul = modul
 		config = conf.serverConfig["modules"][modul]
 		descr = config.get("name", "")

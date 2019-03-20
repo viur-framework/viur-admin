@@ -380,4 +380,13 @@
         <file>viur_win.ico</file>
         <file>cacert.pem</file>
     </qresource>
+    <qresource>
+        <file>htmleditor/jquery-3.3.1.js</file>
+        <file>htmleditor/index.html</file>
+        <file>htmleditor/summernote.eot</file>
+        <file>htmleditor/summernote.ttf</file>
+        <file>htmleditor/summernote.woff</file>
+        <file>htmleditor/htmleditor.min.js</file>
+        <file>htmleditor/htmleditor.min.css</file>
+    </qresource>
 </RCC>

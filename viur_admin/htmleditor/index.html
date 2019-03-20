@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="utf-8">
+	<title>Viur Text Editor</title>
+	<style>
+		html, body {} {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+		}
+
+		.note-editor {
+			width: 100% !important;
+			height: 100% !important;
+			margin: 0;
+			border: 3px solid #555!important;
+			overflow: auto;
+		}
+	</style>
+	<link rel="stylesheet" href="htmleditor.min.css"/>
+	<script>
+      window.module = window.module || {};
+	</script>
+	<script src="jquery-3.3.1.js"></script>
+	<script src="htmleditor.min.js"></script>
+	<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+</head>
+<body>
+<textarea class="texteditor" style="display: none;">foo bar baz</textarea>
+
+<script>
+  new QWebChannel(qt.webChannelTransport, function (channel) {
+    window.handler = channel.objects.handler;
+    window.handler.test();
+  });
+  var editor = summernoteEditor($(".texteditor"), "de");
+</script>
+<!--<script src="htmleditor.js"></script>-->
+</body>
+</html>

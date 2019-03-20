@@ -245,6 +245,7 @@ class FileListView(TreeListView):
 
 	def __init__(self, module, rootNode=None, node=None, *args, **kwargs):
 		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
+		# raise Exception("here we are")
 		self.thread = QtCore.QThread()
 		self.thread.setObjectName('FileListView.previewDownloadThread')
 		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
@@ -254,6 +255,7 @@ class FileListView(TreeListView):
 		self.thread.started.connect(self.previewDownloadWorker.work)
 		self.thread.start(QtCore.QThread.IdlePriority)
 		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
+		self.thread.finished.connect(self.thread.deleteLater)
 		logger.debug("FileListView.__init__: thread started")
 
 	def addItem(self, aitem):
