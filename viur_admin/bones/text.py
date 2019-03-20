@@ -253,10 +253,16 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 
 
 class WebPage(QtCore.QObject):
+	sendText = QtCore.pyqtSignal((str))
+
+	def __init__(self, parent=None):
+		super(WebPage, self).__init__(parent)
+		self.textToEdit = ""
 
 	@QtCore.pyqtSlot()
 	def test(self):
 		print('call received')
+		self.sendText.emit(self.textToEdit)
 
 
 class TextEdit(QtWidgets.QMainWindow):
@@ -280,7 +286,8 @@ class TextEdit(QtWidgets.QMainWindow):
 		settings.setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
 		settings.setUnknownUrlSchemePolicy(QWebEngineSettings.AllowAllUnknownUrlSchemes)
 		self.channel = QWebChannel()
-		self.handler = WebPage()
+		self.handler = WebPage(self)
+		self.handler.textToEdit = text
 		self.channel.registerObject('handler', self.handler)
 		self.ui.textEdit.page().setWebChannel(self.channel)
 		self.ui.centralWidget.layout().addWidget(self.ui.textEdit)
@@ -292,6 +299,8 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
 		self.ui.textEdit.setFocus()
 		self.ui.textEdit.setUrl(QtCore.QUrl("qrc:/htmleditor/index.html"))
+		logger.debug("text to edit: %r", text)
+
 
 	def onTextEditInsertFromMimeData(self, source):
 		QtWidgets.QTextEdit.insertFromMimeData(self.ui.textEdit, source)
