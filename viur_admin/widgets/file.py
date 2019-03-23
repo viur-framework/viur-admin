@@ -25,8 +25,8 @@ iconByExtension = dict()
 class PreviewDownloadWorker(QtCore.QObject):
 	previewImageAvailable = QtCore.pyqtSignal(str, str, QtGui.QIcon, QtCore.QSize)
 
-	def __init__(self, cookies):
-		super(PreviewDownloadWorker, self).__init__()
+	def __init__(self, cookies, parent=None):
+		super(PreviewDownloadWorker, self).__init__(parent)
 		self.taskQueue = deque()
 		self.session = Session()
 		self.running = True
@@ -246,7 +246,7 @@ class FileListView(TreeListView):
 	def __init__(self, module, rootNode=None, node=None, *args, **kwargs):
 		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
 		# raise Exception("here we are")
-		self.thread = QtCore.QThread()
+		self.thread = QtCore.QThread(self)
 		self.thread.setObjectName('FileListView.previewDownloadThread')
 		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
 		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
@@ -257,6 +257,16 @@ class FileListView(TreeListView):
 		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
 		self.thread.finished.connect(self.thread.deleteLater)
 		logger.debug("FileListView.__init__: thread started")
+
+	def prepareDeletion(self):
+		self.previewDownloadWorker.onRequestStopRunning()
+		self.thread.quit()
+		self.thread.wait()
+
+	def closeEvent(self, a0: QtGui.QCloseEvent):
+		self.previewDownloadWorker.onRequestStopRunning()
+		self.thread.quit()
+		super(FileListView, self).closeEvent(a0)
 
 	def addItem(self, aitem):
 		try:
@@ -351,6 +361,9 @@ class FileWidget(TreeWidget):
 	def __init__(self, *args, **kwargs):
 		super(FileWidget, self).__init__(
 			actions=["dirup", "mkdir", "upload", "download", "edit", "rename", "delete", "switchview"], *args, **kwargs)
+
+	def prepareDeletion(self):
+		self.tree.prepareDeletion()
 
 	def doUpload(self, files, node):
 		return self.tree.doUpload(files, node)

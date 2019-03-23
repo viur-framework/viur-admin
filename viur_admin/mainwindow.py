@@ -403,7 +403,6 @@ class MainWindow(QtWidgets.QMainWindow):
 			widget.prepareDeletion()
 		except AttributeError:
 			pass
-		# widget.setParent( None )
 		widget.deleteLater()
 		del widget
 
@@ -440,6 +439,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			Removes a handler added by addHandler or stackHandler.
 			@type handler: EntryHandler
 		"""
+
+		logger.debug("MainWindow.removeHandler: %r", handler)
 
 		def removeRecursive(handler, parent):
 			for subIdx in range(0, parent.childCount()):
