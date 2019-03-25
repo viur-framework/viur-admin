@@ -144,6 +144,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 			@param selection: Currently selected Items.
 			@type selection: List-of-Dict, Dict or None
 		"""
+		logger.debug("SelectedEntitiesWidget.init - start: %r, %r, %r", module, selection, skelType)
 		assert skelType in [None, "node", "leaf"]
 		super(SelectedEntitiesWidget, self).__init__(*args, **kwargs)
 		self.module = self.realModule = module
@@ -167,6 +168,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
+		logger.debug("SelectedEntitiesWidget.rebuildDelegates - start:")
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected

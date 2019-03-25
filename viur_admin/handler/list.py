@@ -20,7 +20,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 	def __init__(self, modul, viewName, *args, **kwargs):
 		config = conf.serverConfig["modules"][modul]
 		myview = [x for x in config["views"] if x["name"] == viewName][0]
-		widgetFactory = lambda: ListWidget(modul, myview.get("columns", list()), myview.get("filter", list()))
+		widgetFactory = lambda: ListWidget(modul, logger.debug("invoking ListWidget"), myview.get("columns", list()), myview.get("filter", list()))
 		if "icon" in myview.keys():
 			if myview["icon"].lower().startswith("http://") or myview["icon"].lower().startswith("https://"):
 				icon = myview["icon"]

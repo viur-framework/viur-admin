@@ -131,6 +131,7 @@ class StringEditBone(BoneEditInterface):
 				def genLambda(lang):
 					return lambda *args, **kwargs: self.genTag("", True, lang)
 
+				# btnAdd.released.connect(self.onAddButtonClickedLanguage)  # TODO: works here?
 				btnAdd.released.connect(genLambda(lang))  # FIXME: Lambda..
 			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
@@ -153,7 +154,8 @@ class StringEditBone(BoneEditInterface):
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
 			self.layout().addWidget(self.btnAdd)
-			self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
+			self.btnAdd.released.connect(self.onAddButtonClicked)  # TODO: check if this is working
+			# self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
 			self.btnAdd.show()
 		else:  # not languages and not multiple:
 			self.setLayout(QtWidgets.QVBoxLayout(self))
@@ -163,6 +165,14 @@ class StringEditBone(BoneEditInterface):
 			self.lineEdit.setReadOnly(self.readOnly)
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		self.installEventFilter(wheelEventFilter)
+
+	@QtCore.pyqtSlot()
+	def onAddButtonClicked(self):
+		self.genTag("", True)
+
+	@QtCore.pyqtSlot(str)
+	def onAddButtonClickedLanguage(self, lang):
+		self.genTag("", True, lang)
 
 	@staticmethod
 	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):

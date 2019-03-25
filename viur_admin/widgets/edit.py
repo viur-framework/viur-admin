@@ -2,6 +2,8 @@
 
 import os
 import os.path
+import sys
+
 from hashlib import sha1
 
 from viur_admin.log import getLogger
@@ -228,8 +230,11 @@ class EditWidget(QtWidgets.QWidget):
 				scrollArea = QtWidgets.QScrollArea()
 				containerWidget = QtWidgets.QWidget(scrollArea)
 				scrollArea.setWidget(containerWidget)
-				tabs[tabName] = QtWidgets.QFormLayout(containerWidget)
-				containerWidget.setLayout(tabs[tabName])
+				formLayout = QtWidgets.QFormLayout(containerWidget)
+				formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
+				formLayout.setLabelAlignment(QtCore.Qt.AlignLeft)
+				tabs[tabName] = formLayout
+				containerWidget.setLayout(formLayout)
 				containerWidget.setSizePolicy(
 						QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
 				tmpTabs.append((scrollArea, tabName))
@@ -250,6 +255,8 @@ class EditWidget(QtWidgets.QWidget):
 			# widget = queue.getBest()
 			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict, editWidget=self)
+			widget.setSizePolicy(
+				QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
@@ -264,19 +271,20 @@ class EditWidget(QtWidgets.QWidget):
 				iconLbl.setToolTip(str(bone["error"]))
 			else:
 				dataWidget = widget
-			## Temporary MacOS Fix
-			import sys
+			# TODO: Temporary MacOS Fix
 
 			if sys.platform.startswith("darwin"):
 				dataWidget.setMaximumWidth(500)
 				dataWidget.setMinimumWidth(500)
-			## Temporary MacOS Fix
+			# TODO: Temporary MacOS Fix
+
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
 			if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
 				lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
 			descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
 			descrLbl.setWordWrap(True)
+
 			if bone["required"]:
 				font = descrLbl.font()
 				font.setBold(True)
@@ -295,6 +303,7 @@ class EditWidget(QtWidgets.QWidget):
 	#	self.overlay.clear()
 
 	def unserialize(self, data):
+		logger.debug("EditWidget.unserialize - start")
 		try:
 			for bone in self.bones.values():
 				bone.unserialize(data)
@@ -303,6 +312,7 @@ class EditWidget(QtWidgets.QWidget):
 			self.overlay.inform(self.overlay.ERROR, str(err))
 			self.ui.btnSaveClose.setDisabled(True)
 			self.ui.btnSaveContinue.setDisabled(True)
+		logger.debug("EditWidget.unserialize - end")
 
 	def onBtnSaveContinueReleased(self, *args, **kwargs):
 		self.closeOnSuccess = False

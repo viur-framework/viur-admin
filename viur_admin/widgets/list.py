@@ -253,6 +253,7 @@ class ListTableView(QtWidgets.QTableView):
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)  # Needed to recive dragEnterEvent, not actually wanted
 		self.setSelectionBehavior(self.SelectRows)
+		self.setWordWrap(True)
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
@@ -302,6 +303,7 @@ class ListTableView(QtWidgets.QTableView):
 			@param data: Skeleton-structure send from the server
 			@type data: dict
 		"""
+		logger.debug("ListTableView.rebuildDelegates - bones: %r", bones)
 		self.delegates = []  # Qt doesn't take ownership of view delegates -> garbarge collected
 		self.structureCache = bones
 		modelHeaders = self.model().headers = []
@@ -466,7 +468,7 @@ class ListWidget(QtWidgets.QWidget):
 
 	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs):
 		super(ListWidget, self).__init__(*args, **kwargs)
-		# logger.debug("ListWidget.init: %r, %r, %r", modul, fields, filter)
+		logger.debug("ListWidget.init: %r, %r, %r", modul, fields, filter)
 		self.modul = modul
 		self.ui = Ui_List()
 		self.ui.setupUi(self)
