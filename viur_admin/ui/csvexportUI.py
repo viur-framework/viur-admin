@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'csvexport.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.dev1812231618
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_CsvExport(object):
     def setupUi(self, CsvExport):
@@ -106,5 +107,6 @@ class Ui_CsvExport(object):
         self.filenameDialogAction.setText(_translate("CsvExport", "..."))
         self.label.setText(_translate("CsvExport", "Datensätze:"))
         self.countLabel.setText(_translate("CsvExport", "0"))
+
 
 import viur_admin.ui.icons_rc

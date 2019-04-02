@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'fileDownloadProgress.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.dev1812231618
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_FileDownloadProgress(object):
     def setupUi(self, FileDownloadProgress):
@@ -47,4 +48,5 @@ class Ui_FileDownloadProgress(object):
         self.label.setText(_translate("FileDownloadProgress", "ProgressTotal"))
         self.lblProgress.setText(_translate("FileDownloadProgress", "Progress"))
         self.btnCancel.setText(_translate("FileDownloadProgress", "Cancel"))
+
 

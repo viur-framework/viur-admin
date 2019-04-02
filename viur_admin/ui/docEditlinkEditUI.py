@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'docEditlinkEdit.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.dev1812231618
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_LinkEdit(object):
     def setupUi(self, LinkEdit):
@@ -32,4 +33,5 @@ class Ui_LinkEdit(object):
         LinkEdit.setWindowTitle(_translate("LinkEdit", "Form"))
         self.label.setText(_translate("LinkEdit", "Verknüpfungsziel"))
         self.checkBoxNewWindow.setText(_translate("LinkEdit", "In neuem Fenster öffnen"))
+
 

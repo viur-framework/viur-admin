@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'addportalwizard.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.dev1812231618
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_AddPortalWizard(object):
     def setupUi(self, AddPortalWizard):
@@ -77,4 +78,5 @@ class Ui_AddPortalWizard(object):
         self.label.setText(_translate("AddPortalWizard", "Title"))
         self.label_2.setText(_translate("AddPortalWizard", "Select Authentication"))
         self.label_3.setText(_translate("AddPortalWizard", "Success"))
+
 
