@@ -60,7 +60,7 @@ class HierarchyHandler(QtCore.QObject):
 
 	def requestModulHandler(self, queue, modul):
 		config = conf.serverConfig["modules"][modul]
-		if (config["handler"] == "hierarchy"):
+		if config["handler"] == "hierarchy" or config["handler"].startswith("hierarchy."):
 			f = lambda: HierarchyCoreHandler(modul)
 			queue.registerHandler(5, f)
 

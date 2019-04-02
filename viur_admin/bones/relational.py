@@ -443,10 +443,20 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			event.emit("popWidget", self)
 
 	def onBtnSelectReleased(self, *args, **kwargs):
+		logger.debug("onBtnSelectReleased")
+		try:
+			self.selection.prepareDeletion()
+		except AttributeError:
+			pass
 		self.selectionChanged.emit(self.selection.get())
 		event.emit("popWidget", self)
 
 	def onBtnCancelReleased(self, *args, **kwargs):
+		logger.debug("onBtnCancelReleased")
+		try:
+			self.selection.prepareDeletion()
+		except AttributeError:
+			pass
 		event.emit("popWidget", self)
 
 	def getFilter(self):

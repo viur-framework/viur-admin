@@ -186,6 +186,10 @@ class FileBoneSelector(TreeBoneSelector):
 		else:
 			super(FileBoneSelector, self).keyPressEvent(e)
 
+	def prepareDeletion(self):
+		self.selection.prepareDeletion()
+		self.list.prepareDeletion()
+
 
 def CheckForFileBone(moduleName, boneName, skelStucture):
 	return skelStucture[boneName]["type"].startswith("treeitem.file")

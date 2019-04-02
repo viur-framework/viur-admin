@@ -397,6 +397,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.stackedWidget.addWidget(widget)
 
 	def removeWidget(self, widget):
+		logger.debug("removeWidget: %r", widget)
 		assert self.stackedWidget.indexOf(widget) != -1
 		self.stackedWidget.removeWidget(widget)
 		try:
@@ -415,6 +416,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			@type widget: QWidget
 			@param widget: Widget to remove. Must be on the current handler's stack.
 		"""
+		logger.debug("popWidget: %r", widget)
 		currentHandler = self.handlerForWidget(widget)
 		if currentHandler is None:
 			logger.error("Stale widget: " + str(widget))
@@ -464,6 +466,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.rebuildBreadCrumbs()
 
 	def onTreeWidgetItemClicked(self, item, column):
+		logger.debug("item, column: %r, %r", item, column)
 		if column == 0:
 			item.clicked()
 		elif column == 1 and not isinstance(item, GroupHandler):

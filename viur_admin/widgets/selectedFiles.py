@@ -27,9 +27,8 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		:param selection: Currently selected Items.
 		:type selection: list of dict, dict or None
 		"""
-		logger.debug("SelectedFilesWidget: %r, %r, %r, %r", modul, selection, args, kwargs)
+		logger.debug("SelectedFilesWidget: %r, %r, %r, %r", module, selection, args, kwargs)
 		super(SelectedFilesWidget, self).__init__(*args, **kwargs)
-		logger.debug("SelectedFilesWidget.init: %r, %r", module, selection)
 		if isinstance(selection, list):
 			self.selection = selection and [s["dest"] for s in selection]
 		elif isinstance(selection, dict):  # This was a singleSelection before
@@ -40,16 +39,24 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		self.itemCache = dict()
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
-		self.thread = QtCore.QThread()
-		self.thread.setObjectName('FileListView.previewDownloadThread')
+		self.thread = QtCore.QThread(self)
+		self.thread.setObjectName('SelectedFilesWidget.previewDownloadThread')
 		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
 		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
 		self.previewDownloadWorker.moveToThread(self.thread)
 		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
 		self.thread.started.connect(self.previewDownloadWorker.work)
 		self.thread.start(QtCore.QThread.IdlePriority)
+		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
+		self.thread.finished.connect(self.thread.deleteLater)
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
+		# raise Exception("here!!!")
+
+	def prepareDeletion(self):
+		self.previewDownloadWorker.onRequestStopRunning()
+		self.thread.quit()
+		self.thread.wait()
 
 	@QtCore.pyqtSlot(str)
 	def onRequestPreview(self, dlKey: str):
