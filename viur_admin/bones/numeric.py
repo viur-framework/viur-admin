@@ -2,6 +2,8 @@
 from math import pow
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QIcon
+
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.bones.base import BaseViewBoneDelegate
@@ -57,7 +59,47 @@ class NumericViewBoneDelegate(BaseViewBoneDelegate):
 					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
 			except:
 				value = str(value)
-		return (super(NumericViewBoneDelegate, self).displayText(value, locale))
+		return super(NumericViewBoneDelegate, self).displayText(value, locale)
+
+
+class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
+	def __init__(self, moduleName, boneName, skelStructure, *args, **kwargs):
+		super(IndexSortViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
+		self.icon = QIcon(":icons/actions/icon-draggable.svg")
+		self.margin = 20
+		self.mode = QIcon.Normal
+		self.state = QIcon.On
+		# logger.debug("IndexSortColumnDelegate")
+
+	def displayText(self, value, locale):
+		if self.boneName in self.skelStructure.keys() and "precision" in self.skelStructure[self.boneName].keys():
+			try:
+				if not self.skelStructure[self.boneName]["precision"]:  # Its an int:
+					value = str(int(value))
+				else:
+					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
+			except:
+				value = str(value)
+		return super(IndexSortViewBoneDelegate, self).displayText(value, locale)
+
+	def paint(self, painter, option, index):
+		# logger.debug("paint: %r, %r, %r", painter, option, index)
+		super(self.__class__, self).paint(painter, option, index)
+
+		# if option.state & QtWidgets.QStyle.State_MouseOver:
+		# 	painter.fillRect(option.rect, option.palette.highlight())
+		# if option.state & QtWidgets.QStyle.State_Selected:
+		# 	painter.fillRect(option.rect, option.palette.highlight())
+		actualSize = self.icon.actualSize(option.decorationSize, self.mode, self.state)
+		option.decorationSize = QtCore.QSize(min(option.decorationSize.width(), actualSize.width()), min(option.decorationSize.height(), actualSize.height()))
+		# logger.debug("in delegate paint: %r, %r", actualSize, option)
+		r = QtCore.QRect(QtCore.QPoint(), option.decorationSize)
+		r.moveCenter(option.rect.center())
+		r.setRight(option.rect.right() - self.margin)
+		self.icon.paint(painter, r, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter, self.mode, self.state)
+
+	def sizeHint(self, option, index):
+		return QtCore.QSize(20, 20)
 
 
 class NumericEditBone(BoneEditInterface):
@@ -106,6 +148,11 @@ def CheckForNumericBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "numeric")
 
 
+def CheckForSortIndexBone(moduleName, boneName, skelStucture):
+	return (skelStucture[boneName]["type"] == "numeric" and boneName == "sortindex")
+
+
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForNumericBone, NumericEditBone)
 viewDelegateSelector.insert(2, CheckForNumericBone, NumericViewBoneDelegate)
+viewDelegateSelector.insert(3, CheckForSortIndexBone, IndexSortViewBoneDelegate)

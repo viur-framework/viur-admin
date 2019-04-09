@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
 
 from viur_admin.log import getLogger
 from PyQt5 import QtCore
@@ -15,13 +16,12 @@ logger = getLogger(__name__)
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 	"""Holds one view for this module (preconfigured from Server)"""
 
-	def __init__(self, modul, viewName, *args, **kwargs):
-		config = conf.serverConfig["modules"][modul]
-		myview = [x for x in config["views"] if x["name"] == viewName][0]
-		icon = loadIcon(myview["icon"])
+	def __init__(self, modul, config, viewName, *args, **kwargs):
+		logger.debug("icon?: %r", config)
+		icon = loadIcon(config.get("icon", None))
 		super(PredefinedViewHandler, self).__init__(
-			lambda: ListWidget(modul, myview.get("columns", list()), myview.get("filter", dict())),
-			descr=myview["name"],
+			lambda: ListWidget(modul, config, config.get("columns", list()), config.get("filter", dict())),
+			descr=config["name"],
 			icon=icon,
 			vanishOnClose=False,
 			*args,
@@ -39,6 +39,7 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 		actions = ListCoreHandlerConfig.get("actions")
 		widgetGen = lambda: ListWidget(
 			modul,
+			config=conf.serverConfig["modules"][modul],
 			fields=ListCoreHandlerConfig.get("columns", list()),
 			filter=ListCoreHandlerConfig.get("filter", dict()),
 			actions=actions
@@ -59,7 +60,9 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 
 		if "views" in ListCoreHandlerConfig.keys():
 			for view in ListCoreHandlerConfig["views"]:
-				self.addChild(PredefinedViewHandler(modul, view["name"]))
+				viewConfig = deepcopy(view)
+				viewConfig["handler"] = ListCoreHandlerConfig["handler"]
+				self.addChild(PredefinedViewHandler(modul, viewConfig, view["name"]))
 
 
 class ListHandler(QtCore.QObject):

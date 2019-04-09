@@ -23,6 +23,7 @@
         <file>actions/download.svg</file>
         <file>actions/download_bill.svg</file>
         <file>actions/download_delivery_note.svg</file>
+        <file>actions/icon-draggable.svg</file>
         <file>actions/dropdownarrow.svg</file>
         <file>actions/dropdownarrow_on.svg</file>
         <file>actions/edit.svg</file>

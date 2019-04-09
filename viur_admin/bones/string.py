@@ -11,8 +11,9 @@ from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.event import event
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.config import conf
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.utils import wheelEventFilter, ViurTabBar
+from viur_admin.ui.extendedStringSearchPluginUI import Ui_Form
 
 
 def unescapeHtml(html):
@@ -104,6 +105,22 @@ class Tag(QtWidgets.QWidget):
 		self.lblDisplay.setText(str(self.tag))
 		self.lblDisplay.show()
 		self.editField.hide()
+
+
+class ExtendedStringFilterPlugin(QtWidgets.QGroupBox):
+	def __init__(self, extension, parent=None):
+		super(ExtendedStringFilterPlugin, self).__init__(parent)
+		self.extension = extension
+		# self.view = view
+		# self.module = module
+		self.ui = Ui_Form()
+		self.ui.setupUi(self)
+		self.setTitle(extension["name"])
+
+	@staticmethod
+	def canHandleExtension(extension):
+		return (isinstance(extension, dict) and "type" in extension.keys() and (
+				extension["type"] == "string" or extension["type"].startswith("string.")))
 
 
 class StringEditBone(BoneEditInterface):
@@ -274,3 +291,4 @@ def CheckForStringBone(moduleName, boneName, skelStucture):
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForStringBone, StringEditBone)
 viewDelegateSelector.insert(2, CheckForStringBone, StringViewBoneDelegate)
+extendedSearchWidgetSelector.insert(1, ExtendedStringFilterPlugin.canHandleExtension, ExtendedStringFilterPlugin)

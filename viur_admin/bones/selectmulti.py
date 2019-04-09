@@ -5,7 +5,8 @@ from PyQt5 import QtWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.bone_interface import BoneEditInterface
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
+from viur_admin.ui.extendedSelectMultiFilterPluginUI import Ui_Form
 
 
 class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
@@ -59,6 +60,33 @@ class SelectMultiEditBone(BoneEditInterface):
 		return {self.boneName: [key for key, checkbox in self.checkboxes.items() if checkbox.isChecked()]}
 
 
+class ExtendedSelectMultiFilterPlugin(QtWidgets.QGroupBox):
+	def __init__(self, extension, parent=None):
+		super(ExtendedSelectMultiFilterPlugin, self).__init__(parent)
+		self.extension = extension
+		# self.view = view
+		# self.module = module
+		self.ui = Ui_Form()
+		self.ui.setupUi(self)
+		self.setTitle(extension["name"])
+		self.ui.values.addItem("", None)
+		for userData, text in extension["values"].items():
+			self.ui.values.addItem(text, userData)
+
+	@staticmethod
+	def canHandleExtension(extension):
+		return (
+				isinstance(extension, dict) and
+				"type" in extension.keys() and (
+						(
+								(extension["type"] == "select" or extension["type"].startswith("select.")) and
+								extension.get("multiple", True)
+						)
+						or (extension["type"] == "selectmulti" or extension["type"].startswith("selectmulti."))
+				)
+		)
+
+
 def CheckForSelectMultiBone(moduleName, boneName, skelStucture):
 	return (
 			((skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")) and
@@ -70,3 +98,4 @@ def CheckForSelectMultiBone(moduleName, boneName, skelStucture):
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForSelectMultiBone, SelectMultiEditBone)
 viewDelegateSelector.insert(2, CheckForSelectMultiBone, SelectMultiViewBoneDelegate)
+extendedSearchWidgetSelector.insert(1, ExtendedSelectMultiFilterPlugin.canHandleExtension, ExtendedSelectMultiFilterPlugin)

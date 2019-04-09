@@ -3,8 +3,9 @@ from datetime import datetime
 from PyQt5 import QtCore, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
-from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.priorityqueue import editBoneSelector, extendedSearchWidgetSelector
 from viur_admin.utils import wheelEventFilter
+from viur_admin.ui.extendedDateRangeFilterPluginUI import Ui_Form
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -67,6 +68,23 @@ class FixedTimeEdit(QtWidgets.QTimeEdit):
 	def focusOutEvent(self, e):
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		super(FixedTimeEdit, self).focusOutEvent(e)
+
+
+class DateRangeFilterPlugin(QtWidgets.QGroupBox):
+	def __init__(self, extension, parent=None):
+		super(DateRangeFilterPlugin, self).__init__(parent)
+		self.extension = extension
+		# self.view = view
+		# self.module = module
+		self.ui = Ui_Form()
+		self.ui.setupUi(self)
+		self.setTitle(extension["name"])
+		self.mutualExclusiveGroupTarget = "daterange-filter"
+		self.mutualExclusiveGroupKey = extension["target"]
+
+	@staticmethod
+	def canHandleExtension(extension):
+		return isinstance(extension, dict) and "type" in extension.keys() and (extension["type"] == "date" or extension["type"].startswith("date."))
 
 
 class DateEditBone(BoneEditInterface):
@@ -149,3 +167,4 @@ def CheckForDateBone(moduleName, boneName, skelStucture):
 
 
 editBoneSelector.insert(2, CheckForDateBone, DateEditBone)
+extendedSearchWidgetSelector.insert(1, DateRangeFilterPlugin.canHandleExtension, DateRangeFilterPlugin)

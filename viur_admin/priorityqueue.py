@@ -27,3 +27,4 @@ viewDelegateSelector = PriorityQueue()  # Queried by listWidget to determine the
 actionDelegateSelector = PriorityQueue()  # Locates an QAction for a given module/action-name
 protocolWrapperClassSelector = PriorityQueue()  # Used during startup to select an Wrapper-Class
 protocolWrapperInstanceSelector = PriorityQueue()  # Used afterwards to get a specific instance
+extendedSearchWidgetSelector = PriorityQueue()  # Queried for additional search filter widgets defined by server

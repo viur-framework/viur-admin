@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+from time import time
+
 import csv
 import json
+from PyQt5.QtCore import QModelIndex
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -10,12 +14,14 @@ from datetime import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.utils import Overlay, urlForItem
 from viur_admin.event import event
-from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector
+from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector, \
+	extendedSearchWidgetSelector
 from viur_admin.widgets.edit import EditWidget
 from viur_admin.utils import WidgetHandler
 from viur_admin.ui.listUI import Ui_List
 from viur_admin.ui.csvexportUI import Ui_CsvExport
 from viur_admin.config import conf
+from viur_admin.network import nam
 
 
 class ListTableModel(QtCore.QAbstractTableModel):
@@ -27,6 +33,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	listIsComplete = QtCore.pyqtSignal()
 
 	def __init__(self, modul, fields=None, filter=None, parent=None, *args):
+		logger.debug("ListTableModel.init: %r, %r, %r, %r, %r", modul, fields, filter, parent, args)
 		QtCore.QAbstractTableModel.__init__(self, parent, *args)
 		self.modul = modul
 		self.fields = fields or ["name"]
@@ -44,9 +51,33 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
 		protoWrap.entitiesChanged.connect(self.reload)
-		protoWrap.queryResultAvailable.connect(self.addData)
-		# self.connect( protoWrap, QtCore.SIGNAL("entitiesChanged()"), self.reload )
+		try:
+			protoWrap.queryResultAvailable.connect(self.addData)
+		except Exception as err:
+			logger.error("Error: here we should look again, what queryResultAvailable provides us...")
+			logger.exception(err)
 		self.reload()
+
+	def insertRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()):
+		# logger.debug("insertRows: %r, %r, %r", row, count, parent)
+		self.beginInsertRows(QModelIndex(), row, row + count - 1)
+		for rowIndex in range(row, row + count):
+			self.dataCache.insert(rowIndex, dict.fromkeys(["key"] + self._validFields))
+		self.endInsertRows()
+		return True
+
+	def removeRows(self, row, count, parent=QModelIndex()):
+		# logger.debug("removeRows: %r, %r, %r", row, count, parent)
+		self.beginRemoveRows(QModelIndex(), row, row + count - 1)
+
+		for rowIndex in range(row, row + count):
+			self.dataCache.pop(rowIndex)
+
+		self.endRemoveRows()
+		return True
+
+	def supportedDropActions(self):
+		return QtCore.Qt.MoveAction | QtCore.Qt.TargetMoveAction
 
 	def setDisplayedFields(self, fields):
 		self.fields = fields
@@ -94,6 +125,22 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		except:
 			return 0
 
+	def setData(self, index, value, role):
+		rowIndex = index.row()
+		colIndex = index.column()
+		lenDataCache = len(self.dataCache)
+		# logger.debug("setData: value=%r", value)
+		# logger.debug("indexes and length: %r, %r, %r", rowIndex, colIndex, lenDataCache)
+		destDataCacheEntry = self.dataCache[rowIndex]
+		fieldNameByIndex = self._validFields[colIndex]
+		# logger.debug("destCacheEntry: %r, fieldNameByIndex: %r", destDataCacheEntry, fieldNameByIndex)
+		if index.isValid():
+			destDataCacheEntry[fieldNameByIndex] = value
+			# logger.debug("data before emitting change: %r", destDataCacheEntry[fieldNameByIndex])
+			self.dataChanged.emit(index, index)
+			return True
+		return False
+
 	def data(self, index, role):
 		if not index.isValid():
 			return None
@@ -117,11 +164,12 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return None
 
 	def loadNext(self, forceLoading=False):
-		# print("loadNext")
+		logger.debug("loadNext - cookies: %r", [i.toRawForm() for i in nam.cookieJar().allCookies()])
 		if self.isLoading and not forceLoading:
 			# print("stopped loadNext")
 			return
 		self.isLoading += 1
+		logger.debug("loadNext.filter, %r", self.filter)
 		rawFilter = self.filter.copy() or {}
 		if self.cursor:
 			rawFilter["cursor"] = self.cursor
@@ -136,6 +184,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 					rawFilter[rawFilter["orderby"] + "$gt"] = self.dataCache[-1][rawFilter["orderby"]]
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
+		logger.debug("loadNext.chunk: %r, %r, %r", rawFilter, type(rawFilter), self._chunkSize)
 		rawFilter["amount"] = self._chunkSize
 		self.loadingKey = protoWrap.queryData(**rawFilter)
 
@@ -172,13 +221,12 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	def getData(self):
 		return self.dataCache
 
-	def sort(self, colum, order):
-		if self.fields[colum] == "key" \
-				or ("cantSort" in dir(self.delegates[colum]) \
-						    and self.delegates[colum].cantSort):
+	def sort(self, p_int, order=None):
+		if (self.fields[p_int] == "key" or (
+				"cantSort" in dir(self.delegates[p_int]) and self.delegates[p_int].cantSort)):
 			return
 		filter = self.filter
-		filter["orderby"] = self.fields[colum]
+		filter["orderby"] = self.fields[p_int]
 		if order == QtCore.Qt.DescendingOrder:
 			filter["orderdir"] = "1"
 		else:
@@ -218,9 +266,20 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.reload()
 
 	def flags(self, index):
+		defaultFlags = super(ListTableModel, self).flags(index)
+		# logger.debug("flags row and col: %r, %r", index.row(), index.column())
 		if not index.isValid():
-			return QtCore.Qt.NoItemFlags
-		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsEnabled
+			# lenData = len(self.dataCache)
+			# if index.row() == -1 and index.column() == -1:
+			# 	return defaultFlags
+			return defaultFlags
+		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | defaultFlags
+
+	def setSortIndex(self, index: QModelIndex, sortindex: float):
+		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
+		assert protoWrap is not None
+		key = self.dataCache[index.row()]["key"]
+		protoWrap.setSortIndex(key, sortindex)
 
 
 class ListTableView(QtWidgets.QTableView):
@@ -248,12 +307,18 @@ class ListTableView(QtWidgets.QTableView):
 		filter = filter or {}
 		self.structureCache = None
 		model = ListTableModel(self.modul, fields or ["name"], filter)
-		self.setModel(model)
-		self.setDragDropMode(self.DragDrop)
 		self.setDragEnabled(True)
-		self.setAcceptDrops(True)  # Needed to recive dragEnterEvent, not actually wanted
+		self.setAcceptDrops(True)  # Needed to receive dragEnterEvent, not actually wanted
 		self.setSelectionBehavior(self.SelectRows)
+		self.setDragDropMode(self.InternalMove)
+		self.setDragDropOverwriteMode(False)
 		self.setWordWrap(True)
+		self.setDropIndicatorShown(True)
+		self.setSelectionMode(self.SingleSelection)
+		self.setDefaultDropAction(QtCore.Qt.MoveAction)
+		self.setModel(model)
+		self.setContentsMargins(0, 0, 0, 0)
+
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		header.customContextMenuRequested.connect(self.tableHeaderContextMenuEvent)
@@ -323,7 +388,8 @@ class ListTableView(QtWidgets.QTableView):
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)
 			colum += 1
-		# logger.debug("ListTableModule.rebuildDelegates headers and fields: %r, %r, %r", modelHeaders, fields, colum)
+
+	# logger.debug("ListTableModule.rebuildDelegates headers and fields: %r, %r, %r", modelHeaders, fields, colum)
 
 	def keyPressEvent(self, e):
 		if e.matches(QtGui.QKeySequence.Delete):
@@ -370,8 +436,8 @@ class ListTableView(QtWidgets.QTableView):
 		if QtWidgets.QMessageBox.question(
 				self,
 				QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
-						QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(ids),
-						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+				QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(ids),
+				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
 				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.model().modul)
@@ -391,24 +457,63 @@ class ListTableView(QtWidgets.QTableView):
 		self.overlay.inform(self.overlay.SUCCESS)
 
 	def dragEnterEvent(self, event):
-		"""
-			Allow Drag&Drop to the outside (ie relationalBone)
+		"""Allow Drag&Drop to the outside (ie relationalBone)
 		"""
 		if event.source() == self:
 			event.accept()
 			tmpList = []
 			for itemIndex in self.selectionModel().selection().indexes():
 				tmpList.append(self.model().getData()[itemIndex.row()])
+				tmpList[-1]["dataPosition"] = itemIndex.row()
 			event.mimeData().setData("viur/listDragData", json.dumps({"entities": tmpList}).encode("utf-8"))
 			event.mimeData().setUrls([urlForItem(self.model().modul, x) for x in tmpList])
 		return super(ListTableView, self).dragEnterEvent(event)
 
 	def dragMoveEvent(self, event):
+		"""We need to have drops enabled to receive dragEnterEvents, so we can add our mimeData.
+
+		Here we also check if we have a valid item as a drop target for internal move aka reordering for sortindex bones.
 		"""
-			We need to have drops enabled to recive dragEnterEvents, so we can add our mimeData;
-			but we won't ever recive an actual drop.
-		"""
-		event.ignore()
+		if self.rowAt(event.pos().y()) is not -1:
+			event.accept()
+		else:
+			event.ignore()
+
+	def dropEvent(self, drop_event: QtGui.QDropEvent):
+		try:
+			model = self.model()
+			totalItems = model.rowCount(None)
+			srcModelIndex = self.currentIndex()
+			sortIndexDataIndex = model._validFields.index("sortindex")
+			srcModelIndex = model.index(srcModelIndex.row(), sortIndexDataIndex)
+			destRowIndex = self.rowAt(drop_event.pos().y())
+			destModelIndex = model.index(destRowIndex, sortIndexDataIndex)
+			destRowSortIndex = model.data(destModelIndex, QtCore.Qt.DisplayRole)
+			srcRowSortIndex = model.data(srcModelIndex, QtCore.Qt.DisplayRole)
+
+			if (destRowIndex == totalItems - 1):
+				# drop to last
+				newSortIndex = time() + destRowSortIndex
+				logger.debug("drop to last item: %r, %r, %r", totalItems, destRowIndex, destRowSortIndex)
+			elif destRowIndex == 0:
+				newSortIndex = destRowSortIndex
+				logger.debug("drop to first item: %r, %r, %r", totalItems, destRowIndex, destRowSortIndex)
+			else:
+				if srcModelIndex.row() < destRowIndex:
+					idx = -1
+				else:
+					idx = 1
+
+				currentModelIndex = model.index(destRowIndex - idx, sortIndexDataIndex)
+				currentSortIndex = model.data(currentModelIndex, QtCore.Qt.DisplayRole)
+				newSortIndex = currentSortIndex + destRowSortIndex
+				logger.debug("before item dropped: %r, %r", destRowIndex - idx, currentSortIndex)
+			newSortIndex /= 2.0
+			model.setSortIndex(srcModelIndex, newSortIndex)
+			logger.debug("dropEvent: %r, %r, %r, %r", destRowIndex, destRowSortIndex, srcRowSortIndex, newSortIndex)
+		except Exception as err:
+			logger.exception(err)
+		return super(ListTableView, self).dropEvent(drop_event)
 
 	def getFilter(self):
 		return self.model().getFilter()
@@ -466,16 +571,18 @@ class ListWidget(QtWidgets.QWidget):
 			"downloaddeliverynote"]
 	}
 
-	def __init__(self, modul, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs):
+	def __init__(self, modul, config=None, fields=None, filter=None, actions=None, editOnDoubleClick=True, *args, **kwargs):
 		super(ListWidget, self).__init__(*args, **kwargs)
-		logger.debug("ListWidget.init: %r, %r, %r", modul, fields, filter)
+		logger.debug("ListWidget.init: modul: %r, fields: %r, filter: %r", modul, fields, filter)
 		self.modul = modul
 		self.ui = Ui_List()
 		self.ui.setupUi(self)
 		layout = QtWidgets.QHBoxLayout(self.ui.tableWidget)
+		layout.setContentsMargins(0, 0, 0, 0)
 		self.ui.tableWidget.setLayout(layout)
 		self.list = ListTableView(self.ui.tableWidget, modul, fields, filter)
 		layout.addWidget(self.list)
+		self.setContentsMargins(0,0,0,0)
 		self.list.show()
 		self.toolBar = QtWidgets.QToolBar(self)
 		self.toolBar.setIconSize(QtCore.QSize(16, 16))
@@ -483,8 +590,8 @@ class ListWidget(QtWidgets.QWidget):
 		# FIXME: testing changing to placeholder text
 		# if filter is not None and "search" in filter.keys():
 		# 	self.ui.editSearch.setText(filter["search"])
-		config = conf.serverConfig["modules"][modul]
-		handler = config["handler"]
+		self.config = config
+		handler = self.config["handler"]
 		try:
 			handler = handler.split(".", 1)[0]
 		except ValueError:
@@ -502,6 +609,10 @@ class ListWidget(QtWidgets.QWidget):
 		self.list.itemClicked.connect(self.itemClicked)
 		self.list.itemDoubleClicked.connect(self.itemDoubleClicked)
 		self.list.itemActivated.connect(self.itemActivated)
+		# self.ui.splitter.setSizes([])
+		# self.ui.splitter.splitterMoved.connect(self.list.realignHeaders)
+		self.ui.extendedSearchArea.setVisible(False)
+		self.ui.extendedSearchBTN.toggled.connect(self.toggleExtendedSearchArea)
 		self.overlay = Overlay(self)
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
 		assert protoWrap is not None
@@ -513,8 +624,18 @@ class ListWidget(QtWidgets.QWidget):
 			"orderby" in self.list.model().getFilter().keys() and self.list.model().getFilter()["orderby"] == "name")
 		self.ui.editSearch.textEdited.connect(self.prefixSearch)
 		self.prefixSearchTimer = None
+		self.extendedSearchPlugins = list()
+		self.initExtendedSearchPlugins()
 
 	# self.overlay.inform( self.overlay.BUSY )
+
+	@QtCore.pyqtSlot(bool)
+	def toggleExtendedSearchArea(self, checked):
+		logger.debug("ext search state: %r", checked)
+		if checked:
+			self.ui.extendedSearchArea.setVisible(True)
+		else:
+			self.ui.extendedSearchArea.setVisible(False)
 
 	def onBusyStateChanged(self, busy):
 		if busy:
@@ -637,6 +758,19 @@ class ListWidget(QtWidgets.QWidget):
 
 	def getSelection(self):
 		return self.list.getSelection()
+
+	def initExtendedSearchPlugins(self):
+		logger.debug("initExtendedSearchPlugins: %r", self.config.get("extendedFilters"))
+		extendedSearchLayout = self.ui.extendedSearchArea.layout()
+		if "extendedFilters" in self.config:
+			for extension in self.config["extendedFilters"]:
+				wdg = extendedSearchWidgetSelector.select(extension)
+				if wdg:
+					self.extendedSearchPlugins.append(wdg(extension, self))
+					count = extendedSearchLayout.count()
+					extendedSearchLayout.insertWidget(count - 1, self.extendedSearchPlugins[-1])
+
+		self.ui.extendedSearchBTN.setVisible(len(self.extendedSearchPlugins) > 0)
 
 
 class CsvExportWidget(QtWidgets.QWidget):

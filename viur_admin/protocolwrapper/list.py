@@ -10,7 +10,7 @@ from collections import OrderedDict
 from PyQt5 import QtCore
 
 from time import time
-from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
+from viur_admin.network import NetworkService, RequestGroup, RequestWrapper, securityTokenProvider
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 
 
@@ -136,6 +136,14 @@ class ListWrapper(QtCore.QObject):
 			self.queryResultAvailable.emit(req.wrapperCbCacheKey)
 		self.checkBusyStatus()
 
+	def setSortIndex(self, key, sortIndex):
+		req = NetworkService.request("/{0}/setSortIndex/".format(self.module), params={"key": key, "index": sortIndex}, secure=True,
+		                             finishedHandler=self.onSaveResult)
+		self.checkBusyStatus()
+		setSortIndexTaskId = str(id(req))
+		logger.debug("proto list setSortIndex task id: %r", setSortIndexTaskId)
+		return setSortIndexTaskId
+
 	def add(self, **kwargs):
 		req = NetworkService.request("/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
 		                             finishedHandler=self.onSaveResult)
@@ -197,7 +205,7 @@ class ListWrapper(QtCore.QObject):
 			self.updatingFailedError.emit(str(id(req)))
 			QtCore.QTimer.singleShot(self.updateDelay, self.resetOnError)
 			return
-		if data["action"] in ["addSuccess", "editSuccess", "deleteSuccess"]:  # Saving succeeded
+		if data["action"] in ["addSuccess", "editSuccess", "deleteSuccess", "setSortIndexSuccess"]:  # Saving succeeded
 			QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 			self.updatingSucceeded.emit(str(id(req)))
 		else:  # There were missing fields

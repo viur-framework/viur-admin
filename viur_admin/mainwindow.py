@@ -78,7 +78,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.verticalLayout.setObjectName("verticalLayout")
 		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 		self._mainWidget = QtWidgets.QWidget(self.centralwidget)
-		self._mainWidget.setContentsMargins(0, 0, 0, 0)
+		self._mainWidgetLayout = QtWidgets.QHBoxLayout(self._mainWidget)
+		self._mainWidgetLayout.setContentsMargins(0, 0, 0, 0)
 		# sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
 		# sizePolicy.setHorizontalStretch(0)
 		# sizePolicy.setVerticalStretch(0)
@@ -87,22 +88,22 @@ class MainWindow(QtWidgets.QMainWindow):
 		# self._mainWidget.setMinimumSize(QtCore.QSize(0, 100))
 		# self._mainWidget.setMaximumSize(QtCore.QSize(16777215, 100))
 		self._mainWidget.setObjectName("mainWindowArea")
-		self.horizontalLayout = QtWidgets.QHBoxLayout(self._mainWidget)
-		self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-		self.horizontalLayout.setObjectName("horizontalLayout")
-		self.iconLbl = QtWidgets.QLabel(self._mainWidget)
-		self.iconLbl.setObjectName("iconLbl")
-		self.horizontalLayout.addWidget(self.iconLbl)
-		self.modulLbl = QtWidgets.QLabel(self._mainWidget)
+		# self.horizontalLayout = QtWidgets.QHBoxLayout(self._mainWidget)
+		# self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+		# self.horizontalLayout.setObjectName("horizontalLayout")
+		# self.iconLbl = QtWidgets.QLabel(self._mainWidget)
+		# self.iconLbl.setObjectName("iconLbl")
+		# self.horizontalLayout.addWidget(self.iconLbl)
+		# self.modulLbl = QtWidgets.QLabel(self._mainWidget)
 		font = QtGui.QFont()
 		font.setPointSize(22)
 		# font.setBold(False)
 		# font.setWeight(50)
-		self.modulLbl.setFont(font)
-		self.modulLbl.setObjectName("modulLbl")
-		self.horizontalLayout.addWidget(self.modulLbl)
-		spacerItem = QtWidgets.QSpacerItem(368, 10, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		self.horizontalLayout.addItem(spacerItem)
+		# self.modulLbl.setFont(font)
+		# self.modulLbl.setObjectName("modulLbl")
+		# self.horizontalLayout.addWidget(self.modulLbl)
+		# spacerItem = QtWidgets.QSpacerItem(368, 10, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+		# self.horizontalLayout.addItem(spacerItem)
 		self.verticalLayout.addWidget(self._mainWidget)
 		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 		self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
@@ -206,8 +207,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		_translate = QtCore.QCoreApplication.translate
 		self.setWindowTitle(_translate("MainWindow", "ViUR Admin"))
-		self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
-		self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
+		# self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
+		# self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
 		self.menuInfo.setTitle(_translate("MainWindow", "Info"))
 		self.menuErweitert.setTitle(_translate("MainWindow", "Advanced"))
 		self.dockWidget.setWindowTitle(_translate("MainWindow", "Modules"))
@@ -479,20 +480,20 @@ class MainWindow(QtWidgets.QMainWindow):
 			Currently, it displays the current module, its icon and
 			stacks the path as children to its handler
 		"""
-		self.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
-		self.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
+		# self.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
+		# self.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
 		currentHandler = self.handlerForWidget()
 		if currentHandler:
 			try:
 				txt, icon = currentHandler.getBreadCrumb()
 			except:
 				return
-			self.modulLbl.setText(txt[:35])
-			if icon:
-				sizes = icon.availableSizes()
-				if len(sizes):
-					pixmap = icon.pixmap(sizes[0])
-					self.iconLbl.setPixmap(pixmap.scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
+			# self.modulLbl.setText(txt[:35])
+			# if icon:
+			# 	sizes = icon.availableSizes()
+			# 	if len(sizes):
+			# 		pixmap = icon.pixmap(sizes[0])
+			# 		self.iconLbl.setPixmap(pixmap.scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
 
 	def resetLoginWindow(self):
 		"""
