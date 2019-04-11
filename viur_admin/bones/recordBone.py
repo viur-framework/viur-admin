@@ -69,7 +69,7 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 
 
 class InternalEdit(QtWidgets.QWidget):
-	def __init__(self, parent, using, values, errorInformation):
+	def __init__(self, parent, using, values, errorInformation, multiple=False):
 		super(InternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.setLayout(self.layout)
@@ -131,19 +131,21 @@ class InternalEdit(QtWidgets.QWidget):
 			self.bonesLayout.addRow(lblWidget, dataWidget)
 			dataWidget.show()
 			self.bones[key] = widget
-		icon6 = QtGui.QIcon()
-		icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		buttonLabelWidget = QtWidgets.QWidget(self)
-		buttonLabelLayout = QtWidgets.QHBoxLayout(buttonLabelWidget)
-		buttonTrayWidget = QtWidgets.QWidget(self)
-		buttonTrayLayout = QtWidgets.QHBoxLayout(buttonTrayWidget)
-		self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("InteralEdit", "Remove"), parent=self)
-		self.delBtn.setIcon(icon6)
-		self.delBtn.released.connect(self.onDelBtnReleased)
-		spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		buttonTrayLayout.addWidget(self.delBtn)
-		buttonTrayLayout.addItem(spacerItem)
-		self.bonesLayout.addRow(buttonLabelWidget, buttonTrayWidget)
+
+		if multiple:
+			icon6 = QtGui.QIcon()
+			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			buttonLabelWidget = QtWidgets.QWidget(self)
+			buttonLabelLayout = QtWidgets.QHBoxLayout(buttonLabelWidget)
+			buttonTrayWidget = QtWidgets.QWidget(self)
+			buttonTrayLayout = QtWidgets.QHBoxLayout(buttonTrayWidget)
+			self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("InteralEdit", "Remove"), parent=self)
+			self.delBtn.setIcon(icon6)
+			self.delBtn.released.connect(self.onDelBtnReleased)
+			spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+			buttonTrayLayout.addWidget(self.delBtn)
+			buttonTrayLayout.addItem(spacerItem)
+			self.bonesLayout.addRow(buttonLabelWidget, buttonTrayWidget)
 		self.layout.addLayout(self.bonesLayout)
 		self.unserialize(values)
 
@@ -191,7 +193,17 @@ class RecordEditBone(BoneEditInterface):
 		self.internalEdits = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
-			self.previewIcon = None
+			self.previewWidget = QtWidgets.QListWidget(self)
+			# self.previewWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+			self.previewWidget.setResizeMode(QtWidgets.QListView.Adjust)
+			self.previewWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+			self.previewWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
+			self.previewWidget.setDefaultDropAction(QtCore.Qt.MoveAction)
+			sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+			self.setSizePolicy(sizePolicy)
+			self.previewWidget.setSizePolicy(sizePolicy)
+			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
+			self.layout.addWidget(self.previewWidget)
 		else:
 			self.layout = QtWidgets.QVBoxLayout(self)
 			self.previewWidget = QtWidgets.QListWidget(self)
@@ -205,23 +217,21 @@ class RecordEditBone(BoneEditInterface):
 			self.previewWidget.setSizePolicy(sizePolicy)
 			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
 			self.layout.addWidget(self.previewWidget)
-		self.addBtn = QtWidgets.QPushButton(
-			QtCore.QCoreApplication.translate("RecordEditBone", "Add Entry"),
-			parent=self)
-		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/add.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		self.addBtn.setIcon(iconadd)
-		self.addBtn.released.connect(self.onAddBtnReleased)
+			self.addBtn = QtWidgets.QPushButton(
+				QtCore.QCoreApplication.translate("RecordEditBone", "Add Entry"),
+				parent=self)
+			iconadd = QtGui.QIcon()
+			iconadd.addPixmap(QtGui.QPixmap(":icons/actions/add.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			self.addBtn.setIcon(iconadd)
+			self.addBtn.released.connect(self.onAddBtnReleased)
 		if not self.multiple:
-			self.entry = QtWidgets.QLineEdit(self)
-			self.layout.addWidget(self.entry)
-			icon6 = QtGui.QIcon()
-			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-			self.delBtn = QtWidgets.QPushButton("", parent=self)
-			self.delBtn.setIcon(icon6)
-			self.delBtn.released.connect(self.onDelBtnReleased)
-			self.layout.addWidget(self.addBtn)
-			self.layout.addWidget(self.delBtn)
+			# icon6 = QtGui.QIcon()
+			# icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			# self.delBtn = QtWidgets.QPushButton("", parent=self)
+			# self.delBtn.setIcon(icon6)
+			# self.delBtn.released.connect(self.onDelBtnReleased)
+			# self.layout.addWidget(self.addBtn)
+			# self.layout.addWidget(self.delBtn)
 			self.selection = None
 		else:
 			self.selection = []
@@ -231,17 +241,19 @@ class RecordEditBone(BoneEditInterface):
 	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		using = skelStructure[boneName]["using"]
-		return cls(moduleName, boneName, readOnly, multiple=True, using=using, format=skelStructure[boneName].get("format", "$(name)"))
+		return cls(moduleName, boneName, readOnly, multiple=skelStructure[boneName]["multiple"], using=using, format=skelStructure[boneName].get("format", "$(name)"))
 
 	def updateVisiblePreview(self):
 		logger.debug("updateVisiblePreview - start")
 		if self.multiple:
 			self.previewWidget.clear()
 			logger.debug("updateVisiblePreview: record bone entries: %r, %r", len(self.selection), self.selection)
+			assert isinstance(self.selection, list)
 			if self.selection and len(self.selection) > 0:
 				heightSum = 0
 				for item in self.selection:
-					item = InternalEdit(self, self.using, item, {})
+					logger.debug("item selection: %r, %r, %r", item, self.selection, self.using)
+					item = InternalEdit(self, self.using, item, {}, multiple=True)
 					item.show()
 					listItem = QtWidgets.QListWidgetItem(self.previewWidget)
 					listItem.setSizeHint(item.sizeHint())
@@ -255,8 +267,17 @@ class RecordEditBone(BoneEditInterface):
 				# heightSum += itemHeight
 				self.previewWidget.setFixedHeight(heightSum)
 				self.addBtn.setText("Auswahl ändern")
-			else:
-				self.addBtn.setText("Auswählen")
+		else:
+			item = InternalEdit(self, self.using, self.selection, {})
+			item.show()
+			listItem = QtWidgets.QListWidgetItem(self.previewWidget)
+			listItem.setSizeHint(item.sizeHint())
+			self.previewWidget.addItem(listItem)
+			self.previewLayout.addWidget(item)
+			self.internalEdits.append(item)
+			self.previewWidget.setItemWidget(listItem, item)
+			self.previewWidget.setFixedHeight(item.sizeHint().height())
+			# self.addBtn.setText("Auswählen")
 		logger.debug("updateVisiblePreview - end")
 
 	def setSelection(self, selection):
