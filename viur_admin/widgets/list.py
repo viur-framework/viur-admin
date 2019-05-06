@@ -273,7 +273,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			# if index.row() == -1 and index.column() == -1:
 			# 	return defaultFlags
 			return defaultFlags
-		return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsDragEnabled | defaultFlags
+		return defaultFlags
 
 	def setSortIndex(self, index: QModelIndex, sortindex: float):
 		protoWrap = protocolWrapperInstanceSelector.select(self.modul)
@@ -310,14 +310,14 @@ class ListTableView(QtWidgets.QTableView):
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)  # Needed to receive dragEnterEvent, not actually wanted
 		self.setSelectionBehavior(self.SelectRows)
-		self.setDragDropMode(self.InternalMove)
-		self.setDragDropOverwriteMode(False)
+		# self.setDragDropMode(self.InternalMove)
+		# self.setDragDropOverwriteMode(False)
 		self.setWordWrap(True)
-		self.setDropIndicatorShown(True)
-		self.setSelectionMode(self.SingleSelection)
-		self.setDefaultDropAction(QtCore.Qt.MoveAction)
+		# self.setDropIndicatorShown(True)
+		# self.setSelectionMode(self.SingleSelection)
+		# self.setDefaultDropAction(QtCore.Qt.MoveAction)
 		self.setModel(model)
-		self.setContentsMargins(0, 0, 0, 0)
+		# self.setContentsMargins(0, 0, 0, 0)
 
 		header = self.horizontalHeader()
 		header.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
