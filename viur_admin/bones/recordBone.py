@@ -11,14 +11,8 @@ from collections import OrderedDict
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
-from viur_admin.event import event
-from viur_admin.utils import formatString, Overlay, WidgetHandler
-from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
-from viur_admin.widgets.list import ListWidget
-from viur_admin.widgets.edit import EditWidget
-from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
+from viur_admin.utils import formatString, Overlay
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin import config
 
@@ -68,9 +62,9 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 		return value
 
 
-class InternalEdit(QtWidgets.QWidget):
-	def __init__(self, parent, using, values, errorInformation):
-		super(InternalEdit, self).__init__(parent)
+class RecordBoneInternalEdit(QtWidgets.QWidget):
+	def __init__(self, parent, using, values, errorInformation=None):
+		super(RecordBoneInternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.setLayout(self.layout)
 		# self.groupBox = QtWidgets.QGroupBox("", self)
@@ -148,9 +142,10 @@ class InternalEdit(QtWidgets.QWidget):
 		self.unserialize(values)
 
 	def unserialize(self, data):
+		logger.debug("RecordBone.unserialize: %r", data)
 		try:
 			for bone in self.bones.values():
-				logger.debug("InternalEdit.unserialize bone: %r", bone)
+				logger.debug("RecordBoneInternalEdit.unserialize bone: %r", bone)
 				bone.unserialize(data)
 		except AssertionError as err:
 			pass
@@ -159,9 +154,8 @@ class InternalEdit(QtWidgets.QWidget):
 		res = {}
 		for key, bone in self.bones.items():
 			data = bone.serializeForPost()
-			# print("InternalEdit.serializeForPost: key, value", key, data)
+			# print("RecordBoneInternalEdit.serializeForPost: key, value", key, data)
 			res.update(data)
-		res["key"] = self.values["dest"]["key"]
 		return res
 
 	def onDelBtnReleased(self):
@@ -188,7 +182,7 @@ class RecordEditBone(BoneEditInterface):
 		self.using = using
 		self.format = format
 		self.overlay = Overlay(self)
-		self.internalEdits = list()
+		self.recordBoneInternalEdits = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
 			self.previewIcon = None
@@ -229,40 +223,46 @@ class RecordEditBone(BoneEditInterface):
 
 	@classmethod
 	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
+		logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
 		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
 		using = skelStructure[boneName]["using"]
-		return cls(moduleName, boneName, readOnly, multiple=True, using=using, format=skelStructure[boneName].get("format", "$(name)"))
+		return cls(moduleName, boneName, readOnly, multiple=True, using=using,
+		           format=skelStructure[boneName].get("format", "$(name)"))
 
 	def updateVisiblePreview(self):
 		logger.debug("updateVisiblePreview - start")
 		if self.multiple:
 			self.previewWidget.clear()
 			logger.debug("updateVisiblePreview: record bone entries: %r, %r", len(self.selection), self.selection)
-			if self.selection and len(self.selection) > 0:
+			if self.selection:
+				if isinstance(self.selection, dict):
+					self.selection = [self.selection]
 				heightSum = 0
-				for item in self.selection:
-					item = InternalEdit(self, self.using, item, {})
+				for entry in self.selection:
+					logger.debug("updateVisiblePreview item: %r, %r", self.using, entry)
+					item = RecordBoneInternalEdit(self, self.using, entry)
 					item.show()
 					listItem = QtWidgets.QListWidgetItem(self.previewWidget)
 					listItem.setSizeHint(item.sizeHint())
 					self.previewWidget.addItem(listItem)
 					self.previewLayout.addWidget(item)
-					self.internalEdits.append(item)
+					self.recordBoneInternalEdits.append(item)
 					self.previewWidget.setItemWidget(listItem, item)
 					heightSum += item.sizeHint().height()
 
 				# itemHeight = heightSum / len(self.selection)
 				# heightSum += itemHeight
 				self.previewWidget.setFixedHeight(heightSum)
-				self.addBtn.setText("Auswahl ändern")
-			else:
-				self.addBtn.setText("Auswählen")
-		logger.debug("updateVisiblePreview - end")
+				self.addBtn.setText(QtCore.QCoreApplication.translate("RecordEditBone", "Add Entry"))
+			logger.debug("updateVisiblePreview - end")
 
 	def setSelection(self, selection):
 		logger.debug("setSelection - start")
 		if self.multiple:
-			self.selection = selection
+			if isinstance(selection, dict):
+				self.selection = [selection]
+			else:
+				self.selection = selection
 		elif len(selection) > 0:
 			self.selection = selection[0]
 		else:
@@ -276,6 +276,8 @@ class RecordEditBone(BoneEditInterface):
 		for key, bone in self.using:
 			newEntry[key] = None
 			logger.debug("add new entry: %r, %r", key, bone)
+		if isinstance(self.selection, dict):
+			self.selection = [self.selection]
 		self.selection.append(newEntry)
 		self.updateVisiblePreview()
 
@@ -298,120 +300,15 @@ class RecordEditBone(BoneEditInterface):
 		if not self.selection:
 			return {self.boneName: None}
 		res = {}
-		if self.using:
-			if self.multiple:
-				for ix, item in enumerate(self.internalEdits):
-					entry = item.serializeForPost()
-					if isinstance(entry, dict):
-						for k, v in entry.items():
-							res["{0}.{1}.{2}".format(self.boneName, ix, k)] = v
-					else:
-						res["{0}.{1}.key".format(self.boneName, ix)] = entry
-		else:
-			if isinstance(self.selection, dict):
-				res["{0}.0.key".format(self.boneName)] = self.selection["dest"]["key"]
-			elif isinstance(self.selection, list):
-				for idx, item in enumerate(self.selection):
-					res["{0}.{1}.key".format(self.boneName, idx)] = item["dest"]["key"]
+		for ix, item in enumerate(self.recordBoneInternalEdits):
+			entry = item.serializeForPost()
+			if isinstance(entry, dict):
+				for k, v in entry.items():
+					res["{0}.{1}.{2}".format(self.boneName, ix, k)] = v
 			else:
-				raise ValueError("Unknown selection type %s" % str(type(self.selection)))
+				res["{0}.{1}.key".format(self.boneName, ix)] = entry
 
 		return res
-
-
-class RecordBoneSelector(QtWidgets.QWidget):
-	selectionChanged = QtCore.pyqtSignal((object,))
-	displaySourceWidget = ListWidget
-	displaySelectionWidget = SelectedEntitiesWidget
-	GarbageTypeName = "RecordBoneSelector"
-
-	def __init__(self, moduleName, boneName, multiple, toModul, selection, *args, **kwargs):
-		super(RecordBoneSelector, self).__init__(*args, **kwargs)
-		logger.debug("RecordBoneSelector.init: %r, %r, %r, %r, %r", moduleName, boneName, multiple, toModul,
-		             selection)
-		self.moduleName = moduleName
-		self.boneName = boneName
-		self.multiple = multiple
-		self.module = toModul
-		self.selection = selection
-		self.ui = Ui_relationalSelector()
-		self.ui.setupUi(self)
-		layout = QtWidgets.QHBoxLayout(self.ui.tableWidget)
-		self.ui.tableWidget.setLayout(layout)
-		self.list = self.displaySourceWidget(self.module, editOnDoubleClick=False, parent=self)
-		layout.addWidget(self.list)
-		self.list.show()
-		layout = QtWidgets.QHBoxLayout(self.ui.listSelected)
-		self.ui.listSelected.setLayout(layout)
-		self.selection = self.displaySelectionWidget(self.module, selection, parent=self)
-		layout.addWidget(self.selection)
-		self.selection.show()
-		if not self.multiple:
-			# self.list.setSelectionMode( self.list.SingleSelection )
-			self.selection.hide()
-			self.ui.lblSelected.hide()
-		self.list.itemDoubleClicked.connect(self.onSourceItemDoubleClicked)
-		self.list.itemClicked.connect(self.onSourceItemClicked)
-		self.ui.btnSelect.clicked.connect(self.onBtnSelectReleased)
-		self.ui.btnCancel.clicked.connect(self.onBtnCancelReleased)
-		event.emit('stackWidget', self)
-
-	def getBreadCrumb(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
-		assert protoWrap is not None
-		# FIXME: Bad hack to get the editWidget we belong to
-		for widget in WidgetHandler.mainWindow.handlerForWidget(self).widgets:
-			if isinstance(widget, EditWidget):
-				if (not widget.key) or widget.clone:  # We're adding a new entry
-					if widget.skelType == "leaf":
-						skel = protoWrap.addLeafStructure
-					elif widget.skelType == "node":
-						skel = protoWrap.addNodeStructure
-					else:
-						skel = protoWrap.addStructure
-				else:
-					if widget.skelType == "leaf":
-						skel = protoWrap.editLeafStructure
-					elif widget.skelType == "node":
-						skel = protoWrap.editNodeStructure
-					else:
-						skel = protoWrap.editStructure
-		assert skel is not None
-		assert self.boneName in skel.keys()
-		return QtCore.QCoreApplication.translate("ExtendedRelationalBoneSelector", "Select %s") % skel[self.boneName][
-			"descr"], QtGui.QIcon(":icons/actions/change_selection.svg")
-
-	def onSourceItemClicked(self, item):
-		pass
-
-	def onSourceItemDoubleClicked(self, item):
-		"""
-				An item has been doubleClicked in our listWidget.
-				Read its properties and add them to our selection.
-		"""
-		logger.debug("RecordEditBone.onSourceItemDoubleClicked: %r", item)
-		data = item
-		if self.multiple:
-			self.selection.extend([data])
-		else:
-			self.selectionChanged.emit([data])
-			event.emit("popWidget", self)
-
-	def onBtnSelectReleased(self, *args, **kwargs):
-		self.selectionChanged.emit(self.selection.get())
-		event.emit("popWidget", self)
-
-	def onBtnCancelReleased(self, *args, **kwargs):
-		event.emit("popWidget", self)
-
-	def getFilter(self):
-		return self.list.getFilter()
-
-	def setFilter(self, filter):
-		return self.list.setFilter(filter)
-
-	def getModul(self):
-		return self.list.getModul()
 
 
 def CheckForRecordBoneBone(moduleName, boneName, skelStucture):
