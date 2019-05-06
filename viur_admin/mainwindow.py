@@ -346,7 +346,6 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.treeWidget.expandItem(parent)
 		else:
 			self.treeWidget.addTopLevelItem(handler)
-		self.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
 
 	def focusHandler(self, handler):
 		"""
