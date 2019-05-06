@@ -148,11 +148,11 @@ def CheckForNumericBone(moduleName, boneName, skelStucture):
 	return (skelStucture[boneName]["type"] == "numeric")
 
 
-def CheckForSortIndexBone(moduleName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "numeric" and boneName == "sortindex")
+# def CheckForSortIndexBone(moduleName, boneName, skelStucture):
+# 	return (skelStucture[boneName]["type"] == "numeric" and boneName == "sortindex")
 
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForNumericBone, NumericEditBone)
 viewDelegateSelector.insert(2, CheckForNumericBone, NumericViewBoneDelegate)
-viewDelegateSelector.insert(3, CheckForSortIndexBone, IndexSortViewBoneDelegate)
+# viewDelegateSelector.insert(3, CheckForSortIndexBone, IndexSortViewBoneDelegate)
