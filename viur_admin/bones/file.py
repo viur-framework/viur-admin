@@ -38,6 +38,8 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		self.request_repaint.emit()
 
 	def paint(self, painter, option, index):
+		if not index.isValid():
+			return super(FileViewBoneDelegate, self).paint(painter, option, index)
 		model = index.model()
 		try:
 			index_column = index.column()
@@ -48,6 +50,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			if record and isinstance(record, list) and len(record) > 0:
 				record = record[0]
 		except (IndexError, KeyError) as err:
+			logger.exception(err)
 			record = None
 		if not record:
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
@@ -61,9 +64,11 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		painter.save()
 		painter.drawImage(option.rect, self.cache[record["dest"]["dlkey"]])
 		painter.restore()
+		return super(FileViewBoneDelegate, self).paint(painter, option, index)
 
 	def displayText(self, value, locale):
-		return formatString(self.format, value, self.structure)
+		result = formatString(self.format, value, self.structure)
+		return super(FileViewBoneDelegate, self).displayText(result, locale)
 
 
 class MultiItemWidget(QtWidgets.QWidget):
