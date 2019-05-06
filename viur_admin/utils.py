@@ -363,13 +363,12 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		self.mainWindow.addHandler(self)
 
 	def __lt__(self, other):
-		# column = self.treeWidget().sortColumn()
 		key1 = self.sortIndex
 		key2 = other.sortIndex
 		try:
-			return float(key1) < float(key2)
+			return float(key1) > float(key2)
 		except ValueError:
-			return key1 < key2
+			return key1 > key2
 
 
 class GroupHandler(WidgetHandler):
