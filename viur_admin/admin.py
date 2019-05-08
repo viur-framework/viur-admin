@@ -75,6 +75,9 @@ parser.add_argument(
 	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
 	choices=["debug", "info", "warning", "critical"])
 parser.add_argument(
+	'--remote-debugging-port', dest='remote_debugging_port', default='8080',
+	help="WebView remote debugging port", type=int)
+parser.add_argument(
 	'-r', '--report', dest='report', default='auto',
 	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
 	choices=["yes", "no", "auto"])

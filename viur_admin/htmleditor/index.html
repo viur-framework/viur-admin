@@ -36,7 +36,13 @@
       $(".texteditor").html(text);
       editor = summernoteEditor($(".texteditor"), "de");
     });
-    window.handler.test();
+    window.handler.requestCode.connect(function (text) {
+      var data = editor.summernote("code");
+      console.log("data", data);
+      window.handler.transmitHtmlCodeToHost(data);
+
+    });
+    window.handler.onEditorLoaded();
   });
 </script>
 </body>

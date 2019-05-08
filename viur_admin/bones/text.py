@@ -254,15 +254,25 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 
 class WebPage(QtCore.QObject):
 	sendText = QtCore.pyqtSignal((str))
+	requestCode = QtCore.pyqtSignal()
+	receiveCodeCallback = QtCore.pyqtSignal((str))
 
 	def __init__(self, parent=None):
 		super(WebPage, self).__init__(parent)
 		self.textToEdit = ""
 
 	@QtCore.pyqtSlot()
-	def test(self):
-		print('call received')
+	def onEditorLoaded(self):
+		logger.debug('onEditorLoaded called')
 		self.sendText.emit(self.textToEdit)
+
+	@QtCore.pyqtSlot()
+	def getHtmlCode(self):
+		self.requestCode.emit()
+
+	@QtCore.pyqtSlot(str)
+	def transmitHtmlCodeToHost(self, data):
+		self.receiveCodeCallback.emit(data)
 
 
 class TextEdit(QtWidgets.QMainWindow):
@@ -295,12 +305,23 @@ class TextEdit(QtWidgets.QMainWindow):
 		                                        QtCore.QCoreApplication.translate("TextEdit", "Apply"),
 		                                        self.ui.centralWidget)
 		self.ui.centralWidget.layout().addWidget(self.ui.btnSave)
+		self.ui.btnSave.released.connect(self.onPrepareSave)
+		self.handler.receiveCodeCallback.connect(self.onFinishSave)
 		self.linkEditor = None
 		self.setToolButtonStyle(QtCore.Qt.ToolButtonFollowStyle)
 		self.ui.textEdit.setFocus()
+		# self.ui.textEdit.setHtml(open("/home/stefan/IdeaProjects/viur_admin/viur_admin/htmleditor/index.html").read())
 		self.ui.textEdit.setUrl(QtCore.QUrl("qrc:/htmleditor/index.html"))
 		logger.debug("text to edit: %r", text)
 
+	@QtCore.pyqtSlot()
+	def onPrepareSave(self):
+		self.handler.getHtmlCode()
+
+	@QtCore.pyqtSlot(str)
+	def onFinishSave(self, data):
+		self.onDataChanged.emit(data)
+		event.emit('popWidget', self)
 
 	def onTextEditInsertFromMimeData(self, source):
 		QtWidgets.QTextEdit.insertFromMimeData(self.ui.textEdit, source)
