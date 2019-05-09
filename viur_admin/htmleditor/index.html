@@ -32,9 +32,9 @@
   var editor;
   new QWebChannel(qt.webChannelTransport, function (channel) {
     window.handler = channel.objects.handler;
-    window.handler.sendText.connect(function (text) {
+    window.handler.sendText.connect(function (text, lang) {
       $(".texteditor").html(text);
-      editor = summernoteEditor($(".texteditor"), "de");
+      editor = summernoteEditor($(".texteditor"), lang);
     });
     window.handler.requestCode.connect(function (text) {
       var data = editor.summernote("code");
