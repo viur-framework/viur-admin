@@ -51,9 +51,7 @@ class BooleanEditBone(BoneEditInterface):
 		return cls(moduleName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data):
-		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
-		assert protoWrap is not None
-		if self.boneName in data.keys() and data[self.boneName]:
+		if data.get(self.boneName):
 			self.checkBox.setChecked(True)
 
 	def serializeForPost(self):
