@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from PyQt5 import QtCore, QtWidgets
-from viur_admin.bones.bone_interface import BoneEditInterface
 
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, extendedSearchWidgetSelector
-from viur_admin.utils import wheelEventFilter
 from viur_admin.ui.extendedDateRangeFilterPluginUI import Ui_Form
+from viur_admin.utils import wheelEventFilter
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -14,8 +14,7 @@ except AttributeError:
 
 
 class FixedDateTimeEdit(QtWidgets.QDateTimeEdit):
-	"""
-		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
 	"""
 
 	def __init__(self, *args, **kwargs):
@@ -52,8 +51,8 @@ class FixedDateEdit(QtWidgets.QDateEdit):
 
 
 class FixedTimeEdit(QtWidgets.QTimeEdit):
-	"""
-		Subclass of SpinBox which doesn't accept QWheelEvents if it doesnt have focus
+	"""Subclass of SpinBox which doesn't accept QWheelEvents if it does not have focus
+
 	"""
 
 	def __init__(self, *args, **kwargs):
@@ -84,7 +83,8 @@ class DateRangeFilterPlugin(QtWidgets.QGroupBox):
 
 	@staticmethod
 	def canHandleExtension(extension):
-		return isinstance(extension, dict) and "type" in extension.keys() and (extension["type"] == "date" or extension["type"].startswith("date."))
+		return isinstance(extension, dict) and "type" in extension.keys() and (
+				extension["type"] == "date" or extension["type"].startswith("date."))
 
 
 class DateEditBone(BoneEditInterface):
@@ -128,14 +128,16 @@ class DateEditBone(BoneEditInterface):
 		if self.boneName in data.keys():
 			value = str(data[self.boneName])
 		self.dt = datetime.now()
-		if (self.time and self.date):  # date AND time
+		if self.time and self.date:  # date AND time
 			try:
 				self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S")
 			except:
 				pass
-			self.lineEdit.setDateTime(QtCore.QDateTime(QtCore.QDate(self.dt.year, self.dt.month, self.dt.day),
-			                                           QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second)))
-		elif (self.date):  # date only
+			self.lineEdit.setDateTime(
+				QtCore.QDateTime(
+					QtCore.QDate(self.dt.year, self.dt.month, self.dt.day),
+					QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second)))
+		elif self.date:  # date only
 			try:
 				self.dt = datetime.strptime(value, "%d.%m.%Y")
 			except:
@@ -150,20 +152,20 @@ class DateEditBone(BoneEditInterface):
 
 	def serializeForPost(self):
 		erg = ""
-		if (self.time and self.date):  # date AND time
+		if self.time and self.date:  # date AND time
 			erg = self.lineEdit.dateTime().toString("dd.MM.yyyy hh:mm:ss")
-		elif (self.date):  # date only
+		elif self.date:  # date only
 			erg = self.lineEdit.date().toString("dd.MM.yyyy")
 		else:  # time only
 			erg = self.lineEdit.time().toString("hh:mm:ss")
-		return ({self.boneName: erg})
+		return {self.boneName: erg}
 
 	def serializeForDocument(self):
-		return (self.serialize())
+		return self.serialize()
 
 
 def CheckForDateBone(moduleName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "date")
+	return skelStucture[boneName]["type"] == "date"
 
 
 editBoneSelector.insert(2, CheckForDateBone, DateEditBone)
