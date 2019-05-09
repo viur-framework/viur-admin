@@ -257,14 +257,15 @@ class WebPage(QtCore.QObject):
 	requestCode = QtCore.pyqtSignal()
 	receiveCodeCallback = QtCore.pyqtSignal((str))
 
-	def __init__(self, parent=None):
+	def __init__(self, lang, parent=None):
 		super(WebPage, self).__init__(parent)
 		self.textToEdit = ""
+		self.lang = lang
 
 	@QtCore.pyqtSlot()
 	def onEditorLoaded(self):
 		logger.debug('onEditorLoaded called')
-		self.sendText.emit(self.textToEdit)
+		self.sendText.emit(self.textToEdit, self.lang)
 
 	@QtCore.pyqtSlot()
 	def getHtmlCode(self):
@@ -278,7 +279,7 @@ class WebPage(QtCore.QObject):
 class TextEdit(QtWidgets.QMainWindow):
 	onDataChanged = QtCore.pyqtSignal((object,))
 
-	def __init__(self, text, validHtml, parent=None):
+	def __init__(self, text, validHtml, lang, parent=None):
 		super(TextEdit, self).__init__(parent)
 		self.validHtml = validHtml
 		self.serializer = HtmlSerializer(validHtml)
@@ -287,6 +288,7 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.setCentralWidget(self.ui.centralWidget)
 		self.ui.centralWidget.setLayout(QtWidgets.QVBoxLayout())
 		self.ui.textEdit = QWebEngineView()
+		self.lang = lang
 		settings = self.ui.textEdit.settings()
 		settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
 		settings.setAttribute(QWebEngineSettings.AllowRunningInsecureContent, True)
@@ -475,6 +477,9 @@ class TextEditBone(BoneEditInterface):
 				btn.lang = lang
 				webView = ClickableWebView(self)
 				webView.clicked.connect(self.openEditor)
+				sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+				webView.setFixedHeight(200)
+				webView.setSizePolicy(sizePolicy)
 				container.webView = webView
 				container.layout().addWidget(webView)
 				container.layout().addWidget(btn)
@@ -547,7 +552,7 @@ class TextEditBone(BoneEditInterface):
 				editor = RawTextEdit(self.html[lang])
 			else:
 				if self.validHtml:
-					editor = TextEdit(self.html[lang], self.validHtml)
+					editor = TextEdit(self.html[lang], self.validHtml, lang)
 				else:
 					editor = RawTextEdit(self.html[lang])
 		else:
