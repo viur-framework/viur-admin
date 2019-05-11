@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 import glob
-from subprocess import Popen
+from subprocess import Popen, PIPE
 
 __author__ = 'Stefan Kögl'
 
@@ -17,8 +17,12 @@ resourceToCopy = [
 
 
 def createResourceFile(projectPath, iconPath):
+	mainCodePath = os.path.join(projectPath, "viur_admin")
 	for i in resourceToCopy:
-		shutil.copyfile(os.path.join(projectPath, i), os.path.join(iconPath, i))
+		shutil.copyfile(
+			os.path.join(mainCodePath, i),
+			os.path.join(iconPath, i)
+		)
 
 	tpl = """<RCC>\n    <qresource prefix="icons">\n{0}\n    </qresource>\n    <qresource>\n{1}\n    </qresource>\n</RCC>\n"""
 
@@ -28,7 +32,7 @@ def createResourceFile(projectPath, iconPath):
 
 	for root, dirs, files in os.walk(iconPath):
 		for i in files:
-			if not i.startswith("."):
+			if not i.startswith(".") and i != "icons.qrc" and i != "icons_rc.py":
 				absPath = os.path.join(root, i)
 				relPath = os.path.relpath(absPath, iconPath)
 				print("absPath, relPath:", absPath, relPath)
@@ -36,9 +40,10 @@ def createResourceFile(projectPath, iconPath):
 
 	try:
 		shutil.copytree(
-			os.path.join(projectPath, "htmleditor"),
+			os.path.join(projectPath, "viur_admin", "htmleditor"),
 			os.path.join(iconPath, "htmleditor"))
-	except:
+	except Exception as err:
+		print(err)
 		pass
 
 	htmleditorPath = os.path.join(iconPath, "htmleditor")
@@ -51,10 +56,10 @@ def createResourceFile(projectPath, iconPath):
 				editorFiles.append(relPath)
 
 	os.chdir(projectPath)
-	# for i in resourceToCopy:
-	# 	os.remove(os.path.join(iconPath, i))
-	# shutil.rmtree(os.path.join(iconPath, "htmleditor"))
-	fp = open("resources_tmp.qrc", "w")
+	for i in resourceToCopy:
+		os.remove(os.path.join(iconPath, i))
+	shutil.rmtree(os.path.join(iconPath, "htmleditor"))
+	fp = open(os.path.join(mainCodePath, "icons.qrc"), "w")
 	iconFiles.sort()
 	editorFiles.sort()
 	iconTxt = "\n".join(["        <file>{0}</file>".format(i) for i in iconFiles])
@@ -69,33 +74,37 @@ def convertImage(iconPath: str):
 
 
 def generateResource(iconPath: str):
-	pd = Popen("pyrcc5 icons.qrc -o ../ui/icons_rc.py", cwd=iconPath)
+	print("generateResource", iconPath)
+	pd = Popen("pyrcc5 icons.qrc -o ../ui/icons_rc.py", cwd=iconPath, shell=True)
 	pd.communicate()
 	shutil.copyfile(
-		os.path.join(os.path.dirname(iconPath), "icons_rc.py"),
+		os.path.join(os.path.dirname(iconPath), "ui", "icons_rc.py"),
 		os.path.join(iconPath, "icons_rc.py"),
 	)
 
 
 def updateTranslations(projectPath: str):
-	pd = Popen("pylupdate5 -noobsolete viur_admin.pro", cwd=projectPath)
+	pd = Popen("pylupdate5 viur_admin.pro", cwd=projectPath, shell=True)
 	pd.communicate()
 
 
 def generateUiFiles(uiPath: str):
 	os.chdir(uiPath)
 	for i in glob.glob("*.ui"):
-		tmpName = "{0}UI.py".format(os.path.splitext()[0])
-		pd = Popen("pyuic5 {0} -o {1}".format(i, tmpName))
-		pd.communicate()
-		open(tmpName, "w").write(open(tmpName).read().replace(
+		tmpName = "{0}UI.py".format(os.path.splitext(i)[0])
+		cmd = "pyuic5 {0} -o {1}".format(i, tmpName)
+		print("cmd", cmd)
+		pd = Popen(cmd, cwd=uiPath, shell=True, stderr=PIPE, stdout=PIPE)
+		print("generateUiFiles results", pd.communicate())
+		tmp = open(tmpName).read().replace(
 			"import icons_rc",
 			"import viur_admin.ui.icons_rc"
-		))
+		)
+		open(tmpName, "w").write(tmp)
 
 
-def createQtProjectFile():
-	fd = open("viur_admin_test.pro", "w")
+def createQtProjectFile(projectPath):
+	fd = open(os.path.join(projectPath, "viur_admin.pro"), "w")
 	forms = list()
 	sources = list()
 	translations = list()
@@ -105,8 +114,11 @@ def createQtProjectFile():
 		'.ts': ("TRANSLATIONS +=", translations),
 	}
 
-	for root, directories, files in os.walk("viur_admin"):
-		if root.startswith("viur_admin/plugins") or root.endswith("__pycache__"):
+	mainCodeDirectory = os.path.join(projectPath, "viur_admin")
+	pluginPath = os.path.join(mainCodeDirectory, "plugins")
+
+	for root, directories, files in os.walk(mainCodeDirectory):
+		if root.startswith(pluginPath) or root.endswith("__pycache__"):
 			continue
 		print("root", root)
 		for entry in files:
@@ -128,7 +140,7 @@ if __name__ == '__main__':
 	projectPath = os.getcwd()
 	iconPath = os.path.join(projectPath, "viur_admin", "icons")
 	uiPath = os.path.join(projectPath, "viur_admin", "ui")
-	createQtProjectFile()
+	createQtProjectFile(projectPath)
 	updateTranslations(projectPath)
 	convertImage(iconPath)
 	createResourceFile(projectPath, iconPath)

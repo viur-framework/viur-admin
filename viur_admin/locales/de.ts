@@ -199,7 +199,7 @@
     <message>
         <location filename="../ui/csvexportUI.py" line="108"/>
         <source>Datensätze:</source>
-        <translation></translation>
+        <translation>Datensätze:</translation>
     </message>
 </context>
 <context>
@@ -589,12 +589,12 @@
     <message>
         <location filename="../ui/docEditlinkEditUI.py" line="34"/>
         <source>Verknüpfungsziel</source>
-        <translation></translation>
+        <translation>Verknüpfungsziel</translation>
     </message>
     <message>
         <location filename="../ui/docEditlinkEditUI.py" line="35"/>
         <source>In neuem Fenster öffnen</source>
-        <translation></translation>
+        <translation>In neuem Fenster öffnen</translation>
     </message>
 </context>
 <context>
@@ -809,7 +809,7 @@
     <message>
         <location filename="../ui/loginformUI.py" line="102"/>
         <source>ViurAdmin – Login</source>
-        <translation></translation>
+        <translation>ViurAdmin – Login</translation>
     </message>
 </context>
 <context>
