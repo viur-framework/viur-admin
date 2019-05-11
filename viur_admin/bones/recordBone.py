@@ -136,7 +136,7 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 			buttonLabelWidget = QtWidgets.QWidget(self)
 			# buttonTrayWidget = QtWidgets.QWidget(self)
 			# buttonTrayLayout = QtWidgets.QHBoxLayout(buttonTrayWidget)
-			self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("InteralEdit", "Remove"), parent=self)
+			self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RecordBoneInternalEdit", "Remove"), parent=self)
 			self.delBtn.setIcon(icon6)
 			self.delBtn.released.connect(self.onDelBtnReleased)
 			# spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)

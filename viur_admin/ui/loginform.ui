@@ -85,7 +85,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Accountmannager</string>
+         <string>Open</string>
         </property>
         <property name="icon">
          <iconset>
@@ -139,7 +139,7 @@
      <x>0</x>
      <y>0</y>
      <width>480</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="layoutDirection">
@@ -152,6 +152,7 @@
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionFirst_steps"/>
    </widget>
    <widget class="QMenu" name="menuEinstellungen">
     <property name="title">
@@ -163,11 +164,6 @@
    <addaction name="menuEinstellungen"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionErste_Schritte">
-   <property name="text">
-    <string>Erste Schritte</string>
-   </property>
-  </action>
   <action name="actionHelp">
    <property name="text">
     <string>&amp;Help</string>
@@ -178,18 +174,18 @@
     <string>&amp;About this Software</string>
    </property>
   </action>
-  <action name="actionSettings">
-   <property name="text">
-    <string>Generel settigs</string>
-   </property>
-  </action>
   <action name="actionAccountmanager">
    <property name="text">
     <string>&amp;Accountmanager</string>
    </property>
   </action>
+  <action name="actionFirst_steps">
+   <property name="text">
+    <string>First steps</string>
+   </property>
+  </action>
  </widget>
-   <resources>
+ <resources>
   <include location="../icons/icons.qrc"/>
  </resources>
  <connections/>

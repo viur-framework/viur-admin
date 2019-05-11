@@ -9,16 +9,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(480, 680)
-        MainWindow.setMinimumSize(QtCore.QSize(480, 0))
-        MainWindow.setMaximumSize(QtCore.QSize(480, 16777215))
+class Ui_AccountManager(object):
+    def setupUi(self, AccountManager):
+        AccountManager.setObjectName("AccountManager")
+        AccountManager.resize(480, 680)
+        AccountManager.setMinimumSize(QtCore.QSize(480, 0))
+        AccountManager.setMaximumSize(QtCore.QSize(480, 16777215))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        AccountManager.setWindowIcon(icon)
+        self.centralwidget = QtWidgets.QWidget(AccountManager)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -54,24 +54,24 @@ class Ui_MainWindow(object):
         self.FinishedBTN.setObjectName("FinishedBTN")
         self.verticalLayout_3.addWidget(self.FinishedBTN)
         self.verticalLayout_2.addLayout(self.verticalLayout_3)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        AccountManager.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(AccountManager)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 480, 26))
         self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        AccountManager.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(AccountManager)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        AccountManager.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.retranslateUi(AccountManager)
+        QtCore.QMetaObject.connectSlotsByName(AccountManager)
 
-    def retranslateUi(self, MainWindow):
+    def retranslateUi(self, AccountManager):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Viur Accountmanager"))
-        self.addAccBTN.setText(_translate("MainWindow", "New Account"))
-        self.delAccBTN.setText(_translate("MainWindow", "Delete Account"))
-        self.FinishedBTN.setText(_translate("MainWindow", "Back to Loginscreen"))
+        AccountManager.setWindowTitle(_translate("AccountManager", "Account manager"))
+        self.addAccBTN.setText(_translate("AccountManager", "New Account"))
+        self.delAccBTN.setText(_translate("AccountManager", "Delete Account"))
+        self.FinishedBTN.setText(_translate("AccountManager", "Back to Loginscreen"))
 
 
 import viur_admin.ui.icons_rc

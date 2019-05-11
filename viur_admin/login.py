@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtNetwork
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
-from viur_admin.accountmanager import Accountmanager
+from viur_admin.accountmanager import AccountManager
 from viur_admin.network import NetworkService, securityTokenProvider, nam, MyCookieJar
 from viur_admin.event import event
 from viur_admin import config
@@ -384,7 +384,7 @@ class Login(QtWidgets.QMainWindow):
 		if self.accman:
 			self.accman.deleteLater()
 			self.accman = None
-		self.accman = Accountmanager()
+		self.accman = AccountManager()
 		self.accman.show()
 
 	def onActionAccountmanagerTriggered(self):

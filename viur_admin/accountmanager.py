@@ -6,7 +6,7 @@ from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.log import getLogger
 from viur_admin.network import NetworkService
-from viur_admin.ui.accountmanagerUI import Ui_MainWindow
+from viur_admin.ui.accountmanagerUI import Ui_AccountManager
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 
 """
@@ -149,10 +149,10 @@ class AccountItem(QtWidgets.QListWidgetItem):
 		self.setText(self.account["name"])
 
 
-class Accountmanager(QtWidgets.QMainWindow):
+class AccountManager(QtWidgets.QMainWindow):
 	def __init__(self, *args, **kwargs):
-		super(Accountmanager, self).__init__(*args, **kwargs)
-		self.ui = Ui_MainWindow()
+		super(AccountManager, self).__init__(*args, **kwargs)
+		self.ui = Ui_AccountManager()
 		self.ui.setupUi(self)
 		self.loadAccountList()
 		self.oldAccountName = None
@@ -201,7 +201,7 @@ class Accountmanager(QtWidgets.QMainWindow):
 	# guiList = self.ui.acclistWidget
 	# item = AccountItem(
 	# 		{
-	# 			"name": QtCore.QCoreApplication.translate("Accountmanager", "New"),
+	# 			"name": QtCore.QCoreApplication.translate("AccountManager", "New"),
 	# 			"user": "",
 	# 			"password": "",
 	# 			"server": ""
@@ -225,8 +225,8 @@ class Accountmanager(QtWidgets.QMainWindow):
 			return
 		reply = QtWidgets.QMessageBox.question(
 			self,
-			QtCore.QCoreApplication.translate("Accountmanager", "Account deletion"),
-			QtCore.QCoreApplication.translate("Accountmanager",
+			QtCore.QCoreApplication.translate("AccountManager", "Account deletion"),
+			QtCore.QCoreApplication.translate("AccountManager",
 			                                  "Really delete the account \"%s\"?") %
 			item.account["name"],
 			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
