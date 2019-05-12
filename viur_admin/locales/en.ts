@@ -176,28 +176,28 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../ui/csvexportUI.py" line="105"/>
-        <source>Sprache</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../ui/csvexportUI.py" line="106"/>
-        <source>Dateiname</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../ui/csvexportUI.py" line="107"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message encoding="UTF-8">
-        <location filename="../ui/csvexportUI.py" line="108"/>
-        <source>Datensätze:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../ui/csvexportUI.py" line="109"/>
         <source>0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/csvexportUI.py" line="105"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/csvexportUI.py" line="106"/>
+        <source>Filename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/csvexportUI.py" line="108"/>
+        <source>entries</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -585,14 +585,19 @@
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message>
         <location filename="../ui/docEditlinkEditUI.py" line="34"/>
-        <source>Verknüpfungsziel</source>
+        <source>URL</source>
         <translation type="unfinished"></translation>
     </message>
-    <message encoding="UTF-8">
+    <message>
         <location filename="../ui/docEditlinkEditUI.py" line="35"/>
-        <source>In neuem Fenster öffnen</source>
+        <source>here the href of the link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/docEditlinkEditUI.py" line="36"/>
+        <source>open in new window</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -866,6 +871,11 @@
     <message>
         <location filename="../mainwindow.py" line="221"/>
         <source>Log out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.py" line="223"/>
+        <source>Handler Search</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

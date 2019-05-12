@@ -55,17 +55,30 @@ def createResourceFile(projectPath, iconPath):
 				relPath = os.path.relpath(absPath, iconPath)
 				editorFiles.append(relPath)
 
-	os.chdir(projectPath)
-	for i in resourceToCopy:
-		os.remove(os.path.join(iconPath, i))
-	shutil.rmtree(os.path.join(iconPath, "htmleditor"))
+
+
+	print("creating qrc file?", mainCodePath, "icons.qrc")
 	fp = open(os.path.join(mainCodePath, "icons.qrc"), "w")
 	iconFiles.sort()
 	editorFiles.sort()
 	iconTxt = "\n".join(["        <file>{0}</file>".format(i) for i in iconFiles])
 	editorTxt = "\n".join(["        <file>{0}</file>".format(i) for i in editorFiles])
 	fp.write(tpl.format(iconTxt, editorTxt))
+	fp.flush()
+	fp.close()
+	del fp
+	print("generateResource", iconPath)
+	pd = Popen("pyrcc5 icons.qrc -o ../ui/icons_rc.py", cwd=iconPath, shell=True, stdout=PIPE, stderr=PIPE)
+	print(pd.communicate())
+	shutil.copyfile(
+		os.path.join(os.path.dirname(iconPath), "ui", "icons_rc.py"),
+		os.path.join(iconPath, "icons_rc.py"),
+	)
+
 	os.chdir(projectPath)
+	for i in resourceToCopy:
+		os.remove(os.path.join(iconPath, i))
+	shutil.rmtree(os.path.join(iconPath, "htmleditor"))
 
 
 def convertImage(iconPath: str):
@@ -74,17 +87,11 @@ def convertImage(iconPath: str):
 
 
 def generateResource(iconPath: str):
-	print("generateResource", iconPath)
-	pd = Popen("pyrcc5 icons.qrc -o ../ui/icons_rc.py", cwd=iconPath, shell=True)
-	pd.communicate()
-	shutil.copyfile(
-		os.path.join(os.path.dirname(iconPath), "ui", "icons_rc.py"),
-		os.path.join(iconPath, "icons_rc.py"),
-	)
+	pass
 
 
 def updateTranslations(projectPath: str):
-	pd = Popen("pylupdate5 viur_admin.pro", cwd=projectPath, shell=True)
+	pd = Popen("pylupdate5 -noobsolete viur_admin.pro", cwd=projectPath, shell=True)
 	pd.communicate()
 
 
@@ -103,7 +110,12 @@ def generateUiFiles(uiPath: str):
 		open(tmpName, "w").write(tmp)
 
 
-def createQtProjectFile(projectPath):
+def createQtProjectFile(projectPath: str):
+	"""Here we're generating a qt project file which we'll later need for creating translation files (*.ts)
+
+	:param projectPath:
+	:return:
+	"""
 	fd = open(os.path.join(projectPath, "viur_admin.pro"), "w")
 	forms = list()
 	sources = list()
@@ -140,9 +152,8 @@ if __name__ == '__main__':
 	projectPath = os.getcwd()
 	iconPath = os.path.join(projectPath, "viur_admin", "icons")
 	uiPath = os.path.join(projectPath, "viur_admin", "ui")
+	generateUiFiles(uiPath)
 	createQtProjectFile(projectPath)
 	updateTranslations(projectPath)
 	convertImage(iconPath)
 	createResourceFile(projectPath, iconPath)
-	generateResource(iconPath)
-	generateUiFiles(uiPath)

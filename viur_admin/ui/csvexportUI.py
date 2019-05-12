@@ -102,10 +102,10 @@ class Ui_CsvExport(object):
         self.encodingLabel.setText(_translate("CsvExport", "Encoding"))
         self.encodingComboBox.setItemText(0, _translate("CsvExport", "UTF-8"))
         self.encodingComboBox.setItemText(1, _translate("CsvExport", "ISO-8859-15"))
-        self.seperatorLabel.setText(_translate("CsvExport", "Sprache"))
-        self.filenameLabel.setText(_translate("CsvExport", "Dateiname"))
+        self.seperatorLabel.setText(_translate("CsvExport", "Language"))
+        self.filenameLabel.setText(_translate("CsvExport", "Filename"))
         self.filenameDialogAction.setText(_translate("CsvExport", "..."))
-        self.label.setText(_translate("CsvExport", "Datensätze:"))
+        self.label.setText(_translate("CsvExport", "entries"))
         self.countLabel.setText(_translate("CsvExport", "0"))
 
 

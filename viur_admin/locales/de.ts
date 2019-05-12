@@ -177,16 +177,6 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/csvexportUI.py" line="105"/>
-        <source>Sprache</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../ui/csvexportUI.py" line="106"/>
-        <source>Dateiname</source>
-        <translation></translation>
-    </message>
-    <message>
         <location filename="../ui/csvexportUI.py" line="107"/>
         <source>...</source>
         <translation></translation>
@@ -197,9 +187,19 @@
         <translation></translation>
     </message>
     <message>
+        <location filename="../ui/csvexportUI.py" line="105"/>
+        <source>Language</source>
+        <translation>Sprache</translation>
+    </message>
+    <message>
+        <location filename="../ui/csvexportUI.py" line="106"/>
+        <source>Filename</source>
+        <translation>Dateiname</translation>
+    </message>
+    <message>
         <location filename="../ui/csvexportUI.py" line="108"/>
-        <source>Datensätze:</source>
-        <translation>Datensätze:</translation>
+        <source>entries</source>
+        <translation>Einträge</translation>
     </message>
 </context>
 <context>
@@ -588,12 +588,17 @@
     </message>
     <message>
         <location filename="../ui/docEditlinkEditUI.py" line="34"/>
-        <source>Verknüpfungsziel</source>
-        <translation>Verknüpfungsziel</translation>
+        <source>URL</source>
+        <translation>URL</translation>
     </message>
     <message>
         <location filename="../ui/docEditlinkEditUI.py" line="35"/>
-        <source>In neuem Fenster öffnen</source>
+        <source>here the href of the link</source>
+        <translation>Hier der href des Links</translation>
+    </message>
+    <message>
+        <location filename="../ui/docEditlinkEditUI.py" line="36"/>
+        <source>open in new window</source>
         <translation>In neuem Fenster öffnen</translation>
     </message>
 </context>
@@ -809,7 +814,7 @@
     <message>
         <location filename="../ui/loginformUI.py" line="102"/>
         <source>ViurAdmin – Login</source>
-        <translation>ViurAdmin – Login</translation>
+        <translation>Viur Admin - Logo</translation>
     </message>
 </context>
 <context>
@@ -868,6 +873,11 @@
         <location filename="../mainwindow.py" line="221"/>
         <source>Log out</source>
         <translation>Ausloggen</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.py" line="223"/>
+        <source>Handler Search</source>
+        <translation>Modulsuche</translation>
     </message>
 </context>
 <context>

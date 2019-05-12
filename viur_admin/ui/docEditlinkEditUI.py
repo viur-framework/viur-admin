@@ -31,7 +31,8 @@ class Ui_LinkEdit(object):
     def retranslateUi(self, LinkEdit):
         _translate = QtCore.QCoreApplication.translate
         LinkEdit.setWindowTitle(_translate("LinkEdit", "Form"))
-        self.label.setText(_translate("LinkEdit", "Verknüpfungsziel"))
-        self.checkBoxNewWindow.setText(_translate("LinkEdit", "In neuem Fenster öffnen"))
+        self.label.setText(_translate("LinkEdit", "URL"))
+        self.editHref.setPlaceholderText(_translate("LinkEdit", "here the href of the link"))
+        self.checkBoxNewWindow.setText(_translate("LinkEdit", "open in new window"))
 
 

@@ -141,6 +141,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# for handler search
 		self.handlerWidget = QtWidgets.QWidget(self)
 		self.handlerLayout = QtWidgets.QVBoxLayout(self.handlerWidget)
+		_translate = QtCore.QCoreApplication.translate
 
 		sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
 		sizePolicy.setHorizontalStretch(0)
@@ -156,7 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.handlerSearchLayout.addWidget(self.moduleSearch)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-		self.searchAction = QtWidgets.QAction(icon, "Handler Search", self)
+		self.searchAction = QtWidgets.QAction(icon, _translate("MainWindow", "Handler Search"), self)
 		self.searchAction.setShortcut(QtGui.QKeySequence.Find)
 		self.searchAction.triggered.connect(self.moduleSearch.setFocus)
 		# self.searchBTN = QtWidgets.QPushButton(self)
@@ -205,7 +206,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.menubar.addAction(self.menuErweitert.menuAction())
 		self.menuErweitert.addAction(self.searchAction)
 
-		_translate = QtCore.QCoreApplication.translate
 		self.setWindowTitle(_translate("MainWindow", "ViUR Admin"))
 		# self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
 		# self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
@@ -220,7 +220,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.actionAbout.setText(_translate("MainWindow", "About"))
 		self.actionLogout.setText(_translate("MainWindow", "Log out"))
 		self.actionTasks.setText(_translate("MainWindow", "Tasks"))
-		self.moduleSearch.setPlaceholderText(_translate("List", "Search"))
+		self.moduleSearch.setPlaceholderText(_translate("MainWindow", "Handler Search"))
 		self.stackedWidget.setCurrentIndex(-1)
 		QtCore.QMetaObject.connectSlotsByName(self)
 
