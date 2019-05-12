@@ -1,6 +1,8 @@
 #!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 import glob
+import sys
+from argparse import ArgumentParser
 from subprocess import Popen, PIPE
 
 __author__ = 'Stefan Kögl'
@@ -16,7 +18,7 @@ resourceToCopy = [
 ]
 
 
-def createResourceFile(projectPath, iconPath):
+def createResourceFile(projectPath: str, iconPath: str):
 	mainCodePath = os.path.join(projectPath, "viur_admin")
 	for i in resourceToCopy:
 		shutil.copyfile(
@@ -148,12 +150,63 @@ def createQtProjectFile(projectPath: str):
 	fd.writelines(translations)
 
 
-if __name__ == '__main__':
-	projectPath = os.getcwd()
-	iconPath = os.path.join(projectPath, "viur_admin", "icons")
-	uiPath = os.path.join(projectPath, "viur_admin", "ui")
+def allTasks(projectPath, iconPath, uiPath):
 	generateUiFiles(uiPath)
 	createQtProjectFile(projectPath)
 	updateTranslations(projectPath)
 	convertImage(iconPath)
 	createResourceFile(projectPath, iconPath)
+
+
+if __name__ == '__main__':
+	parser = ArgumentParser()
+
+	parser.add_argument(
+		"-f",
+		'--forms',
+		action="store_true",
+		help="translate qt ui files to python",
+	)
+
+	parser.add_argument(
+		"-t",
+		'--translations',
+		action="store_true",
+		help="update translation files - you have to use linguist and lrelease apps afterwards",
+	)
+
+	parser.add_argument(
+		"-r",
+		'--resources',
+		action="store_true",
+		help="update resource files",
+	)
+
+	parser.add_argument(
+		"-a",
+		'--all',
+		action="store_true",
+		help="Run all tasks above like '-ftr'",
+	)
+
+	if len(sys.argv) == 1:
+		parser.print_help()
+		sys.exit()
+
+	args = parser.parse_args(sys.argv[1:])
+
+	projectPath = os.getcwd()
+	iconPath = os.path.join(projectPath, "viur_admin", "icons")
+	uiPath = os.path.join(projectPath, "viur_admin", "ui")
+
+	if args.all:
+		allTasks(projectPath, iconPath, uiPath)
+	else:
+		if args.forms:
+			generateUiFiles(uiPath)
+		if args.translations:
+			createQtProjectFile(projectPath)
+			updateTranslations(projectPath)
+		if args.resources_files:
+			convertImage(iconPath)
+			createResourceFile(projectPath, iconPath)

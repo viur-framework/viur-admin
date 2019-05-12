@@ -813,8 +813,8 @@
     </message>
     <message>
         <location filename="../ui/loginformUI.py" line="102"/>
-        <source>ViurAdmin – Login</source>
-        <translation>Viur Admin - Logo</translation>
+        <source>ViurAdmin | Login</source>
+        <translation>ViurAdmin | Login</translation>
     </message>
 </context>
 <context>

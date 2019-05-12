@@ -755,11 +755,6 @@
 </context>
 <context>
     <name>LoginWindow</name>
-    <message encoding="UTF-8">
-        <location filename="../ui/loginformUI.py" line="102"/>
-        <source>ViurAdmin – Login</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <location filename="../ui/loginformUI.py" line="103"/>
         <source>Language</source>
@@ -813,6 +808,11 @@
     <message>
         <location filename="../ui/loginformUI.py" line="106"/>
         <source>Open</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/loginformUI.py" line="102"/>
+        <source>ViurAdmin | Login</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

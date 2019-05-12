@@ -99,7 +99,7 @@ class Ui_LoginWindow(object):
 
     def retranslateUi(self, LoginWindow):
         _translate = QtCore.QCoreApplication.translate
-        LoginWindow.setWindowTitle(_translate("LoginWindow", "ViurAdmin – Login"))
+        LoginWindow.setWindowTitle(_translate("LoginWindow", "ViurAdmin | Login"))
         self.label.setText(_translate("LoginWindow", "Language"))
         self.portalLabel.setText(_translate("LoginWindow", "Portal"))
         self.accountManagerLabel.setText(_translate("LoginWindow", "Account Manager"))
