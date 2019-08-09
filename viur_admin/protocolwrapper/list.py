@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from typing import Sequence, Mapping, Union, Tuple, List, Any, Dict
 
 from viur_admin.log import getLogger
 
@@ -10,7 +11,7 @@ from collections import OrderedDict
 from PyQt5 import QtCore
 
 from time import time
-from viur_admin.network import NetworkService, RequestGroup, RequestWrapper, securityTokenProvider
+from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 
 
@@ -25,22 +26,25 @@ class ListWrapper(QtCore.QObject):
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
 	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this module and that data is now
+
 	# avaiable
 
-	def __init__(self, module, *args, **kwargs):
+	def __init__(self, module: str, *args: Any, **kwargs: Any):
 		super(ListWrapper, self).__init__()
 		self.module = module
-		self.dataCache = {}
+		self.dataCache: Mapping[str, dict] = {}
 		self.viewStructure = None
 		self.addStructure = None
 		self.editStructure = None
 		self.busy = True
-		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvailable)
+		req = NetworkService.request(
+			"/getStructure/%s" % self.module,
+			successHandler=self.onStructureAvailable)
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
-		self.deferredTaskQueue = []
+		self.deferredTaskQueue: List[Tuple[str, str]] = []
 		self.checkBusyStatus()
 
-	def checkBusyStatus(self):
+	def checkBusyStatus(self) -> None:
 		busy = False
 		for child in self.children():
 			if isinstance(child, RequestWrapper) and not child.hasFinished:
@@ -50,7 +54,7 @@ class ListWrapper(QtCore.QObject):
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
 
-	def execNetworkAction(self, *args, **kwargs):
+	def execNetworkAction(self, *args: Any, **kwargs: Any) -> RequestWrapper:
 		"""
 			Starts a QNetworkRequest in this context.
 			All arguments are passed directly to NetworkService.request.
@@ -62,16 +66,16 @@ class ListWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return req
 
-	def checkForOurModul(self, moduleName):
+	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
 
-	def onStructureAvailable(self, req):
+	def onStructureAvailable(self, req: RequestWrapper) -> None:
 		tmp = NetworkService.decode(req)
 		if tmp is None:
 			self.checkBusyStatus()
 			return
 		for stype, structlist in tmp.items():
-			structure = OrderedDict()
+			structure: OrderedDict = OrderedDict()
 			for k, v in structlist:
 				structure[k] = v
 			if stype == "viewSkel":
@@ -83,14 +87,14 @@ class ListWrapper(QtCore.QObject):
 		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
-	def cacheKeyFromFilter(self, filters):
+	def cacheKeyFromFilter(self, filters: dict) -> str:
 		tmpList = list(filters.items())
 		tmpList.sort(key=lambda x: x[0])
 		return "&".join(["%s=%s" % (k, v) for (k, v) in tmpList])
 
-	def queryData(self, **kwargs):
+	def queryData(self, **kwargs: Any) -> str:
 		key = self.cacheKeyFromFilter(kwargs)
-		if key in self.dataCache.keys():
+		if key in self.dataCache:
 			if self.dataCache[key] is None:
 				# We already started querying that key
 				return key
@@ -107,23 +111,23 @@ class ListWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return key
 
-	def queryEntry(self, key):
-		if key in self.dataCache.keys():
+	def queryEntry(self, key: str) -> str:
+		if key in self.dataCache:
 			QtCore.QTimer.singleShot(25, lambda *args, **kwargs: self.entityAvailable.emit(self.dataCache[key]))
 			return key
 		r = NetworkService.request("/%s/view/%s" % (self.module, key), successHandler=self.addCacheData)
 		return key
 
-	def execDefered(self, *args, **kwargs):
+	def execDefered(self, *args: Any, **kwargs: Any) -> None:
 		action, key = self.deferredTaskQueue.pop(0)
 		if action == "queryResultAvailable":
 			self.queryResultAvailable.emit(key)
 		self.checkBusyStatus()
 
-	def addCacheData(self, req):
+	def addCacheData(self, req: RequestWrapper) -> None:
 		data = NetworkService.decode(req)
 		cursor = None
-		if "cursor" in data.keys():
+		if "cursor" in data:
 			cursor = data["cursor"]
 		if data["action"] == "list":
 			self.dataCache[req.wrapperCbCacheKey] = (time(), data["skellist"], cursor)
@@ -136,17 +140,20 @@ class ListWrapper(QtCore.QObject):
 			self.queryResultAvailable.emit(req.wrapperCbCacheKey)
 		self.checkBusyStatus()
 
-	def setSortIndex(self, key, sortIndex):
-		req = NetworkService.request("/{0}/setSortIndex/".format(self.module), params={"key": key, "index": sortIndex}, secure=True,
-		                             finishedHandler=self.onSaveResult)
+	def setSortIndex(self, key: str, sortIndex: Union[float, int]) -> str:
+		req = NetworkService.request(
+			"/{0}/setSortIndex/".format(self.module), params={"key": key, "index": sortIndex},
+			secure=True,
+			finishedHandler=self.onSaveResult)
 		self.checkBusyStatus()
 		setSortIndexTaskId = str(id(req))
 		logger.debug("proto list setSortIndex task id: %r", setSortIndexTaskId)
 		return setSortIndexTaskId
 
-	def add(self, **kwargs):
-		req = NetworkService.request("/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
-		                             finishedHandler=self.onSaveResult)
+	def add(self, **kwargs: Any) -> str:
+		req = NetworkService.request(
+			"/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
@@ -157,9 +164,10 @@ class ListWrapper(QtCore.QObject):
 		logger.debug("proto list add id: %r", addTaskId)
 		return addTaskId
 
-	def edit(self, key, **kwargs):
-		req = NetworkService.request("/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs.keys()) > 0),
-		                             finishedHandler=self.onSaveResult)
+	def edit(self, key: str, **kwargs: Any) -> str:
+		req = NetworkService.request(
+			"/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
@@ -170,18 +178,19 @@ class ListWrapper(QtCore.QObject):
 		logger.debug("proto list edit id: %r", editTaskId)
 		return editTaskId
 
-	def deleteEntities(self, ids):
-		if isinstance(ids, list):
+	def deleteEntities(self, keys: Sequence[str]) -> None:
+		if isinstance(keys, list):
 			req = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
-			for key in ids:
+			for key in keys:
 				r = NetworkService.request("/%s/delete" % self.module, {"key": key}, secure=True, parent=req)
 				req.addQuery(r)
 		else:  # We just delete one
-			NetworkService.request("/%s/delete/%s" % (self.module, id), secure=True,
-			                       finishedHandler=self.delayEmitEntriesChanged)
+			NetworkService.request(
+				"/%s/delete/%s" % (self.module, id), secure=True,
+				finishedHandler=self.delayEmitEntriesChanged)
 		self.checkBusyStatus()
 
-	def delayEmitEntriesChanged(self, *args, **kwargs):
+	def delayEmitEntriesChanged(self, *args: Any, **kwargs: Any) -> None:
 		"""
 			Give the GAE a chance to apply recent changes and then
 			force all open views of that module to reload its data
@@ -189,7 +198,7 @@ class ListWrapper(QtCore.QObject):
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 		self.checkBusyStatus()
 
-	def resetOnError(self, *args, **kwargs):
+	def resetOnError(self, *args: Any, **kwargs: Any) -> None:
 		"""
 			If one or more requests fail, flush our cache and force
 			all listening widgets to reload.
@@ -198,7 +207,7 @@ class ListWrapper(QtCore.QObject):
 		self.entitiesChanged.emit()
 		self.checkBusyStatus()
 
-	def onSaveResult(self, req):
+	def onSaveResult(self, req: RequestWrapper) -> None:
 		try:
 			data = NetworkService.decode(req)
 		except:  # Something went wrong, call ErrorHandler
@@ -212,20 +221,20 @@ class ListWrapper(QtCore.QObject):
 			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
 		self.checkBusyStatus()
 
-	def emitEntriesChanged(self, *args, **kwargs):
+	def emitEntriesChanged(self, *args: Any, **kwargs: Any) -> None:
 		self.dataCache = {}
 		self.entitiesChanged.emit()
 		self.checkBusyStatus()
 
-	# self.emit( QtCore.SIGNAL("entitiesChanged()") )
+
+# self.emit( QtCore.SIGNAL("entitiesChanged()") )
 
 
-def CheckForListModul(moduleName, modulList):
-	modulData = modulList[moduleName]
-	if "handler" in modulData.keys() and (
-						modulData["handler"] == "base" or modulData["handler"] == "list" or modulData[
-				"handler"].startswith(
-				"list.")):
+def CheckForListModul(moduleName: str, moduleList: dict) -> bool:
+	modulData = moduleList[moduleName]
+	if "handler" in modulData and (
+			modulData["handler"] == "base" or
+			modulData["handler"] == "list" or modulData["handler"].startswith("list.")):
 		return True
 	return False
 

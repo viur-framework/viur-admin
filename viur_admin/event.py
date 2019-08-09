@@ -1,4 +1,6 @@
 import weakref
+from typing import Any, Dict, List, Callable, Union
+from weakref import ReferenceType
 
 from PyQt5 import QtCore
 
@@ -8,8 +10,9 @@ from PyQt5 import QtCore
 
 
 class WeakFuncWrapper:
-	def __init__(self, targetFunc):
+	def __init__(self, targetFunc: Any):
 		super(WeakFuncWrapper, self).__init__()
+		self.targetFuncSelf: Union[ReferenceType[Any], None]
 		if "__self__" in dir(targetFunc):
 			self.targetFuncSelf = weakref.ref(targetFunc.__self__)
 			self.targetFuncName = targetFunc.__name__
@@ -19,8 +22,8 @@ class WeakFuncWrapper:
 			self.targetFuncName = None
 			self.targetFunc = weakref.ref(targetFunc)
 
-	def call(self, *args, **kwargs):
-		if self.targetFuncName is not None:  # Bound function
+	def call(self, *args: Any, **kwargs: Any) -> None:
+		if self.targetFuncName is not None and self.targetFuncSelf is not None:  # Bound function
 			funcSelf = self.targetFuncSelf()
 			if funcSelf is not None:
 				getattr(funcSelf, self.targetFuncName)(*args, **kwargs)
@@ -29,7 +32,7 @@ class WeakFuncWrapper:
 			if tf is not None:
 				tf(*args, **kwargs)
 
-	def isDead(self):
+	def isDead(self) -> bool:
 		if self.targetFuncName is not None:  # Bound function
 			return self.targetFuncSelf() is None
 		else:
@@ -49,9 +52,9 @@ class EventDispatcher(QtCore.QObject):
 	normalPriority = 3
 	lowPriority = 4
 	lowestPriority = 5
-	eventMap = {}
+	eventMap: Dict[str, Any] = dict()
 
-	def connectWithPriority(self, signal, func, priority):
+	def connectWithPriority(self, signal: str, func: Callable, priority: int) -> None:
 		""" Connects the given function to the given event, using priority=#.
 
 		:param signal:
@@ -59,11 +62,11 @@ class EventDispatcher(QtCore.QObject):
 		:param priority:
 		:return:
 		"""
-		if signal not in EventDispatcher.eventMap.keys():
+		if signal not in EventDispatcher.eventMap:
 			EventDispatcher.eventMap[signal] = {
-				"high": [],
-				"normal": [],
-				"low": []
+				"high": list(),
+				"normal": list(),
+				"low": list()
 			}
 		obj = WeakFuncWrapper(func)
 		if priority == self.highestPriority:  # Put this one first
@@ -77,9 +80,9 @@ class EventDispatcher(QtCore.QObject):
 		elif priority == self.lowestPriority:  # Append to "low"
 			EventDispatcher.eventMap[signal]["low"].append(obj)
 
-	def emit(self, signal, *args):
+	def emit(self, signal: str, *args: Any) -> None:
 		# super( EventDispatcher, self ).emit( signal, *args )
-		if signal in EventDispatcher.eventMap.keys():
+		if signal in EventDispatcher.eventMap:
 			try:
 				for e in EventDispatcher.eventMap[signal]["high"]:
 					if e.isDead():

@@ -55,8 +55,6 @@ class Ui_LoginWindow(object):
         self.startAccManagerBTN.setObjectName("startAccManagerBTN")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.startAccManagerBTN)
         self.verticalLayout_2.addLayout(self.formLayout)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.verticalLayout_2.addItem(spacerItem)
         self.btnLogin = QtWidgets.QPushButton(self.logincentralwidget)
         self.btnLogin.setMinimumSize(QtCore.QSize(0, 64))
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))

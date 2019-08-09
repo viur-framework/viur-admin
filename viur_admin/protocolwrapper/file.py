@@ -5,30 +5,30 @@ import os
 import sys
 
 from collections import deque
-
+from typing import Sequence, List, Any, Dict
 
 from PyQt5 import QtCore
 
 from viur_admin.config import conf
 from viur_admin.log import getLogger
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector
 from viur_admin.protocolwrapper.tree import TreeWrapper
 
 logger = getLogger(__name__)
 
 
-def x_startswith_dot(x):
+def x_startswith_dot(x: str) -> bool:
 	# print(repr(x))
 	return x.startswith("."),
 
 
-def x_lower(x):
+def x_lower(x: str) -> bool:
 	# print(repr(x))
 	return x.lower == "thumbs.db"
 
 
-def x_startswith_tilde(x):
+def x_startswith_tilde(x: str) -> bool:
 	# print(repr(x))
 	return x.startswith("~") or x.endswith("~")
 
@@ -50,7 +50,12 @@ class FileUploader(QtCore.QObject):
 	failed = QtCore.pyqtSignal()
 	cancel = QtCore.pyqtSignal()
 
-	def __init__(self, fileName, node=None, *args, **kwargs):
+	def __init__(
+			self,
+			fileName: str,
+			node: str = None,
+			*args: Any,
+			**kwargs: Any):
 		"""
 		Uploads a file to the Server
 
@@ -70,7 +75,7 @@ class FileUploader(QtCore.QObject):
 		self.bytesDone = 0
 		NetworkService.request("/file/getUploadURL", successHandler=self.startUpload, secure=True)
 
-	def startUpload(self, req):
+	def startUpload(self, req: RequestWrapper) -> None:
 		self.uploadProgress.emit(0, 1)
 		url = req.readAll().data().decode("UTF-8")
 		myFile = QtCore.QFile(self.fileName)
@@ -81,7 +86,7 @@ class FileUploader(QtCore.QObject):
 		req = NetworkService.request(url, params, finishedHandler=self.onFinished)
 		req.uploadProgress.connect(self.onProgress)
 
-	def onFinished(self, req):
+	def onFinished(self, req: RequestWrapper) -> None:
 		try:
 			data = NetworkService.decode(req)
 		except:
@@ -92,7 +97,7 @@ class FileUploader(QtCore.QObject):
 		self.hasFinished = True
 		self.succeeded.emit(data)
 
-	def onProgress(self, req, bytesSend, bytesTotal):
+	def onProgress(self, req: RequestWrapper, bytesSend: int, bytesTotal: int) -> None:
 		logger.debug("FileUploader.onProgress: %r, %r, %r", req, bytesSend, bytesTotal)
 		self.bytesTotal = bytesTotal
 		self.bytesDone = bytesSend
@@ -100,7 +105,7 @@ class FileUploader(QtCore.QObject):
 		if self.isCanceled:
 			req.abort()
 
-	def getStats(self):
+	def getStats(self) -> None:
 		stats = {
 			"dirsTotal": 0,
 			"dirsDone": 0,
@@ -112,7 +117,7 @@ class FileUploader(QtCore.QObject):
 		logger.debug("FileUploader.getStats: %r", stats)
 		return stats
 
-	def onCanceled(self):
+	def onCanceled(self) -> None:
 		self.isCanceled = True
 
 
@@ -131,7 +136,7 @@ class RecursiveUploader(QtCore.QObject):
 	uploadProgress = QtCore.pyqtSignal((int, int))
 	cancel = QtCore.pyqtSignal()
 
-	def getDirName(self, name):
+	def getDirName(self, name: str) -> str:
 		name, head = os.path.split(name)
 		if head:
 			return head
@@ -141,7 +146,14 @@ class RecursiveUploader(QtCore.QObject):
 		else:
 			return name
 
-	def __init__(self, files, node, module, stats, *args, **kwargs):
+	def __init__(
+			self,
+			files: List[Any],
+			node: str,
+			module: str,
+			stats: Any,
+			*args: Any,
+			**kwargs: Any):
 		"""
 			@param files: List of local files or directories (including their absolute path) which will be uploaded.
 			@type files: list
@@ -157,7 +169,7 @@ class RecursiveUploader(QtCore.QObject):
 		self.node = node
 		self.module = module
 		self.hasFinished = False
-		self.taskQueue = deque()
+		self.taskQueue: deque = deque()
 		self.runningTasks = 0
 		filteredFiles = [
 			x for x in files if
@@ -203,7 +215,7 @@ class RecursiveUploader(QtCore.QObject):
 		self.launchNextRequest()
 		self.tid = self.startTimer(150)
 
-	def launchNextRequest(self):
+	def launchNextRequest(self) -> None:
 		if not len(self.taskQueue):
 			return
 		if self.runningTasks > 1:
@@ -226,11 +238,11 @@ class RecursiveUploader(QtCore.QObject):
 		else:
 			raise NotImplementedError()
 
-	def onRequestFinished(self, *args, **kwargs):
+	def onRequestFinished(self, *args: Any, **kwargs: Any) -> None:
 		self.runningTasks -= 1
 		self.launchNextRequest()
 
-	def timerEvent(self, e):
+	def timerEvent(self, e: QtCore.QTimerEvent) -> None:
 		"""Check if we have busy tasks left
 		"""
 
@@ -242,7 +254,7 @@ class RecursiveUploader(QtCore.QObject):
 			self.finished.emit(self)
 			self.killTimer(self.tid)
 
-	def getStats(self):
+	def getStats(self) -> dict:
 		stats = {
 			"dirsTotal": 0,
 			"dirsDone": 0,
@@ -253,7 +265,7 @@ class RecursiveUploader(QtCore.QObject):
 		}
 
 		# Merge my stats in
-		for k in stats.keys():
+		for k in stats:
 			try:
 				stats[k] += self.stats[k]
 			except KeyError:
@@ -261,7 +273,7 @@ class RecursiveUploader(QtCore.QObject):
 		for child in self.children():
 			try:
 				tmp = child.getStats()
-				for k in stats.keys():
+				for k in stats:
 					if isinstance(child, FileUploader) and k == "filesTotal":
 						# We count files in advance; don't include FileUpload-Class while counting
 						continue
@@ -280,7 +292,7 @@ class RecursiveUploader(QtCore.QObject):
 		logger.debug("RecursiveUploader.getStats: %r", stats)
 		return stats
 
-	def onDirListAvailable(self, req):
+	def onDirListAvailable(self, req: RequestWrapper) -> None:
 		logger.debug("onDirListAvailable")
 		self.runningTasks -= 1
 		if self.isCanceled:
@@ -312,7 +324,7 @@ class RecursiveUploader(QtCore.QObject):
 			self.taskQueue.append(task)
 		self.launchNextRequest()
 
-	def onMkDir(self, req):
+	def onMkDir(self, req: RequestWrapper) -> None:
 		if self.isCanceled:
 			return
 		data = NetworkService.decode(req)
@@ -332,13 +344,13 @@ class RecursiveUploader(QtCore.QObject):
 		self.taskQueue.append(task)
 		self.launchNextRequest()
 
-	def onCanceled(self, *args, **kwargs):
+	def onCanceled(self, *args: Any, **kwargs: Any) -> None:
 		self.isCanceled = True
 
-	def onFailed(self, *args, **kwargs):
+	def onFailed(self, *args: Any, **kwargs: Any) -> None:
 		self.failed.emit(self)
 
-	def onUploadProgress(self, bytesSend, bytesTotal):
+	def onUploadProgress(self, bytesSend: int, bytesTotal: int) -> None:
 		logger.debug("RecursiveUploader.onUploadProgress: %r, %r", bytesSend, bytesTotal)
 		self.uploadProgress.emit(bytesSend, bytesTotal)
 
@@ -356,7 +368,14 @@ class RecursiveDownloader(QtCore.QObject):
 	canceled = QtCore.pyqtSignal(QtCore.QObject)
 	downloadProgress = QtCore.pyqtSignal((int, int))
 
-	def __init__(self, localTargetDir, files, dirs, modul, *args, **kwargs):
+	def __init__(
+			self,
+			localTargetDir: str,
+			files: Sequence[str],
+			dirs: Sequence[str],
+			module: str,
+			*args: Any,
+			**kwargs: Any):
 		"""
 			@param localTargetDir: Local, existing and absolute destination-path
 			@type localTargetDir: str
@@ -368,12 +387,12 @@ class RecursiveDownloader(QtCore.QObject):
 			@type files: List
 			@param dirs: List of directories in the given remote path
 			@type dirs: List
-			@param modul: Modulname to download from (usually "file")
-			@type modul: str
+			@param module: Modulname to download from (usually "file")
+			@type module: str
 		"""
 		super(RecursiveDownloader, self).__init__(*args, **kwargs)
 		self.localTargetDir = localTargetDir
-		self.modul = modul
+		self.module = module
 		self._cancel = False
 		self.stats = {
 			"dirsTotal": 0,
@@ -386,7 +405,7 @@ class RecursiveDownloader(QtCore.QObject):
 		self.remainingRequests = 0
 		for file in files:
 			self.remainingRequests += 1
-			dlkey = "/%s/download/%s/file.dat" % (self.modul, file["dlkey"])
+			dlkey = "/%s/download/%s/file.dat" % (self.module, file["dlkey"])
 			request = NetworkService.request(
 				dlkey, successHandler=self.saveFile,
 				finishedHandler=self.onRequestFinished)
@@ -404,7 +423,7 @@ class RecursiveDownloader(QtCore.QObject):
 					os.mkdir(os.path.join(self.localTargetDir, directory["name"]))
 
 				request = NetworkService.request(
-					"/{0}/list/{1}/{2}".format(self.modul, nodeType, directory["key"]),
+					"/{0}/list/{1}/{2}".format(self.module, nodeType, directory["key"]),
 					successHandler=self.onListDir,
 					finishedHandler=self.onRequestFinished)
 
@@ -413,18 +432,18 @@ class RecursiveDownloader(QtCore.QObject):
 			self.stats["dirsTotal"] += 1
 			self.stats["bytesTotal"] += self.directorySize
 
-	def onRequestFinished(self, req):
+	def onRequestFinished(self, req: RequestWrapper) -> None:
 		if self._cancel:
 			return
 		self.remainingRequests -= 1  # Decrease our request counter
 		if self.remainingRequests == 0:
 			QtCore.QTimer.singleShot(100, self.onFinished)
 
-	def onFinished(self):
+	def onFinished(self) -> None:
 		# Delay emiting the finished signal
 		self.finished.emit(self)
 
-	def saveFile(self, req):
+	def saveFile(self, req: RequestWrapper) -> None:
 		if self._cancel:
 			return
 		fh = open(os.path.join(self.localTargetDir, req.fname), "wb+")
@@ -433,13 +452,13 @@ class RecursiveDownloader(QtCore.QObject):
 		self.stats["bytesDone"] += req.fsize
 		self.downloadProgress.emit(0, 0)
 
-	def onDownloadProgress(self, bytesDone, bytesTotal):
+	def onDownloadProgress(self, bytesDone: int, bytesTotal: int) -> None:
 		self.downloadProgress.emit(bytesDone, bytesTotal)
 
 	# self.ui.pbarTotal.setRange( 0, bytesTotal )
 	# self.ui.pbarTotal.setValue( bytesDone )
 
-	def onListDir(self, req):
+	def onListDir(self, req: RequestWrapper) -> None:
 		if self._cancel:
 			return
 		data = NetworkService.decode(req)
@@ -451,7 +470,7 @@ class RecursiveDownloader(QtCore.QObject):
 				os.path.join(self.localTargetDir, req.dname),
 				[],
 				data["skellist"],
-				self.modul,
+				self.module,
 				parent=self)
 			r.downloadProgress.connect(self.downloadProgress)
 			r.finished.connect(self.onRequestFinished)
@@ -464,12 +483,12 @@ class RecursiveDownloader(QtCore.QObject):
 				os.path.join(self.localTargetDir, req.dname),
 				data["skellist"],
 				[],
-				self.modul,
+				self.module,
 				parent=self)
 			r.downloadProgress.connect(self.downloadProgress)
 			r.finished.connect(self.onRequestFinished)
 
-	def getStats(self):
+	def getStats(self) -> dict:
 		stats = {
 			"dirsTotal": 0,
 			"dirsDone": 0,
@@ -478,16 +497,16 @@ class RecursiveDownloader(QtCore.QObject):
 			"bytesTotal": 0,
 			"bytesDone": 0}
 		# Merge my stats in
-		for k in stats.keys():
+		for k in stats:
 			stats[k] += self.stats[k]
 		for child in self.children():
 			if "getStats" in dir(child):
 				tmp = child.getStats()
-				for k in stats.keys():
+				for k in stats:
 					stats[k] += tmp[k]
 		return stats
 
-	def cancel(self):
+	def cancel(self) -> None:
 		self._cancel = True
 		self.canceled.emit(self)
 
@@ -495,11 +514,11 @@ class RecursiveDownloader(QtCore.QObject):
 class FileWrapper(TreeWrapper):
 	protocolWrapperInstancePriority = 3
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args: Any, **kwargs: Any):
 		super(FileWrapper, self).__init__(*args, **kwargs)
-		self.transferQueues = []  # Keep a reference to uploader/downloader
+		self.transferQueues: list = list()  # Keep a reference to uploader/downloader
 
-	def buildStats(self, filteredFiles):
+	def buildStats(self, filteredFiles: Sequence[str]) -> dict:
 		stats = {
 			"dirsTotal": 0,
 			"dirsDone": 0,
@@ -530,7 +549,7 @@ class FileWrapper(TreeWrapper):
 		logger.debug("buildStats finished: %r, %r", stats["filesTotal"], stats["bytesTotal"])
 		return stats
 
-	def upload(self, files, node):
+	def upload(self, files: Sequence[str], node: Sequence[str]) -> RecursiveUploader:
 		"""
 			Uploads a list of files to the Server and adds them to the given path on the server.
 			@param files: List of local file names including their full, absolute path
@@ -550,7 +569,7 @@ class FileWrapper(TreeWrapper):
 		logger.debug("Filewrapper.upload: %r, %r, %r", files, node, uploader)
 		return uploader
 
-	def download(self, targetDir, files, dirs):
+	def download(self, targetDir: str, files: Sequence[str], dirs: Sequence[str]) -> RecursiveDownloader:
 		"""
 			Download a list of files and/or directories from the server to the local file-system.
 			@param targetDir: Local, existing and absolute path
@@ -565,9 +584,9 @@ class FileWrapper(TreeWrapper):
 		return downloader
 
 
-def CheckForFileModul(moduleName, modulList):
-	modulData = modulList[moduleName]
-	if "handler" in modulData.keys() and modulData["handler"].startswith("tree.simple.file"):
+def CheckForFileModul(moduleName: str, moduleList: str) -> bool:
+	modulData = moduleList[moduleName]
+	if "handler" in modulData and modulData["handler"].startswith("tree.simple.file"):
 		return True
 	return False
 

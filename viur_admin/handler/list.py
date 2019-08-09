@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Any, List, Dict, Union, Callable
 from copy import deepcopy
 
 from viur_admin.log import getLogger
@@ -6,7 +7,7 @@ from PyQt5 import QtCore
 
 from viur_admin.config import conf
 from viur_admin.event import event
-from viur_admin.utils import loadIcon, WidgetHandler
+from viur_admin.utils import loadIcon, WidgetHandler, RegisterQueue
 from viur_admin.widgets.list import ListWidget
 
 
@@ -16,11 +17,17 @@ logger = getLogger(__name__)
 class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 	"""Holds one view for this module (preconfigured from Server)"""
 
-	def __init__(self, modul, config, viewName, *args, **kwargs):
+	def __init__(
+			self,
+			module: str,
+			config: dict,
+			viewName: str,
+			*args: Any,
+			**kwargs: Any):
 		logger.debug("icon?: %r", config)
 		icon = loadIcon(config.get("icon", None))
 		super(PredefinedViewHandler, self).__init__(
-			lambda: ListWidget(modul, config, config.get("columns", list()), config.get("filter", dict())),
+			lambda: ListWidget(module, config, config.get("columns", list()), config.get("filter", dict())),
 			descr=config["name"],
 			icon=icon,
 			vanishOnClose=False,
@@ -32,14 +39,18 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 class ListCoreHandler(WidgetHandler):  # EntryHandler
 	"""Class for holding the main (module) Entry within the modules-list"""
 
-	def __init__(self, modul, *args, **kwargs):
+	def __init__(
+			self,
+			module: str,
+			*args: Any,
+			**kwargs: Any):
 		# Config parsen
-		ListCoreHandlerConfig = conf.serverConfig["modules"][modul]
+		ListCoreHandlerConfig = conf.serverConfig["modules"][module]
 		logger.debug("ListCoreHandler configuration: %r", ListCoreHandlerConfig)
 		actions = ListCoreHandlerConfig.get("actions")
 		widgetGen = lambda: ListWidget(
-			modul,
-			config=conf.serverConfig["modules"][modul],
+			module,
+			config=conf.serverConfig["modules"][module],
 			fields=ListCoreHandlerConfig.get("columns", list()),
 			filter=ListCoreHandlerConfig.get("filter", dict()),
 			actions=actions
@@ -58,21 +69,24 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 			*args,
 			**kwargs)
 
-		if "views" in ListCoreHandlerConfig.keys():
+		if "views" in ListCoreHandlerConfig:
 			for view in ListCoreHandlerConfig["views"]:
 				viewConfig = deepcopy(view)
 				viewConfig["handler"] = ListCoreHandlerConfig["handler"]
-				self.addChild(PredefinedViewHandler(modul, viewConfig, view["name"]))
+				self.addChild(PredefinedViewHandler(module, viewConfig, view["name"]))
 
 
 class ListHandler(QtCore.QObject):
-	def __init__(self, *args, **kwargs):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
+		# TODO: why not super here?
 		QtCore.QObject.__init__(self, *args, **kwargs)
-		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
+		event.connectWithPriority('requestModuleHandler', self.requestModuleHandler, event.lowPriority)
 
-	def requestModulHandler(self, queue, moduleName):
-		f = lambda: ListCoreHandler(moduleName)
-		queue.registerHandler(0, f)
+	def requestModuleHandler(self, queue: RegisterQueue, moduleName: str) -> bool:
+		queue.registerHandler(0, lambda: ListCoreHandler(moduleName))
 
 
 _listHandler = ListHandler()

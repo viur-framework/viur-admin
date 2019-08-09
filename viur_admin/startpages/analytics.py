@@ -86,7 +86,7 @@ class GraphPlotter(QtWidgets.QWidget):
 			qp.setPen(QtGui.QColor(self.txtColor))
 			qp.drawText(10, yPos, str(int(graphMax - (graphMax * g))))
 		xPos = 100
-		for y in range(len(self.data.keys()) - 1, -1, -1):  # X-Axis description
+		for y in range(len(self.data) - 1, -1, -1):  # X-Axis description
 			dtNow = datetime.now()
 			qp.setPen(QtGui.QColor(self.graphColor))
 			qp.drawLine(xPos, event.rect().height() - 45, xPos, event.rect().height() - 55)
@@ -96,13 +96,13 @@ class GraphPlotter(QtWidgets.QWidget):
 			xPos += xStep
 		visitSources = []
 		for x in range(0, 8):
-			for key in self.data[x].keys():
+			for key in self.data[x]:
 				if not key in visitSources:
 					visitSources.append(key)
 		for type in visitSources:
 			xPos = 100
 			lastPos = None
-			if type in self.grapDataColor.keys():
+			if type in self.grapDataColor:
 				qp.setPen(QtGui.QColor(self.grapDataColor[type]))
 			else:
 				qp.setPen(QtGui.QColor("#000000"))
@@ -154,13 +154,13 @@ class AnalyticsTableModel(QtCore.QAbstractTableModel):
 		self.data = data
 		self.fields = ["total"]
 		for stat in self.data.values():
-			for key in stat.keys():
+			for key in stat:
 				if not key in self.fields:
 					self.fields.append(key)
 		self.emit(QtCore.SIGNAL("modelReset()"))
 
 	def rowCount(self, parent):
-		return (len(self.data.keys()))
+		return (len(self.data))
 
 	def columnCount(self, parent):
 		return (len(self.fields))
@@ -170,9 +170,9 @@ class AnalyticsTableModel(QtCore.QAbstractTableModel):
 			return None
 		elif role != QtCore.Qt.DisplayRole:
 			return None
-		if index.row() >= 0 and (index.row() < len(self.data.keys())):
+		if index.row() >= 0 and (index.row() < len(self.data)):
 			try:
-				return (self.data[len(self.data.keys()) - index.row()][self.fields[index.column()]])
+				return (self.data[len(self.data) - index.row()][self.fields[index.column()]])
 			except KeyError:  # No visists from this source this day
 				return (0)
 		else:
@@ -211,7 +211,7 @@ class AnalytisWidget(QtWidgets.QWidget):
 		self.tableView = QtGui.QTableView(self)
 		self.tableView.hide()
 		self.tableView.setModel(self.model)
-		if "configuration" in conf.serverConfig.keys() and "analyticsKey" in conf.serverConfig["configuration"].keys():
+		if "configuration" in conf.serverConfig and "analyticsKey" in conf.serverConfig["configuration"]:
 			self.uaKey = conf.serverConfig["configuration"]["analyticsKey"]
 			# Start fetching the data
 			credDict = {"Email": conf.currentUsername,

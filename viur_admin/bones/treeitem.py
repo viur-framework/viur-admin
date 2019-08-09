@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from typing import List, Dict, Any
+
+from PyQt5 import QtWidgets
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -18,11 +22,12 @@ class TreeItemViewBoneDelegate(RelationalViewBoneDelegate):
 class TreeItemBone(RelationalEditBone):
 	skelType = "leaf"
 
-	def onAddBtnReleased(self, *args, **kwargs):
-		editWidget = TreeBoneSelector(self.moduleName, self.boneName, self.multiple, self.toModul, self.selection)
+	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
+		editWidget = TreeBoneSelector(
+			self.moduleName, self.boneName, self.multiple, self.toModule, self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
-	def installAutoCompletion(self):
+	def installAutoCompletion(self) -> None:
 		"""
 			Prevent installing an autoCompletion for this module (not implementet yet)
 		"""
@@ -38,7 +43,7 @@ class TreeBoneSelector(RelationalBoneSelector):
 	displaySourceWidget = TreeWidget
 	displaySelectionWidget = TreeSelectedEntities
 
-	def onSourceItemDoubleClicked(self, item):
+	def onSourceItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
@@ -53,7 +58,10 @@ class TreeBoneSelector(RelationalBoneSelector):
 			event.emit("popWidget", self)
 
 
-def CheckForTreeItemBone(moduleName, boneName, skelStucture):
+def CheckForTreeItemBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"].startswith("relational.treeitem.")
 
 

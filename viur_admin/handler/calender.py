@@ -52,9 +52,9 @@ class CalenderWidget(ListWidget):
 	def updateDateFilter(self):
 		filter = self.getFilter()
 		if self.currentFilterMode == "none":
-			if filter and "startdate$gt" in filter.keys():
+			if filter and "startdate$gt" in filter:
 				del filter["startdate$gt"]
-			if filter and "startdate$lt" in filter.keys():
+			if filter and "startdate$lt" in filter:
 				del filter["startdate$lt"]
 		elif self.currentFilterMode == "year":
 			filter["startdate$gt"] = self.deFilter.date().toString("01.01.yyyy")
@@ -76,8 +76,8 @@ class CalenderCoreHandler(WidgetHandler):  # EntryHandler
 	def __init__(self, modul, *args, **kwargs):
 		# Config parsen
 		config = conf.serverConfig["modules"][modul]
-		if "columns" in config.keys():
-			if "filter" in config.keys():
+		if "columns" in config:
+			if "filter" in config:
 				widgetGen = lambda: CalenderWidget(modul, config["columns"], config["filter"])
 			else:
 				widgetGen = lambda: CalenderWidget(modul, config["columns"])
@@ -92,7 +92,7 @@ class CalenderCoreHandler(WidgetHandler):  # EntryHandler
 			icon = loadIcon(None)
 		super(CalenderCoreHandler, self).__init__(widgetGen, descr=config["name"], icon=icon, vanishOnClose=False,
 		                                          *args, **kwargs)
-		if "views" in config.keys():
+		if "views" in config:
 			for view in config["views"]:
 				self.addChild(PredefinedViewHandler(modul, view["name"]))
 
@@ -100,9 +100,9 @@ class CalenderCoreHandler(WidgetHandler):  # EntryHandler
 class CalenderHandler(QtCore.QObject):
 	def __init__(self, *args, **kwargs):
 		super(CalenderHandler, self).__init__(*args, **kwargs)
-		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
+		event.connectWithPriority('requestModuleHandler', self.requestModuleHandler, event.lowPriority)
 
-	def requestModulHandler(self, queue, modul):
+	def requestModuleHandler(self, queue, modul):
 		config = conf.serverConfig["modules"][modul]
 		if config["handler"].startswith("list.calender"):
 			f = lambda: CalenderCoreHandler(modul)

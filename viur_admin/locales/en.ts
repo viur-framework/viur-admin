@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="en_US" sourcelanguage="en_US">
+<!DOCTYPE TS><TS version="2.0" language="en_US" sourcelanguage="en_US">
 <context>
     <name>AccountManager</name>
     <message>
@@ -757,62 +756,62 @@
 <context>
     <name>LoginWindow</name>
     <message>
-        <location filename="../ui/loginformUI.py" line="103"/>
+        <location filename="../ui/loginformUI.py" line="101"/>
         <source>Language</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="104"/>
+        <location filename="../ui/loginformUI.py" line="102"/>
         <source>Portal</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="105"/>
+        <location filename="../ui/loginformUI.py" line="103"/>
         <source>Account Manager</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="107"/>
+        <location filename="../ui/loginformUI.py" line="105"/>
         <source>Login</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="108"/>
+        <location filename="../ui/loginformUI.py" line="106"/>
         <source>&amp;Info</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="109"/>
+        <location filename="../ui/loginformUI.py" line="107"/>
         <source>Setti&amp;ngs</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="110"/>
+        <location filename="../ui/loginformUI.py" line="108"/>
         <source>&amp;Help</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="111"/>
+        <location filename="../ui/loginformUI.py" line="109"/>
         <source>&amp;About this Software</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="112"/>
+        <location filename="../ui/loginformUI.py" line="110"/>
         <source>&amp;Accountmanager</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="113"/>
+        <location filename="../ui/loginformUI.py" line="111"/>
         <source>First steps</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="106"/>
+        <location filename="../ui/loginformUI.py" line="104"/>
         <source>Open</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../ui/loginformUI.py" line="102"/>
+        <location filename="../ui/loginformUI.py" line="100"/>
         <source>ViurAdmin | Login</source>
         <translation></translation>
     </message>

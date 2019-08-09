@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
+from typing import Union, Any, Dict, List
 
 from PyQt5 import QtCore, QtWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.bone_interface import BoneEditInterface
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector, \
-	extendedSearchWidgetSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedBooleanFilterPluginUI import Ui_Form
 
 
 class BooleanViewBoneDelegate(BaseViewBoneDelegate):
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		if value:
 			return QtCore.QCoreApplication.translate("BooleanEditBone", "Yes")
 		else:
@@ -18,7 +18,7 @@ class BooleanViewBoneDelegate(BaseViewBoneDelegate):
 
 
 class ExtendedBooleanFilterPlugin(QtWidgets.QGroupBox):
-	def __init__(self, extension, parent=None):
+	def __init__(self, extension: dict, parent: QtWidgets.QWidget = None):
 		super(ExtendedBooleanFilterPlugin, self).__init__(parent)
 		self.extension = extension
 		# self.view = view
@@ -31,13 +31,20 @@ class ExtendedBooleanFilterPlugin(QtWidgets.QGroupBox):
 		self.ui.values.addItem("No", "0")
 
 	@staticmethod
-	def canHandleExtension(extension):
-		return (isinstance(extension, dict) and "type" in extension.keys() and (
-					extension["type"] == "boolean" or extension["type"].startswith("boolean.")))
+	def canHandleExtension(extension: dict) -> bool:
+		return (isinstance(extension, dict) and "type" in extension and (
+				extension["type"] == "boolean" or extension["type"].startswith("boolean.")))
 
 
 class BooleanEditBone(BoneEditInterface):
-	def __init__(self, moduleName, boneName, readOnly, editWidget=None, *args, **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			editWidget: Union[QtWidgets.QWidget, None] = None,
+			*args: Any,
+			**kwargs: Any):
 		super(BooleanEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.checkBox = QtWidgets.QCheckBox(self)
@@ -46,23 +53,31 @@ class BooleanEditBone(BoneEditInterface):
 		self.layout.addWidget(self.checkBox)
 
 	@classmethod
-	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		return cls(moduleName, boneName, readOnly, **kwargs)
 
-	def unserialize(self, data):
+	def unserialize(self, data: dict) -> None:
 		if data.get(self.boneName):
 			self.checkBox.setChecked(True)
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> dict:
 		return {self.boneName: self.checkBox.isChecked()}
 
-	def serializeForDocument(self):
-		return (self.serialize())
+	def serializeForDocument(self) -> dict:
+		return self.serialize()
 
 
-def CheckForBooleanBone(moduleName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "bool")
+def CheckForBooleanBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
+	return skelStucture[boneName]["type"] == "bool"
 
 
 # Register this Bone in the global queue

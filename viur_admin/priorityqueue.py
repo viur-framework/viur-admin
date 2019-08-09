@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from typing import Callable, Dict, List, Any, Tuple, Union
 
 
-class PriorityQueue(object):
-	def __init__(self):
+class PriorityQueue:
+	def __init__(self, *args: Any, **kwargs: Any):
 		super(PriorityQueue, self).__init__()
-		self._q = {}
+		self._q: Dict[int, List[Tuple[Callable, Callable]]] = dict()
 
-	def insert(self, priority, validateFunc, generator):
+	def insert(
+			self,
+			priority: int,
+			validateFunc: Callable[..., bool],
+			generator: Callable) -> None:
 		priority = int(priority)
-		if priority not in self._q.keys():
+		if priority not in self._q:
 			self._q[priority] = []
 		self._q[priority].append((validateFunc, generator))
 
-	def select(self, *args, **kwargs):
-		prios = list(self._q.keys())
-		prios.sort(reverse=True)
+	def select(self, *args: Any, **kwargs: Any) -> Union[Callable, None]:
+		prios = sorted(list(self._q), reverse=True)
 		for p in prios:
 			for validateFunc, generator in self._q[p]:
 				if validateFunc(*args, **kwargs):
 					return generator
+		return None
 
 
 editBoneSelector = PriorityQueue()  # Queried by editWidget to locate its bones

@@ -2,7 +2,7 @@
 """
 Viur Admin
 
-Copyright 2012-2018 Mausbrand Informationssysteme GmbH
+Copyright 2012-2019 Mausbrand Informationssysteme GmbH
 Licensed under GPL Version 3.
 http://www.gnu.org/licenses/gpl-3.0
 
@@ -14,6 +14,7 @@ import os
 import sys
 import traceback
 from collections import namedtuple
+from typing import Any
 
 from PyQt5.QtCore import QDirIterator
 
@@ -25,14 +26,15 @@ if sys.version_info < min_version:
 
 # got this from https://fman.io/blog/pyqt-excepthook/ - very helpful
 
-def excepthook(exc_type, exc_value, exc_tb):
+
+def excepthook(exc_type: Any, exc_value: Any, exc_tb: Any) -> None:
 	enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
 	# Note: sys.__excepthook__(...) would not work here.
 	# We need to use print_exception(...):
 	traceback.print_exception(exc_type, exc_value, enriched_tb)
 
 
-def _add_missing_frames(tb):
+def _add_missing_frames(tb: Any) -> Any:
 	result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
 	frame = tb.tb_frame.f_back
 	while frame:
@@ -110,9 +112,9 @@ import viur_admin.actions
 import viur_admin.ui.icons_rc
 
 
-it = QDirIterator(":", QDirIterator.Subdirectories);
-while it.hasNext():
-	print("resource item:", it.next())
+# it = QDirIterator(":", QDirIterator.Subdirectories);
+# while it.hasNext():
+# 	print("resource item:", it.next())
 
 
 from viur_admin.login import Login
@@ -141,7 +143,7 @@ else:
 os.chdir(path)
 
 
-def reportError(type, value, tb):
+def reportError(type: Any, value: Any, tb: Any) -> Any:
 	print("*" * 40)
 	print(type)
 	print(value)
@@ -182,7 +184,7 @@ if 0 and (args.report == "auto" and not os.path.exists(
 	sys.excepthook = reportError
 
 
-def main():
+def main() -> None:
 	transFiles = resource_listdir("viur_admin", "locales")
 	for file in transFiles:
 		if file.endswith(".qm"):
@@ -191,7 +193,7 @@ def main():
 
 			translator.load(filename)
 			conf.availableLanguages[file[: -3]] = translator
-			if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
+			if "language" in conf.adminConfig and conf.adminConfig["language"] == file[: -3]:
 				app.installTranslator(translator)
 
 	if conf.migrateConfig:

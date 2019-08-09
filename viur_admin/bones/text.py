@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
-
 import html.parser
+from typing import Union, Sequence, Any, List, Dict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
@@ -15,57 +11,50 @@ from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.bones.string import chooseLang
 from viur_admin.event import event
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
+from viur_admin.log import getLogger
 from viur_admin.network import RemoteFile, nam
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
-from html.entities import entitydefs
+from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
 from viur_admin.utils import wheelEventFilter, ViurTabBar
 
-
-class HtmlStripper(html.parser.HTMLParser):
-	def __init__(self):
-		super(HtmlStripper, self).__init__()
-		self.cleanData = []
-
-	def handle_data(self, data):
-		self.cleanData.append(data)
-
-	def getData(self):
-		return ''.join(self.cleanData)
-
-	@staticmethod
-	def strip(txt):
-		s = HtmlStripper()
-		s.feed(txt)
-		return (s.getData())
+logger = getLogger(__name__)
 
 
 class TextViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, modulName, boneName, skelStructure, *args, **kwargs):
+	def __init__(
+			self,
+			modulName: str,
+			boneName: str,
+			skelStructure: dict,
+			*args: Any,
+			**kwargs: Any):
 		super(TextViewBoneDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName = modulName
 
-	def displayText(self, value, locale):
-		if "languages" in self.skelStructure[self.boneName].keys():
+	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
+		if "languages" in self.skelStructure[self.boneName]:
 			languages = self.skelStructure[self.boneName]["languages"]
 		else:
 			languages = None
 		if languages is not None:
 			value = chooseLang(value, languages)
-		if value:
-			value = HtmlStripper.strip(value)
-		return (super(TextViewBoneDelegate, self).displayText(value, locale))
+
+		return super(TextViewBoneDelegate, self).displayText(value, locale)
 
 
 class RawTextEdit(QtWidgets.QWidget):
 	onDataChanged = QtCore.pyqtSignal((object,))
 
-	def __init__(self, text, contentType=None, parent=None):
+	def __init__(
+			self,
+			text: str,
+			contentType: str = None,
+			parent: Union[QtWidgets.QWidget, None] = None):
 		super(RawTextEdit, self).__init__(parent)
 		self.ui = Ui_rawTextEditWindow()
 		self.ui.setupUi(self)
@@ -74,124 +63,58 @@ class RawTextEdit(QtWidgets.QWidget):
 		self.ui.textEdit.setFocus()
 		self.ui.btnSave.released.connect(self.save)
 
-	def save(self, *args, **kwargs):
+	def save(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		self.onDataChanged.emit(self.ui.textEdit.toPlainText())
 		event.emit('popWidget', self)
 
-	def sizeHint(self, *args, **kwargs):
-		return (QtCore.QSize(400, 300))
+	def sizeHint(
+			self,
+			*args: Any,
+			**kwargs: Any) -> QtCore.QSize:
+		return QtCore.QSize(400, 300)
 
-
-class ExtObj(object):
-	pass
-
-
-class HtmlSerializer(html.parser.HTMLParser):  # html.parser.HTMLParser
-	def __init__(self, validHtml=None):
-		global _defaultTags
-		html.parser.HTMLParser.__init__(self)
-		self.result = ""
-		self.openTagsList = []
-		self.validHtml = validHtml
-
-	def handle_data(self, data):
-		if data:
-			self.result += data
-
-	def handle_charref(self, name):
-		self.result += "&#%s;" % (name)
-
-	def handle_entityref(self, name):  # FIXME
-		if name in entitydefs.keys():
-			self.result += "&%s;" % (name)
-
-	def handle_starttag(self, tag, attrs):
-		""" Delete all tags except for legal ones """
-		if self.validHtml and tag in self.validHtml["validTags"]:
-			self.result = self.result + '<' + tag
-			for k, v in attrs:
-				if not tag in self.validHtml["validAttrs"].keys() or not k in \
-				                                                         self.validHtml["validAttrs"][tag]:
-					continue
-				if k.lower()[0:2] != 'on' and v.lower()[0:10] != 'javascript':
-					self.result = '%s %s="%s"' % (self.result, k, v)
-			if "style" in [k for (k, v) in attrs]:
-				syleRes = {}
-				styles = [v for (k, v) in attrs if k == "style"][0].split(";")
-				for s in styles:
-					style = s[: s.find(":")].strip()
-					value = s[s.find(":") + 1:].strip()
-					if style in self.validHtml["validStyles"] and not any(
-							[(x in value) for x in ["\"", ":", ";"]]):
-						syleRes[style] = value
-				if len(syleRes.keys()):
-					self.result += " style=\"%s\"" % "; ".join(
-						[("%s: %s" % (k, v)) for (k, v) in syleRes.items()])
-			if tag in self.validHtml["singleTags"]:
-				self.result = self.result + ' />'
-			else:
-				self.result = self.result + '>'
-				self.openTagsList.insert(0, tag)
-
-	def handle_endtag(self, tag):
-		if self.validHtml and tag in self.openTagsList:
-			for endTag in self.openTagsList[
-			              :]:  # Close all currently open Tags until we reach the current one
-				self.result = "%s</%s>" % (self.result, endTag)
-				self.openTagsList.remove(endTag)
-				if endTag == tag:
-					break
-
-	def cleanup(self):  # FIXME: vertauschte tags
-		""" Append missing closing tags """
-		for tag in self.openTagsList:
-			endTag = '</%s>' % tag
-			self.result += endTag
-
-	def santinize(self, instr):
-		self.result = ""
-		self.openTagsList = []
-		self.feed(instr)
-		self.close()
-		self.cleanup()
-		return (self.result)
-
-
-### Copy&Paste: End
 
 class ExtendedTextEdit(QtWidgets.QTextEdit):
-	def __init__(self, *args, **kwargs):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
 		super(ExtendedTextEdit, self).__init__(*args, **kwargs)
-		self.ressourceMapCache = {}
+		self.resourceMapCache: dict[str, Any] = dict()
 		self._dragData = None
 		self.document().setDefaultStyleSheet(
 			"h1 { font-weight: 700; color: #010101 } h2 { font-weight: 600; color: #010101 } h3 { font-weight: 500; color: #010101 }")
 
-	def loadResource(self, rType, name):
-		if rType == QtGui.QTextDocument.ImageResource:
+	def loadResource(self, resource_type: int, name: QtCore.QUrl) -> Union[QtGui.QImage, None]:
+		logger.debug("loadResource: %r, %r", resource_type, name)
+		if resource_type == QtGui.QTextDocument.ImageResource:
 			name = name.path()
 			if name.startswith("/file/download/"):
 				name = name[len("/file/download/"):]
-			if name in self.ressourceMapCache.keys():
-				if self.ressourceMapCache[name] is not None:
-					return (QtGui.QImage(self.ressourceMapCache[name]["filename"]))
+			if name in self.resourceMapCache:
+				if self.resourceMapCache[name] is not None:
+					return QtGui.QImage(self.resourceMapCache[name]["filename"])
 			else:
 				RemoteFile(name, self.onFileAvaiable)
-				self.ressourceMapCache[name] = None
-		return (None)
+				self.resourceMapCache[name] = None
+		return None
 
-	def onFileAvaiable(self, rFile):
+	def onFileAvaiable(self, rFile: QtCore.QFile) -> None:
 		size = None
 		pic = QtGui.QPixmap(rFile.getFileName())
 		size = pic.width(), pic.height()
-		self.ressourceMapCache[rFile.dlKey] = {"filename": rFile.getFileName(),
-		                                       "size": size
-		                                       }
+		self.resourceMapCache[rFile.dlKey] = {
+			"filename": rFile.getFileName(),
+			"size": size
+		}
 		self.document().markContentsDirty(0, len(self.document().toPlainText()))
 
 	# self.markContentsDirty( 0, len( self.getText() ) )
 
-	def mousePressEvent(self, e):
+	def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
 		"""
 			Allow resizing inline Images using drag&drop
 			Record the start of a potential drag&drop operation
@@ -202,7 +125,7 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 			self._dragData = e.x(), e.y()
 		super(ExtendedTextEdit, self).mousePressEvent(e)
 
-	def mouseMoveEvent(self, e):
+	def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
 		"""
 			Allow resizing inline Images using drag&drop
 			Do the actual work and resize the image
@@ -221,10 +144,10 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 						fname = newImageFormat.name()
 						if fname.startswith("/file/download/"):
 							fname = fname[len("/file/download/"):]
-						if fname in self.ressourceMapCache.keys() and \
-								self.ressourceMapCache[fname]["size"] is not None:
-							ratio = float(self.ressourceMapCache[fname]["size"][0]) / float(
-								self.ressourceMapCache[fname]["size"][1])
+						if fname in self.resourceMapCache and \
+								self.resourceMapCache[fname]["size"] is not None:
+							ratio = float(self.resourceMapCache[fname]["size"][0]) / float(
+								self.resourceMapCache[fname]["size"][1])
 							newX = max(50, newImageFormat.width() + dx)
 							newY = max(50, newImageFormat.height() + dy)
 							newX = min(newX, newY * ratio)
@@ -243,7 +166,7 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 				it += 1
 		super(ExtendedTextEdit, self).mouseMoveEvent(e)
 
-	def mouseReleaseEvent(self, e):
+	def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
 		"""
 			Allow resizing inline Images using drag&drop
 			Destroy our recording of the potential start-drag position.
@@ -257,32 +180,43 @@ class WebPage(QtCore.QObject):
 	requestCode = QtCore.pyqtSignal()
 	receiveCodeCallback = QtCore.pyqtSignal((str))
 
-	def __init__(self, lang, parent=None):
+	def __init__(
+			self,
+			lang: str,
+			parent: Union[None, QtWidgets.QWidget] = None):
 		super(WebPage, self).__init__(parent)
 		self.textToEdit = ""
 		self.lang = lang
 
 	@QtCore.pyqtSlot()
-	def onEditorLoaded(self):
+	def onEditorLoaded(self) -> None:
 		logger.debug('onEditorLoaded called')
 		self.sendText.emit(self.textToEdit, self.lang)
 
 	@QtCore.pyqtSlot()
-	def getHtmlCode(self):
+	def getHtmlCode(self) -> None:
 		self.requestCode.emit()
 
 	@QtCore.pyqtSlot(str)
-	def transmitHtmlCodeToHost(self, data):
+	def transmitHtmlCodeToHost(self, data: str) -> None:
 		self.receiveCodeCallback.emit(data)
+
+
+class ExtObj(object):
+	pass
 
 
 class TextEdit(QtWidgets.QMainWindow):
 	onDataChanged = QtCore.pyqtSignal((object,))
 
-	def __init__(self, text, validHtml, lang, parent=None):
+	def __init__(
+			self,
+			text: str,
+			validHtml: Union[None, dict],
+			lang: str,
+			parent: Union[None, QtWidgets.QWidget] = None):
 		super(TextEdit, self).__init__(parent)
 		self.validHtml = validHtml
-		self.serializer = HtmlSerializer(validHtml)
 		self.ui = ExtObj()
 		self.ui.centralWidget = QtWidgets.QWidget(self)
 		self.setCentralWidget(self.ui.centralWidget)
@@ -317,120 +251,30 @@ class TextEdit(QtWidgets.QMainWindow):
 		logger.debug("text to edit: %r", text)
 
 	@QtCore.pyqtSlot()
-	def onPrepareSave(self):
+	def onPrepareSave(self) -> None:
 		self.handler.getHtmlCode()
 
 	@QtCore.pyqtSlot(str)
-	def onFinishSave(self, data):
+	def onFinishSave(self, data: Dict[str, Any]) -> None:
+		logger.debug("onFinishSave TODO:: %r", data)
 		self.onDataChanged.emit(data)
 		event.emit('popWidget', self)
 
-	def onTextEditInsertFromMimeData(self, source):
-		QtWidgets.QTextEdit.insertFromMimeData(self.ui.textEdit, source)
-		html = self.ui.textEdit.toHtml()
-		start = html.find(">", html.find("<body")) + 1
-		html = html[start: html.rfind("</body>")]
-		html = html.replace("""text-indent:0px;"></p>""", """text-indent:0px;">&nbsp;</p>""")
-		self.ui.textEdit.setText(self.serializer.santinize(html))
-
-	def openLinkEditor(self, fragment):
-		if self.linkEditor:
-			self.linkEditor.deleteLater()
-
-		self.linkEditor = QtWidgets.QDockWidget(
-			QtCore.QCoreApplication.translate("DocumentEditBone", "Edit link"), self)
-		self.linkEditor.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea)
-		self.linkEditor.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
-		self.linkEditor.cWidget = QtWidgets.QWidget()
-		self.linkEditor.ui = Ui_LinkEdit()
-		self.linkEditor.ui.setupUi(self.linkEditor.cWidget)
-		self.linkEditor.setWidget(self.linkEditor.cWidget)
-		self.linkEditor.fragmentPosition = fragment.position()
-		href = fragment.charFormat().anchorHref()
-		self.linkEditor.ui.editHref.setText(href.strip("!"))
-		if href.startswith("!"):
-			self.linkEditor.ui.checkBoxNewWindow.setChecked(True)
-		self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.linkEditor)
-
-	def saveLinkEditor(self):
-		self.ui.textEdit.blockSignals(True)
-		href = self.linkEditor.ui.editHref.text()
-		cursor = self.ui.textEdit.textCursor()
-		block = self.ui.textEdit.document().findBlock(self.linkEditor.fragmentPosition)
-		iterator = block.begin()
-		foundStart = False
-		foundEnd = False
-		oldHref = ""
-		while (not iterator.atEnd()):
-			fragment = iterator.fragment()
-			if foundStart:
-				foundEnd = True
-				if oldHref != fragment.charFormat().anchorHref():
-					newPos = fragment.position()
-					while (cursor.position() < newPos):
-						cursor.movePosition(QtGui.QTextCursor.NextCharacter,
-						                    QtGui.QTextCursor.KeepAnchor)
-					break
-			elif fragment.contains(self.linkEditor.fragmentPosition):
-				cursor.setPosition(fragment.position())
-				foundStart = True
-				oldHref = fragment.charFormat().anchorHref()
-			iterator += 1
-		if foundStart and not foundEnd:  # This is only this block
-			cursor.select(cursor.BlockUnderCursor)
-		if not href:
-			cursor.insertHtml(cursor.selectedText())
-		else:
-			if self.linkEditor.ui.checkBoxNewWindow.isChecked():
-				linkTxt = "<a href=\"!%s\">%s</a>"
-			else:
-				linkTxt = "<a href=\"%s\">%s</a>"
-			cursor.insertHtml(linkTxt % (self.linkEditor.ui.editHref.text(), cursor.selectedText()))
-		self.ui.textEdit.blockSignals(False)
-
-	def getBreadCrumb(self):
-		return (QtCore.QCoreApplication.translate("TextEditBone", "Text edit"),
-		        QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")))
-
-	# def onBtnSaveReleased(self):
-	# 	print(self.ui.textEdit.toHtml())
-	# 	self.save()
-
-
-
-
-### Copy&Paste from server/bones/textBone.py
-
-_attrsMargins = ["margin", "margin-left", "margin-right", "margin-top", "margin-bottom"]
-_attrsSpacing = ["spacing", "spacing-left", "spacing-right", "spacing-top", "spacing-bottom"]
-_attrsDescr = ["title", "alt"]
-_defaultTags = {
-	"validTags": ['font', 'b', 'a', 'i', 'u', 'span', 'div', 'p', 'img', 'ol', 'ul', 'li', 'acronym',
-	              # List of HTML-Tags which are valid
-	              'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td', 'th', 'br', 'hr', 'strong'],
-	"validAttrs": {"font": ["color"],
-	               # Mapping of valid parameters for each tag (if a tag is not listed here: no parameters allowed)
-	               "a": ["href", "target"] + _attrsDescr,
-	               "acronym": ["title"],
-	               "div": ["align", "width", "height"] + _attrsMargins + _attrsSpacing,
-	               "p": ["align", "width", "height"] + _attrsMargins + _attrsSpacing,
-	               "span": ["align", "width", "height"] + _attrsMargins + _attrsSpacing,
-	               "img": ["src", "target", "width", "height",
-	                       "align"] + _attrsDescr + _attrsMargins + _attrsSpacing,
-	               "table": ["width", "align", "border", "cellspacing", "cellpadding"] + _attrsDescr,
-	               "td": ["cellspan", "rowspan", "width", "heigt"] + _attrsMargins + _attrsSpacing
-	               },
-	"validStyles": ["font-weight", "font-style", "text-decoration", "color", "display"],
-	# List of CSS-Directives we allow
-	"singleTags": ["br", "img", "hr"]  # List of tags, which dont have a corresponding end tag
-}
-del _attrsDescr, _attrsSpacing, _attrsMargins
+	def getBreadCrumb(self) -> Any:
+		return (
+			QtCore.QCoreApplication.translate("TextEditBone", "Text edit"),
+			QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png"))
+		)
 
 
 class ClickableWebView(QWebEngineView):
 	clicked = QtCore.pyqtSignal()
 
-	def mousePressEvent(self, ev):
+	def __init__(self, parent: Union[QtWidgets.QWidget, None] = None):
+		self.chromeCookieJar = None
+		super(ClickableWebView, self).__init__(parent)
+
+	def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
 		super(ClickableWebView, self).mousePressEvent(ev)
 		self.chromeCookieJar = self.page().profile().cookieStore()
 		self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
@@ -439,23 +283,30 @@ class ClickableWebView(QWebEngineView):
 			self.chromeCookieJar.setCookie(cookie)
 		self.clicked.emit()
 
-	def onCookieAdded(self, cookie):
+	def onCookieAdded(self, cookie: Any) -> None:
 		logger.error("WebWidget.onCookieAdded not yet handled properly: %r", cookie)
 
 
 class TextEditBone(BoneEditInterface):
-	def __init__(self, modulName, boneName, readOnly, languages=None, plaintext=False, validHtml=None,
-	             editWidget=None,
-	             *args, **kwargs):
-		super(TextEditBone, self).__init__(modulName, boneName, readOnly, editWidget)
+	def __init__(
+			self,
+			modulName: str,
+			boneName: str,
+			readOnly: bool,
+			languages: Sequence[str] = None,
+			plaintext: bool = False,
+			validHtml: Union[dict, None] = None,
+			*args: Any,
+			**kwargs: Any):
+		super(TextEditBone, self).__init__(modulName, boneName, readOnly)
 
 		self.setLayout(QtWidgets.QVBoxLayout(self))
 		self.languages = languages
 		self.plaintext = plaintext
 		self.validHtml = validHtml
 		if self.languages:
-			self.languageContainer = {}
-			self.html = {}
+			self.languageContainer: Dict[str, QtWidgets.QWidget] = dict()
+			self.html: Dict[str, str] = dict()
 			self.tabWidget = QtWidgets.QTabWidget(self)
 			self.tabWidget.setTabBar(ViurTabBar())
 			self.tabWidget.blockSignals(True)
@@ -504,29 +355,38 @@ class TextEditBone(BoneEditInterface):
 			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
 		self.installEventFilter(wheelEventFilter)
 
-	@staticmethod
-	def fromSkelStructure(modulName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		if boneName in skelStructure.keys():
-			if "languages" in skelStructure[boneName].keys():
+	@classmethod
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		languages = None
+		plaintext = False
+		validHtml = None
+		if boneName in skelStructure:
+			if "languages" in skelStructure[boneName]:
 				languages = skelStructure[boneName]["languages"]
-			else:
-				languages = None
-			if "plaintext" in skelStructure[boneName].keys() and skelStructure[boneName]["plaintext"]:
-				plaintext = True
-			else:
-				plaintext = False
-			if "validHtml" in skelStructure[boneName].keys():
-				validHtml = skelStructure[boneName]["validHtml"]
-			else:
-				validHtml = None
-		return (
-			TextEditBone(modulName, boneName, readOnly, languages=languages, plaintext=plaintext,
-			             validHtml=validHtml,
-			             **kwargs))
 
-	def onTabLanguageChanged(self, lang):
-		if lang in self.languageContainer.keys():
+			if "plaintext" in skelStructure[boneName] and skelStructure[boneName]["plaintext"]:
+				plaintext = True
+
+			if "validHtml" in skelStructure[boneName]:
+				validHtml = skelStructure[boneName]["validHtml"]
+
+		return cls(
+			moduleName,
+			boneName,
+			readOnly,
+			languages=languages,
+			plaintext=plaintext,
+			validHtml=validHtml,
+			**kwargs)
+
+	def onTabLanguageChanged(self, lang: str) -> None:
+		if lang in self.languageContainer:
 			try:
 				self.tabWidget.blockSignals(True)
 				self.tabWidget.setCurrentWidget(self.languageContainer[lang])
@@ -534,7 +394,7 @@ class TextEditBone(BoneEditInterface):
 			except RuntimeError as err:
 				pass
 
-	def onTabCurrentChanged(self, idx):
+	def onTabCurrentChanged(self, idx: int) -> None:
 		wdg = self.tabWidget.widget(idx)
 		for k, v in self.languageContainer.items():
 			if v == wdg:
@@ -542,10 +402,10 @@ class TextEditBone(BoneEditInterface):
 				wdg.setFocus()
 				return
 
-	def sizeHint(self):
-		return (QtCore.QSize(150, 150))
+	def sizeHint(self) -> QtCore.QSize:
+		return QtCore.QSize(150, 150)
 
-	def openEditor(self, *args, **kwargs):
+	def openEditor(self, *args: Any, **kwargs: Any) -> None:
 		if self.languages:
 			lang = self.languages[self.tabWidget.currentIndex()]
 			if self.plaintext:
@@ -566,7 +426,7 @@ class TextEditBone(BoneEditInterface):
 		editor.onDataChanged.connect(self.onSave)
 		event.emit("stackWidget", editor)
 
-	def onSave(self, text):
+	def onSave(self, text: str) -> None:
 		if self.languages:
 			lang = self.languages[self.tabWidget.currentIndex()]
 			self.html[lang] = str(text)
@@ -575,14 +435,16 @@ class TextEditBone(BoneEditInterface):
 			self.html = str(text)
 			self.webView.setHtml(text)
 
-	def unserialize(self, data):
-		if self.boneName not in data.keys():
+	def unserialize(self, data: dict) -> None:
+		if self.boneName not in data:
 			return
+
 		if self.languages and isinstance(data[self.boneName], dict):
 			for lang in self.languages:
-				if lang in data[self.boneName].keys() and data[self.boneName][lang] is not None:
-					self.html[lang] = data[self.boneName][lang].replace("target=\"_blank\" href=\"",
-					                                                    "href=\"!")
+				if lang in data[self.boneName] and data[self.boneName][lang] is not None:
+					self.html[lang] = data[self.boneName][lang].replace(
+						"target=\"_blank\" href=\"",
+						"href=\"!")
 				else:
 					self.html[lang] = ""
 				self.languageContainer[lang].webView.setHtml(self.html[lang])
@@ -591,24 +453,27 @@ class TextEditBone(BoneEditInterface):
 					data and data.get(self.boneName)) else ""
 			self.webView.setHtml(self.html)
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> Dict[str, Any]:
 		if self.languages:
 			res = {}
 			for lang in self.languages:
 				res["%s.%s" % (self.boneName, lang)] = self.html[lang]
-			return (res)
+			return res
 		else:
-			return ({self.boneName: self.html.replace("href=\"!", "target=\"_blank\" href=\"")})
+			return {self.boneName: self.html.replace("href=\"!", "target=\"_blank\" href=\"")}
 
-	def serializeForDocument(self):
-		return (self.serialize())
+	def serializeForDocument(self) -> dict:
+		return self.serialize()
 
-	def remove(self):
+	def remove(self) -> None:
 		pass
 
 
-def CheckForTextBone(modulName, boneName, skelStucture):
-	return (skelStucture[boneName]["type"] == "text")
+def CheckForTextBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any][str, Any]) -> bool:
+	return skelStucture[boneName]["type"] == "text"
 
 
 # Register this Bone in the global queue

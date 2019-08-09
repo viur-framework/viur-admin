@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import Any, List, Union, Dict
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -17,15 +19,16 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 
 	requestPreview = QtCore.pyqtSignal(str)
 
-	def __init__(self, module, selection=None, *args, **kwargs):
+	def __init__(
+			self,
+			module: str,
+			selection: Union[List[Dict[str, Any]], Dict[str, Any], None] = None,
+			*args: Any,
+			**kwargs: Any):
 		"""
 
-		:param parent: Parent-Widget
-		:type parent: QWidget
 		:param module: Modul which entities we'll display. (usually "file" in this context)
-		:type module: str
 		:param selection: Currently selected Items.
-		:type selection: list of dict, dict or None
 		"""
 		logger.debug("SelectedFilesWidget: %r, %r, %r, %r", module, selection, args, kwargs)
 		super(SelectedFilesWidget, self).__init__(*args, **kwargs)
@@ -35,8 +38,8 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			self.selection = [selection["dest"]]
 		else:
 			self.selection = list()
-		self.modul = module
-		self.itemCache = dict()
+		self.module = module
+		self.itemCache: Dict[str, Any] = dict()
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 		self.thread = QtCore.QThread(self)
@@ -53,17 +56,17 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			self.addItem(FileItem(s, self))
 		# raise Exception("here!!!")
 
-	def prepareDeletion(self):
+	def prepareDeletion(self) -> None:
 		self.previewDownloadWorker.onRequestStopRunning()
 		self.thread.quit()
 		self.thread.wait()
 
 	@QtCore.pyqtSlot(str)
-	def onRequestPreview(self, dlKey: str):
+	def onRequestPreview(self, dlKey: str) -> None:
 		logger.debug("SelectedFilesWidget.onRequestPreview: %r", dlKey)
 		self.requestPreview.emit(dlKey)
 
-	def onPreviewImageAvailable(self, dlkey, fileName, icon):
+	def onPreviewImageAvailable(self, dlkey: str, fileName: str, icon: QtGui.QIcon) -> None:
 		logger.debug("SelectedFilesWidget.onPreviewImageAvailable: %r, %r, %r", dlkey, fileName, icon)
 		fileItem = self.itemCache[dlkey]
 		fileItem.setIcon(icon)
@@ -71,14 +74,14 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		fileItem.setToolTip('<img src="{0}" width="{1}"><br><strong>{2}</strong>'.format(
 			fileName, width, str(fileItem.entryData["name"])))
 
-	def addItem(self, aitem):
+	def addItem(self, aitem: Any) -> None:
 		try:
 			self.itemCache[aitem.entryData["dlkey"]] = aitem
 		except:
 			pass
 		super(SelectedFilesWidget, self).addItem(aitem)
 
-	def onItemDoubleClicked(self, item):
+	def onItemDoubleClicked(self, item: Any) -> None:
 		"""One of our Items has been double-clicked.
 
 		Remove it from the selection
@@ -96,7 +99,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 
-	def dropEvent(self, event):
+	def dropEvent(self, event: QtGui.QDropEvent) -> None:
 		"""We got a Drop! Add them to the selection if possible.
 
 		Files contain their dlkey instead of an id.
@@ -122,7 +125,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 					self.extend([item.entryData])
 					break
 
-	def set(self, selection):
+	def set(self, selection: List[Any]) -> None:
 		"""Set our current selection to "selection".
 
 		:param selection: The new selection
@@ -135,7 +138,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 
-	def extend(self, selection):
+	def extend(self, selection: List[Any]) -> None:
 		"""Append the given items to our selection.
 
 		:param selection: new items
@@ -145,17 +148,17 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		for s in selection:
 			self.addItem(FileItem(s, self))
 
-	def get(self):
+	def get(self) -> List[Any]:
 		"""Returns the currently selected items.
 
 		:returns: list or None
 		"""
 		return self.selection
 
-	def dragMoveEvent(self, event):
+	def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
 		event.accept()
 
-	def dragEnterEvent(self, event):
+	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
 		mime = event.mimeData()
 		if not mime.hasUrls():
 			event.ignore()
@@ -163,7 +166,7 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 			event.ignore()
 		event.accept()
 
-	def keyPressEvent(self, e):
+	def keyPressEvent(self, e: QtGui.QKeySequence) -> None:
 		"""Catch and handle QKeySequence.Delete.
 		"""
 

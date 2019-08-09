@@ -1,4 +1,28 @@
 #!/usr/bin/env python3
+import hashlib
+import os
+import shutil
+import sys
+import zipfile
+from tempfile import NamedTemporaryFile
+from typing import Any, List
+
+from PyQt5 import QtCore, QtWidgets
+
+from network import NetworkService
+from ui.updaterUI import Ui_Updater
+from utils import Overlay
+
+# Fixing the path
+cwd = os.getcwd()
+prgc = sys.argv[0]
+
+if prgc.startswith("/") or prgc[1] == ":":
+	path = os.path.dirname(prgc)
+else:
+	path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
+os.chdir(path)
+
 """
 ViUR Admin Updater
 
@@ -12,36 +36,14 @@ Note:	Wherever the underlying OS provides an updatemechanism,
 		it should be preferred instead of this script.
 """
 
-import os
-
-import sys
-
-
-# Fixing the path
-cwd = os.getcwd()
-prgc = sys.argv[0]
-
-if prgc.startswith("/") or prgc[1] == ":":
-	path = os.path.dirname(prgc)
-else:
-	path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
-os.chdir(path)
-
-from PySide import Qt, QtCore
-from ui.updaterUI import Ui_Updater
-from utils import Overlay
-from network import NetworkService
-import zipfile, shutil, hashlib
-from tempfile import NamedTemporaryFile
-
 
 class Updater(QtWidgets.QMainWindow):
 	baseURL = "https://viur-site.appspot.com"
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args: Any, **kwargs: Any):
 		super(Updater, self).__init__(*args, **kwargs)
-		self.log = []
-		self.targetVersion = None  # Version, to witch can be upgraded
+		self.log: List[str] = list()
+		self.targetVersion: float = 0.0  # Version, to witch can be upgraded
 		self.targetDL = None  # Download-Key of the file for our OS-Arch
 		self.ui = Ui_Updater()
 		self.ui.setupUi(self)
@@ -53,22 +55,22 @@ class Updater(QtWidgets.QMainWindow):
 			shutil.rmtree(os.path.join(os.getcwd(), "oldData"))
 		os.mkdir(os.path.join(os.getcwd(), "oldData"))
 
-	def on_btnCheck_released(self):
+	def on_btnCheck_released(self) -> None:
 		self.ui.btnCheck.setEnabled(False)
 		self.checkUpdate()
 
-	def on_btnUpdate_released(self):
+	def on_btnUpdate_released(self) -> None:
 		self.ui.btnUpdate.setEnabled(False)
 		self.update()
 
-	def on_btnExit_released(self):
+	def on_btnExit_released(self) -> None:
 		sys.exit(0)
 
-	def onDownloadProgress(self, recv, total):
+	def onDownloadProgress(self, recv: Any, total: Any) -> None:
 		self.ui.progressBar.setRange(0, total)
 		self.ui.progressBar.setValue(recv)
 
-	def getPlattform(self):
+	def getPlattform(self) -> str:
 		isSourceDistribution = False
 		try:
 			open("admin.py", "r").read()
@@ -76,7 +78,7 @@ class Updater(QtWidgets.QMainWindow):
 		except:
 			pass
 		if isSourceDistribution:
-			return ("source")
+			return "source"
 		pf = sys.platform
 		if pf.startswith("linux"):
 			pf = "linux"
@@ -84,15 +86,15 @@ class Updater(QtWidgets.QMainWindow):
 			pf = "darwin"
 		elif pf.startswith("win32"):
 			pf = "win32"
-		return (pf)
+		return pf
 
-	def checkUpdate(self):
+	def checkUpdate(self) -> None:
 		self.overlay.inform(self.overlay.BUSY, "Prüfe")
 		self.addLog(QtCore.QCoreApplication.translate("Updater", "Searching for updates"))
 		self.req = NetworkService.request(self.baseURL + "/json/adminversion/list?orderby=version&orderdir=1&limit=5")
 		self.req.finished.connect(self.onCheckUpdate)
 
-	def onCheckUpdate(self):
+	def onCheckUpdate(self) -> None:
 		data = NetworkService.decode(self.req)
 		self.req.deleteLater()
 		try:
@@ -105,7 +107,7 @@ class Updater(QtWidgets.QMainWindow):
 			if rev > currentVersion:
 				if not self.targetVersion or self.targetVersion < rev:
 					fn = "%sfile" % self.getPlattform()
-					if fn in skel.keys() and skel[fn]:
+					if fn in skel and skel[fn]:
 						self.targetVersion = rev
 						self.targetDL = skel[fn]["dlkey"]
 						self.addLog("%s: %s" % (rev, skel["changelog"]))
@@ -118,14 +120,14 @@ class Updater(QtWidgets.QMainWindow):
 			self.addLog(QtCore.QCoreApplication.translate("Updater", "There is no new version avaiable."))
 		self.overlay.clear()
 
-	def update(self):
+	def update(self) -> None:
 		self.overlay.inform(self.overlay.BUSY, "Prüfe")
 		self.addLog("Download...")
 		self.req = NetworkService.request(self.baseURL + "/file/view/%s/admin.update" % (self.targetDL))
 		self.req.downloadProgress.connect(self.onDownloadProgress)
 		self.req.finished.connect(self.onDownloadComplete)
 
-	def onDownloadComplete(self):
+	def onDownloadComplete(self) -> None:
 		tempfile = NamedTemporaryFile()
 		tempfile.write(self.req.readAll())
 		self.req.deleteLater()
@@ -167,23 +169,23 @@ class Updater(QtWidgets.QMainWindow):
 		self.showExitBtn()
 		self.overlay.clear()
 
-	def showExitBtn(self):
+	def showExitBtn(self) -> None:
 		self.ui.btnCheck.hide()
 		self.ui.btnUpdate.hide()
 		self.ui.btnExit.show()
 
-	def showUpdateBtn(self):
+	def showUpdateBtn(self) -> None:
 		self.ui.btnCheck.hide()
 		self.ui.btnExit.hide()
 		self.ui.btnUpdate.show()
 
-	def addLog(self, message):
+	def addLog(self, message: str) -> None:
 		self.log.append(message)
 		self.ui.textLog.setPlainText("\n".join(self.log))
 		self.ui.textLog.verticalScrollBar().setValue(self.ui.textLog.verticalScrollBar().maximum())
 
 
-app = Qt.QApplication(sys.argv)
+app = QtCore.QApplication(sys.argv)
 updater = Updater()
 updater.show()
 app.exec_()

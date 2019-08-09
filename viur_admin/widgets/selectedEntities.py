@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from typing import Dict, Any, List, Union
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -15,25 +16,29 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		The model holding the currently selected entities.
 	"""
 
-	def __init__(self, parent, module, selection, skelType=None, *args, **kwargs):
+	def __init__(
+			self,
+			parent: QtWidgets.QWidget,
+			module: str,
+			selection: List[Dict[str, Any]],
+			skelType: str = None,
+			*args: Any,
+			**kwargs: Any):
 		"""
-			@param parent: Our parent widget.
-			@type parent: QWidget.
-			@param module: Name of the module which items were going to display.
-			@type module: str
-			@param selection: Currently selected items.
-			@type selection: List-of-Dict, Dict or None
+			:param parent: Our parent widget.
+			:param module: Name of the module which items were going to display.
+			:param selection: Currently selected items.
 		"""
 		super(SelectedEntitiesTableModel, self).__init__(parent, *args, **kwargs)
 		logger.debug("SelectedEntitiesTableModel.init: %r, %r, %r, %r", parent, module, selection, skelType)
 		self.module = self.realModule = module
 		if module.endswith("_rootNode"):
 			self.realModule = module[:-9]
-		self.dataCache = []
+		self.dataCache: List[Any] = []
 		self.fields = ["name", "foo"]
-		self.headers = []
+		self.headers: List[Any] = []
 		self.skelType = skelType
-		self.entryFetches = []  # List of fetch-Tasks we issued
+		self.entryFetches: List[Any] = []  # List of fetch-Tasks we issued
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		structureCache = protoWrap.editStructure
@@ -42,7 +47,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		for item in (selection or []):
 			self.addItem(item)
 
-	def addItem(self, item):
+	def addItem(self, item: Union[Dict[str, Any], str]) -> None:
 		"""
 			Adds an item to the model.
 			The only relevant information is item["key"], the rest is freshly fetched from the server.
@@ -54,13 +59,13 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		if not item:
 			return
 		if isinstance(item, dict):
-			if "dest" in item.keys():
+			if "dest" in item:
 				key = item["dest"]["key"]
-			elif "key" in item.keys():
+			elif "key" in item:
 				key = item["key"]
 			else:
 				raise NotImplementedError("Unknown item format: %s" % item)
-			if "_type" in item.keys():
+			if "_type" in item:
 				self.entryFetches.append(protoWrap.queryEntry(key, item["_type"]))
 			else:
 				if self.skelType:
@@ -78,7 +83,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		# self.entryFetches.append( protoWrap.queryEntry( id ) )
 		# NetworkService.request("/%s/view/%s" % (self.module, id), successHandler= self.onItemDataAvailable )
 
-	def onItemDataAvailable(self, item):
+	def onItemDataAvailable(self, item: Dict[str, Any]) -> None:
 		"""
 			Fetching the updated information from the server finished.
 			Start displaying that item.
@@ -92,38 +97,38 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		self.dataCache.append(item)
 		self.layoutChanged.emit()
 
-	def rowCount(self, parent):
+	def rowCount(self, parent: QtCore.QModelIndex = None) -> int:
 		if not self.dataCache:
-			return (0)
-		return (len(self.dataCache))
+			return 0
+		return len(self.dataCache)
 
-	def columnCount(self, parent):
-		return (len(self.headers))
+	def columnCount(self, parent: QtCore.QModelIndex = None) -> int:
+		return len(self.headers)
 
-	def data(self, index, role):
+	def data(self, index: QtCore.QModelIndex, role: int = QtCore.Qt.DisplayRole) -> Any:
 		if not index.isValid():
 			return None
 		elif role != QtCore.Qt.DisplayRole:
 			return None
-		if (index.row() >= 0 and index.row() < len(self.dataCache)):
-			return (self.dataCache[index.row()][self.fields[index.column()]])
+		if 0 <= index.row() < len(self.dataCache):
+			return self.dataCache[index.row()][self.fields[index.column()]]
 
-	def headerData(self, col, orientation, role):
+	def headerData(self, col: int, orientation: QtCore.Qt.Orientation, role: int = None) -> Any:
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
 			return self.headers[col]
 		return None
 
-	def removeItemAtIndex(self, index):
+	def removeItemAtIndex(self, index: QtCore.QModelIndex) -> None:
 		if not index.isValid() or index.row() >= len(self.dataCache):
 			return
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache.pop(index.row())
 		self.layoutChanged.emit()
 
-	def getData(self):
+	def getData(self) -> List[Dict[str, Any]]:
 		return self.dataCache
 
-	def clear(self):
+	def clear(self) -> None:
 		self.layoutAboutToBeChanged.emit()
 		self.dataCache.clear()
 		self.layoutChanged.emit()
@@ -135,7 +140,13 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 	"""
 	skelType = None
 
-	def __init__(self, module, selection=None, skelType=None, *args, **kwargs):
+	def __init__(
+			self,
+			module: str,
+			selection: Dict[str, Any] = None,
+			skelType: str = None,
+			*args: Any,
+			**kwargs: Any):
 		"""
 			@param parent: Parent-Widget
 			@type parent: QWidget
@@ -150,7 +161,8 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		self.module = self.realModule = module
 		if module.endswith("_rootNode"):
 			self.realModule = module[:-9]
-		self.selection = selection or []
+		self.selection = selection or list()
+		self.delegates: List[Any] = list()  # Qt does not take ownership of view delegates -> garbage collected
 		# self.skelType = skelType
 		if selection and not isinstance(self.selection, list):  # This was a singleSelection before
 			self.selection = [self.selection]
@@ -162,25 +174,24 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 	# self.connect( self, QtCore.SIGNAL("itemDoubleClicked (QListWidgetItem *)"), self.itemDoubleClicked )
 	# self.connect( self.model(), QtCore.SIGNAL("rebuildDelegates(PyQt_PyObject)"), self.rebuildDelegates )
 
-	def rebuildDelegates(self):
-		"""
-			(Re)Attach the viewdelegates to the table.
-			@param data: Skeleton-structure send from the server
-			@type data: dict
+	def rebuildDelegates(self) -> None:
+		"""(Re)Attach the view delegates to the table.
 		"""
 		logger.debug("SelectedEntitiesWidget.rebuildDelegates - start:")
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
-		self.delegates = []  # Qt Dosnt take ownership of viewdelegates -> garbarge collected
+		self.delegates = list()
 		if self.skelType is None:
 			structureCache = protoWrap.viewStructure
 		elif self.skelType == "node":
 			structureCache = protoWrap.viewNodeStructure
 		elif self.skelType == "leaf":
 			structureCache = protoWrap.viewLeafStructure
+		else:
+			structureCache = dict()
 		self.model().headers = []
 		colum = 0
-		fields = [x for x in self.model().fields if x in structureCache.keys()]
+		fields = [x for x in self.model().fields if x in structureCache]
 		for field in fields:
 			self.model().headers.append(structureCache[field]["descr"])
 			# Locate the best ViewDeleate for this colum
@@ -191,14 +202,14 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 			delegate.request_repaint.connect(self.repaint)
 			colum += 1
 
-	def onItemDoubleClicked(self, index):
+	def onItemDoubleClicked(self, index: QtCore.QModelIndex) -> None:
 		"""
 			One of our Items has been double-clicked.
 			Remove it from the selection
 		"""
 		self.model().removeItemAtIndex(index)
 
-	def set(self, selection):
+	def set(self, selection: List[Dict[str, Any]]) -> None:
 		"""
 			Set our current selection to "selection".
 			@param selection: The new selection
@@ -208,7 +219,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		for s in selection:
 			self.model().addItem(s)
 
-	def extend(self, selection):
+	def extend(self, selection: List[Dict[str, Any]]) -> None:
 		"""
 			Append the given items to our selection.
 			@param selection: New items
@@ -217,14 +228,14 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		for s in selection:
 			self.model().addItem(s)
 
-	def get(self):
+	def get(self) -> Any:
 		"""
 			Returns the currently selected items.
 			@returns: List or None
 		"""
-		return (self.model().getData())
+		return self.model().getData()
 
-	def dropEvent(self, event):
+	def dropEvent(self, event: QtGui.QDropEvent) -> None:
 		"""
 			We got a Drop! Add them to the selection if possible.
 			All relevant informations are read from the URLs attached to this drop.
@@ -241,10 +252,10 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 				data = json.loads(mime.data("viur/hierarchyDragData").data().decode("UTF-8"))
 			self.extend(data["entities"])
 
-	def dragMoveEvent(self, event):
+	def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
 		event.accept()
 
-	def dragEnterEvent(self, event):
+	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
 		mime = event.mimeData()
 		if self.skelType is not None and mime.hasFormat("viur/treeDragData"):
 			event.accept()
@@ -254,7 +265,7 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		else:
 			event.ignore()
 
-	def keyPressEvent(self, e):
+	def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
 		"""
 			Catch and handle QKeySequence.Delete.
 		"""

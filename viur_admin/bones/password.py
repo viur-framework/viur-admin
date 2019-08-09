@@ -1,26 +1,34 @@
 # -*- coding: utf-8 -*-
+from typing import Any, Dict, List
 
-from PyQt5 import QtWidgets, QtGui
-from viur_admin.bones.bone_interface import BoneEditInterface
+from PyQt5 import QtCore, QtWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 
 
 class PasswordViewBoneDelegate(BaseViewBoneDelegate):
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		return ""
 
 
-class PasswordValidator(QtGui.QValidator):
-	def __init__(self, lineEdit, lineEditCheck, parent):
-		super().__init__(parent)
-		self.lineEdit = lineEdit
-		self.lineEditCheck = lineEditCheck
+# class PasswordValidator(QtGui.QValidator):
+# 	def __init__(self, lineEdit, lineEditCheck, parent):
+# 		super().__init__(parent)
+# 		self.lineEdit = lineEdit
+# 		self.lineEditCheck = lineEditCheck
 
 
 class PasswordEditBone(BoneEditInterface):
-	def __init__(self, moduleName, boneName, readOnly, editWidget=None, *args, **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			editWidget: QtWidgets.QWidget = None,
+			*args: Any,
+			**kwargs: Any):
 		super().__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		layout = QtWidgets.QVBoxLayout(self)
 		self.setLayout(layout)
@@ -41,7 +49,7 @@ class PasswordEditBone(BoneEditInterface):
 		else:
 			self.lineEdit.setReadOnly(True)
 
-	def validate(self, payload):
+	def validate(self, payload: str) -> None:
 		if self.lineEdit.text() == self.lineEditCheck.text():
 			self.validatorResult.clear()
 			if self.editWidget:
@@ -53,36 +61,44 @@ class PasswordEditBone(BoneEditInterface):
 				self.editWidget.ui.btnSaveContinue.setEnabled(False)
 				self.editWidget.ui.btnSaveClose.setEnabled(False)
 
-	@staticmethod
-	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
+	@classmethod
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		return PasswordEditBone(moduleName, boneName, readOnly, **kwargs)
 
-	def onTabLanguageChanged(self, lang):
-		if lang in self.langEdits.keys():
+	def onTabLanguageChanged(self, lang: str) -> None:
+		if lang in self.langEdits:
 			self.tabWidget.blockSignals(True)
 			self.tabWidget.setCurrentWidget(self.langEdits[lang])
 			self.tabWidget.blockSignals(False)
 
-	def unserialize(self, data):
-		if self.boneName not in data.keys():
+	def unserialize(self, data: dict) -> None:
+		if self.boneName not in data:
 			return
 		data = data[self.boneName]
 		if not data:
 			return
 		self.lineEdit.setText(str(data))
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> dict:
 		text = self.lineEdit.text()
 		if text:
 			return {self.boneName: self.lineEdit.text()}
 		return {}
 
-	def serializeForDocument(self):
+	def serializeForDocument(self) -> dict:
 		return self.serialize()
 
 
-def CheckForPasswordBone(moduleName, boneName, skelStucture):
+def CheckForPasswordBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"] == "password"
 
 

@@ -1,11 +1,13 @@
 from time import time
+from typing import Union, Callable, Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from viur_admin.login import LoginTask, AuthProviderBase
 from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.log import getLogger
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.ui.accountmanagerUI import Ui_AccountManager
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 
@@ -17,14 +19,17 @@ logger = getLogger(__name__)
 
 
 class AddPortalWizard(QtWidgets.QWizard):
-	def __init__(self, currentPortalConfig=None, *args, **kwargs):
-		super(AddPortalWizard, self).__init__(*args, **kwargs)
+	def __init__(
+			self,
+			currentPortalConfig: Union[Dict[str, Any], None] = None,
+			parent: Union[QtWidgets.QWidget, None] = None) -> None:
+		super(AddPortalWizard, self).__init__(parent=parent)
 		self.ui = Ui_AddPortalWizard()
 		self.ui.setupUi(self)
 		self.forcePageFlip = False
-		self.validAuthMethods = None
-		self.loginTask = None
-		self.authProvider = None
+		self.validAuthMethods: Dict[str, Any] = dict()
+		self.loginTask: Union[LoginTask, None] = None
+		self.authProvider: Union[AuthProviderBase, None] = None
 		if currentPortalConfig:
 			self.editMode = True
 			self.currentPortalConfig = currentPortalConfig
@@ -37,13 +42,13 @@ class AddPortalWizard(QtWidgets.QWizard):
 			}
 			self.editMode = False
 
-	def validateCurrentPage(self):
+	def validateCurrentPage(self) -> bool:
 		if self.forcePageFlip:
 			self.forcePageFlip = False
 			return True
 
 		currentId = self.currentId()
-		if currentId == 2 and self.authProvider.advancesAutomatically:
+		if currentId == 2 and isinstance(self.authProvider, AuthProviderBase) and self.authProvider.advancesAutomatically:
 			return False
 		if currentId == 0:
 			if not self.ui.editTitle.text():
@@ -66,13 +71,14 @@ class AddPortalWizard(QtWidgets.QWizard):
 			self.currentPortalConfig["authMethod"] = self.validAuthMethods[self.ui.cbAuthSelector.currentText()]
 			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
 		elif currentId == 2:
-			self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
-			logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
-			self.loginTask.startAuthenticationFlow()
+			if isinstance(self.loginTask, LoginTask):
+				self.currentPortalConfig.update(self.loginTask.getUpdatedPortalConfig())
+				logger.debug("AddPortalWizard.validateCurrentPage: %r, %r", currentId, self.currentPortalConfig)
+				self.loginTask.startAuthenticationFlow()
 			return False
 		return True
 
-	def initializePage(self, pageId):
+	def initializePage(self, pageId: int) -> None:
 		from viur_admin.login import LoginTask
 		logger.debug("initializePage: %r", pageId)
 		super(AddPortalWizard, self).initializePage(pageId)
@@ -98,16 +104,16 @@ class AddPortalWizard(QtWidgets.QWizard):
 			self.loginTask.loginFailed.connect(self.onLoginFailed)
 			self.authProvider = self.loginTask.startSetup()
 			self.ui.scrollArea.setWidget(self.authProvider)
-			if self.authProvider.advancesAutomatically:
-				self.button(QtWidgets.QWizard.NextButton).setDisabled(True)
-			# self.ui.wizardPage1.layout().addWidget(self.authProvider)
-			self.authProvider.show()
+			if self.authProvider:
+				if self.authProvider.advancesAutomatically:
+					self.button(QtWidgets.QWizard.NextButton).setDisabled(True)
+				self.authProvider.show()
 
-	def onAuthMethodsKnown(self, req):
+	def onAuthMethodsKnown(self, req: RequestWrapper) -> None:
 		data = NetworkService.decode(req)
 		logger.debug("onAuthMethodsKnown: %r", data)
 		self.ui.cbAuthSelector.clear()
-		seenList = []
+		seenList: List[str] = []
 		self.validAuthMethods = {}
 		for authMethod, verificationMethod in data:
 			if authMethod not in seenList:
@@ -118,45 +124,48 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.forcePageFlip = True
 		self.next()
 
-	def onError(self, req):
+	def onError(self, req: RequestWrapper) -> None:
 		logger.error("AddPortalWizard.onError: %s", req)
 		self.setDisabled(False)
 
-	def onloginSucceeded(self, *args, **kwargs):
+	def onloginSucceeded(self) -> None:
 		logger.debug("AddPortalWizard: onloginSucceeded")
 		self.setDisabled(False)
 		self.forcePageFlip = True
 		self.next()
 
-	def onLoginFailed(self, msg, *args, **kwargs):
+	def onLoginFailed(self, msg: str) -> None:
 		logger.error("AddPortalWizard.onLoginFailed: %r", msg)
-		tmp = QtWidgets.QMessageBox.warning(self, "Login failed", msg)
+		QtWidgets.QMessageBox.warning(self, "Login failed", msg)
 		self.setDisabled(False)
 
-	def accept(self):
+	def accept(self) -> None:
 		if not self.editMode:
 			conf.accounts.insert(0, self.currentPortalConfig)
 		super(AddPortalWizard, self).accept()
 
 
 class AccountItem(QtWidgets.QListWidgetItem):
-	def __init__(self, account, *args, **kwargs):
-		super(AccountItem, self).__init__(QtGui.QIcon(":icons/profile.png"), account["name"], *args, **kwargs)
+	def __init__(self, account: Dict[str, Any], parent: QtWidgets.QWidget = None) -> None:
+		super(AccountItem, self).__init__(
+			QtGui.QIcon(":icons/profile.png"),
+			account["name"],
+			parent=parent)
 		self.account = account
 
-	def update(self, accountData):
+	def update(self, accountData: Dict[str, Any]) -> None:
 		self.account = accountData
 		self.setText(self.account["name"])
 
 
 class AccountManager(QtWidgets.QMainWindow):
-	def __init__(self, *args, **kwargs):
-		super(AccountManager, self).__init__(*args, **kwargs)
+	def __init__(self, parent: QtWidgets.QWidget = None):
+		super(AccountManager, self).__init__(parent=parent)
 		self.ui = Ui_AccountManager()
 		self.ui.setupUi(self)
 		self.loadAccountList()
 		self.oldAccountName = None
-		self.portalWizard = None
+		self.portalWizard: Union[AddPortalWizard, None] = None
 		self.ui.addAccBTN.released.connect(self.onAddAccBTNReleased)
 		self.ui.acclistWidget.itemClicked.connect(self.onAcclistWidgetItemClicked)
 		self.ui.acclistWidget.itemDoubleClicked.connect(self.onEditAccount)
@@ -165,7 +174,7 @@ class AccountManager(QtWidgets.QMainWindow):
 		if len(conf.accounts) == 0:
 			self.onAddAccBTNReleased()
 
-	def loadAccountList(self):
+	def loadAccountList(self) -> None:
 		guiList = self.ui.acclistWidget
 		guiList.setIconSize(QtCore.QSize(128, 128))
 		guiList.clear()
@@ -181,7 +190,7 @@ class AccountManager(QtWidgets.QMainWindow):
 			guiList.setCurrentRow(currentIndex)
 			self.onAcclistWidgetItemClicked(None)
 
-	def closeEvent(self, e):
+	def closeEvent(self, e: QtGui.QCloseEvent) -> None:
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)
@@ -189,7 +198,7 @@ class AccountManager(QtWidgets.QMainWindow):
 		event.emit("accountListChanged()")
 		self.close()
 
-	def onAddAccBTNReleased(self):
+	def onAddAccBTNReleased(self) -> None:
 		if self.portalWizard:
 			self.portalWizard.deleteLater()
 			self.portalWizard = None
@@ -211,24 +220,23 @@ class AccountManager(QtWidgets.QMainWindow):
 	# guiList.setCurrentItem(item)
 	# self.updateUI()
 
-	def onPortalWizardFinished(self, *args, **kwargs):
-		logger.debug("AddPortalWizard.onPortalWizardFinished: %r, %r", args, kwargs)
+	def onPortalWizardFinished(self) -> None:
+		logger.debug("AddPortalWizard.onPortalWizardFinished")
 		self.setDisabled(False)
 		self.loadAccountList()
 
-	def onAcclistWidgetItemClicked(self, clickeditem):
+	def onAcclistWidgetItemClicked(self, clickedItem: Union[AccountItem, None] = None) -> None:
 		self.updateUI()
 
-	def onDelAccBTNReleased(self):
+	def onDelAccBTNReleased(self) -> None:
 		item = self.ui.acclistWidget.currentItem()
 		if not item:
 			return
+
 		reply = QtWidgets.QMessageBox.question(
-			self,
+			self.centralWidget(),
 			QtCore.QCoreApplication.translate("AccountManager", "Account deletion"),
-			QtCore.QCoreApplication.translate("AccountManager",
-			                                  "Really delete the account \"%s\"?") %
-			item.account["name"],
+			QtCore.QCoreApplication.translate("AccountManager", 'Really delete the account "%s"?' % item.account["name"]),
 			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
 			QtWidgets.QMessageBox.No)
 		if reply == QtWidgets.QMessageBox.No:
@@ -236,7 +244,7 @@ class AccountManager(QtWidgets.QMainWindow):
 		self.ui.acclistWidget.takeItem(self.ui.acclistWidget.row(item))
 		self.updateUI()
 
-	def onEditAccount(self, clickedItem):
+	def onEditAccount(self, clickedItem: AccountItem) -> None:
 		logger.debug("onEditAccount")
 		if self.portalWizard:
 			self.portalWizard.deleteLater()
@@ -246,7 +254,7 @@ class AccountManager(QtWidgets.QMainWindow):
 		self.setDisabled(True)
 		self.portalWizard.finished.connect(self.onPortalWizardFinished)
 
-	def updateUI(self):
+	def updateUI(self) -> None:
 		item = self.ui.acclistWidget.currentItem()
 		self.ui.acclistWidget.sortItems()
 		if not item:
@@ -256,7 +264,7 @@ class AccountManager(QtWidgets.QMainWindow):
 			self.oldAccountName = item.account["name"]
 			self.ui.delAccBTN.setEnabled(True)
 
-	def onFinishedBTNReleased(self):
+	def onFinishedBTNReleased(self) -> None:
 		logger.debug("onFinishedBTNReleased")
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):

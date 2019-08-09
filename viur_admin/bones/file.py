@@ -1,35 +1,35 @@
 # -*- coding: utf-8 -*-
-
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
+from typing import Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.bones.base import BaseViewBoneDelegate
-from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
 from viur_admin.bones.relational import InternalEdit
-from viur_admin.network import RemoteFile
+from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
+from viur_admin.log import getLogger
+from viur_admin.network import RemoteFile, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.utils import formatString
 from viur_admin.widgets.file import FileWidget
 from viur_admin.widgets.selectedFiles import SelectedFilesWidget
 
+logger = getLogger(__name__)
+
 
 class FileViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, modul, boneName, structure):
-		super(FileViewBoneDelegate, self).__init__(modul, boneName, structure)
+	def __init__(self, module: str, boneName: str, structure: dict):
+		super(FileViewBoneDelegate, self).__init__(module, boneName, structure)
 		if not hasattr(self, "cache"):
-			self.cache = dict()
+			self.cache: Dict[str, str] = dict()
 		self.format = "$(name)"
 		self.structure = structure
-		if "format" in structure[boneName].keys():
+		if "format" in structure[boneName]:
 			self.format = structure[boneName]["format"]
 
-	def setImage(self, remoteFile):
+	def setImage(self, remoteFile: RequestWrapper) -> None:
 		fn = remoteFile.getFileName()
 		try:
 			self.cache[remoteFile.dlKey] = QtGui.QImage(fn)
@@ -37,16 +37,18 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			pass
 		self.request_repaint.emit()
 
-	def paint(self, painter, option, index):
+	def paint(self, painter: Any, option: Any, index: Any) -> Any:
 		if not index.isValid():
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
 		model = index.model()
 		try:
 			index_column = index.column()
+			logger.debug("model and fields: %r, %r, %r", index_column, model.fields, model)
 			model_fields = model.fields[index_column]
 			index_row = index.row()
 			cache_row = model.dataCache[index_row]
 			record = cache_row[model_fields]
+			logger.info("record cache row: %r", record)
 			if record and isinstance(record, list) and len(record) > 0:
 				record = record[0]
 		except (IndexError, KeyError) as err:
@@ -55,7 +57,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		if not record:
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
 
-		if record["dest"]["dlkey"] not in self.cache.keys():
+		if record["dest"]["dlkey"] not in self.cache:
 			self.cache[record["dest"]["dlkey"]] = None
 			RemoteFile(record["dest"]["dlkey"], successHandler=self.setImage)
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
@@ -66,13 +68,13 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		painter.restore()
 		return super(FileViewBoneDelegate, self).paint(painter, option, index)
 
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
 		result = formatString(self.format, value, self.structure)
 		return super(FileViewBoneDelegate, self).displayText(result, locale)
 
 
 class MultiItemWidget(QtWidgets.QWidget):
-	def __init__(self, text, parent=None):
+	def __init__(self, text: str, parent: QtWidgets.QWidget = None):
 		super(MultiItemWidget, self).__init__(parent)
 		self.previewImage = QtWidgets.QLabel(self)
 		self.previewImage.hide()
@@ -82,7 +84,7 @@ class MultiItemWidget(QtWidgets.QWidget):
 		self.rowLayout.addWidget(self.previewImage)
 		self.rowLayout.addWidget(self.label)
 
-	def loadIconFromRequest(self, request):
+	def loadIconFromRequest(self, request: RequestWrapper) -> None:
 		preview = QtGui.QIcon(request.getFileName())
 		self.previewImage.setPixmap(preview.pixmap(QtCore.QSize(32, 32)))
 		self.previewImage.show()
@@ -91,17 +93,17 @@ class MultiItemWidget(QtWidgets.QWidget):
 class FileItemBone(TreeItemBone):
 	skelType = "leaf"
 
-	def onAddBtnReleased(self, *args, **kwargs):
+	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
 		editWidget = FileBoneSelector(
 			self.moduleName,
 			self.boneName,
 			self.multiple,
-			self.toModul,
+			self.toModule,
 			self.selection,
 			parent=self)
 		editWidget.selectionChanged.connect(self.setSelection)
 
-	def loadIconFromRequest(self, request):
+	def loadIconFromRequest(self, request: RequestWrapper) -> None:
 		# this former code should be inspected where and why we attached a icon to self
 		# TODO: where self.previewIcon was defined before?
 		# icon = QtGui.QIcon(request.getFileName())
@@ -121,8 +123,8 @@ class FileItemBone(TreeItemBone):
 		else:
 			label.setPixmap(preview.pixmap(QtCore.QSize(32, 32)))
 
-	def updateVisiblePreview(self):
-		protoWrap = protocolWrapperInstanceSelector.select(self.toModul)
+	def updateVisiblePreview(self) -> None:
+		protoWrap = protocolWrapperInstanceSelector.select(self.toModule)
 		assert protoWrap is not None
 		structure = None
 		if self.skelType is None:
@@ -183,7 +185,7 @@ class FileBoneSelector(TreeBoneSelector):
 	displaySourceWidget = FileWidget
 	displaySelectionWidget = SelectedFilesWidget
 
-	def keyPressEvent(self, e):
+	def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
 		"""Handle multiple selection via return or enter key press"""
 
 		if self.multiple and e.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
@@ -191,12 +193,15 @@ class FileBoneSelector(TreeBoneSelector):
 		else:
 			super(FileBoneSelector, self).keyPressEvent(e)
 
-	def prepareDeletion(self):
+	def prepareDeletion(self) -> None:
 		self.selection.prepareDeletion()
 		self.list.prepareDeletion()
 
 
-def CheckForFileBone(moduleName, boneName, skelStucture):
+def CheckForFileBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"].startswith("treeitem.file")
 
 

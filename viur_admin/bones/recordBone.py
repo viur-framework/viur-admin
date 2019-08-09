@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
 
 import sys
+from typing import Any, Dict, List, Union
 
 from viur_admin.log import getLogger
 
@@ -24,7 +25,11 @@ class BaseBone:
 class RecordViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, module, boneName, structure):
+	def __init__(
+			self,
+			module: str,
+			boneName: str,
+			structure: Dict[str, Any]):
 		super(RecordViewBoneDelegate, self).__init__(module, boneName, structure)
 		logger.debug("RecordViewBoneDelegate.init: %r, %r, %r", module, boneName, structure[self.boneName])
 		self.format = "$(name)"
@@ -34,16 +39,18 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 		self.structure = structure
 		self.boneName = boneName
 
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.structure[self.boneName])
 		relStructList = self.structure[self.boneName]["using"]
 		try:
 			if isinstance(value, list):
 				if relStructList:
-					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure.keys())
+					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
 					value = "\n".join([(formatString(
-						formatString(self.format, x, self.structure[self.boneName],
-						             language=config.conf.adminConfig["language"]),
+						formatString(
+							self.format,
+							x, self.structure[self.boneName],
+							language=config.conf.adminConfig["language"]),
 						x, x, language=config.conf.adminConfig["language"]) or x[
 						                    "key"]) for x in value])
 				else:
@@ -65,7 +72,13 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 class RecordBoneInternalEdit(QtWidgets.QWidget):
 	deleteRecordEntry = QtCore.pyqtSignal(int)
 
-	def __init__(self, parent, using, values, errorInformation=None, multiple=False, entryIndex=None):
+	def __init__(
+			self,
+			parent: QtWidgets.QWidget,
+			using: Dict[str, Dict[str, Any]],
+			values: Dict[str, Any],
+			multiple: bool = False,
+			entryIndex: int = None):
 		logger.debug("RecordBoneInternalEdit : %r, %r, %r", using, values, multiple)
 		super(RecordBoneInternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
@@ -79,8 +92,8 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 		self.bonesLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
 		self.bonesLayout.setLabelAlignment(QtCore.Qt.AlignLeft)
 		self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-		self.bones = OrderedDict()
-		self.modul = "poll"
+		self.bones: Dict[str, Any] = OrderedDict()
+		self.module = "poll"
 		self.values = values or dict()
 		self.entryIndex = entryIndex
 		ignoreMissing = True
@@ -90,8 +103,8 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 
 			if not bone["visible"]:
 				continue
-			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict)
+			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
+			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
@@ -115,7 +128,7 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
-			if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
+			if "params" in bone and isinstance(bone["params"], dict) and "tooltip" in bone["params"]:
 				lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
 			descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
 			descrLbl.setWordWrap(True)
@@ -136,7 +149,8 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 			buttonLabelWidget = QtWidgets.QWidget(self)
 			# buttonTrayWidget = QtWidgets.QWidget(self)
 			# buttonTrayLayout = QtWidgets.QHBoxLayout(buttonTrayWidget)
-			self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RecordBoneInternalEdit", "Remove"), parent=self)
+			self.delBtn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("RecordBoneInternalEdit", "Remove"),
+			                                    parent=self)
 			self.delBtn.setIcon(icon6)
 			self.delBtn.released.connect(self.onDelBtnReleased)
 			# spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -146,7 +160,7 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 		self.layout.addLayout(self.bonesLayout)
 		self.unserialize(self.values)
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("RecordBone.unserialize: %r", data)
 		try:
 			for bone in self.bones.values():
@@ -155,15 +169,15 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 		except AssertionError as err:
 			pass
 
-	def serializeForPost(self):
-		res = {}
+	def serializeForPost(self) -> Dict[str, Any]:
+		res:  Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
 			data = bone.serializeForPost()
 			# print("RecordBoneInternalEdit.serializeForPost: key, value", key, data)
 			res.update(data)
 		return res
 
-	def onDelBtnReleased(self):
+	def onDelBtnReleased(self) -> None:
 		self.deleteRecordEntry.emit(self.entryIndex)
 
 
@@ -173,21 +187,21 @@ class RecordEditBone(BoneEditInterface):
 
 	def __init__(
 			self,
-			moduleName,
-			boneName,
-			readOnly,
-			multiple,
-			using=None,
-			format="$(name)",
-			*args,
-			**kwargs):
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			multiple: bool,
+			using: Dict[str, Any] = None,
+			format: str="$(name)",
+			*args: Any,
+			**kwargs: Any):
 		super(RecordEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
 		logger.debug("RecordEditBone: %r, %r, %r", moduleName, boneName, readOnly)
 		self.multiple = multiple
 		self.using = using
 		self.format = format
 		self.overlay = Overlay(self)
-		self.recordBoneInternalEdits = list()
+		self.recordBoneInternalEdits: List[RecordBoneInternalEdit] = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
 			self.previewWidget = QtWidgets.QListWidget(self)
@@ -225,26 +239,32 @@ class RecordEditBone(BoneEditInterface):
 		if not self.multiple:
 			icon6 = QtGui.QIcon()
 			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-			self.selection = None
+			self.selection: Dict[str, Any] = None
 		else:
-			self.selection = []
+			self.selection: List[Dict[str, Any]] = list()
 			self.layout.addWidget(self.addBtn)
 
 	@classmethod
-	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
 		logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		return cls(
 			moduleName,
 			boneName,
 			readOnly,
-            skelStructure[boneName]["multiple"],
+			skelStructure[boneName]["multiple"],
 			using=skelStructure[boneName]["using"],
 			format=skelStructure[boneName].get("format", "$(name)")
 		)
 
-	def updateVisiblePreview(self):
-		logger.debug("updateVisiblePreview - start: boneName=%r, multiple=%r, selection=%r, %r", self.boneName, self.multiple, self.selection, self.using)
+	def updateVisiblePreview(self) -> None:
+		logger.debug("updateVisiblePreview - start: boneName=%r, multiple=%r, selection=%r, %r", self.boneName,
+		             self.multiple, self.selection, self.using)
 		if self.multiple:
 			self.previewWidget.clear()
 			self.recordBoneInternalEdits = list()
@@ -277,7 +297,11 @@ class RecordEditBone(BoneEditInterface):
 			self.previewWidget.setItemWidget(listItem, item)
 			self.previewWidget.setFixedHeight(item.sizeHint().height())
 
-	def setSelection(self, selection):
+	def setSelection(
+			self,
+			selection: Union[
+				Dict[str, Any],
+				List[Dict[str, Any]]]) -> None:
 		logger.debug("setSelection - start")
 		if self.multiple:
 			if isinstance(selection, dict):
@@ -292,8 +316,8 @@ class RecordEditBone(BoneEditInterface):
 		self.updateVisiblePreview()
 		logger.debug("setSelection - end")
 
-	def onAddBtnReleased(self, *args, **kwargs):
-		newEntry = dict()
+	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
+		newEntry: Dict[str, Any] = dict()
 		for key, bone in self.using:
 			newEntry[key] = None
 			logger.debug("add new entry: %r, %r", key, bone)
@@ -303,20 +327,20 @@ class RecordEditBone(BoneEditInterface):
 		self.updateVisiblePreview()
 
 	@QtCore.pyqtSlot(int)
-	def onEntryDelBtnReleased(self, index):
+	def onEntryDelBtnReleased(self, index: int) -> None:
 		self.selection.pop(index)
 		internalEdit = self.recordBoneInternalEdits.pop(index)
 		internalEdit.deleteLater()
 		self.updateVisiblePreview()
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("unserialize start")
 		self.selection = data[self.boneName]
 		logger.debug("unserialize: before calling updateVisiblePreview")
 		self.updateVisiblePreview()
 		logger.debug("unserialize end")
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> dict:
 		if not self.selection:
 			return {self.boneName: None}
 		res = {}
@@ -331,7 +355,10 @@ class RecordEditBone(BoneEditInterface):
 		return res
 
 
-def CheckForRecordBoneBone(moduleName, boneName, skelStucture):
+def CheckForRecordBoneBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any][str, Any]) -> bool:
 	return skelStucture[boneName]["type"] == "record" or skelStucture[boneName]["type"].startswith("record.")
 
 

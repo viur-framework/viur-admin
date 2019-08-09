@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-                                                                                                                                                                                                                                                        
+# -*- coding: utf-8 -*-
+from typing import Union, Any, List, Dict, Tuple
 
 from viur_admin.log import getLogger
 
@@ -15,7 +16,7 @@ from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
 from viur_admin.widgets.edit import EditWidget
 from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate
@@ -29,24 +30,24 @@ class BaseBone:
 class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, module, boneName, structure):
+	def __init__(self, module: str, boneName: str, structure: Dict[str, Any]):
 		super(RelationalViewBoneDelegate, self).__init__(module, boneName, structure)
 		# logger.debug("RelationalViewBoneDelegate.init: %r", boneName)
 		self.format = "$(name)"
-		if "format" in structure[boneName].keys():
+		if "format" in structure[boneName]:
 			self.format = structure[boneName]["format"]
 		self.module = module
 		self.structure = structure
 		self.boneName = boneName
 
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
 				if relStructList:
-					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure.keys())
+					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
 					value = ", ".join([(formatString(
 						formatString(self.format, x["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
 						             language=config.conf.adminConfig["language"]),
@@ -69,20 +70,26 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 
 
 class AutocompletionModel(QtCore.QAbstractTableModel):
-	def __init__(self, modul, format, structure, *args, **kwargs):
+	def __init__(
+			self,
+			module: str,
+			format: str,
+			structure: Dict[str, Any],
+			*args: Any,
+			**kwargs: Any):
 		super(AutocompletionModel, self).__init__(*args, **kwargs)
-		self.modul = modul
+		self.module = module
 		self.format = format
 		self.structure = structure
-		self.dataCache = []
+		self.dataCache: List[Dict[str, Any]] = list()
 
-	def rowCount(self, *args, **kwargs):
+	def rowCount(self, *args: Any, **kwargs: Any) -> int:
 		return len(self.dataCache)
 
-	def colCount(self, *args, **kwargs):
+	def colCount(self, *args: Any, **kwargs: Any) -> int:
 		return 2
 
-	def data(self, index, role):
+	def data(self, index: QtCore.QModelIndex, role: Union[int, None] = None) -> Any:
 		if not index.isValid():
 			return
 		elif role != QtCore.Qt.ToolTipRole and role != QtCore.Qt.EditRole and role != QtCore.Qt.DisplayRole:
@@ -93,11 +100,13 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			else:
 				return "foo"
 
-	def setCompletionPrefix(self, prefix):
-		NetworkService.request("/%s/list" % self.modul, {"name$lk": prefix, "orderby": "name"},
-		                       successHandler=self.addCompletionData)
+	def setCompletionPrefix(self, prefix: str) -> None:
+		NetworkService.request(
+			"/%s/list" % self.module,
+			{"name$lk": prefix, "orderby": "name"},
+			successHandler=self.addCompletionData)
 
-	def addCompletionData(self, req):
+	def addCompletionData(self, req: RequestWrapper) -> None:
 		try:
 			data = NetworkService.decode(req)
 		except ValueError:  # Query was canceled
@@ -108,7 +117,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			self.dataCache.append(skel)
 		self.layoutChanged.emit()
 
-	def getItem(self, label):
+	def getItem(self, label: str) -> Union[str, None]:
 		res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
 		if len(res):
 			return res[0]
@@ -116,13 +125,18 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 
 
 class InternalEdit(QtWidgets.QWidget):
-	def __init__(self, parent, using, text, values, errorInformation):
+	def __init__(
+			self,
+			parent: QtWidgets.QWidget,
+			using: Dict[str, Any],
+			text: str,
+			values: Dict[str, Any]):
 		super(InternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.dest = QtWidgets.QLabel(text)
 		self.layout.addWidget(self.dest)
-		self.bones = OrderedDict()
-		self.modul = "poll"
+		self.bones: Dict[str, Any] = OrderedDict()
+		self.module = ""
 		self.values = values
 		ignoreMissing = True
 		tmpDict = dict()
@@ -132,8 +146,8 @@ class InternalEdit(QtWidgets.QWidget):
 		for key, bone in using:
 			if not bone["visible"]:
 				continue
-			wdgGen = editBoneSelector.select(self.modul, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.modul, key, tmpDict)
+			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
+			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
 			if bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
@@ -150,7 +164,7 @@ class InternalEdit(QtWidgets.QWidget):
 				dataWidget = widget
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
-			if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
+			if "params" in bone and isinstance(bone["params"], dict) and "tooltip" in bone["params"]:
 				lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
 			descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
 			descrLbl.setWordWrap(True)
@@ -165,7 +179,7 @@ class InternalEdit(QtWidgets.QWidget):
 			self.bones[key] = widget
 		self.unserialize(values["rel"])
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		try:
 			for bone in self.bones.values():
 				logger.debug("unserialize bone: %r", bone)
@@ -173,8 +187,8 @@ class InternalEdit(QtWidgets.QWidget):
 		except AssertionError as err:
 			pass
 
-	def serializeForPost(self):
-		res = {}
+	def serializeForPost(self) -> Dict[str, Any]:
+		res: Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
 			data = bone.serializeForPost()
 			# print("InternalEdit.serializeForPost: key, value", key, data)
@@ -187,19 +201,27 @@ class RelationalEditBone(BoneEditInterface):
 	GarbageTypeName = "ExtendedRelationalEditBone"
 	skelType = None
 
-	def __init__(self, moduleName, boneName, readOnly, destModul, multiple, using=None, format="$(name)",
-	             editWidget=None, *args,
-	             **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			destModule: str,
+			multiple: bool,
+			using: Union[str, None] = None,
+			format: str = "$(name)",
+			*args: Any,
+			**kwargs: Any):
 		super(RelationalEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
-		logger.debug("RelationalEditBone: %r, %r, %r, %r", moduleName, boneName, readOnly, destModul)
-		self.toModul = self.realModule = destModul
-		if self.toModul.endswith("_rootNode"):
-			self.realModule = destModul[:-9]
+		logger.debug("RelationalEditBone: %r, %r, %r, %r", moduleName, boneName, readOnly, destModule)
+		self.toModule = self.realModule = destModule
+		if self.toModule.endswith("_rootNode"):
+			self.realModule = destModule[:-9]
 		self.multiple = multiple
 		self.using = using
 		self.format = format
 		self.overlay = Overlay(self)
-		self.internalEdits = list()
+		self.internalEdits: List[InternalEdit] = list()
 		if not self.multiple:
 			self.layout = QtWidgets.QHBoxLayout(self)
 			self.previewIcon = None
@@ -226,31 +248,42 @@ class RelationalEditBone(BoneEditInterface):
 			self.delBtn.released.connect(self.onDelBtnReleased)
 			self.layout.addWidget(self.addBtn)
 			self.layout.addWidget(self.delBtn)
-			self.selection = None
+			self.selection: Dict[str, Any] = None
 		else:
-			self.selection = []
+			self.selection: List[Dict[str, Any]] = list()
 			self.layout.addWidget(self.addBtn)
 
 	@classmethod
-	def fromSkelStructure(cls, moduleName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		multiple = skelStructure[boneName]["multiple"]
-		if "module" in skelStructure[boneName].keys():
+		if "module" in skelStructure[boneName]:
 			destModul = skelStructure[boneName]["module"]
 		else:
 			destModul = skelStructure[boneName]["type"].split(".")[1]
 		fmt = "$(name)"
-		if "format" in skelStructure[boneName].keys():
+		if "format" in skelStructure[boneName]:
 			fmt = skelStructure[boneName]["format"]
-		using = skelStructure[boneName]["using"]
-		return cls(moduleName, boneName, readOnly, multiple=multiple, destModul=destModul, using=using, format=fmt)
+		return cls(
+			moduleName,
+			boneName,
+			readOnly,
+			multiple=multiple,
+			destModule=destModul,
+			using=skelStructure[boneName]["using"],
+			format=fmt)
 
-	def installAutoCompletion(self):
+	def installAutoCompletion(self) -> None:
 		"""
 				Installs our autoCompleter on self.entry if possible
 		"""
 		if not self.multiple:
-			self.autoCompletionModel = AutocompletionModel(self.toModul, self.format, {})  # FIXME: {} was
+			self.autoCompletionModel = AutocompletionModel(self.toModule, self.format, {})  # FIXME: {} was
 			self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
 			self.autoCompleter.setModel(self.autoCompletionModel)
 			self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -259,7 +292,7 @@ class RelationalEditBone(BoneEditInterface):
 			self.autoCompleter.activated.connect(self.setAutoCompletion)  # Broken...
 			self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
-	def updateVisiblePreview(self):
+	def updateVisiblePreview(self) -> None:
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None, "Unknown module: %s" % self.realModule
 		if self.skelType is None:
@@ -300,16 +333,16 @@ class RelationalEditBone(BoneEditInterface):
 				else:
 					self.entry.setText("")
 
-	def reloadAutocompletion(self, text):
+	def reloadAutocompletion(self, text: str) -> None:
 		if text and len(text) > 2:
 			self.autoCompletionModel.setCompletionPrefix(text)
 
-	def setAutoCompletion(self, label):
+	def setAutoCompletion(self, label: str) -> None:
 		res = self.autoCompletionModel.getItem(label)
 		if res:
 			self.setSelection([res])
 
-	def setSelection(self, selection):
+	def setSelection(self, selection: Union[list, dict, None]) -> None:
 		data = [{"dest": x, "rel": {}} if "dest" not in x else x for x in selection]
 		if self.multiple:
 			self.selection = data
@@ -319,29 +352,30 @@ class RelationalEditBone(BoneEditInterface):
 			self.selection = None
 		self.updateVisiblePreview()
 
-	def onAddBtnReleased(self, *args, **kwargs):
+	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
 		editWidget = RelationalBoneSelector(
 			self.moduleName,
 			self.boneName,
 			self.multiple,
-			self.toModul,
+			self.toModule,
 			self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
-	def onDelBtnReleased(self, *args, **kwargs):
+	def onDelBtnReleased(self, *args: Any, **kwargs: Any) -> None:
 		if self.multiple:
 			self.selection = []
 		else:
 			self.selection = None
 		self.updateVisiblePreview()
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		self.selection = data[self.boneName]
 		self.updateVisiblePreview()
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> Dict[str, Any]:
 		if not self.selection:
 			return {self.boneName: None}
+
 		res = {}
 		if self.using:
 			if self.multiple:
@@ -370,7 +404,15 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 	displaySelectionWidget = SelectedEntitiesWidget
 	GarbageTypeName = "ExtendedRelationalBoneSelector"
 
-	def __init__(self, moduleName, boneName, multiple, toModul, selection, *args, **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			multiple: bool,
+			toModul: str,
+			selection: list,
+			*args: Any,
+			**kwargs: Any):
 		super(RelationalBoneSelector, self).__init__(*args, **kwargs)
 		logger.debug("RelationalBoneSelector.init: %r, %r, %r, %r, %r", moduleName, boneName, multiple, toModul,
 		             selection)
@@ -401,10 +443,11 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		self.ui.btnCancel.clicked.connect(self.onBtnCancelReleased)
 		event.emit('stackWidget', self)
 
-	def getBreadCrumb(self):
+	def getBreadCrumb(self) -> Tuple[Union[str, None], QtGui.QIcon]:
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		# FIXME: Bad hack to get the editWidget we belong to
+		skel: Union[Dict[str, Any], None] = None
 		for widget in WidgetHandler.mainWindow.handlerForWidget(self).widgets:
 			if isinstance(widget, EditWidget):
 				if (not widget.key) or widget.clone:  # We're adding a new entry
@@ -422,14 +465,14 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 					else:
 						skel = protoWrap.editStructure
 		assert skel is not None
-		assert self.boneName in skel.keys()
+		assert self.boneName in skel
 		return QtCore.QCoreApplication.translate("ExtendedRelationalBoneSelector", "Select %s") % skel[self.boneName][
 			"descr"], QtGui.QIcon(":icons/actions/change_selection.svg")
 
-	def onSourceItemClicked(self, item):
+	def onSourceItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		pass
 
-	def onSourceItemDoubleClicked(self, item):
+	def onSourceItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		"""
 				An item has been doubleClicked in our listWidget.
 				Read its properties and add them to our selection.
@@ -442,7 +485,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			self.selectionChanged.emit([data])
 			event.emit("popWidget", self)
 
-	def onBtnSelectReleased(self, *args, **kwargs):
+	def onBtnSelectReleased(self, *args: Any, **kwargs: Any) -> None:
 		logger.debug("onBtnSelectReleased")
 		try:
 			self.selection.prepareDeletion()
@@ -451,7 +494,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		self.selectionChanged.emit(self.selection.get())
 		event.emit("popWidget", self)
 
-	def onBtnCancelReleased(self, *args, **kwargs):
+	def onBtnCancelReleased(self, *args: Any, **kwargs: Any) -> None:
 		logger.debug("onBtnCancelReleased")
 		try:
 			self.selection.prepareDeletion()
@@ -459,17 +502,17 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 			pass
 		event.emit("popWidget", self)
 
-	def getFilter(self):
+	def getFilter(self) -> Dict[str, Any]:
 		return self.list.getFilter()
 
-	def setFilter(self, filter):
-		return self.list.setFilter(filter)
+	def setFilter(self, queryFilter: Dict[str, Any]) -> None:
+		return self.list.setFilter(queryFilter)
 
-	def getModul(self):
+	def getModul(self) -> str:
 		return self.list.getModul()
 
 
-def CheckForRelationalicBone(moduleName, boneName, skelStucture):
+def CheckForRelationalicBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any][str, Any]) -> bool:
 	return skelStucture[boneName]["type"].startswith("relational.")
 
 

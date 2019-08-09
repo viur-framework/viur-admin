@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from typing import Union, Any, List, Dict, Tuple
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from viur_admin.bones.bone_interface import BoneEditInterface
@@ -8,7 +9,7 @@ from viur_admin.priorityqueue import editBoneSelector
 
 
 class AccessPushButton(QtWidgets.QPushButton):
-	def __init__(self, bone, module, state, parent=None):
+	def __init__(self, bone: str, module: str, state: bool, parent: QtWidgets.QWidget = None):
 		super(AccessPushButton, self).__init__(parent)
 		self.setCheckable(True)
 		self.bone = bone
@@ -16,7 +17,7 @@ class AccessPushButton(QtWidgets.QPushButton):
 		self.state = state
 		self.toggled.connect(self.onToggled)
 
-	def onToggled(self, checked):
+	def onToggled(self, checked: bool) -> None:
 		# self.bone.modules[self.module][self.state][1] = checked
 		if checked and self.state != "view":
 			self.bone.modules[self.module]["view"][0].setChecked(True)
@@ -29,13 +30,13 @@ class AccessPushButton(QtWidgets.QPushButton):
 
 
 class AccessCheckBox(QtWidgets.QCheckBox):
-	def __init__(self, bone, module, parent=None):
+	def __init__(self, bone: str, module: str, parent: QtWidgets.QWidget = None):
 		super(AccessCheckBox, self).__init__(parent)
 		self.bone = bone
 		self.module = module
 		self.clicked.connect(self.onStateChanged)
 
-	def onStateChanged(self, clicked):
+	def onStateChanged(self, clicked: bool) -> None:
 		state = self.checkState()
 		if state == QtCore.Qt.Checked:
 			for item, isEnabled in self.bone.modules[self.module].values():
@@ -50,13 +51,22 @@ class AccessCheckBox(QtWidgets.QCheckBox):
 class AccessSelectMultiEditBone(BoneEditInterface):
 	states = ["view", "edit", "add", "delete"]
 
-	def __init__(self, moduleName, boneName, readOnly, values, sortBy="keys", editWidget=None, *args, **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			values: list,
+			sortBy: str = "keys",
+			editWidget: Union[QtWidgets.QWidget, None] = None,
+			*args: Any,
+			**kwargs: Any):
 		super(AccessSelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
-		self.checkboxes = {}
-		self.flags = {}
-		self.modules = {}
-		self.moduleBoxes = {}
+		self.checkboxes: Dict[Any, Any] = dict()
+		self.flags: Dict[Any, Any] = dict()
+		self.modules: Dict[Any, Any] = dict()
+		self.moduleBoxes: Dict[Any, Any] = dict()
 		tmpList = values
 		if sortBy == "keys":
 			tmpList.sort(key=lambda x: x[0])  # Sort by keys
@@ -68,10 +78,10 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			module = self.parseskelaccess(key)
 			if not module:
 				self.flags[value] = None
-			elif module[0] not in self.modules.keys():
+			elif module[0] not in self.modules:
 				self.modules[module[0]] = {}
 
-		for flag in sorted(self.flags.keys()):
+		for flag in sorted(self.flags):
 			try:
 				descr = defaultValues[flag]
 			except KeyError:
@@ -81,7 +91,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			cb.show()
 			self.checkboxes[flag] = cb
 
-		for module in sorted(self.modules.keys()):
+		for module in sorted(self.modules):
 			groupBox = QtWidgets.QGroupBox(module, self)
 			groupBoxLayout = QtWidgets.QHBoxLayout(groupBox)
 			for ix, state in enumerate(self.states):
@@ -111,14 +121,14 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			groupBoxLayout.addWidget(cb)
 			self.layout.addWidget(groupBox)
 
-	def parseskelaccess(self, value):
+	def parseskelaccess(self, value: str) -> Union[Tuple[str, str], bool]:
 		for state in self.states:
 			if value.endswith(state):
 				return value[0: -(len(state) + 1)], state
 
 		return False
 
-	def checkmodulesbox(self, module):
+	def checkmodulesbox(self, module: str) -> None:
 		on = 0
 		all = 0
 
@@ -134,44 +144,55 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 		else:
 			self.moduleBoxes[module].setCheckState(QtCore.Qt.PartiallyChecked)
 
-	@staticmethod
-	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		if "sortBy" in skelStructure[boneName].keys():
+	@classmethod
+	def fromSkelStructure(
+			cls,
+			moduleName: str,
+			boneName: str,
+			skelStructure: dict,
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		if "sortBy" in skelStructure[boneName]:
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
 			sortBy = "keys"
 		values = list(skelStructure[boneName]["values"])
-		return AccessSelectMultiEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		return cls(
+			moduleName,
+			boneName,
+			readOnly,
+			values=values,
+			sortBy=sortBy,
+			**kwargs)
 
-	def unserialize(self, data):
-		if self.boneName not in data.keys():
+	def unserialize(self, data: Dict[str, Any]) -> None:
+		if self.boneName not in data:
 			return
 		for key, checkbox in self.checkboxes.items():
 			checkbox.setChecked(key in data[self.boneName])
 
-		for module in self.modules.keys():
+		for module in self.modules:
 			self.checkmodulesbox(module)
 
-	def serializeForPost(self):
+	def serializeForPost(self) -> Dict[str, Any]:
 		ret = []
 
-		for name in self.flags.keys():
+		for name in self.flags:
 			if self.checkboxes[name].isChecked():
 				ret.append(name)
 
-		for module in self.modules.keys():
+		for module in self.modules:
 			for state in self.states:
 				if self.modules[module][state][0].isChecked():
 					ret.append("%s-%s" % (module, state))
 
 		return {self.boneName: ret}
 
-	def serializeForDocument(self):
+	def serializeForDocument(self) -> Dict[str, Any]:
 		return self.serialize()
 
 
-def CheckForAccessSelectMultiBone(moduleName, boneName, skelStucture):
+def CheckForAccessSelectMultiBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"] in ("select.access", "selectmulti.access")
 
 

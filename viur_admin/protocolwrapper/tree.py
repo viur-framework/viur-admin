@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
 from collections import OrderedDict
+from typing import Union, Sequence, Tuple, List, Dict, Any
 
 from PyQt5 import QtCore
 
+from viur_admin.log import getLogger
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
+
+logger = getLogger(__name__)
 
 
 class TreeWrapper(QtCore.QObject):
@@ -29,10 +30,10 @@ class TreeWrapper(QtCore.QObject):
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
 	onModulStructureAvailable = QtCore.pyqtSignal()
 
-	def __init__(self, module, *args, **kwargs):
+	def __init__(self, module: str, *args: Any, **kwargs: Any):
 		super(TreeWrapper, self).__init__()
 		self.module = module
-		self.dataCache = {}
+		self.dataCache: Dict[str, Any] = {}
 		# self.parentMap = {} #Stores references from child -> parent
 		self.viewLeafStructure = None
 		self.viewNodeStructure = None
@@ -43,13 +44,13 @@ class TreeWrapper(QtCore.QObject):
 		self.editNodeStructure = None
 		self.rootNodes = None
 		self.busy = True
-		self._requestGroups = list()  # we must keep a reference to request groups until all child requests are done
+		self._requestGroups: list = list()  # we must keep a reference to request groups until all child requests are done
 		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvailable)
 		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvailable)
 		protocolWrapperInstanceSelector.insert(self.protocolWrapperInstancePriority, self.checkForOurModul, self)
-		self.deferredTaskQueue = []
+		self.deferredTaskQueue: Sequence[Tuple[str, str]] = list()
 
-	def checkBusyStatus(self):
+	def checkBusyStatus(self) -> None:
 		busy = False
 		for child in self.children():
 			if isinstance(child, RequestWrapper) or isinstance(child, RequestGroup):
@@ -60,10 +61,10 @@ class TreeWrapper(QtCore.QObject):
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
 
-	def checkForOurModul(self, moduleName):
+	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
 
-	def clearCache(self):
+	def clearCache(self) -> None:
 		"""
 			Resets our Cache.
 			Does not emit entitiesChanged!
@@ -77,13 +78,13 @@ class TreeWrapper(QtCore.QObject):
 			node["parentdir"] = None
 			self.dataCache[node["key"]] = node
 
-	def onStructureAvailable(self, req):
+	def onStructureAvailable(self, req: RequestWrapper) -> None:
 		tmp = NetworkService.decode(req)
 		if tmp is None:
 			self.checkBusyStatus()
 			return
 		for stype, structlist in tmp.items():
-			structure = OrderedDict()
+			structure: OrderedDict = OrderedDict()
 			for k, v in structlist:
 				structure[k] = v
 			if stype == "viewNodeSkel":
@@ -103,7 +104,7 @@ class TreeWrapper(QtCore.QObject):
 		self.onModulStructureAvailable.emit()
 		self.checkBusyStatus()
 
-	def onRootNodesAvailable(self, req):
+	def onRootNodesAvailable(self, req: RequestWrapper) -> None:
 		tmp = NetworkService.decode(req)
 		if isinstance(tmp, list):
 			self.rootNodes = tmp
@@ -112,7 +113,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		logger.debug("TreeWrapper.onRootNodesAvailable: %r", tmp)
 
-	def childrenForNode(self, node):
+	def childrenForNode(self, node: str) -> str:
 		assert isinstance(node, str)
 		res = []
 		for item in self.dataCache.values():
@@ -121,14 +122,14 @@ class TreeWrapper(QtCore.QObject):
 					res.append(item)
 		return res
 
-	def cacheKeyFromFilter(self, node, filters):
+	def cacheKeyFromFilter(self, node: str, filters: dict) -> str:
 		tmp = {k: v for k, v in filters.items()}
 		tmp["node"] = node
 		tmpList = list(tmp.items())
 		tmpList.sort(key=lambda x: x[0])
 		return "&".join(["%s=%s" % (k, v) for (k, v) in tmpList])
 
-	def queryData(self, node, **kwargs):
+	def queryData(self, node: str, **kwargs: Any) -> str:
 		logger.debug("TreeWrapper.queryData: %r, %r", node, kwargs)
 		key = self.cacheKeyFromFilter(node, kwargs)
 		if key in self.dataCache:
@@ -160,7 +161,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return key
 
-	def queryEntry(self, key, skelType):
+	def queryEntry(self, key: str, skelType: str) -> str:
 		logger.debug("TreeWrapper.queryEntry: %r, %r", key, skelType)
 		if key in self.dataCache:
 			self.deferredTaskQueue.append(("entityAvailable", key))
@@ -173,7 +174,7 @@ class TreeWrapper(QtCore.QObject):
 		r.node = key
 		return key
 
-	def execDefered(self, *args, **kwargs):
+	def execDefered(self, *args: Any, **kwargs: Any) -> None:
 		logger.debug("TreeWrapper.execDefered: %r, %r", args, kwargs)
 		m, key = self.deferredTaskQueue.pop(0)
 		if m == "entitiesChanged":
@@ -182,19 +183,19 @@ class TreeWrapper(QtCore.QObject):
 			self.entityAvailable.emit(self.dataCache[key])
 		self.checkBusyStatus()
 
-	def getNode(self, node):
+	def getNode(self, node: str) -> Union[str, None]:
 		logger.debug("TreeWrapper.getNode: %r", node)
 		if node in self.dataCache:
 			return self.dataCache[node]
 		return None
 
-	def getNodesForCustomQuery(self, key):
+	def getNodesForCustomQuery(self, key: str) -> Union[str, None]:
 		if key not in self.dataCache or self.dataCache[key] is None:
-			return []
+			return None
 		else:
 			return self.dataCache[key]
 
-	def addCacheData(self, req):
+	def addCacheData(self, req: RequestWrapper) -> None:
 		data = NetworkService.decode(req)
 		logger.debug("TreeWrapper.addCacheData: %r, %r", req.skelType, req.queryArgs)
 		if req.queryArgs:  # This was a custom request
@@ -208,7 +209,7 @@ class TreeWrapper(QtCore.QObject):
 					self.dataCache[key].append(skel)
 			self.customQueryFinished.emit(key)
 		cursor = None
-		if "cursor" in data.keys():
+		if "cursor" in data:
 			cursor = data["cursor"]
 		hasChanged = False
 		addedData = list()
@@ -219,9 +220,9 @@ class TreeWrapper(QtCore.QObject):
 				skel["_type"] = req.skelType
 				self.dataCache[skel["key"]] = skel
 				addedData.append(skel)
-				# logger.debug("TreeWrapper.addCacheData: %r, %r", skel["name"], req.skelType)
+			# logger.debug("TreeWrapper.addCacheData: %r, %r", skel["name"], req.skelType)
 			if len(data["skellist"]) == self.batchSize:  # There might be more results
-				if "cursor" in data.keys() and cursor:  # We have a cursor (we can continue this query)
+				if "cursor" in data and cursor:  # We have a cursor (we can continue this query)
 					# Fetch the next batch
 					tmp = {k: v for k, v in req.queryArgs.items()}
 					tmp["node"] = req.node
@@ -244,13 +245,13 @@ class TreeWrapper(QtCore.QObject):
 			self.entitiesAppended.emit(req.node, addedData)
 		self.checkBusyStatus()
 
-	def add(self, node, skelType, **kwargs):
+	def add(self, node: str, skelType: str, **kwargs: Any) -> str:
 		tmp = kwargs.copy()
 		tmp["node"] = node
 		tmp["skelType"] = skelType
 		req = NetworkService.request(
-				"/%s/add/" % self.module, tmp, secure=(len(kwargs) > 0),
-				finishedHandler=self.onSaveResult)
+			"/%s/add/" % self.module, tmp, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
@@ -259,10 +260,10 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(req))
 
-	def edit(self, key, skelType, **kwargs):
+	def edit(self, key: str, skelType: str, **kwargs: Any) -> str:
 		req = NetworkService.request(
-				"/%s/edit/%s/%s" % (self.module, skelType, key), kwargs, secure=(len(kwargs) > 0),
-				finishedHandler=self.onSaveResult)
+			"/%s/edit/%s/%s" % (self.module, skelType, key), kwargs, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, don't show a missing hint
 			req.wasInitial = True
@@ -271,7 +272,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(req))
 
-	def deleteEntities(self, nodes, leafs):
+	def deleteEntities(self, nodes: list, leafs: list) -> None:
 		"""Delete files and/or directories from the server.
 
 		Nodes will be deleted recursively
@@ -293,7 +294,7 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(request))
 
-	def move(self, nodes, leafs, destNode):
+	def move(self, nodes: Sequence[str], leafs: Sequence[str], destNode: str) -> str:
 		"""Moves elements to the given rootNode/path.
 
 		:param nodes: Nodes to be removed
@@ -307,27 +308,27 @@ class TreeWrapper(QtCore.QObject):
 		self._requestGroups.append(request)
 		for node in nodes:
 			request.addQuery(NetworkService.request(
-					"/%s/move" % self.module,
-					{
-						"key": node,
-						"skelType": "node",
-						"destNode": destNode
-					},
-					parent=self, secure=True))
+				"/%s/move" % self.module,
+				{
+					"key": node,
+					"skelType": "node",
+					"destNode": destNode
+				},
+				parent=self, secure=True))
 		for leaf in leafs:
 			request.addQuery(NetworkService.request(
-					"/%s/move" % self.module,
-					{
-						"key": leaf,
-						"skelType": "leaf",
-						"destNode": destNode
-					},
-					parent=self, secure=True))
+				"/%s/move" % self.module,
+				{
+					"key": leaf,
+					"skelType": "leaf",
+					"destNode": destNode
+				},
+				parent=self, secure=True))
 		request.queryType = "move"
 		self.checkBusyStatus()
 		return str(id(request))
 
-	def delayEmitEntriesChanged(self, req=None, *args, **kwargs):
+	def delayEmitEntriesChanged(self, req: RequestWrapper = None, *args: Any, **kwargs: Any) -> None:
 		"""Give GAE a chance to apply recent changes and then force all open views of that module to reload its data
 
 		:param req:
@@ -350,7 +351,7 @@ class TreeWrapper(QtCore.QObject):
 				pass
 		QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
 
-	def onSaveResult(self, req):
+	def onSaveResult(self, req: RequestWrapper = None) -> None:
 		try:
 			data = NetworkService.decode(req)
 		except:  # Something went wrong, call ErrorHandler
@@ -364,13 +365,13 @@ class TreeWrapper(QtCore.QObject):
 			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
 		self.checkBusyStatus()
 
-	def emitEntriesChanged(self, *args, **kwargs):
+	def emitEntriesChanged(self, *args: Any, **kwargs: Any) -> None:
 		logger.debug("TreeWrapper.emitEntriesChanged: %r, %r", args, kwargs)
 		self.clearCache()
 		self.entitiesChanged.emit("")
 		self.checkBusyStatus()
 
-	def resetOnError(self, *args, **kwargs):
+	def resetOnError(self, *args: Any, **kwargs: Any) -> None:
 		"""
 			If one or more requests fail, flush our cache and force
 			all listening widgets to reload.
@@ -378,9 +379,9 @@ class TreeWrapper(QtCore.QObject):
 		self.emitEntriesChanged()
 
 
-def CheckForTreeModul(moduleName, modulList):
-	modulData = modulList[moduleName]
-	if "handler" in modulData.keys() and (modulData["handler"] == "tree" or modulData["handler"].startswith("tree.")):
+def CheckForTreeModul(moduleName: str, moduleList: dict) -> bool:
+	modulData = moduleList[moduleName]
+	if "handler" in modulData and (modulData["handler"] == "tree" or modulData["handler"].startswith("tree.")):
 		return True
 	return False
 

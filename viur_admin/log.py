@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import Any
+
 __author__ = 'Stefan Kögl'
 
 import os.path
@@ -7,7 +9,7 @@ import logging
 logger = None
 
 
-def prepareLogger(level):
+def prepareLogger(level: int) -> None:
 	if level == "info":
 		level = logging.INFO
 	elif level == "debug":
@@ -42,6 +44,6 @@ def prepareLogger(level):
 	logger.addHandler(ch)
 
 
-def getLogger(module):
+def getLogger(module: str) -> Any:
 	global logger
 	return logger.getChild(module)

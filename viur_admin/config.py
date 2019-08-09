@@ -1,42 +1,44 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
-from datetime import datetime
+from typing import Any, Dict, List, Callable, Union
 
-import viur_admin
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
-import os
 import glob
+import json
+import os
+from datetime import datetime
 from hashlib import sha512
 from time import time, sleep
 
 from PyQt5 import QtNetwork
 
+import viur_admin
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 
 class Config(object):
-	def __init__(self):
-		object.__init__(self)
-		self.storagePath = os.path.join(os.path.expanduser("~"), ".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2]))
-		self.payload = list()
+	def __init__(self, *args: Any):
+		super(Config, self).__init__()
+		self.storagePath = os.path.join(os.path.expanduser("~"),
+		                                ".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2]))
+		self.payload: List[Any] = list()
 		self.migrateConfig = False
 		if not os.path.isdir(self.storagePath):
 			self._checkConfigurationMigration()
-		self.accounts = []
-		self.portal = {}
-		self.adminConfig = {"language": "en"}
-		self.serverConfig = {"modules": {}}
+		self.accounts: List[Any] = list()
+		self.portal: Dict[str, Any] = dict()
+		self.adminConfig: Dict[str, Any] = {"language": "en"}
+		self.serverConfig: Dict[str, Any] = {"modules": dict()}
 		self.currentPortalConfigDirectory = None
 		self.currentUsername = None  # Store the current Username/Password sothat
 		self.currentPassword = None  # plugins are able to authenticate against other services
 		self.currentUserEntry = None
-		self.availableLanguages = {}
+		self.availableLanguages: Dict[str, Any] = dict()
 		self.cmdLineOpts = None
 		self.loadConfig()
 
-	def _checkConfigurationMigration(self):
+	def _checkConfigurationMigration(self) -> None:
 		oldDirectoriesRaw = glob.glob("{0}/.viuradmin*".format(os.path.expanduser("~")))
 		if oldDirectoriesRaw:
 			self.migrateConfig = True
@@ -57,7 +59,7 @@ class Config(object):
 			self.payload.append(itemData)
 		logger.debug("old configs: %r", self.payload)
 
-	def xor(self, data, key=None):
+	def xor(self, data: Dict[str, Any], key: str = None) -> bytes:
 		"""This applies at least some *VERY BASIC* obscuring to saved passwords
 
 		DO NOT RELY ON THIS TO GUARD ANYTHING
@@ -69,7 +71,7 @@ class Config(object):
 			res.append(data[i] ^ key[i % klen])
 		return bytes(res)
 
-	def loadConfig(self):
+	def loadConfig(self) -> None:
 		# Load stored accounts
 		logger.debug("Config.loadConfig")
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
@@ -114,7 +116,7 @@ class Config(object):
 		if changed:
 			self.saveConfig()
 
-	def saveConfig(self):
+	def saveConfig(self) -> None:
 		# Save accounts
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		configFileObject = open(configFileName, "w+b")
@@ -130,9 +132,14 @@ class Config(object):
 		configFileObject.flush()
 		configFileObject.close()
 
-	def loadPortalConfig(self, url, withCookies=True, forceReload=True):
+	def loadPortalConfig(
+			self,
+			url: str,
+			withCookies: bool = True,
+			forceReload: bool = True) -> None:
 		from viur_admin import network
-		logger.debug("Config.loadPortalConfig for url:%r, withCookies:%r, forcingReload:%r", url, withCookies, forceReload)
+		logger.debug("Config.loadPortalConfig for url:%r, withCookies:%r, forcingReload:%r", url, withCookies,
+		             forceReload)
 		if self.portal and not forceReload:
 			return
 		self.currentPortalConfigDirectory = os.path.join(self.storagePath, sha512(url.encode("UTF-8")).hexdigest())
@@ -161,7 +168,7 @@ class Config(object):
 			logger.exception(err)
 			self.portal = {"modules": {}}
 
-	def savePortalConfig(self):
+	def savePortalConfig(self) -> None:
 		from viur_admin import network
 		if not self.currentPortalConfigDirectory:
 			return
@@ -174,8 +181,4 @@ class Config(object):
 		configFileObject.close()
 
 
-conf = None
-
-if not conf:
-	conf = Config()
-
+conf = Config()

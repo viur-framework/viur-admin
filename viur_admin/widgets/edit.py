@@ -3,8 +3,9 @@
 import os
 import os.path
 import sys
-
+from enum import Enum
 from hashlib import sha1
+from typing import Any, Dict, List, Tuple
 
 from viur_admin.log import getLogger
 
@@ -14,37 +15,47 @@ from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, getFileNameForUrl, RequestWrapper
 from viur_admin.event import event
-from viur_admin.utils import Overlay, formatString
+from viur_admin.utils import Overlay
 from viur_admin.config import conf
 from viur_admin.ui.editUI import Ui_Edit
 from viur_admin.priorityqueue import editBoneSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 
 
-class EditWidget(QtWidgets.QWidget):
-	appList = "list"
-	appHierarchy = "hierarchy"
-	appTree = "tree"
-	appSingleton = "singleton"
+class ApplicationType(Enum):
+	LIST = 0
+	HIERARCHY = 1
+	TREE = 2
+	SINGLETON = 3
 
-	def __init__(self, module, applicationType, key=None, node=None, skelType=None, clone=False, *args, **kwargs):
+
+class EditWidget(QtWidgets.QWidget):
+
+	def __init__(
+			self,
+			module: str,
+			applicationType: ApplicationType,
+			key: str = None,
+			node: str = None,
+			skelType: str = None,
+			clone: bool = False,
+			*args: Any,
+			**kwargs: Any):
 		"""
 			Initialize a new Edit or Add-Widget for the given module.
 			@param module: Name of the module
 			@type module: String
 			@param applicationType: Defines for what application this Add / Edit should be created. This hides
 			additional complexity introduced by the hierarchy / tree-application
-			@type applicationType: Any of EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree or
-			EditWidget.appSingleton
 			@param key: id/key of the new entry. If None, It's a new entry, if clone it's the key of the entry we will clone
 			@type key: str
-			@param node: If applicationType==EditWidget.appHierarchy, the new entry will be added under this
-			node, if applicationType==EditWidget,appTree the final node is derived from this and the path-parameter.
-			Has no effect if applicationType is not appHierarchy or appTree or if an id have been set.
+			@param node: If applicationType==ApplicationType.HIERARCHY, the new entry will be added under this
+			node, if ApplicationType.TREE the final node is derived from this and the path-parameter.
+			Has no effect if applicationType is not HIERARCHY or TREE or if an id have been set.
 			@type node: str
-			@param clone: If true, it will load the values from the given id, but will save a new entry (i.e. allows
+			@param clone: If true, it will load the values from the given key, but will save a new entry (i.e. allows
 			"cloning" an existing entry)
 			@type clone: bool
 		"""
@@ -54,15 +65,15 @@ class EditWidget(QtWidgets.QWidget):
 		protoWrap = protocolWrapperInstanceSelector.select(module)
 		assert protoWrap is not None
 		self.module = module
+
 		# A Bunch of santy-checks, as there is a great chance to mess around with this widget
-		assert applicationType in [EditWidget.appList, EditWidget.appHierarchy, EditWidget.appTree,
-		                           EditWidget.appSingleton]  # Invalid Application-Type?
-		if applicationType == EditWidget.appHierarchy or applicationType == EditWidget.appTree:
+		if applicationType == ApplicationType.HIERARCHY or applicationType == ApplicationType.TREE:
 			assert key or node  # Need either an id or an node
+
 		if clone:
 			assert key  # Need an id if we should clone an entry
 			assert not applicationType == EditWidget.appSingleton  # We can't clone a singleton
-			if applicationType == EditWidget.appHierarchy or applicationType == EditWidget.appTree:
+			if applicationType == ApplicationType.HIERARCHY or applicationType == ApplicationType.TREE:
 				assert node  # We still need a rootNode for cloning
 		# End santy-checks
 		self.applicationType = applicationType
@@ -70,16 +81,17 @@ class EditWidget(QtWidgets.QWidget):
 		self.node = node
 		self.skelType = skelType
 		self.clone = clone
-		self.bones = {}
+		self.bones: Dict[str, Any] = dict()
 		self.overlay = Overlay(self)
 		self.overlay.inform(self.overlay.BUSY)
+		self.dataCache: Dict[str, Any] = dict()
 		self.closeOnSuccess = False
 		# self._lastData = {}  # Dict of structure and values recived
 		self.editTaskID = None
 		self.reloadData()
 		# Hide Previewbuttons if no PreviewURLs are set
-		# if module in conf.serverConfig["modules"].keys():
-		# 	if not "previewurls" in conf.serverConfig["modules"][self.module].keys() \
+		# if module in conf.serverConfig["modules"]:
+		# 	if not "previewurls" in conf.serverConfig["modules"][self.module] \
 		# 			or not conf.serverConfig["modules"][self.module]["previewurls"]:
 		# 		self.ui.btnPreview.hide()
 		if module == "_tasks":
@@ -102,13 +114,13 @@ class EditWidget(QtWidgets.QWidget):
 		protoWrap.updatingDataAvailable.connect(self.onDataAvailable)
 		self.overlay.inform(self.overlay.BUSY)
 
-	def onBusyStateChanged(self, busy):
+	def onBusyStateChanged(self, busy: str) -> None:
 		if busy:
 			self.overlay.inform(self.overlay.BUSY)
 		else:
 			self.overlay.clear()
 
-	def getBreadCrumb(self):
+	def getBreadCrumb(self) -> Any:
 		if self.clone:
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
 			icon = QtGui.QIcon(":icons/actions/clone.svg")
@@ -120,53 +132,60 @@ class EditWidget(QtWidgets.QWidget):
 			icon = QtGui.QIcon(":icons/actions/add.svg")
 		return descr, icon
 
-	def onBtnCloseReleased(self, *args, **kwargs):
+	def onBtnCloseReleased(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		event.emit("popWidget", self)
 
-	def reloadData(self):
+	def reloadData(self) -> None:
 		# print("--RELOADING--")
 		self.save({})
 		return
 
-	def save(self, data):
+	def save(self, data: dict) -> None:
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		if self.module == "_tasks":
 			self.editTaskID = protoWrap.edit(self.key, **data)
 		# request = NetworkService.request("/%s/execute/%s" % ( self.module, self.id ), data, secure=True,
 		# successHandler=self.onSaveResult )
-		elif self.applicationType == EditWidget.appList:  ## Application: List
+		elif self.applicationType == ApplicationType.LIST:  # Application: List
 			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit(self.key, **data)
 			else:
 				self.editTaskID = protoWrap.add(**data)
-		elif self.applicationType == EditWidget.appHierarchy:  ## Application: Hierarchy
+		elif self.applicationType == ApplicationType.HIERARCHY:  # Application: Hierarchy
 			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit(self.key, **data)
 			else:
 				self.editTaskID = protoWrap.add(self.node, **data)
-		elif self.applicationType == EditWidget.appTree:  ## Application: Tree
+		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
 			if self.key and not self.clone:
 				self.editTaskID = protoWrap.edit(self.key, self.skelType, **data)
 			else:
 				self.editTaskID = protoWrap.add(self.node, self.skelType, **data)
-		elif self.applicationType == EditWidget.appSingleton:  ## Application: Singleton
+		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
 			self.editTaskID = protoWrap.edit(**data)
 		else:
 			raise NotImplementedError()  # Should never reach this
 
-	def onBtnResetReleased(self, *args, **kwargs):
-		res = QtWidgets.QMessageBox.question(self,
-		                                     QtCore.QCoreApplication.translate("EditWidget", "Confirm reset"),
-		                                     QtCore.QCoreApplication.translate("EditWidget",
-		                                                                       "Discard all unsaved changes?"),
-		                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-		                                     QtWidgets.QMessageBox.No
-		                                     )
+	def onBtnResetReleased(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
+		res = QtWidgets.QMessageBox.question(
+			self,
+			QtCore.QCoreApplication.translate("EditWidget", "Confirm reset"),
+			QtCore.QCoreApplication.translate(
+				"EditWidget",
+				"Discard all unsaved changes?"),
+			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+			QtWidgets.QMessageBox.No)
 		if res == QtWidgets.QMessageBox.Yes:
 			self.setData(data=self.dataCache)
 
-	def parseHelpText(self, txt):
+	def parseHelpText(self, txt: str) -> str:
 		"""Parses the HTML-Text txt and returns it with remote Images replaced with their local copies
 
 		@type txt: String
@@ -183,30 +202,36 @@ class EditWidget(QtWidgets.QWidget):
 			endpos = txt.find("\"", idx + 13)
 			url = txt[startpos:endpos]
 			res += txt[: startpos]
-			res += getFileName(url)  # FIXME: BROKEN
+			res += getFileNameForUrl(url)  # FIXME: BROKEN
 			txt = txt[endpos:]
 
-		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlkey.encode("UTF-8")).hexdigest())
-		if not os.path.isfile(fileName):
-			try:
-				data = NetworkService.request(dlkey)
-			except:
-				return (None)
-			open(fileName, "w+b").write(data)
-		return (fileName)
+			fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(url.encode("UTF-8")).hexdigest())
+			logger.debug("parseHelpText - url: %r", url)
+			if not os.path.isfile(fileName):
+				try:
+					data = NetworkService.request(url)
+				except:
+					return None
+				open(fileName, "w+b").write(data)
+		return txt
 
-	def setData(self, request=None, data=None, ignoreMissing=False):
+	def setData(
+			self,
+			request: RequestWrapper = None,
+			data: Dict[str, Any] = None,
+			ignoreMissing: bool = False) -> None:
 		"""
 		Rebuilds the UI according to the skeleton received from server
 
-		@type data: dict
-		@param data: The data received
+		:param request: the request to handle
+		:param data: The data received
+		:param ignoreMissing: if missing data should be reported as errors
 		"""
-		assert (request or data)
+		assert request or data
 		if request:
 			data = NetworkService.decode(request)
 		# Clear the UI
-		while (self.ui.tabWidget.count()):
+		while self.ui.tabWidget.count():
 			item = self.ui.tabWidget.widget(0)
 			if item and item.widget():
 				if "remove" in dir(item.widget()):
@@ -215,18 +240,20 @@ class EditWidget(QtWidgets.QWidget):
 		self.bones = OrderedDict()
 		self.dataCache = data
 		tmpDict = {}
-		tabs = {}
-		tmpTabs = []  # Sort tabs by their description
+		tabs: Dict[str, QtWidgets.QFormLayout] = dict()
+		tmpTabs: List[Tuple[QtWidgets.QScrollArea, str]] = list()  # Sort tabs by their description
 		for key, bone in data["structure"]:
 			tmpDict[key] = bone
 		for key, bone in data["structure"]:
-			if bone["visible"] == False:
+			if not bone["visible"]:
 				continue
-			if "params" in bone.keys() and bone["params"] and "category" in bone["params"].keys():
+
+			if "params" in bone and bone["params"] and "category" in bone["params"]:
 				tabName = bone["params"]["category"]
 			else:
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
-			if tabName not in tabs.keys():
+
+			if tabName not in tabs:
 				scrollArea = QtWidgets.QScrollArea()
 				containerWidget = QtWidgets.QWidget(scrollArea)
 				scrollArea.setWidget(containerWidget)
@@ -236,7 +263,7 @@ class EditWidget(QtWidgets.QWidget):
 				tabs[tabName] = formLayout
 				containerWidget.setLayout(formLayout)
 				containerWidget.setSizePolicy(
-						QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
+					QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
 				tmpTabs.append((scrollArea, tabName))
 				scrollArea.setWidgetResizable(True)
 		tmpTabs.sort(key=lambda x: x[1])
@@ -245,7 +272,7 @@ class EditWidget(QtWidgets.QWidget):
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
 				continue
-			if "params" in bone.keys() and bone["params"] and "category" in bone["params"].keys():
+			if "params" in bone and bone["params"] and "category" in bone["params"]:
 				tabName = bone["params"]["category"]
 			else:
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
@@ -280,7 +307,7 @@ class EditWidget(QtWidgets.QWidget):
 
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
-			if "params" in bone.keys() and isinstance(bone["params"], dict) and "tooltip" in bone["params"].keys():
+			if "params" in bone and isinstance(bone["params"], dict) and "tooltip" in bone["params"]:
 				lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
 			descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
 			descrLbl.setWordWrap(True)
@@ -302,7 +329,7 @@ class EditWidget(QtWidgets.QWidget):
 	# if self.overlay.status==self.overlay.BUSY:
 	#	self.overlay.clear()
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("EditWidget.unserialize - start")
 		try:
 			for bone in self.bones.values():
@@ -314,23 +341,29 @@ class EditWidget(QtWidgets.QWidget):
 			self.ui.btnSaveContinue.setDisabled(True)
 		logger.debug("EditWidget.unserialize - end")
 
-	def onBtnSaveContinueReleased(self, *args, **kwargs):
+	def onBtnSaveContinueReleased(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		self.closeOnSuccess = False
 		# self.overlay.inform( self.overlay.BUSY )
-		res = {}
+		res: Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
 			res.update(bone.serializeForPost())
 		self.save(res)
 
-	def onBtnSaveCloseReleased(self, *args, **kwargs):
+	def onBtnSaveCloseReleased(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		self.closeOnSuccess = True
 		# self.overlay.inform( self.overlay.BUSY )
-		res = {}
+		res: Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
 			res.update(bone.serializeForPost())
 		self.save(res)
 
-	def onSaveSuccess(self, editTaskID):
+	def onSaveSuccess(self, editTaskID: int) -> None:
 		"""
 			Adding/editing an entry just succeeded
 		"""
@@ -343,7 +376,7 @@ class EditWidget(QtWidgets.QWidget):
 		else:
 			self.reloadData()
 
-	def onDataAvailable(self, editTaskID, data, wasInitial):
+	def onDataAvailable(self, editTaskID: int, data: dict, wasInitial: bool) -> None:
 		"""
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
@@ -354,18 +387,21 @@ class EditWidget(QtWidgets.QWidget):
 		if not wasInitial:
 			self.overlay.inform(self.overlay.MISSING, QtCore.QCoreApplication.translate("EditWidget", "Missing data"))
 
-	def onSaveError(self, error):
+	def onSaveError(self, error: Any) -> None:
 		"""
 			Unspecified error on saving/editing
 		"""
-		self.overlay.inform(self.overlay.ERROR,
-		                    QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes"))
+		self.overlay.inform(
+			self.overlay.ERROR,
+			QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes"))
 		return
 
-	def taskAdded(self):
-		QtWidgets.QMessageBox.information(self,
-		                                  QtCore.QCoreApplication.translate("EditWidget", "Task created"),
-		                                  QtCore.QCoreApplication.translate("EditWidget",
-		                                                                    "The task was sucessfully created."),
-		                                  QtCore.QCoreApplication.translate("EditWidget", "Okay"))
+	def taskAdded(self) -> None:
+		QtWidgets.QMessageBox.information(
+			self,
+			QtCore.QCoreApplication.translate("EditWidget", "Task created"),
+			QtCore.QCoreApplication.translate(
+				"EditWidget",
+				"The task was sucessfully created."),
+			QtCore.QCoreApplication.translate("EditWidget", "Okay"))
 		self.parent().deleteLater()
