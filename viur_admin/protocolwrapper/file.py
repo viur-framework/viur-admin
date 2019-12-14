@@ -15,26 +15,9 @@ from viur_admin.protocolwrapper.tree import TreeWrapper
 logger = getLogger(__name__)
 
 
-def x_startswith_dot(x):
-	# print(repr(x))
-	return x.startswith("."),
-
-
-def x_lower(x):
-	# print(repr(x))
-	return x.lower == "thumbs.db"
-
-
-def x_startswith_tilde(x):
-	# print(repr(x))
-	return x.startswith("~") or x.endswith("~")
-
 
 # List of patterns of filenames/directories, which wont get uploaded
 ignorePatterns = [
-	# x_startswith_dot,
-	# x_lower,
-	# x_startswith_tilde,
 	lambda x: x.startswith("."),  # All files/dirs starting with a dot (".")
 	lambda x: x.lower() == "thumbs.db",  # Thumbs.DB,
 	lambda x: x.startswith("~") or x.endswith("~")  # Temp files (ususally starts/ends with ~)
@@ -59,31 +42,49 @@ class FileUploader(QtCore.QObject):
 		super(FileUploader, self).__init__(*args, **kwargs)
 		self.fileName = fileName
 		self.node = node
+		self.targetFileKey = None
 		self.isCanceled = False
 		self.hasFinished = False
 		self.cancel.connect(self.onCanceled)
 		self.bytesTotal = os.path.getsize(self.fileName.encode(sys.getfilesystemencoding()))
 		logger.debug("FileUploader sizeof: %r, %r", fileName, self.bytesTotal)
 		self.bytesDone = 0
-		NetworkService.request("/file/getUploadURL", successHandler=self.startUpload, secure=True)
+		NetworkService.request("/file/getUploadURL", {"node": node}, successHandler=self.startUpload, secure=True)
 
 	def startUpload(self, req):
 		self.uploadProgress.emit(0, 1)
-		url = req.readAll().data().decode("UTF-8")
-		params = {"Filedata": open(self.fileName.encode(sys.getfilesystemencoding()), "rb")}
-		if self.node:
-			params["node"] = self.node
-		req = NetworkService.request(url, params, finishedHandler=self.onFinished)
+		getUploadUrlResponse = NetworkService.decode(req)["values"]
+		params = getUploadUrlResponse["params"]
+		params["file"] = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
+		self.targetFileKey = params["key"][:-16]
+		params["key"] = params["key"].replace("file.dat", os.path.basename(self.fileName))
+		#	params["node"] = self.node
+		req = NetworkService.request(getUploadUrlResponse["url"], params, successHandler=self.onUploadFinished, failureHandler=self.onUploadFailed)
 		req.uploadProgress.connect(self.onProgress)
 
-	def onFinished(self, req):
+	def onUploadFailed(self, req):
+		self.hasFinished = True
+		self.failed.emit()
+
+	def onUploadFinished(self, req):
+		self.bytesDone = self.bytesTotal
+		if self.node and self.targetFileKey:  # We have to append that file into the file-tree
+			req = NetworkService.request("/file/add", {
+				"key": self.targetFileKey,
+				"node": self.node,
+				"skelType": "leaf",
+			}, successHandler=self.onTreeAddFinished, failureHandler=self.onUploadFailed, secure=True)
+		else:
+			self.hasFinished = True
+			self.succeeded.emit({})
+
+	def onTreeAddFinished(self, req):
 		try:
 			data = NetworkService.decode(req)
 		except:
 			self.hasFinished = True
 			self.failed.emit()
 			return
-		self.bytesDone = self.bytesTotal
 		self.hasFinished = True
 		self.succeeded.emit(data)
 

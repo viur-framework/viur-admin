@@ -44,6 +44,10 @@ class Preloader(QtWidgets.QWidget):
 				continue
 			if protoWrap.busy:
 				missing += 1
+		if not total:
+			print("No Modules available!!!")
+			total = 1
+			missing = 0
 		self.ui.progressBar.setValue(10 + int(100.0 * ((total - missing) / total)))
 		if not missing:
 			event.emit("preloadingFinished")
@@ -203,6 +207,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
 		self.menuInfo.setTitle(_translate("MainWindow", "Info"))
 		self.menuErweitert.setTitle(_translate("MainWindow", "Advanced"))
+		self.dockWidget.setFeatures(self.dockWidget.NoDockWidgetFeatures)
+		self.dockWidget.setFloating(False)
+
 		self.dockWidget.setWindowTitle(_translate("MainWindow", "Modules"))
 		self.treeWidget.setSortingEnabled(False)
 		self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Module"))
@@ -609,6 +616,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			item = it.value()
 
 	def searchHandler(self):
+		self.dockWidget.setFloating(False)
 		text = self.moduleSearch.text()
 		if text and len(text) > 2:
 			self._setAllHidden()

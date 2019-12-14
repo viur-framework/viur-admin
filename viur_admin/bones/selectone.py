@@ -87,7 +87,8 @@ class SelectOneEditBone(BoneEditInterface):
 
 
 def CheckForSelectOneBone(moduleName, boneName, skelStucture):
-	return skelStucture[boneName]["type"] == "selectone"
+	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
+	return isSelect and not skelStucture[boneName]["multiple"]
 
 
 # Register this Bone in the global queue

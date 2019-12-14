@@ -16,7 +16,7 @@ from hashlib import sha1
 logger = getLogger(__name__)
 
 class PreviewThread(QtCore.QThread):
-	requestPreviewImage = QtCore.pyqtSignal((str))
+	requestPreviewImage = QtCore.pyqtSignal((str, str))
 	previewImageAvailable = QtCore.pyqtSignal((str, str, QtGui.QIcon))
 
 	def __init__(self):
@@ -24,23 +24,17 @@ class PreviewThread(QtCore.QThread):
 		self.shouldTerminate = False
 		self.taskQueue = []
 		self.requestPreviewImage.connect(self.onRequestPreviewImage)
-		self.threadThread = None
 		self.start(QtCore.QThread.IdlePriority)
-		while self.threadThread is None:
-			self.usleep(5)
-		#self.moveToThread(self.threadThread)
 
 	def run(self):
-		self.threadThread = self.currentThread()
 		while not self.shouldTerminate:
 			try:
-				dlKey = self.taskQueue.pop(0)
-				fileName = os.path.join(conf.currentPortalConfigDirectory,
-				                        sha1(dlKey.encode("UTF-8")).hexdigest())
+				dlKey, dlUrl = self.taskQueue.pop(0)
+				fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
 				wasDownloaded = False
 				if not os.path.isfile(fileName):
 					wasDownloaded = True
-					req = urllib.request.Request(NetworkService.url.replace("/admin","")+"/file/download/"+dlKey)
+					req = urllib.request.Request(NetworkService.url.replace("/admin", "") + dlUrl)
 					try:
 						response = urllib.request.urlopen(req)
 					except:
@@ -62,12 +56,12 @@ class PreviewThread(QtCore.QThread):
 			except IndexError:
 				self.sleep(1)
 
-	def onRequestPreviewImage(self, dlkey):
-		if dlkey not in self.taskQueue:
-			self.taskQueue.append(dlkey)
+	def onRequestPreviewImage(self, dlKey, dlUrl):
+		if dlKey not in [x[0] for x in self.taskQueue]:
+			self.taskQueue.append((dlKey, dlUrl))
 
-	def requestPreview(self, dlkey):
-		self.requestPreviewImage.emit(dlkey)
+	def requestPreview(self, dlKey, dlUrl):
+		self.requestPreviewImage.emit(dlKey, dlUrl)
 
 previewer = PreviewThread()
 
@@ -92,10 +86,9 @@ class FileItem(LeafItem):
 		else:
 			icon = QtGui.QIcon(":icons/filetypes/unknown.png")
 		self.setIcon(icon)
-		if ("metamime" in data.keys() and str(data["metamime"]).lower().startswith("image")) or (
-							extension in ["jpg", "jpeg", "png"] and "servingurl" in data.keys() and data["servingurl"]):
+		if ("mimetype" in data and str(data["mimetype"]).lower().startswith("image")):
 			previewer.previewImageAvailable.connect(self.onPreviewImageAvailable)
-			previewer.requestPreview(data["dlkey"])
+			previewer.requestPreview(data["dlkey"], data["downloadUrl"])
 		self.setText(self.entryData["name"])
 
 	def onPreviewImageAvailable(self, dlkey, fileName, icon):

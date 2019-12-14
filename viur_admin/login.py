@@ -117,6 +117,12 @@ class AuthUserPassword(QtWidgets.QWidget):
 
 	def onViurAuth(self, request):  # We received an response to our auth request
 		logger.debug("Checkpoint: onViurAuth")
+		staticSkey = None
+		for headerNameByteArray, headerValueByteArray in request.request.rawHeaderPairs():
+			headerName = headerNameByteArray.data().decode("LATIN-1").lower()
+			if headerName == "sec-x-viur-staticskey":
+				staticSkey = headerValueByteArray.data().decode("LATIN-1")
+				break
 		try:
 			res = NetworkService.decode(request)
 		except:  # Something went wrong
@@ -125,7 +131,7 @@ class AuthUserPassword(QtWidgets.QWidget):
 			return
 		if str(res).lower() == "okay":
 			print("onViurAuth: okay")
-			securityTokenProvider.reset()  # User-login flushes the session, invalidate all skeys
+			securityTokenProvider.reset(staticSecurityKey = staticSkey)  # User-login flushes the session, invalidate all skeys
 			self.loginSucceeded.emit()
 		elif str(res).startswith("X-VIUR-2FACTOR-"):
 			secondFactor = str(res).replace("X-VIUR-2FACTOR-", "")
@@ -339,7 +345,7 @@ class Login(QtWidgets.QMainWindow):
 			"/user/view/self",
 			secure=True,
 			failSilent=True,
-			successHandler=self.onSkipAuth,
+			successHandler=self.onNotLoggedInYet,  #self.onSkipAuth, FIXME!
 			failureHandler=self.onNotLoggedInYet
 		)
 

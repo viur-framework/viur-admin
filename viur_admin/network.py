@@ -126,23 +126,25 @@ class SecurityTokenProvider(QObject):
 
 	def __init__(self, *args, **kwargs):
 		super(SecurityTokenProvider, self).__init__(*args, **kwargs)
-		self.queue = Queue(5)  # Queue of valid tokens
+		self.queue = Queue(1)  # Queue of valid tokens
 		self.isRequesting = False
+		self.staticSecurityKey = None
 
-	def reset(self):
+	def reset(self, staticSecurityKey = None):
 		"""
 			Flushes the cache and tries to rebuild it
 		"""
 		logger.debug("Reset")
 		while not self.queue.empty():
 			self.queue.get(False)
+		self.staticSecurityKey = staticSecurityKey
 		self.isRequesting = False
 
 	def fetchNext(self):
 		"""
 			Requests a new SKey if theres currently no request pending
 		"""
-		if not self.isRequesting:
+		if not self.isRequesting and self.staticSecurityKey is None:
 			if SecurityTokenProvider.errorCount > 5:  # We got 5 Errors in a row
 				raise RuntimeError("Error-limit exceeded on fetching skey")
 			logger.debug("Fetching new skey")
@@ -198,7 +200,7 @@ class SecurityTokenProvider(QObject):
 				# self.logger.debug("Empty cache! Please wait...")
 				QtCore.QCoreApplication.processEvents()
 		# self.logger.debug("Using skey: %s", skey)
-		return (skey)
+		return skey
 
 
 securityTokenProvider = SecurityTokenProvider()
@@ -214,8 +216,9 @@ class RequestWrapper(QtCore.QObject):
 
 	def __init__(self, request, successHandler=None, failureHandler=None, finishedHandler=None, parent=None, url=None,
 	             failSilent=False):
-		super(QtCore.QObject, self).__init__()
+		super(RequestWrapper, self).__init__()
 		logger.debug("New network request: %s", str(self))
+		self.startTime = time.time()
 		self.request = request
 		self.url = url
 		self.failSilent = failSilent
@@ -249,9 +252,13 @@ class RequestWrapper(QtCore.QObject):
 
 	def onFinished(self):
 		self.hasFinished = True
+		print("Req TIME: %.3f" % (time.time() - self.startTime))
 		if self.request.error() == self.request.NoError:
 			self.requestSucceeded.emit(self)
 		else:
+			print(self.request)
+			print(self.request.error())
+			print(self.request.readAll())
 			try:
 				errorDescr = NetworkErrorDescrs[self.request.error()]
 			except:  # Unknown error
@@ -557,7 +564,13 @@ class NetworkService():
 			else:
 				sys.exit(1)
 		if secure:
-			key = securityTokenProvider.getKey()
+			if securityTokenProvider.staticSecurityKey:
+				key = "staticSessionKey"
+				if not extraHeaders:
+					extraHeaders = {}
+				extraHeaders["Sec-X-ViUR-StaticSKey"] = securityTokenProvider.staticSecurityKey
+			else:
+				key = securityTokenProvider.getKey()
 			if not params:
 				params = {}
 			params["skey"] = key
@@ -568,7 +581,8 @@ class NetworkService():
 		req = QNetworkRequest(reqURL)
 		if extraHeaders:
 			for k, v in extraHeaders.items():
-				req.setRawHeader(k, v)
+				req.setRawHeader(k.encode("LATIN-1", "ignore"), v.encode("LATIN-1", "ignore"))
+		print("REq: %s; Header: %s; Params: %s" % (url, extraHeaders, params))
 		if params:
 			if isinstance(params, dict):
 				multipart, boundary = NetworkService.genReqStr(params)

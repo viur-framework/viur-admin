@@ -60,7 +60,8 @@ class SelectMultiEditBone(BoneEditInterface):
 
 
 def CheckForSelectMultiBone(moduleName, boneName, skelStucture):
-	return skelStucture[boneName]["type"] == "selectmulti" or skelStucture[boneName]["type"].startswith("selectmulti.")
+	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
+	return isSelect and skelStucture[boneName]["multiple"]
 
 
 # Register this Bone in the global queue
