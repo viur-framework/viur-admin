@@ -307,7 +307,7 @@ class StringEditBone(BoneEditInterface):
 			self.layout().addWidget(Tag(tag, editMode))
 
 
-def CheckForStringBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any][str, Any]) -> bool:
+def CheckForStringBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
 	return (skelStucture[boneName]["type"] == "str")
 
 

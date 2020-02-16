@@ -106,7 +106,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return self.fields
 
 	def getModul(self) -> None:
-		return self.modul
+		return self.module
 
 	def reload(self) -> None:
 		self.modelAboutToBeReset.emit()
@@ -579,7 +579,8 @@ class ListWidget(QtWidgets.QWidget):
 			"clone",
 			"preview",
 			"delete",
-			"reload"],
+			"reload",
+		],
 		"list.order": [
 			"add",
 			"edit",

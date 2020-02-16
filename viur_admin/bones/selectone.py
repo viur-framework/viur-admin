@@ -132,7 +132,7 @@ class SelectOneEditBone(BoneEditInterface):
 def CheckForSelectOneBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any][str, Any]) -> bool:
+		skelStucture: Dict[str, Any]) -> bool:
 	return (
 			(skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.") and not
 			skelStucture[boneName].get("multiple", False)) or

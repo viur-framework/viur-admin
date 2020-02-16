@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import List, Any, Dict, Union, Tuple
 
+from PyQt5.QtWidgets import QTreeWidgetItemIterator
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -17,6 +19,7 @@ from viur_admin.startpages.default import DefaultWidget
 from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
 from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler
+import viur_admin.plugins
 
 
 class Preloader(QtWidgets.QWidget):
@@ -622,7 +625,21 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.addHandler(taskHandler)
 		taskHandler.focus()
 
+	def prepareCloseEverywhere(self):
+		stackedWidgetCount = self.stackedWidget.count()
+		for i in range(stackedWidgetCount - 1, -1, -1):
+			widget = self.stackedWidget.widget(i)
+			self.stackedWidget.removeWidget(widget)
+			try:
+				widget.prepareDeletion()
+			except AttributeError:
+				pass
+			widget.deleteLater()
+			del widget
+
 	def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+		logger.debug("closeEvent: %r", event)
+		self.prepareCloseEverywhere()
 		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
 		settings.setValue("geometry", self.saveGeometry())
 		settings.setValue("windowState", self.saveState())

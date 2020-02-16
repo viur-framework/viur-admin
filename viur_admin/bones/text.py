@@ -472,7 +472,7 @@ class TextEditBone(BoneEditInterface):
 def CheckForTextBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any][str, Any]) -> bool:
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"] == "text"
 
 

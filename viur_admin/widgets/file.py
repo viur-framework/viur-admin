@@ -25,12 +25,14 @@ iconByExtension: Dict[str, QtGui.QIcon] = dict()
 
 class PreviewDownloadWorker(QtCore.QObject):
 	previewImageAvailable = QtCore.pyqtSignal(str, str, QtGui.QIcon, QtCore.QSize)
+	previewPixmapAvailable = QtCore.pyqtSignal(str, str, QtGui.QPixmap)
 
-	def __init__(self, cookies: Any, parent: QtWidgets.QWidget = None):
+	def __init__(self, cookies: Any, parent: QtWidgets.QWidget = None, pixmapMode=False):
 		super(PreviewDownloadWorker, self).__init__(parent)
 		self.taskQueue: deque = deque()
 		self.session = Session()
 		self.running = True
+		self.pixmapMode = pixmapMode
 
 		cookieJar = self.session.cookies
 		for cookie in cookies:
@@ -77,9 +79,12 @@ class PreviewDownloadWorker(QtCore.QObject):
 				pixmap = QtGui.QPixmap()
 				pixmap.loadFromData(fileData)
 				if not pixmap.isNull():
-					icon = QtGui.QIcon()
-					icon.addPixmap(pixmap.scaled(104, 104), QtGui.QIcon.Normal, QtGui.QIcon.On)
-					self.previewImageAvailable.emit(dlKey, fileName, icon, pixmap.size())
+					if self.pixmapMode:
+						self.previewPixmapAvailable.emit(dlKey, fileName, pixmap)
+					else:
+						icon = QtGui.QIcon()
+						icon.addPixmap(pixmap.scaled(104, 104), QtGui.QIcon.Normal, QtGui.QIcon.On)
+						self.previewImageAvailable.emit(dlKey, fileName, icon, pixmap.size())
 			except IndexError:
 				time.sleep(1)
 		logger.debug("previewTask finished...")

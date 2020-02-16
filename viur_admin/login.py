@@ -256,7 +256,7 @@ class LoginTask(QtCore.QObject):
 		self.authProvider = self.authenticationProvider[currentPortalConfig["authMethod"]](
 			currentPortalConfig,
 			isWizard=isWizard,
-			parent=self
+			parent=self.parent()
 		)
 		self.authProvider.loginSucceeded.connect(self.onLoginSucceeded)
 		self.authProvider.loginFailed.connect(self.onLoginFailed)
@@ -396,7 +396,7 @@ class Login(QtWidgets.QMainWindow):
 			account = config.conf.accounts[cb.currentIndex().row()]
 			config.conf.accounts.remove(account)
 			config.conf.accounts.insert(0, account)
-		self.loginTask = LoginTask(currentPortalCfg)
+		self.loginTask = LoginTask(currentPortalCfg, parent=self)
 		self.loginTask.loginSucceeded.connect(self.onLoginSucceeded)
 		self.loginTask.loginFailed.connect(self.onLoginFailed)
 		self.overlay.inform(self.overlay.BUSY, QtCore.QCoreApplication.translate("Login", "Login in progress"))

@@ -512,7 +512,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		return self.list.getModul()
 
 
-def CheckForRelationalicBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any][str, Any]) -> bool:
+def CheckForRelationalicBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"].startswith("relational.")
 
 

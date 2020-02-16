@@ -1,9 +1,8 @@
 from time import time
-from typing import Union, Callable, Any, Dict, List
+from typing import Union, Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from viur_admin.login import LoginTask, AuthProviderBase
 from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.log import getLogger
@@ -28,8 +27,8 @@ class AddPortalWizard(QtWidgets.QWizard):
 		self.ui.setupUi(self)
 		self.forcePageFlip = False
 		self.validAuthMethods: Dict[str, Any] = dict()
-		self.loginTask: Union[LoginTask, None] = None
-		self.authProvider: Union[AuthProviderBase, None] = None
+		self.loginTask = None
+		self.authProvider = None
 		if currentPortalConfig:
 			self.editMode = True
 			self.currentPortalConfig = currentPortalConfig
@@ -43,12 +42,14 @@ class AddPortalWizard(QtWidgets.QWizard):
 			self.editMode = False
 
 	def validateCurrentPage(self) -> bool:
+		from viur_admin.login import LoginTask, AuthProviderBase
 		if self.forcePageFlip:
 			self.forcePageFlip = False
 			return True
 
 		currentId = self.currentId()
-		if currentId == 2 and isinstance(self.authProvider, AuthProviderBase) and self.authProvider.advancesAutomatically:
+		if currentId == 2 and isinstance(self.authProvider,
+		                                 AuthProviderBase) and self.authProvider.advancesAutomatically:
 			return False
 		if currentId == 0:
 			if not self.ui.editTitle.text():
@@ -236,7 +237,8 @@ class AccountManager(QtWidgets.QMainWindow):
 		reply = QtWidgets.QMessageBox.question(
 			self.centralWidget(),
 			QtCore.QCoreApplication.translate("AccountManager", "Account deletion"),
-			QtCore.QCoreApplication.translate("AccountManager", 'Really delete the account "%s"?' % item.account["name"]),
+			QtCore.QCoreApplication.translate("AccountManager",
+			                                  'Really delete the account "%s"?' % item.account["name"]),
 			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
 			QtWidgets.QMessageBox.No)
 		if reply == QtWidgets.QMessageBox.No:

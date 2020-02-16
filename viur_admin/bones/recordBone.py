@@ -358,7 +358,7 @@ class RecordEditBone(BoneEditInterface):
 def CheckForRecordBoneBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any][str, Any]) -> bool:
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"] == "record" or skelStucture[boneName]["type"].startswith("record.")
 
 
