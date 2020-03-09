@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'textedit.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -45,3 +44,5 @@ class Ui_textEditWindow(object):
         textEditWindow.setWindowTitle(_translate("textEditWindow", "MainWindow"))
         self.btnSave.setText(_translate("textEditWindow", "Apply"))
 
+
+import viur_admin.ui.icons_rc

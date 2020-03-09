@@ -2,12 +2,11 @@
 
 # Form implementation generated from reading ui file 'fileUploadProgress.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_FileUploadProgress(object):
@@ -56,4 +55,5 @@ class Ui_FileUploadProgress(object):
         self.label_2.setText(_translate("FileUploadProgress", "ProgressFile"))
         self.lblProgress.setText(_translate("FileUploadProgress", "Progress"))
         self.btnCancel.setText(_translate("FileUploadProgress", "Cancel"))
+
 

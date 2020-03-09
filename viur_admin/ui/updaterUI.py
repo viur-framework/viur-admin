@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'updater.ui'
 #
-# Created: Mon Nov 24 18:30:25 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -71,3 +70,5 @@ class Ui_Updater(object):
         self.btnUpdate.setText(_translate("Updater", "Update now"))
         self.btnExit.setText(_translate("Updater", "Exit"))
 
+
+import viur_admin.ui.icons_rc

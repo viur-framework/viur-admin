@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import List, Any, Dict
 
 from viur_admin.log import getLogger
 
@@ -14,8 +15,12 @@ from viur_admin.mainwindow import WidgetHandler
 
 
 class TreeBaseHandler(WidgetHandler):
-	def __init__(self, modul, *args, **kwargs):
-		config = conf.serverConfig["modules"][modul]
+	def __init__(
+			self,
+			module: str,
+			*args: Any,
+			**kwargs: Any):
+		config = conf.serverConfig["modules"][module]
 		if config["icon"]:
 			if config["icon"].lower().startswith("http://") or config["icon"].lower().startswith("https://"):
 				icon = config["icon"]
@@ -23,7 +28,7 @@ class TreeBaseHandler(WidgetHandler):
 				icon = loadIcon(config["icon"])
 		else:
 			icon = loadIcon(":icons/modules/tree.svg")
-		super(TreeBaseHandler, self).__init__(lambda: TreeWidget(modul), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False, *args,
+		super(TreeBaseHandler, self).__init__(lambda: TreeWidget(module), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False, *args,
 		                                      **kwargs)
 		logger.debug("TreeBaseHandler name: %r", config["name"])
 		# self.setText(0, config["name"])
@@ -35,34 +40,36 @@ class TreeHandler(QtCore.QObject):
 	Do not create another instance of this!
 	"""
 
-	def __init__(self, *args, **kwargs):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
 		"""
 		Do not instantiate this!
 		All parameters are passed to QObject.__init__
 		"""
 		QtCore.QObject.__init__(self, *args, **kwargs)
-		event.connectWithPriority('requestModulHandler', self.requestModulHandler, event.lowPriority)
+		event.connectWithPriority('requestModuleHandler', self.requestModuleHandler, event.lowPriority)
 
 	# print("TreeHandler event id", id(event))
 
-	def requestModulHandler(self, queue, modul):
+	def requestModuleHandler(self, queue: RegisterQueue, module: str) -> None:
 		"""Pushes a L{TreeBaseHandler} onto the queue if handled by "tree"
 
 		@type queue: RegisterQueue
-		@type modul: string
-		@param modul: Name of the modul which should be handled
+		@type module: string
+		@param module: Name of the module which should be handled
 		"""
-		config = conf.serverConfig["modules"][modul]
-		if (config["handler"] == "tree" or config["handler"].startswith("tree.")):
-			f = lambda: TreeBaseHandler(modul)
-			queue.registerHandler(3, f)
+		config = conf.serverConfig["modules"][module]
+		if config["handler"] == "tree" or config["handler"].startswith("tree."):
+			queue.registerHandler(3, lambda: TreeBaseHandler(module))
 
-	def openList(self, moduleName, config):
-		if "name" in config.keys():
+	def openList(self, moduleName: str, config: Dict[str, Any]) -> None:
+		if "name" in config:
 			name = config["name"]
 		else:
 			name = "Liste"
-		if "icon" in config.keys():
+		if "icon" in config:
 			icon = config["icon"]
 		else:
 			icon = None

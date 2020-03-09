@@ -1,38 +1,65 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from typing import Any, Dict, List, Callable, Union
+
+import glob
 import json
-from datetime import datetime
-
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
 import os
+from datetime import datetime
 from hashlib import sha512
 from time import time, sleep
 
 from PyQt5 import QtNetwork
 
+import viur_admin
+from viur_admin.log import getLogger
+
+logger = getLogger(__name__)
+
 
 class Config(object):
-	def __init__(self):
-		object.__init__(self)
-		self.storagePath = os.path.join(os.path.expanduser("~"), ".viuradmin")
+	def __init__(self, *args: Any):
+		super(Config, self).__init__()
+		self.storagePath = os.path.join(os.path.expanduser("~"),
+		                                ".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2]))
+		self.payload: List[Any] = list()
+		self.migrateConfig = False
 		if not os.path.isdir(self.storagePath):
-			os.mkdir(self.storagePath)
-		self.accounts = []
-		self.portal = {}
-		self.adminConfig = {}
-		self.serverConfig = {"modules": {}}
+			self._checkConfigurationMigration()
+		self.accounts: List[Any] = list()
+		self.portal: Dict[str, Any] = dict()
+		self.adminConfig: Dict[str, Any] = {"language": "en"}
+		self.serverConfig: Dict[str, Any] = {"modules": dict()}
 		self.currentPortalConfigDirectory = None
 		self.currentUsername = None  # Store the current Username/Password sothat
 		self.currentPassword = None  # plugins are able to authenticate against other services
 		self.currentUserEntry = None
-		self.availableLanguages = {}
+		self.availableLanguages: Dict[str, Any] = dict()
 		self.cmdLineOpts = None
 		self.loadConfig()
 
-	def xor(self, data, key=None):
+	def _checkConfigurationMigration(self) -> None:
+		oldDirectoriesRaw = glob.glob("{0}/.viuradmin*".format(os.path.expanduser("~")))
+		if oldDirectoriesRaw:
+			self.migrateConfig = True
+		for path in oldDirectoriesRaw:
+			itemData = {
+				"lastUsed": 0, #datetime.fromtimestamp(os.stat(os.path.join(self.storagePath, "accounts.dat")).st_mtime),
+				"version": "1.0",
+				"path": path,
+				"displayedName": ""
+			}
+			try:
+				pathParts = path.rsplit("-", 1)
+				list(map(int, pathParts[1].split(".")))
+				itemData["version"] = pathParts[1]
+			except:
+				pass
+			itemData["displayedName"] = "{0}".format(path)
+			self.payload.append(itemData)
+		logger.debug("old configs: %r", self.payload)
+
+	def xor(self, data: Dict[str, Any], key: str = None) -> bytes:
 		"""This applies at least some *VERY BASIC* obscuring to saved passwords
 
 		DO NOT RELY ON THIS TO GUARD ANYTHING
@@ -44,23 +71,37 @@ class Config(object):
 			res.append(data[i] ^ key[i % klen])
 		return bytes(res)
 
-	def loadConfig(self):
+	def loadConfig(self) -> None:
 		# Load stored accounts
+		logger.debug("Config.loadConfig")
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		try:
 			configFileObject = open(configFileName, "rb")
 			configData = self.xor(configFileObject.read()).decode("UTF-8")
-			cfg = json.loads(configData)
-			self.accounts = cfg
-		except:
-			logger.error("Could not load accounts")
+			self.accounts = json.loads(configData)
+			for account in self.accounts:
+				logger.debug("account: %r", account)
+		except Exception as err:
+			logger.exception(err)
 			self.accounts = []
 
 		self.accounts.sort(key=lambda x: x["name"].lower())
+		changed = False
+		# ensure account data conforms to our latest data scheme
+		# TODO:  later also validated via json-schema
 		for account in self.accounts:
-			if "key" not in account.keys():
+			if "key" not in account:
 				account["key"] = int(time())
 				sleep(1)  # Bad hack to ensure key is unique; runs only once at first start
+				changed = True
+			if "url" in account and "server" not in account:
+				account["server"] = account["url"]
+				del account["url"]
+				changed = True
+			if "authMethod" not in account:
+				account["authMethod"] = 'X-VIUR-AUTH-User-Password'
+				changed = True
+
 		# Load rest of the config
 		configFileName = os.path.join(self.storagePath, "config.dat")
 		try:
@@ -72,7 +113,10 @@ class Config(object):
 			logger.exception(err)
 			self.adminConfig = {}
 
-	def saveConfig(self):
+		if changed:
+			self.saveConfig()
+
+	def saveConfig(self) -> None:
 		# Save accounts
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		configFileObject = open(configFileName, "w+b")
@@ -88,9 +132,14 @@ class Config(object):
 		configFileObject.flush()
 		configFileObject.close()
 
-	def loadPortalConfig(self, url, withCookies=False, forceReload=False):
+	def loadPortalConfig(
+			self,
+			url: str,
+			withCookies: bool = True,
+			forceReload: bool = True) -> None:
 		from viur_admin import network
-		logger.debug("loading portal config for url=%r with cookies=%r and forcingReload=%r", url, withCookies, forceReload)
+		logger.debug("Config.loadPortalConfig for url:%r, withCookies:%r, forcingReload:%r", url, withCookies,
+		             forceReload)
 		if self.portal and not forceReload:
 			return
 		self.currentPortalConfigDirectory = os.path.join(self.storagePath, sha512(url.encode("UTF-8")).hexdigest())
@@ -109,16 +158,17 @@ class Config(object):
 				for plainCookie in rawCookies:
 					logger.debug("cookieRaw: %r", plainCookie)
 					restoredCookie = QtNetwork.QNetworkCookie.parseCookies(bytearray(plainCookie, "ascii"))[0]
-					if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
-						logger.debug("restored cookie accepted: %r", restoredCookie)
-						cookies.append(restoredCookie)
+					# TODO: for now we restore all saved cookies
+					# if restoredCookie.expirationDate() > now and plainCookie.startswith("viur"):
+					logger.debug("restored cookie accepted: %r", restoredCookie)
+					cookies.append(restoredCookie)
 				network.nam.cookieJar().setAllCookies(cookies)
 		except Exception as err:
 			logger.error("Could not load Portal Config")
 			logger.exception(err)
 			self.portal = {"modules": {}}
 
-	def savePortalConfig(self):
+	def savePortalConfig(self) -> None:
 		from viur_admin import network
 		if not self.currentPortalConfigDirectory:
 			return

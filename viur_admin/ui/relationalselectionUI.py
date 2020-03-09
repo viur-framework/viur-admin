@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'relationalselection.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -43,7 +42,7 @@ class Ui_relationalSelector(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnCancel = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":icons/actions/cancel_small.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnCancel.setIcon(icon)
         self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout_2.addWidget(self.btnCancel)
@@ -69,3 +68,5 @@ class Ui_relationalSelector(object):
         self.btnCancel.setText(_translate("relationalSelector", "Abort"))
         self.btnSelect.setText(_translate("relationalSelector", "Apply"))
 
+
+import viur_admin.ui.icons_rc

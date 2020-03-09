@@ -2,12 +2,11 @@
 
 # Form implementation generated from reading ui file 'rawtextedit.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_rawTextEditWindow(object):
@@ -30,4 +29,5 @@ class Ui_rawTextEditWindow(object):
         _translate = QtCore.QCoreApplication.translate
         rawTextEditWindow.setWindowTitle(_translate("rawTextEditWindow", "Form"))
         self.btnSave.setText(_translate("rawTextEditWindow", "Apply"))
+
 

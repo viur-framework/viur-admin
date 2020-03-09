@@ -37,12 +37,14 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>icons/actions/add.svg</normaloff>icons/actions/add.svg</iconset>
+       <normaloff>:icons/actions/add.svg</normaloff>:icons/actions/add.svg</iconset>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+   <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

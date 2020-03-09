@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'treeselector.ui'
 #
-# Created: Mon Nov 24 18:30:24 2014
-# by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -59,3 +58,5 @@ class Ui_TreeSelector(object):
         self.lblSelected.setText(_translate("TreeSelector", "Selected:"))
         self.btnSelect.setText(_translate("TreeSelector", "Apply"))
 
+
+import viur_admin.ui.icons_rc

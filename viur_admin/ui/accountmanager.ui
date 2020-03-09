@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>AccountManager</class>
+ <widget class="QMainWindow" name="AccountManager">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -23,11 +23,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Viur Accountmanager</string>
+   <string>Account manager</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/viur_logo.png</normaloff>icons/viur_logo.png</iconset>
+    <normaloff>:/icons/viur_logo.png</normaloff>:/icons/viur_logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -52,7 +52,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/actions/add_white.svg</normaloff>icons/actions/add_white.svg</iconset>
+            <normaloff>:/icons/actions/add.svg</normaloff>:/icons/actions/add.svg</iconset>
           </property>
          </widget>
         </item>
@@ -66,7 +66,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>icons/actions/delete_white.svg</normaloff>icons/actions/delete_white.svg</iconset>
+            <normaloff>:/icons/actions/delete.svg</normaloff>:/icons/actions/delete.svg</iconset>
           </property>
          </widget>
         </item>
@@ -83,7 +83,7 @@
         </property>
         <property name="icon">
          <iconset>
-          <normaloff>icons/actions/accept.svg</normaloff>icons/actions/accept.svg</iconset>
+          <normaloff>:/icons/actions/accept.svg</normaloff>:/icons/actions/accept.svg</iconset>
         </property>
        </widget>
       </item>
@@ -97,12 +97,14 @@
      <x>0</x>
      <y>0</y>
      <width>480</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

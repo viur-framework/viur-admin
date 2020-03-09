@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'csvexport.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_CsvExport(object):
     def setupUi(self, CsvExport):
@@ -101,10 +102,11 @@ class Ui_CsvExport(object):
         self.encodingLabel.setText(_translate("CsvExport", "Encoding"))
         self.encodingComboBox.setItemText(0, _translate("CsvExport", "UTF-8"))
         self.encodingComboBox.setItemText(1, _translate("CsvExport", "ISO-8859-15"))
-        self.seperatorLabel.setText(_translate("CsvExport", "Sprache"))
-        self.filenameLabel.setText(_translate("CsvExport", "Dateiname"))
+        self.seperatorLabel.setText(_translate("CsvExport", "Language"))
+        self.filenameLabel.setText(_translate("CsvExport", "Filename"))
         self.filenameDialogAction.setText(_translate("CsvExport", "..."))
-        self.label.setText(_translate("CsvExport", "Datensätze:"))
+        self.label.setText(_translate("CsvExport", "entries"))
         self.countLabel.setText(_translate("CsvExport", "0"))
+
 
 import viur_admin.ui.icons_rc

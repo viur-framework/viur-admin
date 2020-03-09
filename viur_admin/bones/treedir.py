@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from typing import List, Dict, Any
 
+from PyQt5 import QtWidgets
 
 from viur_admin.log import getLogger
 
@@ -18,14 +20,15 @@ class TreeDirViewBoneDelegate(RelationalViewBoneDelegate):
 class TreeDirBone(RelationalEditBone):
 	skelType = "node"
 
-	def onAddBtnReleased(self, *args, **kwargs):
-		editWidget = TreeDirBoneSelector(self.moduleName, self.boneName, self.multiple, self.toModul,
-		                                 self.selection)
+	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
+		editWidget = TreeDirBoneSelector(
+			self.moduleName, self.boneName, self.multiple, self.toModule,
+			self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
-	def installAutoCompletion(self):
+	def installAutoCompletion(self) -> None:
 		"""
-			Prevent installing an autoCompletion for this modul (not implementet yet)
+			Prevent installing an autoCompletion for this module (not implementet yet)
 		"""
 		if not self.multiple:
 			self.entry.setReadOnly(True)
@@ -39,14 +42,14 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 	displaySourceWidget = TreeWidget
 	displaySelectionWidget = TreeSelectedEntities
 
-	def onSourceItemDoubleClicked(self, item):
+	def onSourceItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
 		return
 
-	def onSourceItemClicked(self, item):
+	def onSourceItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		if not isinstance(item, self.list.getNodeItemClass()):
 			return
 
@@ -58,7 +61,10 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 			self.selection.set([data])
 
 
-def CheckForTreeDirBone(moduleName, boneName, skelStucture):
+def CheckForTreeDirBone(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
 	return skelStucture[boneName]["type"].startswith("treedir.")
 
 

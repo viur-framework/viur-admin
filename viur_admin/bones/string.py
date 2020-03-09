@@ -1,28 +1,23 @@
 # -*- coding: utf-8 -*-
 
-from viur_admin.log import getLogger
-
-logger = getLogger(__name__)
-from html.parser import HTMLParser
+from html import unescape as unescapeHtml
+from typing import Union, List, Dict, Any, Callable
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from viur_admin.bones.bone_interface import BoneEditInterface
 
-from viur_admin.event import event
 from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.config import conf
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.event import event
+from viur_admin.log import getLogger
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
+from viur_admin.ui.extendedStringSearchPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter, ViurTabBar
 
-
-def unescapeHtml(html):
-	if 1:
-		return (HTMLParser.unescape(HTMLParser, html))
-	else:  # except:
-		return (html)
+logger = getLogger(__name__)
 
 
-def chooseLang(value, prefs):
+def chooseLang(value: Dict[str, Any], prefs: List[str]) -> Union[str, dict, None]:
 	"""
 		Tries to select the best language for the current user.
 		Value is the dictionary of lang -> text received from the server,
@@ -34,24 +29,24 @@ def chooseLang(value, prefs):
 		lang = conf.adminConfig["language"]
 	except KeyError:
 		lang = ""
-	if lang in value.keys() and value[lang]:
-		return (value[lang])
+	if lang in value and value[lang]:
+		return value[lang]
 	for lang in prefs:
-		if lang in value.keys():
+		if lang in value:
 			if value[lang]:
 				return value[lang]
 	return None
 
 
 class StringViewBoneDelegate(BaseViewBoneDelegate):
-	def displayText(self, value, locale):
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		# print("StringViewBoneDelegate.displayText:", value, locale)
-		if self.boneName in self.skelStructure.keys():
-			if "multiple" in self.skelStructure[self.boneName].keys():
+		if self.boneName in self.skelStructure:
+			if "multiple" in self.skelStructure[self.boneName]:
 				multiple = self.skelStructure[self.boneName]["multiple"]
 			else:
 				multiple = False
-			if "languages" in self.skelStructure[self.boneName].keys():
+			if "languages" in self.skelStructure[self.boneName]:
 				languages = self.skelStructure[self.boneName]["languages"]
 			else:
 				languages = None
@@ -70,7 +65,12 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 
 
 class Tag(QtWidgets.QWidget):
-	def __init__(self, tag, editMode, *args, **kwargs):
+	def __init__(
+			self,
+			tag: str,
+			editMode: int,
+			*args: Any,
+			**kwargs: Any):
 		# print("Tag.init", tag, editMode)
 		super(Tag, self).__init__(*args, **kwargs)
 		self.setLayout(QtWidgets.QHBoxLayout(self))
@@ -94,20 +94,51 @@ class Tag(QtWidgets.QWidget):
 		self.btnDelete.released.connect(self.deleteLater)
 		self.lblDisplay.mousePressEvent = self.onEdit
 
-	def onEdit(self, *args, **kwargs):
+	def onEdit(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		self.lblDisplay.hide()
 		self.editField.show()
 		self.editField.setFocus()
 
-	def onEditingFinished(self, *args, **kwargs):
+	def onEditingFinished(
+			self,
+			*args: Any,
+			**kwargs: Any) -> None:
 		self.tag = self.editField.text()
 		self.lblDisplay.setText(str(self.tag))
 		self.lblDisplay.show()
 		self.editField.hide()
 
 
+class ExtendedStringFilterPlugin(QtWidgets.QGroupBox):
+	def __init__(self, extension: Dict[str, Any], parent: Union[QtWidgets.QWidget, None] = None):
+		super(ExtendedStringFilterPlugin, self).__init__(parent)
+		self.extension = extension
+		# self.view = view
+		# self.module = module
+		self.ui = Ui_Form()
+		self.ui.setupUi(self)
+		self.setTitle(extension["name"])
+
+	@staticmethod
+	def canHandleExtension(extension: Dict[str, Any]) -> bool:
+		return (isinstance(extension, dict) and "type" in extension and (
+				extension["type"] == "string" or extension["type"].startswith("string.")))
+
+
 class StringEditBone(BoneEditInterface):
-	def __init__(self, moduleName, boneName, readOnly, multiple=False, languages=None, editWidget=None, *args, **kwargs):
+	def __init__(
+			self,
+			moduleName: str,
+			boneName: str,
+			readOnly: bool,
+			multiple: bool = False,
+			languages: List[str] = None,
+			editWidget: Union[QtWidgets.QWidget, None] = None,
+			*args: Any,
+			**kwargs: Any):
 		super(StringEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
 		self.multiple = multiple
 		self.languages = languages
@@ -119,7 +150,7 @@ class StringEditBone(BoneEditInterface):
 			self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 			event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
 			self.layout().addWidget(self.tabWidget)
-			self.langEdits = {}
+			self.langEdits: Dict[str, QtWidgets.QWidget] = dict()
 			for lang in self.languages:
 				container = QtWidgets.QWidget()
 				self.langEdits[lang] = container
@@ -128,9 +159,10 @@ class StringEditBone(BoneEditInterface):
 				btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
 				container.layout().addWidget(btnAdd)
 
-				def genLambda(lang):
-					return lambda *args, **kwargs: self.genTag("", True, lang)
+				def genLambda(lang: str) -> Callable:
+					return lambda *largs, **lkwargs: self.genTag("", True, lang)
 
+				# btnAdd.released.connect(self.onAddButtonClickedLanguage)  # TODO: works here?
 				btnAdd.released.connect(genLambda(lang))  # FIXME: Lambda..
 			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
@@ -153,7 +185,8 @@ class StringEditBone(BoneEditInterface):
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
 			self.layout().addWidget(self.btnAdd)
-			self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
+			self.btnAdd.released.connect(self.onAddButtonClicked)  # TODO: check if this is working
+			# self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
 			self.btnAdd.show()
 		else:  # not languages and not multiple:
 			self.setLayout(QtWidgets.QVBoxLayout(self))
@@ -164,22 +197,39 @@ class StringEditBone(BoneEditInterface):
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		self.installEventFilter(wheelEventFilter)
 
-	@staticmethod
-	def fromSkelStructure(moduleName, boneName, skelStructure, **kwargs):
-		readOnly = "readonly" in skelStructure[boneName].keys() and skelStructure[boneName]["readonly"]
-		if boneName in skelStructure.keys():
-			if "multiple" in skelStructure[boneName].keys():
-				multiple = skelStructure[boneName]["multiple"]
-			else:
-				multiple = False
-			if "languages" in skelStructure[boneName].keys():
-				languages = skelStructure[boneName]["languages"]
-			else:
-				languages = None
-		return (StringEditBone(moduleName, boneName, readOnly, multiple=multiple, languages=languages, **kwargs))
+	@QtCore.pyqtSlot()
+	def onAddButtonClicked(self) -> None:
+		self.genTag("", True)
 
-	def onTabLanguageChanged(self, lang):
-		if lang in self.langEdits.keys():
+	@QtCore.pyqtSlot(str)
+	def onAddButtonClickedLanguage(self, lang: str) -> None:
+		self.genTag("", True, lang)
+
+	@staticmethod
+	def fromSkelStructure(
+			moduleName: str,
+			boneName: str,
+			skelStructure: Dict[str, Any],
+			**kwargs: Any) -> Any:
+		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		multiple = False
+		languages = None
+		if boneName in skelStructure:
+			if "multiple" in skelStructure[boneName]:
+				multiple = skelStructure[boneName]["multiple"]
+
+			if "languages" in skelStructure[boneName]:
+				languages = skelStructure[boneName]["languages"]
+		return StringEditBone(
+			moduleName,
+			boneName,
+			readOnly,
+			multiple=multiple,
+			languages=languages,
+			**kwargs)
+
+	def onTabLanguageChanged(self, lang: str) -> None:
+		if lang in self.langEdits:
 			try:
 				self.tabWidget.blockSignals(True)
 				self.tabWidget.setCurrentWidget(self.langEdits[lang])
@@ -187,7 +237,7 @@ class StringEditBone(BoneEditInterface):
 			except RuntimeError as err:
 				logger.exception(err)
 
-	def onTabCurrentChanged(self, idx):
+	def onTabCurrentChanged(self, idx: int) -> None:
 		wdg = self.tabWidget.widget(idx)
 		for k, v in self.langEdits.items():
 			if v == wdg:
@@ -195,9 +245,9 @@ class StringEditBone(BoneEditInterface):
 				wdg.setFocus()
 				return
 
-	def unserialize(self, data):
+	def unserialize(self, data: Dict[str, Any]) -> None:
 		# print("StringEditBone", data)
-		if self.boneName not in data.keys():
+		if self.boneName not in data:
 			return
 		data = data[self.boneName]
 		if not data:
@@ -205,7 +255,7 @@ class StringEditBone(BoneEditInterface):
 		if self.languages and self.multiple:
 			assert isinstance(data, dict)
 			for lang in self.languages:
-				if lang in data.keys():
+				if lang in data:
 					val = data[lang]
 					if isinstance(val, str):
 						self.genTag(unescapeHtml(val), lang=lang)
@@ -215,7 +265,7 @@ class StringEditBone(BoneEditInterface):
 		elif self.languages and not self.multiple:
 			assert isinstance(data, dict)
 			for lang in self.languages:
-				if lang in data.keys():
+				if lang in data:
 					self.langEdits[lang].setText(unescapeHtml(str(data[lang])))
 		elif not self.languages and self.multiple:
 			if isinstance(data, list):
@@ -228,8 +278,8 @@ class StringEditBone(BoneEditInterface):
 		else:
 			pass
 
-	def serializeForPost(self):
-		res = {}
+	def serializeForPost(self) -> Dict[str, Any]:
+		res: Dict[str, Any] = dict()
 		if self.languages and self.multiple:
 			for lang in self.languages:
 				res["%s.%s" % (self.boneName, lang)] = []
@@ -248,19 +298,20 @@ class StringEditBone(BoneEditInterface):
 					res["%s.%s" % (self.boneName, lang)] = txt
 		elif not self.languages and not self.multiple:
 			res[self.boneName] = self.lineEdit.text()
-		return (res)
+		return res
 
-	def genTag(self, tag, editMode=False, lang=None):
+	def genTag(self, tag: Tag, editMode : bool = False, lang: Union[str, None] = None) -> None:
 		if lang is not None:
 			self.langEdits[lang].layout().addWidget(Tag(tag, editMode))
 		else:
 			self.layout().addWidget(Tag(tag, editMode))
 
 
-def CheckForStringBone(moduleName, boneName, skelStucture):
+def CheckForStringBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
 	return (skelStucture[boneName]["type"] == "str")
 
 
 # Register this Bone in the global queue
 editBoneSelector.insert(2, CheckForStringBone, StringEditBone)
 viewDelegateSelector.insert(2, CheckForStringBone, StringViewBoneDelegate)
+extendedSearchWidgetSelector.insert(1, ExtendedStringFilterPlugin.canHandleExtension, ExtendedStringFilterPlugin)

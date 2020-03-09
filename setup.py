@@ -27,7 +27,7 @@ setup(
 		packages=find_packages(),
 		zip_safe=False,
 		setup_requires=sys.platform == "linux" and ['install_freedesktop'] or [],
-		install_requires=["markdown2", "html2text"],
+		install_requires=["requests"],
 		include_package_data=True,
 		package_data={"": ["locales/*.qm"]},
 		entry_points={

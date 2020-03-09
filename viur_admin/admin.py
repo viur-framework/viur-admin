@@ -2,7 +2,7 @@
 """
 Viur Admin
 
-Copyright 2012-2013 Mausbrand Informationssysteme GmbH
+Copyright 2012-2019 Mausbrand Informationssysteme GmbH
 Licensed under GPL Version 3.
 http://www.gnu.org/licenses/gpl-3.0
 
@@ -10,47 +10,90 @@ http://www.viur.is
 http://docs.viur.is
 """
 
-import sys
 import os
+import sys
 import traceback
-min_version = (3, 2)
+from collections import namedtuple
+from typing import Any
+
+from PyQt5.QtCore import QDirIterator
+
+min_version = (3, 6)
 if sys.version_info < min_version:
 	# no logger objects present here
-	sys.stderr.write("You need python3.2 or newer! - found: %r\n" % sys.version_info)
+	sys.stderr.write("You need python3.6 or newer! - found: %r\n" % sys.version_info)
 	sys.exit(1)
 
-from viur_admin.log import prepareLogger
+# got this from https://fman.io/blog/pyqt-excepthook/ - very helpful
 
+
+def excepthook(exc_type: Any, exc_value: Any, exc_tb: Any) -> None:
+	enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
+	# Note: sys.__excepthook__(...) would not work here.
+	# We need to use print_exception(...):
+	traceback.print_exception(exc_type, exc_value, enriched_tb)
+
+
+def _add_missing_frames(tb: Any) -> Any:
+	result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
+	frame = tb.tb_frame.f_back
+	while frame:
+		result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
+		frame = frame.f_back
+	return result
+
+
+fake_tb = namedtuple(
+	'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
+)
+
+sys.excepthook = excepthook
+
+# end of extended error handling
+
+from viur_admin.log import prepareLogger
 
 from argparse import ArgumentParser
 from viur_admin.bugsnag import Notification
 
 try:
-	from PyQt5 import QtGui, QtCore, QtWebKit, QtWidgets, QtSvg, QtWebKitWidgets
+	from PyQt5 import QtGui, QtCore, QtWidgets, QtSvg, QtWebEngineWidgets
 except ImportError as err:
 	# no logger objects present here
-	sys.stderr.write("QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
+	sys.stderr.write(
+		"QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
 	sys.exit(1)
+
+from PyQt5.QtWidgets import QStyleFactory
+
+styleKeys = QStyleFactory.keys()
+styleKeys.append("Viur")
 
 from pkg_resources import resource_filename, resource_listdir
 
 parser = ArgumentParser()
 parser.add_argument(
-		'-d', '--debug', dest='debug', default='info',
-		help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
-		choices=["debug", "info", "warning", "critical"])
+	'-d', '--debug', dest='debug', default='info',
+	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+	choices=["debug", "info", "warning", "critical"])
 parser.add_argument(
-		'-r', '--report', dest='report', default='auto',
-		help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
-		choices=["yes", "no", "auto"])
+	'--remote-debugging-port', dest='remote_debugging_port', default='8080',
+	help="WebView remote debugging port", type=int)
 parser.add_argument(
-		'-i', '--no-ignore', dest='noignore', default=False,
-		help="Disable automatic exclusion of temporary files on upload", action="store_true")
+	'-r', '--report', dest='report', default='auto',
+	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
+	choices=["yes", "no", "auto"])
+parser.add_argument(
+	'-i', '--no-ignore', dest='noignore', default=False,
+	help="Disable automatic exclusion of temporary files on upload", action="store_true")
 parser.add_argument(
 		'-s', '--show_sortindex', action="store_true",
 		help="Shows Handler sortIndex (helpful for reordering modules)")
-
-
+parser.add_argument(
+	"-t", "--theme", dest="theme", default="Viur",
+	help="Choose your prefered widget style from the list",
+	choices=styleKeys
+)
 
 args = parser.parse_args()
 args = args
@@ -61,26 +104,34 @@ conf.cmdLineOpts = args
 
 app = QtWidgets.QApplication(sys.argv)
 
-
 import viur_admin.protocolwrapper
 import viur_admin.handler
 import viur_admin.widgets
 import viur_admin.bones
 import viur_admin.actions
+import viur_admin.ui.icons_rc
+
+
+# it = QDirIterator(":", QDirIterator.Subdirectories);
+# while it.hasNext():
+# 	print("resource item:", it.next())
 
 
 from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
-import viur_admin.ui.icons_rc
 
-import viur_admin.plugins
-
-app.setStyle("cleanlooks")
-css = QtCore.QFile(":icons/app.css")
-css.open(QtCore.QFile.ReadOnly)
-data = str(css.readAll(), encoding='ascii')
-# data = str(open("app.css", "rb").read(), encoding="ascii")
-app.setStyleSheet(data)
+if args.theme != "Viur":
+	try:
+		QtWidgets.QApplication.setStyle(QStyleFactory.create(args.theme))
+		QtWidgets.QApplication.setPalette(QtWidgets.QApplication.style().standardPalette())
+	except Exception as err:
+		print(err)
+else:
+	css = QtCore.QFile(":icons/app.css")
+	css.open(QtCore.QFile.ReadOnly)
+	data = str(css.readAll(), encoding='ascii')
+	# data = str(open("app.css", "rb").read(), encoding="ascii")
+	app.setStyleSheet(data)
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -92,12 +143,11 @@ else:
 os.chdir(path)
 
 
-def reportError(type, value, tb):
+def reportError(type: Any, value: Any, tb: Any) -> Any:
 	print("*" * 40)
 	print(type)
 	print(value)
 	traceback.print_tb(tb)
-	return
 	if os.path.exists(".git"):
 		releaseStage = "development"
 	else:
@@ -134,7 +184,7 @@ if 0 and (args.report == "auto" and not os.path.exists(
 	sys.excepthook = reportError
 
 
-def main():
+def main() -> None:
 	transFiles = resource_listdir("viur_admin", "locales")
 	for file in transFiles:
 		if file.endswith(".qm"):
@@ -143,9 +193,13 @@ def main():
 
 			translator.load(filename)
 			conf.availableLanguages[file[: -3]] = translator
-			if "language" in conf.adminConfig.keys() and conf.adminConfig["language"] == file[: -3]:
+			if "language" in conf.adminConfig and conf.adminConfig["language"] == file[: -3]:
 				app.installTranslator(translator)
 
+	if conf.migrateConfig:
+		from viur_admin.config_migration_wizard import ConfigMigrationWizard
+		wizard = ConfigMigrationWizard()
+		wizard.exec()
 	mainWindow = MainWindow()
 	l = Login()
 	l.show()

@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="icons">
-        <file>app.css</file>
         <file>ViURadmin.ico</file>
         <file>accounts.svg</file>
         <file>actions/accept.svg</file>
@@ -35,6 +34,7 @@
         <file>actions/headline1.svg</file>
         <file>actions/headline2.svg</file>
         <file>actions/headline3.svg</file>
+        <file>actions/icon-draggable.svg</file>
         <file>actions/import.svg</file>
         <file>actions/link.svg</file>
         <file>actions/list_small.png</file>
@@ -96,7 +96,9 @@
         <file>actions/translate.svg</file>
         <file>actions/undo.svg</file>
         <file>actions/upload.svg</file>
+        <file>app.css</file>
         <file>beta_small.png</file>
+        <file>cacert.pem</file>
         <file>filetypes/3gp.png</file>
         <file>filetypes/7zip.png</file>
         <file>filetypes/aac.png</file>
@@ -124,9 +126,10 @@
         <file>filetypes/html.png</file>
         <file>filetypes/image.svg</file>
         <file>filetypes/jpg.png</file>
-        <file>filetypes/json.svg</file>
         <file>filetypes/jpg.svg</file>
         <file>filetypes/js.png</file>
+        <file>filetypes/json.svg</file>
+        <file>filetypes/mkv.svg</file>
         <file>filetypes/mov.png</file>
         <file>filetypes/mp3.png</file>
         <file>filetypes/mp4.png</file>
@@ -203,11 +206,11 @@
         <file>filetypes/sicherung/xslx.png</file>
         <file>filetypes/sicherung/xvid.png</file>
         <file>filetypes/sicherung/zip.png</file>
-        <file>filetypes/sicherung</file>
         <file>filetypes/svcd.png</file>
         <file>filetypes/swf.png</file>
         <file>filetypes/tar.png</file>
         <file>filetypes/tga.png</file>
+        <file>filetypes/tif.svg</file>
         <file>filetypes/tiff.svg</file>
         <file>filetypes/txt.png</file>
         <file>filetypes/unknown.png</file>
@@ -230,7 +233,6 @@
         <file>is_loading32.gif</file>
         <file>is_uploading.gif</file>
         <file>login.png</file>
-        <file>mdedit.html</file>
         <file>menu/arrow_down.svg</file>
         <file>menu/arrow_left.svg</file>
         <file>menu/arrow_right.svg</file>
@@ -378,7 +380,14 @@
         <file>viur_splash.png</file>
         <file>viur_updater_win.ico</file>
         <file>viur_win.ico</file>
-        <file>cacert.pem</file>
-        <file>mdedit_docs_de.md</file>
+    </qresource>
+    <qresource>
+        <file>htmleditor/htmleditor.min.css</file>
+        <file>htmleditor/htmleditor.min.js</file>
+        <file>htmleditor/index.html</file>
+        <file>htmleditor/jquery-3.3.1.js</file>
+        <file>htmleditor/summernote.eot</file>
+        <file>htmleditor/summernote.ttf</file>
+        <file>htmleditor/summernote.woff</file>
     </qresource>
 </RCC>

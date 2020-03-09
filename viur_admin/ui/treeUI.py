@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'tree.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Tree(object):
     def setupUi(self, Tree):
@@ -57,4 +58,5 @@ class Ui_Tree(object):
         self.editSearch.setPlaceholderText(_translate("Tree", "Search"))
         self.btnSearch.setText(_translate("Tree", "Search"))
 
-# import viur_admin.ui.icons_rc
+
+import viur_admin.ui.icons_rc

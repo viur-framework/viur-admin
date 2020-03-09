@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+from typing import Tuple, Sequence, Dict, List, Any
 
 from PyQt5 import QtCore
 
@@ -16,30 +17,32 @@ class SingletonWrapper(QtCore.QObject):
 	updatingSucceeded = QtCore.pyqtSignal((str,))  # Adding/Editing an entry succeeded
 	updatingFailedError = QtCore.pyqtSignal((str,))  # Adding/Editing an entry failed due to network/server error
 	updatingDataAvailable = QtCore.pyqtSignal((str, dict, bool))  # Adding/Editing an entry failed due to missing fields
-	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this modul and that data is now
-	# avaiable
+	modulStructureAvailable = QtCore.pyqtSignal()  # We fetched the structure for this module and that data is now
+	# available
 	busyStateChanged = QtCore.pyqtSignal((bool,))  # If true, im busy right now
 
-	def __init__(self, module, *args, **kwargs):
+	def __init__(self, module: str, *args: Any, **kwargs: Any):
 		super(SingletonWrapper, self).__init__()
 		self.module = module
 		self.busy = True
-		self.editStructure = None
-		self.viewStructure = None
+		self.editStructure: Dict[str, Any] = None
+		self.viewStructure: Dict[str, Any] = None
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
-		self.deferredTaskQueue = []
-		req = NetworkService.request("/getStructure/%s" % (self.module), successHandler=self.onStructureAvailable)
+		self.deferredTaskQueue: Sequence[Tuple[str, str]] = list()
+		req = NetworkService.request(
+			"/getStructure/%s" % self.module,
+			successHandler=self.onStructureAvailable)
 
-	def checkForOurModul(self, moduleName):
+	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
 
-	def onStructureAvailable(self, req):
+	def onStructureAvailable(self, req: RequestWrapper) -> None:
 		tmp = NetworkService.decode(req)
 		if tmp is None:
 			self.checkBusyStatus()
 			return
 		for stype, structlist in tmp.items():
-			structure = OrderedDict()
+			structure: OrderedDict = OrderedDict()
 			for k, v in structlist:
 				structure[k] = v
 			if stype == "viewSkel":
@@ -49,18 +52,20 @@ class SingletonWrapper(QtCore.QObject):
 		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
-	def edit(self, **kwargs):
-		req = NetworkService.request("/%s/edit" % (self.module), kwargs, secure=(len(kwargs.keys()) > 0),
-		                             finishedHandler=self.onSaveResult)
+	def edit(self, **kwargs: Any) -> str:
+		req = NetworkService.request(
+			"/%s/edit" % self.module,
+			kwargs, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, dont show a missing hint
 			req.wasInitial = True
 		else:
 			req.wasInitial = False
 		self.checkBusyStatus()
-		return (str(id(req)))
+		return str(id(req))
 
-	def onSaveResult(self, req):
+	def onSaveResult(self, req: RequestWrapper) -> None:
 		try:
 			data = NetworkService.decode(req)
 		except:  # Something went wrong, call ErrorHandler
@@ -73,7 +78,7 @@ class SingletonWrapper(QtCore.QObject):
 			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
 		self.checkBusyStatus()
 
-	def checkBusyStatus(self):
+	def checkBusyStatus(self) -> None:
 		busy = False
 		for child in self.children():
 			if isinstance(child, RequestWrapper) or isinstance(child, RequestGroup):
@@ -85,10 +90,10 @@ class SingletonWrapper(QtCore.QObject):
 			self.busyStateChanged.emit(busy)
 
 
-def CheckForSingletonModul(moduleName, modulList):
-	modulData = modulList[moduleName]
-	if "handler" in modulData.keys() and (
-					modulData["handler"] == "singleton" or modulData["handler"].startswith("singleton.")):
+def CheckForSingletonModul(moduleName: str, moduleList: dict) -> bool:
+	modulData = moduleList[moduleName]
+	if "handler" in modulData and (
+			modulData["handler"] == "singleton" or modulData["handler"].startswith("singleton.")):
 		return True
 	return False
 

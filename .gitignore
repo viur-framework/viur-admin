@@ -1,10 +1,11 @@
 *.pyc
-/generate.bat
-/start.bat
-/plugins/hsk
-/ui/*.bak
-/ui/*.bat
-/cacert.pem_
+viur_admin/generate.bat
+viur_admin/start.bat
+viur_admin/plugins/*
+viur_admin/ui/*.bak
+viur_admin/ui/*.bat
+*.csv
+cacert.pem_
 .idea
 *.egg-info
 .eggs/

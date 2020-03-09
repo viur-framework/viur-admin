@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from typing import List, Any, Dict, Union, Tuple
+
+from PyQt5.QtWidgets import QTreeWidgetItemIterator
+
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -9,18 +13,22 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin import startpages
 from viur_admin.config import conf
 from viur_admin.event import event
-from viur_admin.network import NetworkService
+from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from viur_admin.startpages.default import DefaultWidget
 from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
 from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler
+import viur_admin.plugins
 
 
 class Preloader(QtWidgets.QWidget):
 	finished = QtCore.pyqtSignal()
 
-	def __init__(self, *args, **kwargs):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
 		super(Preloader, self).__init__(*args, **kwargs)
 		self.ui = Ui_Preloader()
 		self.ui.setupUi(self)
@@ -30,14 +38,14 @@ class Preloader(QtWidgets.QWidget):
 		self.ui.progressBar.setValue(0)
 		event.connectWithPriority("configDownloaded", self.configDownloaded, event.lowPriority)
 
-	def configDownloaded(self):
+	def configDownloaded(self) -> None:
 		self.ui.progressBar.setValue(10)
 		self.timerID = self.startTimer(100)
 
-	def timerEvent(self, e):
+	def timerEvent(self, e: QtCore.QTimerEvent) -> None:
 		total = 0
 		missing = 0
-		for modul in conf.serverConfig["modules"].keys():
+		for modul in conf.serverConfig["modules"]:
 			total += 1
 			protoWrap = protocolWrapperInstanceSelector.select(modul)
 			if protoWrap is None:
@@ -63,7 +71,10 @@ class MainWindow(QtWidgets.QMainWindow):
 	mannaging the viewport
 	"""
 
-	def __init__(self, *args, **kwargs):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
 		super(MainWindow, self).__init__(*args, **kwargs)
 		self.setObjectName("MainWindow")
 		self.resize(983, 707)
@@ -73,46 +84,53 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.setIconSize(QtCore.QSize(32, 32))
 		self.centralwidget = QtWidgets.QWidget(self)
 		self.centralwidget.setObjectName("centralwidget")
+		self.centralwidget.setContentsMargins(0, 0, 0, 0)
 		self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralwidget)
-		self.horizontalLayout_2.setSpacing(30)
-		self.horizontalLayout_2.setContentsMargins(15, 15, 15, 20)
+		self.horizontalLayout_2.setSpacing(0)
+		self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
 		self.horizontalLayout_2.setObjectName("horizontalLayout_2")
 		self.verticalLayout = QtWidgets.QVBoxLayout()
 		self.verticalLayout.setObjectName("verticalLayout")
+		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 		self._mainWidget = QtWidgets.QWidget(self.centralwidget)
-		sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-		sizePolicy.setHorizontalStretch(0)
-		sizePolicy.setVerticalStretch(0)
-		sizePolicy.setHeightForWidth(self._mainWidget.sizePolicy().hasHeightForWidth())
-		self._mainWidget.setSizePolicy(sizePolicy)
-		self._mainWidget.setMinimumSize(QtCore.QSize(0, 100))
-		self._mainWidget.setMaximumSize(QtCore.QSize(16777215, 100))
-		self._mainWidget.setObjectName("widget")
-		self.horizontalLayout = QtWidgets.QHBoxLayout(self._mainWidget)
-		self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-		self.horizontalLayout.setObjectName("horizontalLayout")
-		self.iconLbl = QtWidgets.QLabel(self._mainWidget)
-		self.iconLbl.setObjectName("iconLbl")
-		self.horizontalLayout.addWidget(self.iconLbl)
-		self.modulLbl = QtWidgets.QLabel(self._mainWidget)
+		self._mainWidgetLayout = QtWidgets.QHBoxLayout(self._mainWidget)
+		self._mainWidgetLayout.setContentsMargins(0, 0, 0, 0)
+		# sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+		# sizePolicy.setHorizontalStretch(0)
+		# sizePolicy.setVerticalStretch(0)
+		# sizePolicy.setHeightForWidth(self._mainWidget.sizePolicy().hasHeightForWidth())
+		# self._mainWidget.setSizePolicy(sizePolicy)
+		# self._mainWidget.setMinimumSize(QtCore.QSize(0, 100))
+		# self._mainWidget.setMaximumSize(QtCore.QSize(16777215, 100))
+		self._mainWidget.setObjectName("mainWindowArea")
+		# self.horizontalLayout = QtWidgets.QHBoxLayout(self._mainWidget)
+		# self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+		# self.horizontalLayout.setObjectName("horizontalLayout")
+		# self.iconLbl = QtWidgets.QLabel(self._mainWidget)
+		# self.iconLbl.setObjectName("iconLbl")
+		# self.horizontalLayout.addWidget(self.iconLbl)
+		# self.modulLbl = QtWidgets.QLabel(self._mainWidget)
 		font = QtGui.QFont()
 		font.setPointSize(22)
-		font.setBold(False)
-		font.setWeight(50)
-		self.modulLbl.setFont(font)
-		self.modulLbl.setObjectName("modulLbl")
-		self.horizontalLayout.addWidget(self.modulLbl)
-		spacerItem = QtWidgets.QSpacerItem(368, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-		self.horizontalLayout.addItem(spacerItem)
+		# font.setBold(False)
+		# font.setWeight(50)
+		# self.modulLbl.setFont(font)
+		# self.modulLbl.setObjectName("modulLbl")
+		# self.horizontalLayout.addWidget(self.modulLbl)
+		# spacerItem = QtWidgets.QSpacerItem(368, 10, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+		# self.horizontalLayout.addItem(spacerItem)
 		self.verticalLayout.addWidget(self._mainWidget)
+		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 		self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
 		self.stackedWidget.setObjectName("stackedWidget")
+		self.stackedWidget.setContentsMargins(0, 0, 0, 0)
 		self.verticalLayout.addWidget(self.stackedWidget)
 		self.horizontalLayout_2.addLayout(self.verticalLayout)
 		self.setCentralWidget(self.centralwidget)
+
 		self.menubar = QtWidgets.QMenuBar(self)
 		self.menubar.setEnabled(True)
-		self.menubar.setGeometry(QtCore.QRect(0, 0, 983, 19))
+		# self.menubar.setGeometry(QtCore.QRect(0, 0, 983, 19))
 		self.menubar.setObjectName("menubar")
 		self.menuInfo = QtWidgets.QMenu(self.menubar)
 		self.menuInfo.setObjectName("menuInfo")
@@ -125,7 +143,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.dockWidget = QtWidgets.QDockWidget(self)
 		self.dockWidget.setWindowFlags(QtCore.Qt.Window)
 		# self.dockWidget.setMinimumSize(QtCore.QSize(300, 35))
-		self.dockWidget.setFloating(False)
 		self.dockWidget.setObjectName("dockWidget")
 		self.treeWidget = QtWidgets.QTreeWidget(self)
 		self.treeWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
@@ -139,6 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# for handler search
 		self.handlerWidget = QtWidgets.QWidget(self)
 		self.handlerLayout = QtWidgets.QVBoxLayout(self.handlerWidget)
+		_translate = QtCore.QCoreApplication.translate
+
 		sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
 		sizePolicy.setHorizontalStretch(0)
 		sizePolicy.setVerticalStretch(0)
@@ -147,19 +166,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.handlerSearchLayout = QtWidgets.QHBoxLayout()
 		self.handlerSearchLayout.setObjectName("handlerSearchLayout")
 		self.moduleSearch = QtWidgets.QLineEdit(self)
-		self.moduleSearch.setMinimumSize(QtCore.QSize(0, 32))
+		# self.moduleSearch.setMinimumSize(QtCore.QSize(0, 32))
 		self.moduleSearch.setObjectName("moduleSearch")
+		self.moduleSearch.textChanged.connect(self.searchHandler)
 		self.handlerSearchLayout.addWidget(self.moduleSearch)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-		self.searchAction = QtWidgets.QAction(icon, "Handler Search", self)
+		self.searchAction = QtWidgets.QAction(icon, _translate("MainWindow", "Handler Search"), self)
 		self.searchAction.setShortcut(QtGui.QKeySequence.Find)
 		self.searchAction.triggered.connect(self.moduleSearch.setFocus)
-		self.searchBTN = QtWidgets.QPushButton(self)
-		self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
-		self.searchBTN.setIcon(icon)
-		self.searchBTN.setObjectName("searchBTN")
-		self.handlerSearchLayout.addWidget(self.searchBTN)
+		# self.searchBTN = QtWidgets.QPushButton(self)
+		# self.searchBTN.setMinimumSize(QtCore.QSize(0, 32))
+		# self.searchBTN.setIcon(icon)
+		# self.searchBTN.setObjectName("searchBTN")
+		# self.handlerSearchLayout.addWidget(self.searchBTN)
 
 		self.handlerLayout.addWidget(self.treeWidget)
 		self.handlerLayout.addLayout(self.handlerSearchLayout)
@@ -201,10 +221,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.menubar.addAction(self.menuErweitert.menuAction())
 		self.menuErweitert.addAction(self.searchAction)
 
-		_translate = QtCore.QCoreApplication.translate
 		self.setWindowTitle(_translate("MainWindow", "ViUR Admin"))
-		self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
-		self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
+		# self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
+		# self.modulLbl.setText(_translate("MainWindow", "TextLabel"))
 		self.menuInfo.setTitle(_translate("MainWindow", "Info"))
 		self.menuErweitert.setTitle(_translate("MainWindow", "Advanced"))
 		self.dockWidget.setFeatures(self.dockWidget.NoDockWidgetFeatures)
@@ -213,13 +232,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.dockWidget.setWindowTitle(_translate("MainWindow", "Modules"))
 		self.treeWidget.setSortingEnabled(False)
 		self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Module"))
-		self.actionQuit.setText(_translate("MainWindow", "Beenden"))
-		self.actionErste_Schritte.setText(_translate("MainWindow", "Erste Schritte"))
+		self.actionQuit.setText(_translate("MainWindow", "Exit"))
+		self.actionErste_Schritte.setText(_translate("MainWindow", "First steps"))
 		self.actionHelp.setText(_translate("MainWindow", "Help"))
 		self.actionAbout.setText(_translate("MainWindow", "About"))
-		self.actionLogout.setText(_translate("MainWindow", "Ausloggen"))
+		self.actionLogout.setText(_translate("MainWindow", "Log out"))
 		self.actionTasks.setText(_translate("MainWindow", "Tasks"))
-		self.moduleSearch.setPlaceholderText(_translate("List", "Search"))
+		self.moduleSearch.setPlaceholderText(_translate("MainWindow", "Handler Search"))
 		self.stackedWidget.setCurrentIndex(-1)
 		QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -246,7 +265,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
 		self.actionTasks.triggered.connect(self.onActionTasksTriggered)
 		self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
-		self.searchBTN.released.connect(self.searchHandler)
+		# self.searchBTN.released.connect(self.searchHandler)
 		self.moduleSearch.returnPressed.connect(self.searchHandler)
 		self.currentWidget = None
 		self.helpBrowser = None
@@ -260,7 +279,10 @@ class MainWindow(QtWidgets.QMainWindow):
 			# print(err)
 			pass
 
-	def loadConfig(self, request=None):
+		if self.dockWidget.isFloating():
+			self.dockWidget.hide()
+
+	def loadConfig(self, request: RequestWrapper = None) -> None:
 		# self.show()
 		self.preloader = Preloader()
 		self.preloader.show()
@@ -268,14 +290,16 @@ class MainWindow(QtWidgets.QMainWindow):
 		# logger.debug("Checkpoint: loadConfig")
 		NetworkService.request("/user/view/self", successHandler=self.onLoadUser, failureHandler=self.onError)
 		NetworkService.request("/config", successHandler=self.onLoadConfig, failureHandler=self.onError)
+		if self.dockWidget.isFloating():
+			self.dockWidget.show()
 
-	def onPreloaderFinished(self):
+	def onPreloaderFinished(self) -> None:
 		self.preloader.deleteLater()
 		self.preloader = None
 		self.show()
 
-	def onLoadConfig(self, request):
-		# logger.debug("Checkpoint: onLoadConfig")
+	def onLoadConfig(self, request: RequestWrapper) -> None:
+		logger.debug("Checkpoint: onLoadConfig")
 		try:
 			conf.serverConfig = NetworkService.decode(request)
 		except:
@@ -285,10 +309,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		if conf.currentUserEntry is not None:
 			self.setup()
 
-	def onLoadUser(self, request):
+	def onLoadUser(self, request: RequestWrapper) -> None:
 		try:
 			conf.currentUserEntry = NetworkService.decode(request)["values"]
-			logger.debug("userConfigLoaded: %r", conf.currentUserEntry)
+			logger.debug(repr(conf.currentUserEntry))
 		except Exception as err:
 			logger.exception(err)
 			self.onError(msg="Unable to parse user entry!")
@@ -299,7 +323,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	# event.emit( "loginSucceeded()" )
 
-	def onError(self, msg=""):
+	def onError(self, msg: str = "") -> None:
 		"""
 			Called if something went wrong while loading or parsing the
 			portalconfig requested from the server.
@@ -307,14 +331,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		logger.error("OnError msg: %r", msg)
 		QtCore.QTimer.singleShot(3000, self.resetLoginWindow)
 
-	def handlerForWidget(self, wdg=None):
-		def findRekursive(wdg, node):
+	def handlerForWidget(self, wdg: QtWidgets.QWidget = None) -> Union[QtWidgets.QTreeWidgetItem, None]:
+		def findRekursive(currentWidget: QtWidgets.QWidget, node: Union[WidgetHandler, GroupHandler]) -> Union[WidgetHandler, GroupHandler, QtWidgets.QWidget, None]:
 			if "widgets" in dir(node) and isinstance(node.widgets, list):
 				for w in node.widgets:
-					if w == wdg:
+					if w == currentWidget:
 						return node
 			for x in range(0, node.childCount()):
-				res = findRekursive(wdg, node.child(x))
+				res = findRekursive(currentWidget, node.child(x))
 				if res is not None:
 					return res
 			return None
@@ -325,7 +349,10 @@ class MainWindow(QtWidgets.QMainWindow):
 				return None
 		return findRekursive(wdg, self.treeWidget.invisibleRootItem())
 
-	def addHandler(self, handler, parent=None):
+	def addHandler(
+			self,
+			handler: Union[WidgetHandler, GroupHandler],
+			parent: QtWidgets.QTreeWidgetItem = None) -> None:
 		"""
 		Adds an handler as child of parent.
 		If parent is None, handler is added to the toplevel.
@@ -340,9 +367,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.treeWidget.expandItem(parent)
 		else:
 			self.treeWidget.addTopLevelItem(handler)
-		self.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
 
-	def focusHandler(self, handler):
+	def focusHandler(self, handler: Any) -> None:
 		"""
 		Ensures that the widget gains focus.
 
@@ -359,7 +385,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.stackedWidget.setCurrentWidget(handler.widgets[-1])
 		self.rebuildBreadCrumbs()
 
-	def stackHandler(self, handler):
+	def stackHandler(self, handler: Any) -> None:
 		"""
 			Stacks a new handler to the current handler
 
@@ -371,7 +397,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		currentHandler.addChild(handler)
 		handler.focus()
 
-	def stackWidget(self, widget):
+	def stackWidget(self, widget: Any) -> None:
 		"""
 			Stacks a new widget to the current handler.
 			This widget doesnt have its own handler, so it wont appear in the QTreeWidget.
@@ -386,23 +412,23 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.addWidget(widget)
 		currentHandler.focus()
 
-	def addWidget(self, widget):
+	def addWidget(self, widget: Any) -> None:
 		assert self.stackedWidget.indexOf(widget) == -1
 		event.emit("addWidget", widget)
 		self.stackedWidget.addWidget(widget)
 
-	def removeWidget(self, widget):
+	def removeWidget(self, widget: Any) -> None:
+		logger.debug("removeWidget: %r", widget)
 		assert self.stackedWidget.indexOf(widget) != -1
 		self.stackedWidget.removeWidget(widget)
 		try:
 			widget.prepareDeletion()
 		except AttributeError:
 			pass
-		# widget.setParent( None )
 		widget.deleteLater()
 		del widget
 
-	def popWidget(self, widget):
+	def popWidget(self, widget: Any) -> None:
 		"""
 			Removes a widget from the currentHandler's stack.
 			The widget looses focus and gets detached from that handler.
@@ -411,14 +437,16 @@ class MainWindow(QtWidgets.QMainWindow):
 			@type widget: QWidget
 			@param widget: Widget to remove. Must be on the current handler's stack.
 		"""
+		logger.debug("popWidget: %r", widget)
 		currentHandler = self.handlerForWidget(widget)
 		if currentHandler is None:
 			logger.error("Stale widget: " + str(widget))
-			raise
+			# TODO: why the former raise here without Exception instance?
+			raise Exception("stale Widget: %r", widget)
 		currentHandler.close()
 		self.rebuildBreadCrumbs()
 
-	def unfocusHandler(self, handler):
+	def unfocusHandler(self, handler: Any) -> None:
 		"""
 			Moves the focus to the next handler on our stack (if any).
 
@@ -429,13 +457,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		if currentHandler:
 			self.focusHandler(currentHandler)
 
-	def removeHandler(self, handler):
+	def removeHandler(self, handler: Any) -> None:
 		"""
 			Removes a handler added by addHandler or stackHandler.
 			@type handler: EntryHandler
 		"""
 
-		def removeRecursive(handler, parent):
+		logger.debug("MainWindow.removeHandler: %r", handler)
+
+		def removeRecursive(handler: Any, parent: Any) -> Any:
 			for subIdx in range(0, parent.childCount()):
 				child = parent.child(subIdx)
 				if id(child) == id(handler):
@@ -456,42 +486,43 @@ class MainWindow(QtWidgets.QMainWindow):
 				self.focusHandler(currentHandler)
 		self.rebuildBreadCrumbs()
 
-	def onTreeWidgetItemClicked(self, item, column):
+	def onTreeWidgetItemClicked(self, item: Any, column: Any) -> None:
+		logger.debug("item, column: %r, %r", item, column)
 		if column == 0:
 			item.clicked()
 		elif column == 1 and not isinstance(item, GroupHandler):
 			# Close only if we don't clicked on column 2 of a group
 			item.close()
 
-	def rebuildBreadCrumbs(self):
+	def rebuildBreadCrumbs(self) -> None:
 		"""
 			Rebuilds the breadcrump-path.
 			Currently, it displays the current module, its icon and
 			stacks the path as children to its handler
 		"""
-		self.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
-		self.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(64, 64, QtCore.Qt.IgnoreAspectRatio))
+		# self.modulLbl.setText(QtCore.QCoreApplication.translate("MainWindow", "Welcome to ViUR!"))
+		# self.iconLbl.setPixmap(QtGui.QPixmap(":icons/viur_logo.png").scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
 		currentHandler = self.handlerForWidget()
 		if currentHandler:
 			try:
 				txt, icon = currentHandler.getBreadCrumb()
 			except:
 				return
-			self.modulLbl.setText(txt[: 35])
-			if icon:
-				sizes = icon.availableSizes()
-				if len(sizes):
-					pixmap = icon.pixmap(sizes[0])
-					self.iconLbl.setPixmap(pixmap.scaled(64, 64, QtCore.Qt.IgnoreAspectRatio))
+			# self.modulLbl.setText(txt[:35])
+			# if icon:
+			# 	sizes = icon.availableSizes()
+			# 	if len(sizes):
+			# 		pixmap = icon.pixmap(sizes[0])
+			# 		self.iconLbl.setPixmap(pixmap.scaled(32, 32, QtCore.Qt.IgnoreAspectRatio))
 
-	def resetLoginWindow(self):
+	def resetLoginWindow(self) -> None:
 		"""
 		Emits QtCore.SIGNAL('resetLoginWindow()')
 		"""
 		event.emit('resetLoginWindow')
 		self.hide()
 
-	def setup(self):
+	def setup(self) -> None:
 		"""
 		Initializes everything based on the config received from the server.
 		It
@@ -502,11 +533,11 @@ class MainWindow(QtWidgets.QMainWindow):
 			- Finally emits modulHandlerInitialized and mainWindowInitialized
 		"""
 		if not self.startPage:
-			if "configuration" in conf.serverConfig.keys():
-				if "analyticsKey" in conf.serverConfig["configuration"].keys():
+			if "configuration" in conf.serverConfig:
+				if "analyticsKey" in conf.serverConfig["configuration"]:
 					logger.debug("setting analytics widget as startpage")
 					self.startPage = startpages.AnalytisWidget()
-				elif "startPage" in conf.serverConfig["configuration"].keys():
+				elif "startPage" in conf.serverConfig["configuration"]:
 					logger.debug("retrieving startpage from server")
 					self.startPage = startpages.WebWidget()
 			if not self.startPage:  # Still not
@@ -517,10 +548,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		data = conf.serverConfig
 		handlers = []
 		groupHandlers = {}
-		by_group = dict()
-		if "configuration" in data.keys() and "moduleGroups" in data["configuration"].keys():
+		by_group: Dict[str, List[Any]] = dict()
+		if "configuration" in data and "moduleGroups" in data["configuration"]:
 			for group in data["configuration"]["moduleGroups"]:
-				if not all([x in group.keys() for x in
+				if not all([x in group for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
 				group_handler = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
@@ -531,7 +562,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		if "modules" not in conf.portal:
 			conf.portal["modules"] = {}
 
-		def sortItemHandlers(pair):
+		def sortItemHandlers(pair: Tuple[Any, Any]) -> Any:
 			return pair[1].sortIndex
 
 		groupHandlers = OrderedDict(sorted(groupHandlers.items(), key=sortItemHandlers))
@@ -542,11 +573,11 @@ class MainWindow(QtWidgets.QMainWindow):
 			if "root" not in access and not "{0}-view".format(module) in access:
 				continue
 			queue = RegisterQueue()
-			event.emit('requestModulHandler', queue, module)
+			event.emit('requestModuleHandler', queue, module)
 			handler = queue.getBest()()
-			if "name" in cfg.keys() and groupHandlers:
+			if "name" in cfg and groupHandlers:
 				parent = None
-				for groupName in groupHandlers.keys():
+				for groupName in groupHandlers:
 					if cfg["name"].startswith(groupName):
 						parent = groupHandlers[groupName]
 						break
@@ -563,7 +594,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				wrapperClass(module)
 			event.emit('modulHandlerInitialized', module)
 
-		def subhandlerSorter(x):
+		def subhandlerSorter(x: Any) -> int:
 			return x.sortIndex
 
 		emptyGroups = list()
@@ -585,15 +616,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		event.emit('mainWindowInitialized')
 		QtWidgets.QApplication.restoreOverrideCursor()
 
-	def onActionAboutTriggered(self, checked=None):
+	def onActionAboutTriggered(self, checked: bool = None) -> None:
 		if checked is None:
 			return
 		showAbout(self)
 
-	def onActionHelpTriggered(self):
+	def onActionHelpTriggered(self) -> None:
 		QtGui.QDesktopServices.openUrl(QtCore.QUrl("http://www.viur.is/site/Admin-Dokumentation"))
 
-	def onActionTasksTriggered(self, checked=None):
+	def onActionTasksTriggered(self, checked: bool = None) -> None:
 		"""
 			Creates a WidgetHandler for the TaskView and displayed the taskHandler
 		"""
@@ -601,13 +632,27 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.addHandler(taskHandler)
 		taskHandler.focus()
 
-	def closeEvent(self, event):
+	def prepareCloseEverywhere(self):
+		stackedWidgetCount = self.stackedWidget.count()
+		for i in range(stackedWidgetCount - 1, -1, -1):
+			widget = self.stackedWidget.widget(i)
+			self.stackedWidget.removeWidget(widget)
+			try:
+				widget.prepareDeletion()
+			except AttributeError:
+				pass
+			widget.deleteLater()
+			del widget
+
+	def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+		logger.debug("closeEvent: %r", event)
+		self.prepareCloseEverywhere()
 		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
 		settings.setValue("geometry", self.saveGeometry())
 		settings.setValue("windowState", self.saveState())
 		super(MainWindow, self).closeEvent(event)
 
-	def _setAllHidden(self, hidden=True):
+	def _setAllHidden(self, hidden: bool = True) -> None:
 		it = QtWidgets.QTreeWidgetItemIterator(self.treeWidget)
 		item = it.value()
 		while item:
@@ -615,7 +660,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			it += 1
 			item = it.value()
 
-	def searchHandler(self):
+
+	def searchHandler(self) -> None:
 		self.dockWidget.setFloating(False)
 		text = self.moduleSearch.text()
 		if text and len(text) > 2:

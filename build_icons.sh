@@ -1,7 +1,16 @@
 #!/bin/bash
 
 pushd viur_admin
-cp cacert.pem app.css html/mdedit.html html/mdedit_docs_de.md icons.qrc icons
+cp -r cacert.pem app.css icons.qrc htmleditor icons
 pushd icons
+# for now generate a missing file until we have updated the icons submodule
+convert filetypes/jpg.svg filetypes/jpg.png
 pyrcc5 icons.qrc -o ../ui/icons_rc.py
-rm cacert.pem app.css mdedit.html mdedit_docs_de.md icons.qrc
+cp ../ui/icons_rc.py .
+rm -r cacert.pem app.css icons.qrc htmleditor
+popd
+pushd ui
+for uiFile in *.ui; do pyuic5 "${uiFile}" -o "${uiFile%.ui}UI.py"; done
+find . -name '*UI.py' -exec sed -i 's/import icons_rc/import viur_admin.ui.icons_rc/g' {} \;
+popd
+popd

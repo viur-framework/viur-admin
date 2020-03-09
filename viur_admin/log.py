@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import Any
+
 __author__ = 'Stefan Kögl'
 
 import os.path
@@ -7,7 +9,7 @@ import logging
 logger = None
 
 
-def prepareLogger(level):
+def prepareLogger(level: int) -> None:
 	if level == "info":
 		level = logging.INFO
 	elif level == "debug":
@@ -34,7 +36,7 @@ def prepareLogger(level):
 	ch = logging.StreamHandler()
 	ch.setLevel(level)
 	# create formatter and add it to the handlers
-	formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+	formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s:%(lineno)d - %(message)s')
 	fh.setFormatter(formatter)
 	ch.setFormatter(formatter)
 	# add the handlers to the logger
@@ -42,6 +44,6 @@ def prepareLogger(level):
 	logger.addHandler(ch)
 
 
-def getLogger(module):
+def getLogger(module: str) -> Any:
 	global logger
 	return logger.getChild(module)

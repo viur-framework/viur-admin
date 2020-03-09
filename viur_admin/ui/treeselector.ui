@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/windowicon.png</normaloff>icons/windowicon.png</iconset>
+    <normaloff>:icons/windowicon.png</normaloff>:icons/windowicon.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="margin">
@@ -63,7 +63,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>icons/actions/relationalselect.png</normaloff>icons/actions/relationalselect.png</iconset>
+           <normaloff>:icons/actions/relationalselect.png</normaloff>:icons/actions/relationalselect.png</iconset>
          </property>
         </widget>
        </item>
@@ -73,6 +73,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+   <resources>
+  <include location="../icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

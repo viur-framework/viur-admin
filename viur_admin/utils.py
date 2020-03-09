@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Callable, Any, Dict, List, Tuple, Union
 
 from viur_admin.log import getLogger
 
@@ -7,8 +8,7 @@ logger = getLogger(__name__)
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
-from viur_admin.network import NetworkService, RemoteFile
-
+from viur_admin.network import NetworkService, RemoteFile, RequestWrapper
 
 
 class RegisterQueue:
@@ -16,11 +16,11 @@ class RegisterQueue:
 	Propagates through the QT-Eventqueue and collects all Handlers able to scope with the current request
 	"""
 
-	def __init__(self):
+	def __init__(self, *args: Any, **kwargs: Any):
 		super(RegisterQueue, self).__init__()
-		self.queue = {}
+		self.queue: Dict[int, List[Callable]] = dict()
 
-	def registerHandler(self, priority, handler):
+	def registerHandler(self, priority: int, handler: Callable) -> None:
 		"""
 		Registers an Object with given priority
 
@@ -28,28 +28,28 @@ class RegisterQueue:
 		@param priority: Priority of the handler. The higest one wins.
 		@type handler: Object
 		"""
-		if priority not in self.queue.keys():
+		if priority not in self.queue:
 			self.queue[priority] = []
 		self.queue[priority].append(handler)
 
-	def getBest(self):
+	def getBest(self) -> Callable:
 		"""
 		Returns the handler with the higest priority.
 		If 2 or more handlers claim the same higest priority, the first one is returned
 
 		@return: Object
 		"""
-		prios = [x for x in self.queue.keys()]
+		prios = [x for x in self.queue]
 		prios.sort()
 		return self.queue[prios[-1]][0]
 
-	def getAll(self):
+	def getAll(self) -> List[Callable]:
 		"""
 		Returns all handlers in ascending order
 
 		@return: [Object]
 		"""
-		prios = [x for x in self.queue.keys()]
+		prios = [x for x in self.queue]
 		prios.sort()
 		res = []
 		for p in prios:
@@ -73,7 +73,7 @@ class Overlay(QtWidgets.QWidget):
 	WARNING_DURATION = 30
 	ERROR_DURATION = 30
 
-	def __init__(self, parent=None):
+	def __init__(self, parent: QtWidgets.QWidget=None):
 		"""
 		@type parent: QWidget
 		"""
@@ -93,7 +93,7 @@ class Overlay(QtWidgets.QWidget):
 		self.resize(QtCore.QSize(1, 1))
 		self.hide()
 
-	def paintEvent(self, event):
+	def paintEvent(self, event: QtGui.QPaintEvent) -> None:
 		"""
 		Draws the message/busy overlay
 
@@ -174,7 +174,7 @@ class Overlay(QtWidgets.QWidget):
 				self.clear(True)
 		painter.end()
 
-	def start(self):
+	def start(self) -> None:
 		"""
 		Starts displaying.
 		Dont call this directly
@@ -189,7 +189,7 @@ class Overlay(QtWidgets.QWidget):
 		self.timer = self.startTimer(100)
 		self.show()
 
-	def clear(self, force=False):
+	def clear(self, force: bool = False) -> None:
 		"""
 		Clears the overlay.
 		Its parent becomes accessible again
@@ -208,7 +208,7 @@ class Overlay(QtWidgets.QWidget):
 		self.parent().setEnabled(True)
 		self.hide()
 
-	def inform(self, status, message=""):
+	def inform(self, status: str, message: str = "") -> None:
 		"""
 		Draws a informal message over its parent-widget's area.
 		If type is not Overlay.BUSY, it clears automaticaly after a few seconds.
@@ -217,6 +217,7 @@ class Overlay(QtWidgets.QWidget):
 		@param status: Type of the message displayed. Sets the icon and the display duration.
 		@type message: string
 		@param message: Text to display
+		TODO: change status into real enum
 		"""
 		assert (status in [self.BUSY, self.MISSING, self.ERROR, self.SUCCESS])
 		self.status = status
@@ -225,7 +226,7 @@ class Overlay(QtWidgets.QWidget):
 			self.counter = 0
 		self.start()
 
-	def timerEvent(self, event):
+	def timerEvent(self, event: QtCore.QTimerEvent) -> None:
 		"""
 		Draws the next frame in the animation.
 
@@ -246,24 +247,28 @@ class Overlay(QtWidgets.QWidget):
 class WidgetHandler(QtWidgets.QTreeWidgetItem):
 	"""
 	Holds the items displayed top-left within the admin.
-	Each of these provides access to one modul and holds the references
+	Each of these provides access to one module and holds the references
 	to the widgets shown inside L{MainWindow.ui.stackedWidget}
 	"""
 	mainWindow = None
 
-	def __init__(self, widgetGenerator, descr="", icon=None, vanishOnClose=True, mainWindow=None, sortIndex=0, *args,
-	             **kwargs):
-		"""
-		@type modul: string
-		@param modul: Name of the modul handled
-		"""
+	def __init__(
+			self,
+			widgetGenerator: Callable,
+			descr: str = "",
+			icon: QtGui.QIcon = None,
+			vanishOnClose: bool = True,
+			mainWindow: QtWidgets.QWidget = None,
+			sortIndex: int = 0,
+			*args: Any,
+			**kwargs: Any):
 		super(WidgetHandler, self).__init__(*args, **kwargs)
 		if mainWindow:
 			self.mainWindow = mainWindow
 		if self.mainWindow is None:
 			raise UnboundLocalError(
 				"You either have to create the mainwindow before using this class or specifiy an replacement.")
-		self.widgets = []
+		self.widgets: List[QtWidgets.QWidget] = list()
 		self.widgetGenerator = widgetGenerator
 		try:
 			prefix, descr = descr.split(": ", 1)
@@ -287,13 +292,13 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
 		self.vanishOnClose = vanishOnClose
 
-	def loadIconFromRequest(self, request):
+	def loadIconFromRequest(self, request: RequestWrapper) -> None:
 		filename = request.getFileName()
 		icon = QtGui.QIcon(filename)
 		logger.debug("WidgetHandler.loadIconFromRequest: %r, %r", filename, icon)
 		self.setIcon(0, icon)
 
-	def focus(self):
+	def focus(self) -> None:
 		"""
 		If this handler holds at least one widget, the last widget
 		on the stack gains focus
@@ -307,7 +312,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 
 	# event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
 
-	def close(self):
+	def close(self) -> None:
 		"""
 		Closes *one* widgets of this handler
 		"""
@@ -322,7 +327,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				self.mainWindow.unfocusHandler(self)
 				self.setIcon(1, QtGui.QIcon())
 
-	def getBreadCrumb(self):
+	def getBreadCrumb(self) -> Tuple[str, QtGui.QIcon]:
 		for widget in self.widgets[:: -1]:
 			try:
 				txt, icon = widget.getBreadCrumb()
@@ -337,53 +342,52 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 				continue
 		return self.text(0), self.icon(0)
 
-	def clicked(self):
+	def clicked(self) -> None:
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
 		self.setExpanded(not self.isExpanded())
 		self.focus()
 
-	def contextMenu(self):
+	def contextMenu(self) -> None:
 		"""
 		Currently unused
 		"""
 		pass
 
-	def stackHandler(self):
+	def stackHandler(self) -> None:
 		"""
 			Stacks this handler onto the currently active one.
 		"""
 		self.mainWindow.stackHandler(self)
 
-	def register(self):
+	def register(self) -> None:
 		"""
 			Adds this handler as a top-level one
 		"""
 		self.mainWindow.addHandler(self)
 
-	def __lt__(self, other):
-		# column = self.treeWidget().sortColumn()
+	def __lt__(self, other: Any) -> None:
 		key1 = self.sortIndex
 		key2 = other.sortIndex
 		try:
-			return float(key1) < float(key2)
+			return float(key1) > float(key2)
 		except ValueError:
-			return key1 < key2
+			return key1 > key2
 
 
 class GroupHandler(WidgetHandler):
 	"""
-		Toplevel widget for one modul-group
+		Toplevel widget for one module-group
 	"""
 
-	def clicked(self):
+	def clicked(self) -> None:
 		"""
 		Called whenever the user selects the handler from the treeWidget.
 		"""
 		self.setExpanded(not self.isExpanded())
 
-	def contextMenu(self):
+	def contextMenu(self) -> None:
 		"""
 		Currently unused
 		"""
@@ -396,7 +400,7 @@ class WheelEventFilter(QtCore.QObject):
 		This fixes accidential changing values in editWidget while scrolling.
 	"""
 
-	def eventFilter(self, obj, event):
+	def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
 		if event.type() == QtCore.QEvent.Wheel:
 			event.ignore()
 			return True
@@ -410,42 +414,43 @@ class ViurTabBar(QtWidgets.QTabBar):
 	"""Used in conjunction with WheelEventFilter especially for QTabWidget
 
 	"""
-	def __init__(self, parent=None):
+
+	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ViurTabBar, self).__init__(parent)
 		self.installEventFilter(wheelEventFilter)
 
 
-def urlForItem(modul, item):
+def urlForItem(module: str, item: Dict[str, Any]) -> QtCore.QUrl:
 	"""
 		Returns a QUrl for the given item.
 		Usefull for creating a QDrag which can be dropped outside the application.
-		@param modul: Name of the modul, this item belongs to.
-		@type modul: String
+		@param module: Name of the module, this item belongs to.
+		@type module: String
 		@param item: Data-Dictionary of the item. Must contain at least an "id" key.
 		@type item: Dict
 		@returns: QUrl
 	"""
-	if "dlkey" in item.keys():  # Its a file, fill in its dlkey, sothat drag&drop to the outside works
-		if "name" in item.keys():
+	if "dlkey" in item:  # Its a file, fill in its dlkey, sothat drag&drop to the outside works
+		if "name" in item:
 			return (QtCore.QUrl("%s/%s/download/%s/%s" % (
-				NetworkService.url.replace("/admin", ""), modul, item["dlkey"], item["name"])))
+				NetworkService.url.replace("/admin", ""), module, item["dlkey"], item["name"])))
 		else:  # Return a URL without a name appended
-			return QtCore.QUrl("%s/%s/download/%s" % (NetworkService.url.replace("/admin", ""), modul, item["dlkey"]))
+			return QtCore.QUrl("%s/%s/download/%s" % (NetworkService.url.replace("/admin", ""), module, item["dlkey"]))
 	else:
-		if "name" in item.keys():
+		if "name" in item:
 			return QtCore.QUrl(
-				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"], item["name"]))
+				"%s/%s/view/%s/%s" % (NetworkService.url.replace("/admin", ""), module, item["key"], item["name"]))
 		else:  # Return a URL without a name appended
-			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), modul, item["key"]))
+			return QtCore.QUrl("%s/%s/view/%s" % (NetworkService.url.replace("/admin", ""), module, item["key"]))
 
 
-def itemFromUrl(url):
+def itemFromUrl(url: QtCore.QUrl) -> Union[Tuple[str, str, str], None]:
 	"""
 		Parses a URL constructed by urlForItem.
-		Returns a tuple (modul, id, name ) if parsing is successfull, None otherwise.
+		Returns a tuple (module, id, name ) if parsing is successfull, None otherwise.
 		@param url: Url which should be parsed.
 		@type url: QUrl or String
-		@returns: Tuple (modul, id, name ) or None
+		@returns: Tuple (module, id, name ) or None
 	"""
 	if isinstance(url, QtCore.QUrl):
 		url = url.toString()
@@ -459,7 +464,7 @@ def itemFromUrl(url):
 	if parts[1].lower() != "view":
 		return None
 	modul = parts[0]
-	if modul not in conf.serverConfig["modules"].keys():  # Unknown modul
+	if modul not in conf.serverConfig["modules"]:  # Unknown module
 		return None
 	if len(parts) > 3:
 		return modul, parts[2], parts[3]
@@ -467,7 +472,7 @@ def itemFromUrl(url):
 		return modul, parts[2], ""
 
 
-def formatString(format, data, structure=None, prefix=None, language="de", _rec=0):
+def formatString(format: str, data: Dict[str, Any], structure: Dict[str, Any] = None, prefix: List[str] = None, language: str = "de", _rec: int = 0) -> str:
 	"""
 	Parses a string given by format and substitutes placeholders using values specified by data.
 
@@ -520,18 +525,18 @@ def formatString(format, data, structure=None, prefix=None, language="de", _rec=
 		elif not data:
 			return res
 
-		for key in data.keys():
+		for key in data:
 			val = data[key]
 			struct = structure.get(key) if structure else None
 
-			logger.debug("key: %r, val: %r", key, val)
+			# logger.debug("key: %r, val: %r", key, val)
 			# print("%s%s: %s" % (_rec * " ", key, struct))
 
 			if isinstance(val, dict):
 				if struct and ("$(%s)" % ".".join(prefix + [key])) in res:
 					langs = struct.get("languages")
 					if langs:
-						if language and language in langs and language in val.keys():
+						if language and language in langs and language in val:
 							val = val[language]
 						else:
 							val = ", ".join(val.values())
@@ -549,11 +554,12 @@ def formatString(format, data, structure=None, prefix=None, language="de", _rec=
 
 			res = res.replace("$(%s)" % (".".join(prefix + [key])), str(val))
 	except Exception as err:
-		logger.debug("in formatString: %r, %r, %r", format, data, err)
+		pass
+	# logger.debug("in formatString: %r, %r, %r", format, data, err)
 	return res
 
 
-def loadIcon(icon):
+def loadIcon(icon: Union[QtGui.QIcon, str]) -> Union[QtGui.QIcon, str]:
 	"""
 		Tries to create an icon from the given filename.
 		If that image exists in different sizes, all of them are loaded.
@@ -562,14 +568,17 @@ def loadIcon(icon):
 		return icon
 	elif isinstance(icon, str) and not icon.startswith("/") and ".." not in icon and not icon.startswith(
 			"https://") and not icon.startswith("http://"):
-		return QtGui.QIcon(":{0}".format(icon))
+		if icon.startswith(":"):
+			return QtGui.QIcon(icon)
+		else:
+			return QtGui.QIcon(":{0}".format(icon))
 	elif isinstance(icon, str):
 		return icon
 	else:
-		return QtGui.QIcon(":icons/modules/list.svg")
+		return QtGui.QIcon(":/icons/modules/list.svg")
 
 
-def showAbout(parent=None):
+def showAbout(parent: QtWidgets.QWidget = None) -> None:
 	"""Shows the about-dialog
 
 	:param parent:

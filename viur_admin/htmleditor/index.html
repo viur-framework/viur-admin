@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="utf-8">
+	<title>Viur Text Editor</title>
+	<link rel="stylesheet" href="htmleditor.min.css"/>
+	<style>
+		html, body {} {
+			width: 100% !important;;
+			height: 100% !important;;
+			margin: 0;
+		}
+
+		.note-editor {
+			width: 100% !important;
+			height: 100% !important;;
+			border: 3px solid #555!important;
+			overflow: auto;
+		}
+	</style>
+</head>
+<body>
+<textarea data-bonename="descr" class="texteditor" style="display: none;"></textarea>
+
+<script>
+  window.module = window.module || {};
+</script>
+<script src="jquery-3.3.1.js"></script>
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script src="htmleditor.min.js"></script>
+<script>
+  var editor;
+  new QWebChannel(qt.webChannelTransport, function (channel) {
+    window.handler = channel.objects.handler;
+    window.handler.sendText.connect(function (text, lang) {
+      $(".texteditor").html(text);
+      editor = summernoteEditor($(".texteditor"), lang);
+    });
+    window.handler.requestCode.connect(function (text) {
+      var data = editor.summernote("code");
+      console.log("data", data);
+      window.handler.transmitHtmlCodeToHost(data);
+
+    });
+    window.handler.onEditorLoaded();
+  });
+</script>
+</body>
+</html>

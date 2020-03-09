@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'loginform.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
@@ -15,7 +16,7 @@ class Ui_LoginWindow(object):
         LoginWindow.setMinimumSize(QtCore.QSize(480, 0))
         LoginWindow.setMaximumSize(QtCore.QSize(480, 16777215))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":icons/viur_logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         LoginWindow.setWindowIcon(icon)
         self.logincentralwidget = QtWidgets.QWidget(LoginWindow)
         self.logincentralwidget.setObjectName("logincentralwidget")
@@ -49,24 +50,22 @@ class Ui_LoginWindow(object):
         self.startAccManagerBTN = QtWidgets.QPushButton(self.logincentralwidget)
         self.startAccManagerBTN.setMinimumSize(QtCore.QSize(0, 32))
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("icons/accounts.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":icons/accounts.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.startAccManagerBTN.setIcon(icon1)
         self.startAccManagerBTN.setObjectName("startAccManagerBTN")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.startAccManagerBTN)
         self.verticalLayout_2.addLayout(self.formLayout)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.verticalLayout_2.addItem(spacerItem)
         self.btnLogin = QtWidgets.QPushButton(self.logincentralwidget)
         self.btnLogin.setMinimumSize(QtCore.QSize(0, 64))
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("icons/actions/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(":icons/actions/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnLogin.setIcon(icon2)
         self.btnLogin.setObjectName("btnLogin")
         self.verticalLayout_2.addWidget(self.btnLogin)
         LoginWindow.setCentralWidget(self.logincentralwidget)
         self.menubar = QtWidgets.QMenuBar(LoginWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 480, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 480, 26))
         self.menubar.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.menubar.setObjectName("menubar")
         self.menuInfo = QtWidgets.QMenu(self.menubar)
@@ -77,19 +76,18 @@ class Ui_LoginWindow(object):
         self.statusbar = QtWidgets.QStatusBar(LoginWindow)
         self.statusbar.setObjectName("statusbar")
         LoginWindow.setStatusBar(self.statusbar)
-        self.actionErste_Schritte = QtWidgets.QAction(LoginWindow)
-        self.actionErste_Schritte.setObjectName("actionErste_Schritte")
         self.actionHelp = QtWidgets.QAction(LoginWindow)
         self.actionHelp.setObjectName("actionHelp")
         self.actionAbout = QtWidgets.QAction(LoginWindow)
         self.actionAbout.setObjectName("actionAbout")
-        self.actionSettings = QtWidgets.QAction(LoginWindow)
-        self.actionSettings.setObjectName("actionSettings")
         self.actionAccountmanager = QtWidgets.QAction(LoginWindow)
         self.actionAccountmanager.setObjectName("actionAccountmanager")
+        self.actionFirst_steps = QtWidgets.QAction(LoginWindow)
+        self.actionFirst_steps.setObjectName("actionFirst_steps")
         self.menuInfo.addAction(self.actionHelp)
         self.menuInfo.addSeparator()
         self.menuInfo.addAction(self.actionAbout)
+        self.menuInfo.addAction(self.actionFirst_steps)
         self.menuEinstellungen.addAction(self.actionAccountmanager)
         self.menubar.addAction(self.menuInfo.menuAction())
         self.menubar.addAction(self.menuEinstellungen.menuAction())
@@ -99,17 +97,18 @@ class Ui_LoginWindow(object):
 
     def retranslateUi(self, LoginWindow):
         _translate = QtCore.QCoreApplication.translate
-        LoginWindow.setWindowTitle(_translate("LoginWindow", "ViurAdmin – Login"))
+        LoginWindow.setWindowTitle(_translate("LoginWindow", "ViurAdmin | Login"))
         self.label.setText(_translate("LoginWindow", "Language"))
         self.portalLabel.setText(_translate("LoginWindow", "Portal"))
         self.accountManagerLabel.setText(_translate("LoginWindow", "Account Manager"))
-        self.startAccManagerBTN.setText(_translate("LoginWindow", "Accountmannager"))
+        self.startAccManagerBTN.setText(_translate("LoginWindow", "Open"))
         self.btnLogin.setText(_translate("LoginWindow", "Login"))
         self.menuInfo.setTitle(_translate("LoginWindow", "&Info"))
         self.menuEinstellungen.setTitle(_translate("LoginWindow", "Setti&ngs"))
-        self.actionErste_Schritte.setText(_translate("LoginWindow", "Erste Schritte"))
         self.actionHelp.setText(_translate("LoginWindow", "&Help"))
         self.actionAbout.setText(_translate("LoginWindow", "&About this Software"))
-        self.actionSettings.setText(_translate("LoginWindow", "Generel settigs"))
         self.actionAccountmanager.setText(_translate("LoginWindow", "&Accountmanager"))
+        self.actionFirst_steps.setText(_translate("LoginWindow", "First steps"))
 
+
+import viur_admin.ui.icons_rc
