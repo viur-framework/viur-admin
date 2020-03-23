@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'extendedSelectOneFilterPlugin.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -36,5 +37,3 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Form"))
         Form.setTitle(_translate("Form", "Filter Name"))
         self.valuesLabel.setText(_translate("Form", "Value"))
-
-

@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'extendedDateRangeFilterPlugin.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -48,5 +49,3 @@ class Ui_Form(object):
         self.fromDatePickerLabel.setText(_translate("Form", "Start Date"))
         self.toDatePickerLabel.setText(_translate("Form", "End Date"))
         self.clearFilter.setText(_translate("Form", "Filter entfernen"))
-
-

@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'configuration_migration_wizard.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -69,5 +70,3 @@ class Ui_configMigrationWizard(object):
         self.label.setText(_translate("configMigrationWizard", "Version"))
         self.wizardPage2.setTitle(_translate("configMigrationWizard", "Migration completed"))
         self.wizardPage2.setSubTitle(_translate("configMigrationWizard", "migrated following portals"))
-
-

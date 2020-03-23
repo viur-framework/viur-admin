@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'settings_dialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -65,5 +66,3 @@ class Ui_Dialog(object):
         self.debug_level_label.setText(_translate("Dialog", "Debug Verbosity"))
         self.style_group.setTitle(_translate("Dialog", "Appearance"))
         self.ui_style_label.setText(_translate("Dialog", "UI Style"))
-
-

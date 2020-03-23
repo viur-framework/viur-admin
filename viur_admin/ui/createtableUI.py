@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'createtable.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -57,5 +58,3 @@ class Ui_DialogCreateTable(object):
         self.cbAlignment.setItemText(0, _translate("DialogCreateTable", "Left"))
         self.cbAlignment.setItemText(1, _translate("DialogCreateTable", "Center"))
         self.cbAlignment.setItemText(2, _translate("DialogCreateTable", "Right"))
-
-

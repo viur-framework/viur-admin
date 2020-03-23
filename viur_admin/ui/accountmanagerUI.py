@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'accountmanager.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -72,6 +73,4 @@ class Ui_AccountManager(object):
         self.addAccBTN.setText(_translate("AccountManager", "New Account"))
         self.delAccBTN.setText(_translate("AccountManager", "Delete Account"))
         self.FinishedBTN.setText(_translate("AccountManager", "Back to Loginscreen"))
-
-
 import viur_admin.ui.icons_rc

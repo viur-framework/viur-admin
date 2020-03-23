@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'loginform.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -109,6 +110,4 @@ class Ui_LoginWindow(object):
         self.actionAbout.setText(_translate("LoginWindow", "&About this Software"))
         self.actionAccountmanager.setText(_translate("LoginWindow", "&Accountmanager"))
         self.actionFirst_steps.setText(_translate("LoginWindow", "First steps"))
-
-
 import viur_admin.ui.icons_rc

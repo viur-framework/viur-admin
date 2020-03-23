@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'treeselector.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -57,6 +58,4 @@ class Ui_TreeSelector(object):
         self.btnAddSelected.setText(_translate("TreeSelector", "Add to selected"))
         self.lblSelected.setText(_translate("TreeSelector", "Selected:"))
         self.btnSelect.setText(_translate("TreeSelector", "Apply"))
-
-
 import viur_admin.ui.icons_rc
