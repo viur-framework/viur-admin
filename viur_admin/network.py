@@ -8,14 +8,14 @@ import sys
 import time
 import weakref
 from hashlib import sha1
-from queue import Queue, Empty as QEmpty, Full as QFull
-from typing import Union, Callable, Any, List, Dict
+from queue import Empty as QEmpty, Full as QFull, Queue
+from typing import Any, Callable, Dict, List, Union
 from urllib import request
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QUrl, QObject, QVariant
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QSslConfiguration, QSslCertificate, QNetworkReply, \
-	QNetworkCookieJar, QHttpPart, QHttpMultiPart
+from PyQt5.QtCore import QObject, QUrl
+from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QNetworkCookieJar, QNetworkReply, \
+	QNetworkRequest, QSslCertificate, QSslConfiguration
 
 import viur_admin.ui.icons_rc
 from viur_admin.config import conf
@@ -543,7 +543,7 @@ class RemoteFile(QtCore.QObject):
 class NetworkService:
 	url = None
 	serverVersion = None
-	currentRequests: List[RequestWrapper] = list() # A list of currently running requests
+	currentRequests: List[RequestWrapper] = list()  # A list of currently running requests
 
 	@staticmethod
 	def genReqStr(params: Dict[str, Any]) -> QHttpMultiPart:
@@ -557,18 +557,24 @@ class NetworkService:
 					mimetype = "application/octet-stream"
 				filePart = QHttpPart()
 				filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
-				filePart.setHeader(QNetworkRequest.ContentDispositionHeader,
-				                   'form-data; name="{0}"; filename="{1}"'.format(key,
-				                                                                  os.path.basename(value.fileName())))
+				filePart.setHeader(
+					QNetworkRequest.ContentDispositionHeader,
+					'form-data; name="{0}"; filename="{1}"'.format(
+						key,
+						os.path.basename(value.fileName())))
 				filePart.setBodyDevice(value)
 				value.setParent(multiPart)
 				multiPart.append(filePart)
 			elif isinstance(value, list):
 				for val in value:
+					logger.debug("serializing param item %r of list value %r", val, key)
 					textPart = QHttpPart()
-					textPart.setHeader(QNetworkRequest.ContentTypeHeader, QVariant(b"application/octet-stream"))
-					textPart.setHeader(QNetworkRequest.ContentDispositionHeader,
-					                   'form-data; name="{0}"'.format(key.encode("utf-8")))
+					textPart.setHeader(
+						QNetworkRequest.ContentTypeHeader,
+						"application/octet-stream")
+					textPart.setHeader(
+						QNetworkRequest.ContentDispositionHeader,
+						'form-data; name="{0}"'.format(key))
 					textPart.setBody(str(val).encode("utf-8"))
 					multiPart.append(textPart)
 			else:
