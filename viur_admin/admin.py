@@ -16,7 +16,6 @@ import traceback
 from collections import namedtuple
 from typing import Any
 
-from PyQt5.QtCore import QDirIterator
 
 min_version = (3, 6)
 if sys.version_info < min_version:
@@ -66,6 +65,11 @@ except ImportError as err:
 
 from PyQt5.QtWidgets import QStyleFactory
 
+# enable highdpi scaling
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+# use highdpi icons
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
 styleKeys = QStyleFactory.keys()
 styleKeys.append("Viur")
 
@@ -102,6 +106,7 @@ from viur_admin.config import conf
 
 conf.cmdLineOpts = args
 
+
 app = QtWidgets.QApplication(sys.argv)
 
 import viur_admin.protocolwrapper
@@ -112,13 +117,9 @@ import viur_admin.actions
 import viur_admin.ui.icons_rc
 
 
-# it = QDirIterator(":", QDirIterator.Subdirectories);
-# while it.hasNext():
-# 	print("resource item:", it.next())
-
-
 from viur_admin.login import Login
 from viur_admin.mainwindow import MainWindow
+
 
 if args.theme != "Viur":
 	try:
@@ -200,7 +201,20 @@ def main() -> None:
 		from viur_admin.config_migration_wizard import ConfigMigrationWizard
 		wizard = ConfigMigrationWizard()
 		wizard.exec()
-	mainWindow = MainWindow()
+
+	moduleWhitelist = None
+	groupWhitelist = None
+	try:
+		import viur_admin.module_overwrites
+		moduleWhitelist = viur_admin.module_overwrites.moduleWhitelist
+		groupWhitelist = viur_admin.module_overwrites.groupWhitelist
+	except ImportError:
+		pass
+
+	mainWindow = MainWindow(
+		moduleWhitelist=moduleWhitelist,
+		groupWhitelist=groupWhitelist)
+
 	l = Login()
 	l.show()
 	app.exec_()

@@ -69,9 +69,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def __init__(
 			self,
+			groupWhitelist=None,
+			moduleWhitelist=None,
 			*args: Any,
 			**kwargs: Any):
 		super(MainWindow, self).__init__(*args, **kwargs)
+		self.groupWhitelist = groupWhitelist
+		self.moduleWhitelist = moduleWhitelist
 		self.setObjectName("MainWindow")
 		self.resize(983, 707)
 		icon = QtGui.QIcon()
@@ -203,16 +207,29 @@ class MainWindow(QtWidgets.QMainWindow):
 		icon = QtGui.QIcon.fromTheme("system-log-out")
 		self.actionLogout.setIcon(icon)
 		self.actionLogout.setObjectName("actionLogout")
-		self.actionTasks = QtWidgets.QAction(self)
-		icon1 = QtGui.QIcon()
-		icon1.addPixmap(QtGui.QPixmap(":icons/settings.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		self.actionTasks.setIcon(icon1)
-		self.actionTasks.setObjectName("actionTasks")
+
+		setActionTasks = True
+		try:
+			from viur_admin.module_overwrites import mainWindowTasksActionOff
+			setActionTasks = mainWindowTasksActionOff
+		except ImportError:
+			pass
+
+		if setActionTasks:
+			self.actionTasks = QtWidgets.QAction(self)
+			icon1 = QtGui.QIcon()
+			icon1.addPixmap(QtGui.QPixmap(":icons/settings.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			self.actionTasks.setIcon(icon1)
+			self.actionTasks.setObjectName("actionTasks")
+			self.menuErweitert.addAction(self.actionTasks)
+			self.actionTasks.setText(_translate("MainWindow", "Tasks"))
+			self.actionTasks.triggered.connect(self.onActionTasksTriggered)
+
 		self.toggleModuleViewTasks = QtWidgets.QAction(self)
 		self.menuInfo.addAction(self.actionHelp)
 		self.menuInfo.addSeparator()
 		self.menuInfo.addAction(self.actionAbout)
-		self.menuErweitert.addAction(self.actionTasks)
+
 		self.menubar.addAction(self.menuInfo.menuAction())
 		self.menubar.addAction(self.menuErweitert.menuAction())
 		self.menuErweitert.addAction(self.searchAction)
@@ -230,7 +247,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.actionHelp.setText(_translate("MainWindow", "Help"))
 		self.actionAbout.setText(_translate("MainWindow", "About"))
 		self.actionLogout.setText(_translate("MainWindow", "Log out"))
-		self.actionTasks.setText(_translate("MainWindow", "Tasks"))
+
 		self.moduleSearch.setPlaceholderText(_translate("MainWindow", "Handler Search"))
 		self.stackedWidget.setCurrentIndex(-1)
 		QtCore.QMetaObject.connectSlotsByName(self)
@@ -256,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.actionAbout.triggered.connect(self.onActionAboutTriggered)
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
-		self.actionTasks.triggered.connect(self.onActionTasksTriggered)
+
 		self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
 		# self.searchBTN.released.connect(self.searchHandler)
 		self.moduleSearch.returnPressed.connect(self.searchHandler)
@@ -274,6 +291,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		if self.dockWidget.isFloating():
 			self.dockWidget.hide()
+
+		self.timer = QtCore.QTimer(self)
+		self.timer.timeout.connect(self.loginCheck)
+		self.timer.start(900000)
+
+	@QtCore.pyqtSlot()
+	def loginCheck(self):
+		logger.debug("loginCheck")
+		NetworkService.request("/user/view/self", successHandler=self.onLoadUser, failureHandler=self.onError)
 
 	def loadConfig(self, request: RequestWrapper = None) -> None:
 		# self.show()
@@ -303,6 +329,9 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.setup()
 
 	def onLoadUser(self, request: RequestWrapper) -> None:
+		if conf.currentUserEntry:
+			return
+
 		try:
 			conf.currentUserEntry = NetworkService.decode(request)["values"]
 			logger.debug(repr(conf.currentUserEntry))
@@ -542,9 +571,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		handlers = []
 		groupHandlers = {}
 		by_group: Dict[str, List[Any]] = dict()
+
 		if "configuration" in data and "moduleGroups" in data["configuration"]:
 			for group in data["configuration"]["moduleGroups"]:
-				if not all([x in group for x in
+				if (self.groupWhitelist is not None and group["name"] not in self.groupWhitelist) or not all([x in group for x in
 				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
 					continue
 				group_handler = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
@@ -563,7 +593,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		access = conf.currentUserEntry["access"]
 		for module, cfg in data["modules"].items():
 			logger.debug("starting to load module %r", module)
-			if "root" not in access and not "{0}-view".format(module) in access:
+			if (self.moduleWhitelist is not None and cfg["name"] not in self.moduleWhitelist) or "root" not in access and not "{0}-view".format(module) in access:
 				continue
 			queue = RegisterQueue()
 			event.emit('requestModuleHandler', queue, module)
