@@ -2,6 +2,7 @@
 viur_admin/generate.bat
 viur_admin/start.bat
 viur_admin/plugins
+viur_admin/plugins/__init__.py
 viur_admin/ui/*.bak
 viur_admin/ui/*.bat
 *.csv
