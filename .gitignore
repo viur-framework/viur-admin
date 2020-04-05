@@ -1,7 +1,7 @@
 *.pyc
 viur_admin/generate.bat
 viur_admin/start.bat
-viur_admin/plugins/*
+viur_admin/plugins
 viur_admin/ui/*.bak
 viur_admin/ui/*.bat
 *.csv
@@ -10,4 +10,5 @@ cacert.pem_
 *.egg-info
 .eggs/
 MANIFEST
-
+.mypy_cache/
+viur_admin/module_overwrites.py
