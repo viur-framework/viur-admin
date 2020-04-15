@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Dict, List, Callable, Union
-
 import glob
 import json
 import os
 from datetime import datetime
 from hashlib import sha512
-from time import time, sleep
+from time import sleep, time
+from typing import Any, Dict, List
 
 from PyQt5 import QtNetwork
 
@@ -20,11 +19,17 @@ logger = getLogger(__name__)
 class Config(object):
 	def __init__(self, *args: Any):
 		super(Config, self).__init__()
-		self.storagePath = os.path.join(os.path.expanduser("~"),
-		                                ".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2]))
+		self.storagePath = os.path.abspath(
+			os.path.join(
+				os.path.expanduser("~"),
+				".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2])))
 		self.payload: List[Any] = list()
 		self.migrateConfig = False
 		if not os.path.isdir(self.storagePath):
+			try:
+				os.makedirs(self.storagePath)
+			except Exception as err:
+				logger.exception(err)
 			self._checkConfigurationMigration()
 		self.accounts: List[Any] = list()
 		self.portal: Dict[str, Any] = dict()
@@ -118,6 +123,10 @@ class Config(object):
 
 	def saveConfig(self) -> None:
 		# Save accounts
+		try:
+			os.makedirs(self.storagePath)
+		except Exception as err:
+			pass
 		configFileName = os.path.join(self.storagePath, "accounts.dat")
 		configFileObject = open(configFileName, "w+b")
 		configData = self.xor(json.dumps(self.accounts).encode("UTF-8"))

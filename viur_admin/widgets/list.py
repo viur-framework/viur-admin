@@ -167,12 +167,12 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return None
 
 	def loadNext(self, forceLoading: bool = False) -> None:
-		logger.debug("loadNext - cookies: %r", [i.toRawForm() for i in nam.cookieJar().allCookies()])
+		# logger.debug("loadNext - cookies: %r", [i.toRawForm() for i in nam.cookieJar().allCookies()])
 		if self.isLoading and not forceLoading:
 			# print("stopped loadNext")
 			return
 		self.isLoading += 1
-		logger.debug("loadNext.filter, %r", self.filter)
+		# logger.debug("loadNext.filter, %r", self.filter)
 		rawFilter = self.filter.copy() or {}
 		if self.cursor:
 			rawFilter["cursor"] = self.cursor
@@ -187,7 +187,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 					rawFilter[rawFilter["orderby"] + "$gt"] = self.dataCache[-1][rawFilter["orderby"]]
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
-		logger.debug("loadNext.chunk: %r, %r, %r", rawFilter, type(rawFilter), self._chunkSize)
+		# logger.debug("loadNext.chunk: %r, %r, %r", rawFilter, type(rawFilter), self._chunkSize)
 		rawFilter["amount"] = self._chunkSize
 		self.loadingKey = protoWrap.queryData(**rawFilter)
 
@@ -495,7 +495,7 @@ class ListTableView(QtWidgets.QTableView):
 
 		Here we also check if we have a valid item as a drop target for internal move aka reordering for sortindex bones.
 		"""
-		if self.rowAt(event.pos().y()) is not -1:
+		if self.rowAt(event.pos().y()) != -1:
 			event.accept()
 		else:
 			event.ignore()
@@ -628,6 +628,13 @@ class ListWidget(QtWidgets.QWidget):
 		except ValueError:
 			pass
 		all_actions = list()
+
+		try:
+			from viur_admin.module_overwrites import listDefaultActionsOverwrite
+			self.defaultActions = listDefaultActionsOverwrite
+		except ImportError:
+			pass
+
 		if handler in self.defaultActions:
 			all_actions.extend(self.defaultActions[handler])
 		if actions is not None:
@@ -635,6 +642,12 @@ class ListWidget(QtWidgets.QWidget):
 		if not all_actions:  # Still None
 			all_actions = self.defaultActions["list"]
 		self.setActions(all_actions)
+		try:
+			from viur_admin.module_overwrites import listWidgetInstanceFlags
+			editOnDoubleClick = listWidgetInstanceFlags["editOnDoubleClick"]
+		except ImportError:
+			pass
+
 		if editOnDoubleClick:
 			self.list.itemDoubleClicked.connect(self.openEditor)
 		self.list.itemClicked.connect(self.itemClicked)
@@ -789,6 +802,10 @@ class ListWidget(QtWidgets.QWidget):
 		logger.debug("requestDelete: %r", ids)
 		self.list.requestDelete(ids)
 
+	def prepareDeletion(self) -> None:
+		logger.debug("ListWidget.prepareDeletion")
+		pass
+
 	def getSelection(self) -> Sequence:
 		return self.list.getSelection()
 
@@ -802,7 +819,6 @@ class ListWidget(QtWidgets.QWidget):
 					self.extendedSearchPlugins.append(wdg(extension, self))
 					count = extendedSearchLayout.count()
 					extendedSearchLayout.insertWidget(count - 1, self.extendedSearchPlugins[-1])
-
 		self.ui.extendedSearchBTN.setVisible(len(self.extendedSearchPlugins) > 0)
 
 

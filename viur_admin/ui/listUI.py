@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'list.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -83,6 +84,4 @@ class Ui_List(object):
         self.btnPrefixSearch.setText(_translate("List", "Prefix search"))
         self.searchBTN.setText(_translate("List", "Fulltext search"))
         self.extendedSearchBTN.setText(_translate("List", "Extended Search"))
-
-
 import viur_admin.ui.icons_rc

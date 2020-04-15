@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'extendedStringSearchPlugin.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -53,5 +54,3 @@ class Ui_Form(object):
         Form.setTitle(_translate("Form", "Filter Name"))
         self.value1Label.setText(_translate("Form", "Value 1"))
         self.value2Label.setText(_translate("Form", "Value 2"))
-
-

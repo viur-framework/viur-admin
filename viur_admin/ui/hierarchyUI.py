@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'hierarchy.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -47,6 +48,4 @@ class Ui_Hierarchy(object):
     def retranslateUi(self, Hierarchy):
         _translate = QtCore.QCoreApplication.translate
         Hierarchy.setWindowTitle(_translate("Hierarchy", "Form"))
-
-
 from PyQt5 import QtWebEngineWidgets

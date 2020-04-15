@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file 'task.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -41,5 +42,3 @@ class Ui_Task(object):
         Task.setWindowTitle(_translate("Task", "Form"))
         self.lblName.setText(_translate("Task", "TextLabel"))
         self.btnExecute.setText(_translate("Task", "Execute"))
-
-
