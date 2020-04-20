@@ -349,7 +349,7 @@ class EditWidget(QtWidgets.QWidget):
 		# self.overlay.inform( self.overlay.BUSY )
 		res: Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
-			res.update(bone.serializeForPost())
+			res[key] = bone.serializeForPost()
 		self.save(res)
 
 	def onBtnSaveCloseReleased(

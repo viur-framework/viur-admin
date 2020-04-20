@@ -39,10 +39,13 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.module = module
 		self.structure = structure
 		self.boneName = boneName
+		self.commitData.connect(self.commitDataCb)
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
+		if value == "-Lade-":
+			return value
 		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
@@ -67,6 +70,32 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 			# We probably received some garbage
 			value = ""
 		return value
+
+	def createEditor(self, parent, option, index):
+		print("In CREATE EDITOR")
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		skelStructure = protoWrap.editStructure
+		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure)
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=self)
+		widget.setParent(parent)
+		parent.parent().verticalHeader().setSectionResizeMode(index.row(), parent.parent().verticalHeader().ResizeToContents)
+		return widget
+
+	def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
+		self.editingModel = model
+		self.editingIndex = index
+		self.editingItem = model.dataCache[index.row()]
+		return False
+
+	def commitDataCb(self, editor):
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		self.editingModel.dataCache[self.editingIndex.row()][self.boneName] = "-Lade-"
+		self.editingModel = None
+		self.editingIndex = None
+		self.request_repaint.emit()
 
 
 class AutocompletionModel(QtCore.QAbstractTableModel):

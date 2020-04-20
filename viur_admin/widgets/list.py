@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.utils import Overlay, urlForItem
 from viur_admin.event import event
 from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector, \
-	extendedSearchWidgetSelector
+	extendedSearchWidgetSelector, editBoneSelector
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 from viur_admin.utils import WidgetHandler
 from viur_admin.ui.listUI import Ui_List
@@ -46,6 +46,8 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.skippedkeys: List[str] = list()
 		self.dataCache: List[Dict[str, Any]] = list()
 		self.headers: List[Any] = []
+		self.editableFields = set()
+		self.bones = {}
 		self.completeList = False  # Have we all items?
 		self.isLoading = 0
 		self.cursor = None
@@ -111,6 +113,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	def reload(self) -> None:
 		self.modelAboutToBeReset.emit()
 		self.dataCache = []
+		self.editableFields = set()
 		self.completeList = False
 		self.cursor = False
 		self.modelReset.emit()
@@ -203,10 +206,12 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.layoutAboutToBeChanged.emit()
 
 		# Rebuild our local cache of valid fields
-		bones = {}
+		self.bones = {}
 		for key, bone in protoWrap.viewStructure.items():
-			bones[key] = bone
-		self._validFields = [x for x in self.fields if x in bones]
+			self.bones[key] = bone
+			if not bone["readonly"]:
+				self.editableFields.add(key)
+		self._validFields = [x for x in self.fields if x in self.bones]
 		self.rebuildDelegates.emit(protoWrap.viewStructure)
 		self.dataCache.extend(skellist)
 		if len(skellist) < self._chunkSize:
@@ -214,6 +219,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.cursor = cursor
 		self.layoutChanged.emit()
 		self.loadingKey = None
+		print(self.editableFields)
 
 	# self.emit(QtCore.SIGNAL("dataRecived()"))
 
@@ -270,12 +276,8 @@ class ListTableModel(QtCore.QAbstractTableModel):
 
 	def flags(self, index: QModelIndex = None) -> QtCore.Qt.ItemFlags:
 		defaultFlags = super(ListTableModel, self).flags(index)
-		# logger.debug("flags row and col: %r, %r", index.row(), index.column())
-		if not index.isValid():
-			# lenData = len(self.dataCache)
-			# if index.row() == -1 and index.column() == -1:
-			# 	return defaultFlags
-			return defaultFlags
+		if self.fields[index.column()] in self.editableFields:
+			defaultFlags |= QtCore.Qt.ItemIsEditable
 		return defaultFlags
 
 	def setSortIndex(self, index: QModelIndex, sortindex: float) -> None:
@@ -343,6 +345,9 @@ class ListTableView(QtWidgets.QTableView):
 		model.layoutChanged.connect(self.realignHeaders)
 		self.clicked.connect(self.onItemClicked)
 		self.doubleClicked.connect(self.onItemDoubleClicked)
+		self.setEditTriggers(self.EditKeyPressed)
+		#self.horizontalHeader().setStretchLastSection(True)
+		#self.verticalHeader().setCascadingSectionResizes(True)
 
 	def onItemClicked(self, index: QModelIndex) -> None:
 		try:
@@ -417,6 +422,14 @@ class ListTableView(QtWidgets.QTableView):
 				data = self.model().getData()[row]
 				idList.append(data["key"])
 			self.requestDelete(idList)
+		#elif e.key() == QtCore.Qt.Key_Return and e.modifiers() == QtCore.Qt.AltModifier:
+		#	print("ALT RETURN!!")
+		#	for index in self.selectedIndexes():
+		#		print(index)
+		#		print(index.row())
+		#		print(index.column())
+		#		self.openPersistentEditor(index)
+		#		break
 		elif e.key() == QtCore.Qt.Key_Return:
 			for index in self.selectedIndexes():
 				self.itemActivated.emit(self.model().getData()[index.row()])
@@ -565,6 +578,7 @@ class ListTableView(QtWidgets.QTableView):
 			fontWidth = fm.width(msg)
 			painter.drawText(self.width() / 2 - fontWidth / 2, (self.height() / 2) + 55, msg)
 			painter.end()
+
 
 
 class ListWidget(QtWidgets.QWidget):

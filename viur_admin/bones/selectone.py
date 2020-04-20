@@ -12,12 +12,44 @@ from viur_admin.utils import wheelEventFilter
 
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.editingModel = None
+		self.editingIndex = None
+		self.editingItem = None
+		self.commitData.connect(self.commitDataCb)
+
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"]])
 		if str(value) in items:
 			return items[str(value)]
 		else:
 			return value
+
+	def createEditor(self, parent, option, index):
+		print("In CREATE EDITOR")
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		skelStructure = protoWrap.editStructure
+		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure)
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=self)
+		widget.setParent(parent)
+		#print(self.skelStructure)
+
+		return widget
+
+	def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
+		self.editingModel = model
+		self.editingIndex = index
+		self.editingItem = model.dataCache[index.row()]
+		return False
+
+	def commitDataCb(self, editor):
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		self.editingModel = None
+		self.editingIndex = None
 
 
 class FixedComboBox(QtWidgets.QComboBox):
