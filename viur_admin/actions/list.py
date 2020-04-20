@@ -30,7 +30,7 @@ class ListAddAction(QtWidgets.QAction):
 		else:
 			name = self.parentWidget().list.modul
 		descr = QtCore.QCoreApplication.translate("ListHandler", "Add entry: %s") % name
-		modul = self.parentWidget().list.modul
+		modul = self.parentWidget().list.module
 		handler = WidgetHandler(
 			lambda: EditWidget(modul, ApplicationType.LIST),
 			descr,

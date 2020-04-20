@@ -36,7 +36,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 		if isinstance(other, self.listWidget().leafItem):
 			return False
 		elif isinstance(other, self.listWidget().nodeItem):
-			return self.entryData["name"] > other.entryData["name"]
+			return (self.entryData["name"] or "") > (other.entryData["name"] or "")
 		else:
 			return str(self) > str(other)
 
@@ -44,7 +44,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 		if isinstance(other, self.listWidget().leafItem):
 			return True
 		elif isinstance(other, self.listWidget().nodeItem):
-			return self.entryData["name"] < other.entryData["name"]
+			return (self.entryData["name"] or "") < (other.entryData["name"] or "")
 		else:
 			return str(self) < str(other)
 

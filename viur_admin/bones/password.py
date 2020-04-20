@@ -78,9 +78,6 @@ class PasswordEditBone(BoneEditInterface):
 			self.tabWidget.blockSignals(False)
 
 	def unserialize(self, data: dict) -> None:
-		if self.boneName not in data:
-			return
-		data = data[self.boneName]
 		if not data:
 			return
 		self.lineEdit.setText(str(data))
@@ -88,8 +85,8 @@ class PasswordEditBone(BoneEditInterface):
 	def serializeForPost(self) -> dict:
 		text = self.lineEdit.text()
 		if text:
-			return {self.boneName: self.lineEdit.text()}
-		return {}
+			return self.lineEdit.text()
+		return ""
 
 	def serializeForDocument(self) -> dict:
 		return self.serialize()

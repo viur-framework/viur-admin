@@ -3,7 +3,7 @@ from typing import Union, Any, Dict, List
 
 from PyQt5 import QtCore, QtWidgets
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedBooleanFilterPluginUI import Ui_Form
@@ -59,15 +59,24 @@ class BooleanEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		return cls(moduleName, boneName, readOnly, **kwargs)
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		widgetGen = lambda: cls(moduleName, boneName, readOnly, **kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
+
 
 	def unserialize(self, data: dict) -> None:
-		if data.get(self.boneName):
+		if data:
 			self.checkBox.setChecked(True)
 
 	def serializeForPost(self) -> dict:
-		return {self.boneName: self.checkBox.isChecked()}
+		return "1" if self.checkBox.isChecked() else "0"
 
 	def serializeForDocument(self) -> dict:
 		return self.serialize()

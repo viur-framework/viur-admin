@@ -5,7 +5,78 @@ from PyQt5 import QtCore, QtWidgets
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
+from viur_admin.utils import wheelEventFilter, ViurTabBar
 
+
+class LanguageContainer(QtWidgets.QTabWidget):
+	def __init__(self, languages, widgetGen):
+		super().__init__()
+		self.languages = languages
+		self.setTabBar(ViurTabBar(self))
+		self.blockSignals(True)
+		self.currentChanged.connect(self.onTabCurrentChanged)
+		for lang in languages:
+			edit = widgetGen()
+			#edit.setReadOnly(self.readOnly)
+			#self.langEdits[lang] = edit
+			self.addTab(edit, lang)
+
+	def onTabCurrentChanged(self,idx: int) -> None:
+		wdg = self.tabWidget.widget(idx)
+		for k, v in self.langEdits.items():
+			if v == wdg:
+				#event.emit("tabLanguageChanged", k)
+				wdg.setFocus()
+				return
+
+	def unserialize(self, data):
+		if not isinstance(data, dict):
+			return  # Fixme
+		for idx, lng in enumerate(self.languages):
+			wdg = self.widget(idx)
+			langData = data.get(lng)
+			wdg.unserialize(langData)
+
+	def serializeForPost(self):
+		r = {lng: self.widget(idx).serializeForPost() for idx, lng in enumerate(self.languages)}
+		return r
+
+class MultiContainer(QtWidgets.QWidget):
+	def __init__(self, widgetGen):
+		super().__init__()
+		self.widgetGen = widgetGen
+		self.setLayout(QtWidgets.QVBoxLayout(self))
+		self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
+		self.layout().addWidget(self.btnAdd)
+		self.btnAdd.released.connect(self.onAddButtonClicked)  # TODO: check if this is working
+		# self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
+		self.btnAdd.show()
+
+	def clearContents(self):
+		for widget in self.children():
+			if widget is self.btnAdd or widget is self.layout():
+				continue
+			self.layout().removeWidget(widget)
+
+	def onAddButtonClicked(self, *args, **kwargs):
+		self.layout().addWidget(self.widgetGen())
+
+	def unserialize(self, data):
+		self.clearContents()
+		if not data:
+			return
+		elif isinstance(data, list):
+			for d in data:
+				wdg = self.widgetGen()
+				self.layout().addWidget(wdg)
+				wdg.unserialize(d)
+		else:
+			wdg = self.widgetGen()
+			self.layout().addWidget(wdg)
+			wdg.unserialize(data)
+
+	def serializeForPost(self):
+		return [wdg.serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
 
 class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	request_repaint = QtCore.pyqtSignal()
@@ -52,11 +123,10 @@ class BaseEditBone(BoneEditInterface):
 		return BaseEditBone(moduleName, boneName, readOnly, **kwargs)
 
 	def unserialize(self, data: dict) -> None:
-		if self.boneName in data:
-			self.lineEdit.setText(str(data[self.boneName]) if data[self.boneName] else "")
+		self.lineEdit.setText(str(data) if data else "")
 
 	def serializeForPost(self) -> dict:
-		return {self.boneName: self.lineEdit.displayText()}
+		return self.lineEdit.displayText()
 
 	def serializeForDocument(self) -> dict:
 		return self.serialize()

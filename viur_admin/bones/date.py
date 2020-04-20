@@ -7,6 +7,7 @@ from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedDateRangeFilterPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter
+from viur_admin.bones.base import MultiContainer, LanguageContainer
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -133,15 +134,22 @@ class DateEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		hasDate = skelStructure[boneName]["date"]
-		hasTime = skelStructure[boneName]["time"]
-		return DateEditBone(moduleName, boneName, readOnly, hasDate, hasTime, **kwargs)
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		hasDate = myStruct["date"]
+		hasTime = myStruct["time"]
+		widgetGen = lambda: DateEditBone(moduleName, boneName, readOnly, hasDate, hasTime, **kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
+
 
 	def unserialize(self, data: dict) -> None:
-		value = None
-		if self.boneName in data:
-			value = str(data[self.boneName])
+		value = str(data)
 		self.dt = datetime.now()
 		if self.time and self.date:  # date AND time
 			try:
@@ -174,7 +182,7 @@ class DateEditBone(BoneEditInterface):
 		else:  # time only
 			arg = self.lineEdit.time().toString("hh:mm:ss")
 
-		return {self.boneName: arg}
+		return arg
 
 	def serializeForDocument(self) -> dict:
 		return self.serialize()

@@ -5,7 +5,7 @@ from typing import Union, List, Dict, Any, Callable
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.config import conf
 from viur_admin.event import event
@@ -142,7 +142,7 @@ class StringEditBone(BoneEditInterface):
 		super(StringEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
 		self.multiple = multiple
 		self.languages = languages
-		if self.languages and self.multiple:  # FIXME: Multiple and readOnly...
+		if 0 and self.languages and self.multiple:  # FIXME: Multiple and readOnly...
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.tabWidget = QtWidgets.QTabWidget(self)
 			self.tabWidget.setTabBar(ViurTabBar(self))
@@ -166,7 +166,7 @@ class StringEditBone(BoneEditInterface):
 				btnAdd.released.connect(genLambda(lang))  # FIXME: Lambda..
 			self.tabWidget.blockSignals(False)
 			self.tabWidget.show()
-		elif self.languages and not self.multiple:
+		elif 0 and self.languages and not self.multiple:
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.tabWidget = QtWidgets.QTabWidget(self)
 			self.tabWidget.setTabBar(ViurTabBar(self))
@@ -181,7 +181,7 @@ class StringEditBone(BoneEditInterface):
 				self.langEdits[lang] = edit
 				self.tabWidget.addTab(edit, lang)
 			self.tabWidget.blockSignals(False)
-		elif not self.languages and self.multiple:
+		elif 0 and  not self.languages and self.multiple:
 			self.setLayout(QtWidgets.QVBoxLayout(self))
 			self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
 			self.layout().addWidget(self.btnAdd)
@@ -211,7 +211,23 @@ class StringEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		myStruct = skelStructure[boneName]
+		readOnly = bool(myStruct.get("readonly"))
+		widgetGen = lambda: StringEditBone(
+			moduleName,
+			boneName,
+			readOnly,
+			multiple=False,
+			languages=None,
+			**kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
+
 		multiple = False
 		languages = None
 		if boneName in skelStructure:
@@ -247,9 +263,9 @@ class StringEditBone(BoneEditInterface):
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
 		# print("StringEditBone", data)
-		if self.boneName not in data:
-			return
-		data = data[self.boneName]
+		#if self.boneName not in data:
+		#	return
+		#data = data[self.boneName]
 		if not data:
 			return
 		if self.languages and self.multiple:
@@ -297,7 +313,7 @@ class StringEditBone(BoneEditInterface):
 				if txt:
 					res["%s.%s" % (self.boneName, lang)] = txt
 		elif not self.languages and not self.multiple:
-			res[self.boneName] = self.lineEdit.text()
+			return self.lineEdit.text()
 		return res
 
 	def genTag(self, tag: Tag, editMode : bool = False, lang: Union[str, None] = None) -> None:

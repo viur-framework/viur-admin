@@ -3,7 +3,7 @@ from typing import Any, Dict, Tuple, List, Union
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, protocolWrapperInstanceSelector, \
 	extendedSearchWidgetSelector
@@ -87,10 +87,10 @@ class SelectOneEditBone(BoneEditInterface):
 		self.comboBox = FixedComboBox(self)
 		self.layout.addWidget(self.comboBox)
 		tmpList = values
-		if sortBy == "keys":
-			tmpList.sort(key=lambda x: x[0])  # Sort by keys
-		else:
-			tmpList.sort(key=lambda x: x[1])  # Values
+		#if sortBy == "keys":
+		#	tmpList.sort(key=lambda x: x[0])  # Sort by keys
+		#else:
+		#	tmpList.sort(key=lambda x: x[1])  # Values
 		self.comboBox.addItems([x[1] for x in tmpList])
 
 	@staticmethod
@@ -99,23 +99,26 @@ class SelectOneEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		if "sortBy" in skelStructure[boneName]:
-			sortBy = skelStructure[boneName]["sortBy"]
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		if "sortBy" in myStruct:
+			sortBy = myStruct["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"])
-		if "required" not in skelStructure[boneName] or not skelStructure[boneName]["required"]:
+		values = list(myStruct["values"])
+		if "required" not in myStruct or not myStruct["required"]:
 			values.insert(0, ["", ""])
-		return SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		widgetGen = lambda: SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
-		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
-		assert protoWrap is not None
 		if 1:  # There might be junk comming from the server
 			items = dict([(str(k), str(v)) for k, v in self.values])
-			if str(data[self.boneName]) in items:
-				self.comboBox.setCurrentIndex(self.comboBox.findText(items[str(data[self.boneName])]))
+			if str(data) in items:
+				self.comboBox.setCurrentIndex(self.comboBox.findText(items[str(data)]))
 			else:
 				self.comboBox.setCurrentIndex(-1)
 		else:  # except:
@@ -125,8 +128,8 @@ class SelectOneEditBone(BoneEditInterface):
 		currentValue = str(self.comboBox.currentText())
 		for key, value in self.values:
 			if str(value) == currentValue:
-				return {self.boneName: str(key)}
-		return {self.boneName: None}
+				return str(key)
+		return None
 
 
 def CheckForSelectOneBone(

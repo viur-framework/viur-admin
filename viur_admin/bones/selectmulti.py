@@ -4,7 +4,7 @@ from typing import Union, Any, List, Dict
 
 from PyQt5 import QtWidgets
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedSelectMultiFilterPluginUI import Ui_Form
@@ -40,10 +40,10 @@ class SelectMultiEditBone(BoneEditInterface):
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.checkboxes: Dict[str, QtWidgets.QCheckBox] = dict()
 		tmpList = values
-		if sortBy == "keys":
-			tmpList.sort(key=lambda x: x[0])  # Sort by keys
-		else:
-			tmpList.sort(key=lambda x: x[1])  # Values
+		#if sortBy == "keys":
+		#	tmpList.sort(key=lambda x: x[0])  # Sort by keys
+		#else:
+		#	tmpList.sort(key=lambda x: x[1])  # Values
 		for key, descr in tmpList:
 			cb = QtWidgets.QCheckBox(descr, self)
 			self.layout.addWidget(cb)
@@ -57,28 +57,31 @@ class SelectMultiEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		if "sortBy" in skelStructure[boneName]:
-			sortBy = skelStructure[boneName]["sortBy"]
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		if "sortBy" in myStruct:
+			sortBy = myStruct["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"])
-		return cls(
+		values = list(myStruct["values"])
+		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
 			values=values,
 			sortBy=sortBy,
 			**kwargs)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
-		if self.boneName not in data:
-			return
 		for key, checkbox in self.checkboxes.items():
-			checkbox.setChecked(key in data[self.boneName])
+			checkbox.setChecked(isinstance(data, list) and key in data)
 
 	def serializeForPost(self) -> Dict[str, Any]:
-		return {self.boneName: [key for key, checkbox in self.checkboxes.items() if checkbox.isChecked()]}
+		return [key for key, checkbox in self.checkboxes.items() if checkbox.isChecked()]
 
 
 

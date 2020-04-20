@@ -332,8 +332,8 @@ class EditWidget(QtWidgets.QWidget):
 	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("EditWidget.unserialize - start")
 		try:
-			for bone in self.bones.values():
-				bone.unserialize(data)
+			for key, bone in self.bones.items():
+				bone.unserialize(data.get(key))
 		except AssertionError as err:
 			logger.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))
@@ -360,7 +360,8 @@ class EditWidget(QtWidgets.QWidget):
 		# self.overlay.inform( self.overlay.BUSY )
 		res: Dict[str, Any] = dict()
 		for key, bone in self.bones.items():
-			res.update(bone.serializeForPost())
+			res[key] = bone.serializeForPost()
+			#res.update(bone.serializeForPost())
 		self.save(res)
 
 	def onSaveSuccess(self, editTaskID: int) -> None:

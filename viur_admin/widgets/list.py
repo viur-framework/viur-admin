@@ -621,6 +621,9 @@ class ListWidget(QtWidgets.QWidget):
 		# FIXME: testing changing to placeholder text
 		# if filter is not None and "search" in filter:
 		# 	self.ui.editSearch.setText(filter["search"])
+		if config is None:
+			config = conf.serverConfig["modules"][module]
+		print("config is", config)
 		self.config = config
 		handler = self.config["handler"]
 		try:

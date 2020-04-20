@@ -19,7 +19,7 @@ from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin import config
 
 
@@ -63,7 +63,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 					relStructDict, value["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or value[
 					        "key"]
 		except Exception as err:
-			logger.exception(err)
+			#logger.exception(err)
 			# We probably received some garbage
 			value = ""
 		return value
@@ -86,7 +86,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 	def rowCount(self, *args: Any, **kwargs: Any) -> int:
 		return len(self.dataCache)
 
-	def colCount(self, *args: Any, **kwargs: Any) -> int:
+	def columnCount(self, *args: Any, **kwargs: Any) -> int:
 		return 2
 
 	def data(self, index: QtCore.QModelIndex, role: Union[int, None] = None) -> Any:
@@ -95,8 +95,10 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		elif role != QtCore.Qt.ToolTipRole and role != QtCore.Qt.EditRole and role != QtCore.Qt.DisplayRole:
 			return
 		if 0 <= index.row() < self.rowCount():
-			if index.col() == 0:
-				return formatString(self.format, self.structure, self.dataCache[index.row()])
+			if index.column() == 0:
+				#print(formatString("$(name)", self.structure, self.dataCache[index.row()]))
+				#return formatString("$(name)", self.structure, self.dataCache[index.row()])
+				return str(self.dataCache[index.row()].get("name"))
 			else:
 				return "foo"
 
@@ -118,7 +120,8 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		self.layoutChanged.emit()
 
 	def getItem(self, label: str) -> Union[str, None]:
-		res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
+		#res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
+		res = [x for x in self.dataCache if x.get("name") == label]
 		if len(res):
 			return res[0]
 		return
@@ -260,23 +263,31 @@ class RelationalEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		multiple = skelStructure[boneName]["multiple"]
-		if "module" in skelStructure[boneName]:
-			destModul = skelStructure[boneName]["module"]
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		multiple = myStruct["multiple"]
+		if "module" in myStruct:
+			destModul = myStruct["module"]
 		else:
-			destModul = skelStructure[boneName]["type"].split(".")[1]
+			destModul = myStruct["type"].split(".")[1]
 		fmt = "$(name)"
-		if "format" in skelStructure[boneName]:
-			fmt = skelStructure[boneName]["format"]
-		return cls(
+		if "format" in myStruct:
+			fmt = myStruct["format"]
+		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
-			multiple=multiple,
+			multiple=False,
 			destModule=destModul,
-			using=skelStructure[boneName]["using"],
+			using=myStruct["using"],
 			format=fmt)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
 
 	def installAutoCompletion(self) -> None:
 		"""
@@ -289,7 +300,7 @@ class RelationalEditBone(BoneEditInterface):
 			self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
 			self.entry.setCompleter(self.autoCompleter)
 			self.entry.textChanged.connect(self.reloadAutocompletion)
-			self.autoCompleter.activated.connect(self.setAutoCompletion)  # Broken...
+			self.autoCompleter.activated[str].connect(self.setAutoCompletion)  # Broken...
 			self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
 	def updateVisiblePreview(self) -> None:
@@ -369,13 +380,17 @@ class RelationalEditBone(BoneEditInterface):
 		self.updateVisiblePreview()
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
-		self.selection = data[self.boneName]
+		self.selection = data
 		self.updateVisiblePreview()
 
 	def serializeForPost(self) -> Dict[str, Any]:
 		if not self.selection:
-			return {self.boneName: None}
-
+			return None
+			#return {self.boneName: None}
+		if self.using:
+			raise NotImplementedError()
+		else:
+			return self.selection["dest"]["key"]
 		res = {}
 		if self.using:
 			if self.multiple:

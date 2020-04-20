@@ -7,7 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.bones.string import chooseLang
 from viur_admin.event import event
@@ -176,7 +176,7 @@ class ExtendedTextEdit(QtWidgets.QTextEdit):
 
 
 class WebPage(QtCore.QObject):
-	sendText = QtCore.pyqtSignal((str))
+	sendText = QtCore.pyqtSignal((str, str))
 	requestCode = QtCore.pyqtSignal()
 	receiveCodeCallback = QtCore.pyqtSignal((str))
 
@@ -362,28 +362,33 @@ class TextEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		myStruct = skelStructure[boneName]
+		readOnly = "readonly" in myStruct and myStruct
 		languages = None
 		plaintext = False
 		validHtml = None
 		if boneName in skelStructure:
-			if "languages" in skelStructure[boneName]:
-				languages = skelStructure[boneName]["languages"]
-
-			if "plaintext" in skelStructure[boneName] and skelStructure[boneName]["plaintext"]:
+			if "plaintext" in myStruct and myStruct["plaintext"]:
 				plaintext = True
+			if "validHtml" in myStruct:
+				validHtml = myStruct["validHtml"]
 
-			if "validHtml" in skelStructure[boneName]:
-				validHtml = skelStructure[boneName]["validHtml"]
-
-		return cls(
+		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
-			languages=languages,
+			languages=None,
 			plaintext=plaintext,
 			validHtml=validHtml,
 			**kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
+
 
 	def onTabLanguageChanged(self, lang: str) -> None:
 		if lang in self.languageContainer:
@@ -420,7 +425,7 @@ class TextEditBone(BoneEditInterface):
 				editor = RawTextEdit(self.html)
 			else:
 				if self.validHtml:
-					editor = TextEdit(self.html, self.validHtml)
+					editor = TextEdit(self.html, self.validHtml, "en")
 				else:
 					editor = RawTextEdit(self.html)
 		editor.onDataChanged.connect(self.onSave)
@@ -436,31 +441,11 @@ class TextEditBone(BoneEditInterface):
 			self.webView.setHtml(text)
 
 	def unserialize(self, data: dict) -> None:
-		if self.boneName not in data:
-			return
-
-		if self.languages and isinstance(data[self.boneName], dict):
-			for lang in self.languages:
-				if lang in data[self.boneName] and data[self.boneName][lang] is not None:
-					self.html[lang] = data[self.boneName][lang].replace(
-						"target=\"_blank\" href=\"",
-						"href=\"!")
-				else:
-					self.html[lang] = ""
-				self.languageContainer[lang].webView.setHtml(self.html[lang])
-		elif not self.languages:
-			self.html = str(data[self.boneName]).replace("target=\"_blank\" href=\"", "href=\"!") if (
-					data and data.get(self.boneName)) else ""
-			self.webView.setHtml(self.html)
+		self.html = str(data).replace("target=\"_blank\" href=\"", "href=\"!") if (data) else ""
+		self.webView.setHtml(self.html)
 
 	def serializeForPost(self) -> Dict[str, Any]:
-		if self.languages:
-			res = {}
-			for lang in self.languages:
-				res["%s.%s" % (self.boneName, lang)] = self.html[lang]
-			return res
-		else:
-			return {self.boneName: self.html.replace("href=\"!", "target=\"_blank\" href=\"")}
+		return self.html.replace("href=\"!", "target=\"_blank\" href=\"")
 
 	def serializeForDocument(self) -> dict:
 		return self.serialize()

@@ -36,6 +36,7 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 		self.viewName = viewName
 
 
+
 class ListCoreHandler(WidgetHandler):  # EntryHandler
 	"""Class for holding the main (module) Entry within the modules-list"""
 

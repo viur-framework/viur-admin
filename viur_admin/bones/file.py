@@ -52,7 +52,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			if record and isinstance(record, list) and len(record) > 0:
 				record = record[0]
 		except (IndexError, KeyError) as err:
-			logger.exception(err)
+			#logger.exception(err)
 			record = None
 		if not record:
 			return super(FileViewBoneDelegate, self).paint(painter, option, index)
@@ -125,7 +125,7 @@ class FileItemBone(TreeItemBone):
 
 	def updateVisiblePreview(self) -> None:
 		protoWrap = protocolWrapperInstanceSelector.select(self.toModule)
-		assert protoWrap is not None
+		assert protoWrap is not None, "Module %s has no protoWrap" % self.toModule
 		structure = None
 		if self.skelType is None:
 			structure = protoWrap.viewStructure

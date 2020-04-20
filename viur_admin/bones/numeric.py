@@ -5,7 +5,7 @@ from typing import Union, Dict, Any, List
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIcon, QFocusEvent
 
-from viur_admin.bones.base import BaseViewBoneDelegate
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.log import getLogger
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
@@ -61,7 +61,7 @@ class NumericViewBoneDelegate(BaseViewBoneDelegate):
 				else:
 					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
 			except Exception as err:
-				logger.exception(err)
+				#logger.exception(err)
 				value = str(value)
 		return super(NumericViewBoneDelegate, self).displayText(value, locale)
 
@@ -153,7 +153,9 @@ class NumericEditBone(BoneEditInterface):
 		else:
 			minVal = -pow(2, 30)
 			maxVal = pow(2, 30)
-		return cls(
+		myStruct = skelStructure[boneName]
+		readOnly = bool(myStruct.get("readonly"))
+		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
@@ -161,16 +163,22 @@ class NumericEditBone(BoneEditInterface):
 			min=minVal,
 			max=maxVal,
 			**kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
 
 	def unserialize(self, data: dict) -> None:
-		if self.boneName not in data:
-			return
 		if not self.precision:
-			self.lineEdit.setValue(int(data[self.boneName]) if data[self.boneName] else 0)
+			self.lineEdit.setValue(int(data) if data else 0)
 		else:
-			self.lineEdit.setValue(float(data[self.boneName]) if data[self.boneName] else 0)
+			self.lineEdit.setValue(float(data) if data else 0)
 
 	def serializeForPost(self) -> dict:
+		return str(self.lineEdit.value())
 		return {self.boneName: str(self.lineEdit.value())}
 
 	def serializeForDocument(self) -> dict:

@@ -553,43 +553,51 @@ class NetworkService:
 	currentRequests: List[RequestWrapper] = list()  # A list of currently running requests
 
 	@staticmethod
-	def genReqStr(params: Dict[str, Any]) -> QHttpMultiPart:
-		multiPart = QHttpMultiPart(QHttpMultiPart.FormDataType)
-		for key, value in params.items():
-			if isinstance(value, QtCore.QFile):  # file content must be a QFile object
-				try:
-					mimetype, encoding = mimetypes.guess_type(value.fileName(), strict=False)
-					mimetype = mimetype or "application/octet-stream"
-				except:
-					mimetype = "application/octet-stream"
-				filePart = QHttpPart()
-				filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
-				filePart.setHeader(
+	def genReqStr(value: Dict[str, Any], prefix="", multiPart=None) -> QHttpMultiPart:
+		if not multiPart:
+			multiPart = QHttpMultiPart(QHttpMultiPart.FormDataType)
+
+		if isinstance(value, QtCore.QFile):  # file content must be a QFile object
+			try:
+				mimetype, encoding = mimetypes.guess_type(value.fileName(), strict=False)
+				mimetype = mimetype or "application/octet-stream"
+			except:
+				mimetype = "application/octet-stream"
+			filePart = QHttpPart()
+			filePart.setHeader(QNetworkRequest.ContentTypeHeader, mimetype)
+			filePart.setHeader(
+				QNetworkRequest.ContentDispositionHeader,
+				'form-data; name="{0}"; filename="{1}"'.format(
+					prefix,
+					os.path.basename(value.fileName())))
+			filePart.setBodyDevice(value)
+			value.setParent(multiPart)
+			multiPart.append(filePart)
+		elif isinstance(value, list):
+			for val in value:
+				logger.debug("serializing param item %r of list value %r", val, prefix)
+				textPart = QHttpPart()
+				textPart.setHeader(
+					QNetworkRequest.ContentTypeHeader,
+					"application/octet-stream")
+				textPart.setHeader(
 					QNetworkRequest.ContentDispositionHeader,
-					'form-data; name="{0}"; filename="{1}"'.format(
-						key,
-						os.path.basename(value.fileName())))
-				filePart.setBodyDevice(value)
-				value.setParent(multiPart)
-				multiPart.append(filePart)
-			elif isinstance(value, list):
-				for val in value:
-					logger.debug("serializing param item %r of list value %r", val, key)
-					textPart = QHttpPart()
-					textPart.setHeader(
-						QNetworkRequest.ContentTypeHeader,
-						"application/octet-stream")
-					textPart.setHeader(
-						QNetworkRequest.ContentDispositionHeader,
-						'form-data; name="{0}"'.format(key))
-					textPart.setBody(str(val).encode("utf-8"))
-					multiPart.append(textPart)
-			else:
-				otherPart = QHttpPart()
-				otherPart.setHeader(QNetworkRequest.ContentTypeHeader, "application/octet-stream")
-				otherPart.setHeader(QNetworkRequest.ContentDispositionHeader, 'form-data; name="{0}"'.format(key))
-				otherPart.setBody(str(value).encode("utf-8"))
-				multiPart.append(otherPart)
+					'form-data; name="{0}"'.format(prefix))
+				textPart.setBody(str(val).encode("utf-8"))
+				multiPart.append(textPart)
+		elif isinstance(value, dict):
+			if prefix:
+				prefix += "."
+			for k, v in value.items():
+				NetworkService.genReqStr(v, prefix+k, multiPart)
+		elif value is None:
+			return multiPart
+		else:
+			otherPart = QHttpPart()
+			otherPart.setHeader(QNetworkRequest.ContentTypeHeader, "application/octet-stream")
+			otherPart.setHeader(QNetworkRequest.ContentDispositionHeader, 'form-data; name="{0}"'.format(prefix))
+			otherPart.setBody(str(value).encode("utf-8"))
+			multiPart.append(otherPart)
 		return multiPart
 
 	@staticmethod
