@@ -276,8 +276,11 @@ class ListTableModel(QtCore.QAbstractTableModel):
 
 	def flags(self, index: QModelIndex = None) -> QtCore.Qt.ItemFlags:
 		defaultFlags = super(ListTableModel, self).flags(index)
-		if self.fields[index.column()] in self.editableFields:
-			defaultFlags |= QtCore.Qt.ItemIsEditable
+		try:
+			if self.fields[index.column()] in self.editableFields:
+				defaultFlags |= QtCore.Qt.ItemIsEditable
+		except:
+			pass
 		return defaultFlags
 
 	def setSortIndex(self, index: QModelIndex, sortindex: float) -> None:

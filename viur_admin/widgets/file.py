@@ -18,6 +18,7 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
+from time import sleep
 
 logger = getLogger(__name__)
 iconByExtension: Dict[str, QtGui.QIcon] = dict()
@@ -86,7 +87,7 @@ class PreviewDownloadWorker(QtCore.QObject):
 						icon.addPixmap(pixmap.scaled(104, 104), QtGui.QIcon.Normal, QtGui.QIcon.On)
 						self.previewImageAvailable.emit(dlKey, fileName, icon, pixmap.size())
 			except IndexError:
-				self.sleep(1)
+				self.running = False
 
 	def requestPreview(self, dlKey, dlUrl):
 		self.requestPreviewImage.emit(dlKey, dlUrl)

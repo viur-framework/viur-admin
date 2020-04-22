@@ -20,6 +20,7 @@ from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QN
 import viur_admin.ui.icons_rc
 from viur_admin.config import conf
 from viur_admin.log import getLogger
+import io
 
 logger = getLogger(__name__)
 logger.debug("icons_rc found: %r", viur_admin.ui.icons_rc)  # import guard
@@ -557,9 +558,14 @@ class NetworkService:
 		if not multiPart:
 			multiPart = QHttpMultiPart(QHttpMultiPart.FormDataType)
 
-		if isinstance(value, QtCore.QFile):  # file content must be a QFile object
+		if isinstance(value, (QtCore.QFile, io.BufferedReader)):  # file content must be a QFile object
+			# FIXME: This is broken. IoBufferedReader will be read to memory entirely - not streamed!!
+			if "name" in dir(value):
+				fileName = value.name
+			elif "fileName" in dir(value):
+				fileName = value.fileName()
 			try:
-				mimetype, encoding = mimetypes.guess_type(value.fileName(), strict=False)
+				mimetype, encoding = mimetypes.guess_type(fileName, strict=False)
 				mimetype = mimetype or "application/octet-stream"
 			except:
 				mimetype = "application/octet-stream"
@@ -569,9 +575,12 @@ class NetworkService:
 				QNetworkRequest.ContentDispositionHeader,
 				'form-data; name="{0}"; filename="{1}"'.format(
 					prefix,
-					os.path.basename(value.fileName())))
-			filePart.setBodyDevice(value)
-			value.setParent(multiPart)
+					os.path.basename(fileName)))
+			if isinstance(value, io.BufferedReader):
+				filePart.setBody(value.read())
+			else:
+				filePart.setBodyDevice(value)
+				value.setParent(multiPart)
 			multiPart.append(filePart)
 		elif isinstance(value, list):
 			for val in value:

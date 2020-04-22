@@ -163,9 +163,9 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("RecordBone.unserialize: %r", data)
 		try:
-			for bone in self.bones.values():
+			for key, bone in self.bones.items():
 				logger.debug("RecordBoneInternalEdit.unserialize bone: %r", bone)
-				bone.unserialize(data)
+				bone.unserialize(data.get(key))
 		except AssertionError as err:
 			pass
 
@@ -335,23 +335,17 @@ class RecordEditBone(BoneEditInterface):
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
 		logger.debug("unserialize start")
-		self.selection = data[self.boneName]
+		self.selection = data
 		logger.debug("unserialize: before calling updateVisiblePreview")
 		self.updateVisiblePreview()
 		logger.debug("unserialize end")
 
 	def serializeForPost(self) -> dict:
 		if not self.selection:
-			return {self.boneName: None}
-		res = {}
+			return None
+		res = []
 		for ix, item in enumerate(self.recordBoneInternalEdits):
-			entry = item.serializeForPost()
-			if isinstance(entry, dict):
-				for k, v in entry.items():
-					res["{0}.{1}.{2}".format(self.boneName, ix, k)] = v
-			else:
-				res["{0}.{1}.key".format(self.boneName, ix)] = entry
-
+			res.append(item.serializeForPost())
 		return res
 
 

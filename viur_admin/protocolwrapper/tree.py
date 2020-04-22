@@ -143,7 +143,7 @@ class TreeWrapper(QtCore.QObject):
 		# It's a cache-miss or cache too old
 		self.dataCache[key] = None
 		queryParams = {k: v for k, v in kwargs.items()}
-		queryParams["node"] = node
+		queryParams["parententry"] = node
 		for skelType in ["node", "leaf"]:
 			queryParams["skelType"] = skelType
 			queryParams["amount"] = self.batchSize

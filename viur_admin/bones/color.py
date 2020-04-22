@@ -63,14 +63,12 @@ class ColorEditBone(BoneEditInterface):
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % str(self.lineEdit.displayText()))
 
 	def unserialize(self, data: dict) -> None:
-		if self.boneName not in data:
-			return
-		data = str(data[self.boneName]) if data[self.boneName] else ""
+		data = str(data)
 		self.lineEdit.setText(data)
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)
 
 	def serializeForPost(self) -> dict:
-		return {self.boneName: str(self.lineEdit.displayText())}
+		return str(self.lineEdit.displayText())
 
 
 def CheckForColorBone(
