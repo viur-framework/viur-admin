@@ -583,17 +583,21 @@ class NetworkService:
 				value.setParent(multiPart)
 			multiPart.append(filePart)
 		elif isinstance(value, list):
-			for val in value:
-				logger.debug("serializing param item %r of list value %r", val, prefix)
-				textPart = QHttpPart()
-				textPart.setHeader(
-					QNetworkRequest.ContentTypeHeader,
-					"application/octet-stream")
-				textPart.setHeader(
-					QNetworkRequest.ContentDispositionHeader,
-					'form-data; name="{0}"'.format(prefix))
-				textPart.setBody(str(val).encode("utf-8"))
-				multiPart.append(textPart)
+			if any([isinstance(x, dict) for x in value]):
+				for idx, v in enumerate(value):
+					NetworkService.genReqStr(v, (prefix+"." if prefix else "")+str(idx), multiPart)
+			else:
+				for val in value:
+					logger.debug("serializing param item %r of list value %r", val, prefix)
+					textPart = QHttpPart()
+					textPart.setHeader(
+						QNetworkRequest.ContentTypeHeader,
+						"application/octet-stream")
+					textPart.setHeader(
+						QNetworkRequest.ContentDispositionHeader,
+						'form-data; name="{0}"'.format(prefix))
+					textPart.setBody(str(val).encode("utf-8"))
+					multiPart.append(textPart)
 		elif isinstance(value, dict):
 			if prefix:
 				prefix += "."

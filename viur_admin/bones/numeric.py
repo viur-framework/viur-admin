@@ -179,7 +179,6 @@ class NumericEditBone(BoneEditInterface):
 
 	def serializeForPost(self) -> dict:
 		return str(self.lineEdit.value())
-		return {self.boneName: str(self.lineEdit.value())}
 
 	def serializeForDocument(self) -> dict:
 		return self.serializeForPost()

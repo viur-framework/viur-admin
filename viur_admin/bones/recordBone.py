@@ -174,7 +174,7 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 		for key, bone in self.bones.items():
 			data = bone.serializeForPost()
 			# print("RecordBoneInternalEdit.serializeForPost: key, value", key, data)
-			res.update(data)
+			res[key] = data
 		return res
 
 	def onDelBtnReleased(self) -> None:
@@ -323,6 +323,8 @@ class RecordEditBone(BoneEditInterface):
 			logger.debug("add new entry: %r, %r", key, bone)
 		if isinstance(self.selection, dict):
 			self.selection = [self.selection]
+		elif self.selection is None:
+			self.selection = []
 		self.selection.append(newEntry)
 		self.updateVisiblePreview()
 

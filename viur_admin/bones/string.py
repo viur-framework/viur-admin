@@ -262,10 +262,6 @@ class StringEditBone(BoneEditInterface):
 				return
 
 	def unserialize(self, data: Dict[str, Any]) -> None:
-		# print("StringEditBone", data)
-		#if self.boneName not in data:
-		#	return
-		#data = data[self.boneName]
 		if not data:
 			return
 		if self.languages and self.multiple:

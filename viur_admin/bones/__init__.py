@@ -15,3 +15,4 @@ import viur_admin.bones.text
 import viur_admin.bones.treedir
 import viur_admin.bones.treeitem
 import viur_admin.bones.recordBone
+import viur_admin.bones.spatial
