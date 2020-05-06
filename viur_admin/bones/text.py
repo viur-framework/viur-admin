@@ -186,7 +186,7 @@ class WebPage(QtCore.QObject):
 			parent: Union[None, QtWidgets.QWidget] = None):
 		super(WebPage, self).__init__(parent)
 		self.textToEdit = ""
-		self.lang = lang
+		self.lang = "de"
 
 	@QtCore.pyqtSlot()
 	def onEditorLoaded(self) -> None:
