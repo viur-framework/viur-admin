@@ -62,7 +62,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(AccessSelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		self.layout = QtWidgets.QVBoxLayout(self)
+		layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.checkboxes: Dict[Any, Any] = dict()
 		self.flags: Dict[Any, Any] = dict()
 		self.modules: Dict[Any, Any] = dict()
@@ -86,13 +86,13 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 				descr = defaultValues[flag]
 			except KeyError:
 				descr = flag
-			cb = QtWidgets.QCheckBox(descr, self)
-			self.layout.addWidget(cb)
+			cb = QtWidgets.QCheckBox(descr, self.editWidget)
+			layout.addWidget(cb)
 			cb.show()
 			self.checkboxes[flag] = cb
 
 		for module in sorted(self.modules):
-			groupBox = QtWidgets.QGroupBox(module, self)
+			groupBox = QtWidgets.QGroupBox(module, self.editWidget)
 			groupBoxLayout = QtWidgets.QHBoxLayout(groupBox)
 			for ix, state in enumerate(self.states):
 				key = "{0}-{1}".format(module, state)
@@ -100,7 +100,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 					descr = defaultValues[key]
 				except:
 					descr = key
-				cb = AccessPushButton(self, module, state, self)
+				cb = AccessPushButton(self, module, state, self.editWidget)
 				if state == "view":
 					iconName = "preview"
 				else:
@@ -165,7 +165,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			sortBy=sortBy,
 			**kwargs)
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		if self.boneName not in data:
 			return
 		for key, checkbox in self.checkboxes.items():

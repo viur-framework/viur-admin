@@ -11,11 +11,17 @@ from hashlib import sha1
 from queue import Empty as QEmpty, Full as QFull, Queue
 from typing import Any, Callable, Dict, List, Union
 from urllib import request
-
+from viur_admin.pyodidehelper import isPyodide
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QObject, QUrl
-from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QNetworkCookieJar, QNetworkReply, \
-	QNetworkRequest, QSslCertificate, QSslConfiguration
+if isPyodide:
+	from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QNetworkReply, QNetworkRequest
+
+	QNetworkCookieJar = QSslCertificate = QSslConfiguration = None
+
+else:
+	from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QNetworkCookieJar, QNetworkReply, \
+		QNetworkRequest, QSslCertificate, QSslConfiguration
 
 import viur_admin.ui.icons_rc
 from viur_admin.config import conf
@@ -25,46 +31,52 @@ import io
 logger = getLogger(__name__)
 logger.debug("icons_rc found: %r", viur_admin.ui.icons_rc)  # import guard
 
-# Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
-try:
-	css = QtCore.QFile(":icons/cacert.pem")
-	css.open(QtCore.QFile.ReadOnly)
-	certs = css.readAll()
-except:
-	certs = None
+if not isPyodide:
+	# Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
+	try:
+		css = QtCore.QFile(":icons/cacert.pem")
+		css.open(QtCore.QFile.ReadOnly)
+		certs = css.readAll()
+	except:
+		certs = None
 
-if certs:
-	baseSslConfig = QSslConfiguration.defaultConfiguration()
-	baseSslConfig.setCaCertificates(QSslCertificate.fromData(certs))
-	QSslConfiguration.setDefaultConfiguration(baseSslConfig)
-	nam = QNetworkAccessManager()
-	_isSecureSSL = True
+	if certs:
+		baseSslConfig = QSslConfiguration.defaultConfiguration()
+		baseSslConfig.setCaCertificates(QSslCertificate.fromData(certs))
+		QSslConfiguration.setDefaultConfiguration(baseSslConfig)
+		nam = QNetworkAccessManager()
+		_isSecureSSL = True
+	else:
+		# We got no valid certificate file - accept all SSL connections
+		nam = QNetworkAccessManager()
+
+
+		class SSLFIX(QtCore.QObject):
+			def onSSLError(self, networkReply: Any, sslErros: Any) -> None:
+				networkReply.ignoreSslErrors()
+
+
+		_SSLFIX = SSLFIX()
+		nam.sslErrors.connect(_SSLFIX.onSSLError)
+		_isSecureSSL = False
+
+
+	class MyCookieJar(QNetworkCookieJar):
+		"""Needed for accessing protected methods"""
+		pass
+
 else:
-	# We got no valid certificate file - accept all SSL connections
+	_isSecureSSL = True  # That is handled by your browser
 	nam = QNetworkAccessManager()
+	MyCookieJar = None
 
-
-	class SSLFIX(QtCore.QObject):
-		def onSSLError(self, networkReply: Any, sslErros: Any) -> None:
-			networkReply.ignoreSslErrors()
-
-
-	_SSLFIX = SSLFIX()
-	nam.sslErrors.connect(_SSLFIX.onSSLError)
-	_isSecureSSL = False
-
-
-class MyCookieJar(QNetworkCookieJar):
-	"""Needed for accessing protected methods"""
-
-	pass
 
 
 def getFileNameForUrl(dlKey: str) -> str:
 	return os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
 
-
-nam.setCookieJar(MyCookieJar())
+if not isPyodide:
+	nam.setCookieJar(MyCookieJar())
 
 mimetypes.init()
 if os.path.exists("mime.types"):
@@ -295,7 +307,7 @@ class RequestWrapper(QtCore.QObject):
 			except:  # Unknown error
 				errorDescr = None
 			if errorDescr:
-				if not self.failSilent:
+				if not self.failSilent and not isPyodide:
 					QtWidgets.QMessageBox.warning(
 						None,
 						"Networkrequest Failed",
@@ -308,6 +320,7 @@ class RequestWrapper(QtCore.QObject):
 		self.successHandler = None
 		self.failureHandler = None
 		self.finishedHandler = None
+		QtCore.QCoreApplication.processEvents()
 		self.deleteLater()
 
 	# logger.debug("onFinished exit")
@@ -549,7 +562,7 @@ class RemoteFile(QtCore.QObject):
 
 
 class NetworkService:
-	url = None
+	url = "/admin"
 	serverVersion = None
 	currentRequests: List[RequestWrapper] = list()  # A list of currently running requests
 
@@ -660,7 +673,10 @@ class NetworkService:
 					extraHeaders = {}
 				extraHeaders["Sec-X-ViUR-StaticSKey"] = securityTokenProvider.staticSecurityKey
 			else:
-				key = securityTokenProvider.getKey()
+				if isPyodide:
+					key = "--USE SKEY--"
+				else:
+					securityTokenProvider.getKey()
 			if not params:
 				params = {}
 			params["skey"] = key

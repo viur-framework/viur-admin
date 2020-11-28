@@ -14,7 +14,7 @@ from viur_admin.event import event
 from viur_admin.utils import formatString, Overlay, WidgetHandler
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, collectBoneErrors
 from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
@@ -162,7 +162,8 @@ class InternalEdit(QtWidgets.QWidget):
 			parent: QtWidgets.QWidget,
 			using: Dict[str, Any],
 			text: str,
-			values: Dict[str, Any]):
+			values: Dict[str, Any],
+			errors: List[Dict]):
 		super(InternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.dest = QtWidgets.QLabel(text)
@@ -174,13 +175,15 @@ class InternalEdit(QtWidgets.QWidget):
 		tmpDict = dict()
 		for key, bone in using:
 			tmpDict[key] = bone
-
+		print("-in USING--")
 		for key, bone in using:
+			print((key, bone))
 			if not bone["visible"]:
 				continue
 			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
+			print(wdgGen)
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
-			if bone["error"] and not ignoreMissing:
+			if 0 and bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
 				dataWidget.setLayout(layout)
@@ -209,13 +212,13 @@ class InternalEdit(QtWidgets.QWidget):
 			layout.addWidget(dataWidget)
 			self.layout.addWidget(lblWidget)
 			self.bones[key] = widget
-		self.unserialize(values["rel"])
+		self.unserialize(values, errors)
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		try:
-			for bone in self.bones.values():
+			for key, bone in self.bones.items():
 				logger.debug("unserialize bone: %r", bone)
-				bone.unserialize(data)
+				bone.unserialize(data.get(key), collectBoneErrors(errors, key))
 		except AssertionError as err:
 			pass
 
@@ -224,8 +227,7 @@ class InternalEdit(QtWidgets.QWidget):
 		for key, bone in self.bones.items():
 			data = bone.serializeForPost()
 			# print("InternalEdit.serializeForPost: key, value", key, data)
-			res.update(data)
-		res["key"] = self.values["dest"]["key"]
+			res[key] = data
 		return res
 
 
@@ -253,37 +255,35 @@ class RelationalEditBone(BoneEditInterface):
 		self.using = using
 		self.format = format
 		self.overlay = Overlay(self)
-		self.internalEdits: List[InternalEdit] = list()
-		if not self.multiple:
-			self.layout = QtWidgets.QHBoxLayout(self)
-			self.previewIcon = None
-		else:
-			self.layout = QtWidgets.QVBoxLayout(self)
-			self.previewWidget = QtWidgets.QWidget(self)
-			self.previewLayout = QtWidgets.QVBoxLayout(self.previewWidget)
-			self.layout.addWidget(self.previewWidget)
+		self.internalEdits: InternalEdit = None
+		outerLayout = QtWidgets.QVBoxLayout(self.editWidget)  # Vbox with Relational entry and optional using edit
+		hboxWidget = QtWidgets.QWidget(self.editWidget)
+		hboxLayout = QtWidgets.QHBoxLayout(hboxWidget)
+		outerLayout.addWidget(hboxWidget)
+		self.previewIcon = None
+
 		self.addBtn = QtWidgets.QPushButton(
 			QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
-			parent=self)
+			parent=hboxWidget)
 		iconadd = QtGui.QIcon()
 		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.addBtn.setIcon(iconadd)
 		self.addBtn.released.connect(self.onAddBtnReleased)
-		if not self.multiple:
-			self.entry = QtWidgets.QLineEdit(self)
-			self.installAutoCompletion()
-			self.layout.addWidget(self.entry)
-			icon6 = QtGui.QIcon()
-			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-			self.delBtn = QtWidgets.QPushButton("", parent=self)
-			self.delBtn.setIcon(icon6)
-			self.delBtn.released.connect(self.onDelBtnReleased)
-			self.layout.addWidget(self.addBtn)
-			self.layout.addWidget(self.delBtn)
-			self.selection: Dict[str, Any] = None
-		else:
-			self.selection: List[Dict[str, Any]] = list()
-			self.layout.addWidget(self.addBtn)
+		self.entry = QtWidgets.QLineEdit(hboxWidget)
+		self.installAutoCompletion()
+		hboxLayout.addWidget(self.entry)
+		#icon6 = QtGui.QIcon()
+		#icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+		#self.delBtn = QtWidgets.QPushButton("", parent=self.editWidget)
+		#self.delBtn.setIcon(icon6)
+		#self.delBtn.released.connect(self.onDelBtnReleased)
+		hboxLayout.addWidget(self.addBtn)
+		#hboxLayout.addWidget(self.delBtn)
+		self.selection: Dict[str, Any] = None
+		self.usingEdit = QtWidgets.QWidget(hboxWidget)
+		self.previewLayout = QtWidgets.QVBoxLayout(self.usingEdit)
+		outerLayout.addWidget(self.usingEdit)
+		self.lastErrors = []  # List of errors we receveid in last unserialize call
 
 	@classmethod
 	def fromSkelStructure(
@@ -294,7 +294,6 @@ class RelationalEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		multiple = myStruct["multiple"]
 		if "module" in myStruct:
 			destModul = myStruct["module"]
 		else:
@@ -344,34 +343,17 @@ class RelationalEditBone(BoneEditInterface):
 		if structure is None:
 			return
 		if self.using:
-			if self.multiple:
-				widgetItem = self.previewLayout.takeAt(0)
-				while widgetItem:
-					widgetItem = self.previewLayout.takeAt(0)
-				if self.selection and len(self.selection) > 0:
-					for item in self.selection:
-						item = InternalEdit(self, self.using, formatString(self.format, item, structure), item, {})
-						item.show()
-						self.previewLayout.addWidget(item)
-						self.internalEdits.append(item)
-					self.addBtn.setText("Auswahl ändern")
-				else:
-					self.addBtn.setText("Auswählen")
+			while self.previewLayout.takeAt(0):
+				pass
+			item = InternalEdit(self.usingEdit, self.using, "FIXME", self.selection["rel"], errors=self.lastErrors)
+			item.show()
+			self.previewLayout.addWidget(item)
+			self.internalEdits = item
+			self.addBtn.setText("Auswahl ändern")
+		if self.selection:
+			self.entry.setText(formatString(self.format, self.selection, structure))
 		else:
-			if self.multiple:
-				widgetItem = self.previewLayout.takeAt(0)
-				while widgetItem:
-					widgetItem = self.previewLayout.takeAt(0)
-				if self.selection and len(self.selection) > 0:
-					for item in self.selection:
-						lbl = QtWidgets.QLabel(self.previewWidget)
-						lbl.setText(formatString(self.format, item, structure))
-						self.previewLayout.addWidget(lbl)
-			else:
-				if self.selection:
-					self.entry.setText(formatString(self.format, self.selection, structure))
-				else:
-					self.entry.setText("")
+			self.entry.setText("")
 
 	def reloadAutocompletion(self, text: str) -> None:
 		if text and len(text) > 2:
@@ -408,8 +390,9 @@ class RelationalEditBone(BoneEditInterface):
 			self.selection = None
 		self.updateVisiblePreview()
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		self.selection = data
+		self.lastErrors = errors
 		self.updateVisiblePreview()
 
 	def serializeForPost(self) -> Dict[str, Any]:
@@ -417,29 +400,11 @@ class RelationalEditBone(BoneEditInterface):
 			return None
 			#return {self.boneName: None}
 		if self.using:
-			raise NotImplementedError()
+			resDict = self.internalEdits.serializeForPost()
+			resDict["key"] = self.selection["dest"]["key"]
+			return resDict
 		else:
 			return self.selection["dest"]["key"]
-		res = {}
-		if self.using:
-			if self.multiple:
-				for ix, item in enumerate(self.internalEdits):
-					entry = item.serializeForPost()
-					if isinstance(entry, dict):
-						for k, v in entry.items():
-							res["{0}.{1}.{2}".format(self.boneName, ix, k)] = v
-					else:
-						res["{0}.{1}.key".format(self.boneName, ix)] = entry
-		else:
-			if isinstance(self.selection, dict):
-				res["{0}.0.key".format(self.boneName)] = self.selection["dest"]["key"]
-			elif isinstance(self.selection, list):
-				for idx, item in enumerate(self.selection):
-					res["{0}.{1}.key".format(self.boneName, idx)] = item["dest"]["key"]
-			else:
-				raise ValueError("Unknown selection type %s" % str(type(self.selection)))
-
-		return res
 
 
 class RelationalBoneSelector(QtWidgets.QWidget):

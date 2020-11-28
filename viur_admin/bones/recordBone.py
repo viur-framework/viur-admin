@@ -160,7 +160,7 @@ class RecordBoneInternalEdit(QtWidgets.QWidget):
 		self.layout.addLayout(self.bonesLayout)
 		self.unserialize(self.values)
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		logger.debug("RecordBone.unserialize: %r", data)
 		try:
 			for key, bone in self.bones.items():
@@ -335,7 +335,7 @@ class RecordEditBone(BoneEditInterface):
 		internalEdit.deleteLater()
 		self.updateVisiblePreview()
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		logger.debug("unserialize start")
 		self.selection = data
 		logger.debug("unserialize: before calling updateVisiblePreview")

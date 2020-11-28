@@ -3,10 +3,16 @@ from typing import Any, Dict, Callable
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
-
-from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
+from viur_admin.pyodidehelper import isPyodide
+if isPyodide:
+	from PyQt5 import QtCore, QtWidgets, QtGui
+	import js
+	QtWebEngineWidgets = None
+else:
+	from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 from viur_admin.ui.loginformUI import Ui_LoginWindow
+from viur_admin.ui.simpleloginUI import Ui_simpleLogin
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
 from viur_admin.accountmanager import AccountManager
 from viur_admin.network import NetworkService, securityTokenProvider, nam, MyCookieJar, RequestWrapper
@@ -506,3 +512,56 @@ class Login(QtWidgets.QMainWindow):
 		newLanguage = self.langKeys[index]
 		QtCore.QCoreApplication.installTranslator(config.conf.availableLanguages[newLanguage])
 		config.conf.adminConfig["language"] = newLanguage
+
+class SimpleLogin(QtWidgets.QMainWindow):
+	def __init__(
+			self,
+			*args: Any,
+			**kwargs: Any):
+		QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
+		self.ui = Ui_simpleLogin()
+		self.ui.setupUi(self)
+		self.ui.loginBtn.clicked.connect(self.onBtnLoginReleased)
+		self.setDisabled(True)
+		self.loginTask = None
+		NetworkService.request("/user/view/self", successHandler=self.onHasSession, failureHandler=self.onNoSession, failSilent=True)
+
+	def onHasSession(self, req):
+		data = NetworkService.decode(req)
+		js.console.log("onHASSEssion")
+		js.console.log(data)
+		if data["values"] and data["values"]["access"] and "root" in data["values"]["access"]:
+			self.onLoginSucceeded()
+		else:
+			self.onNoSession()
+
+	def onNoSession(self, *args, **kwargs):
+		js.console.log("onNoSession")
+		self.setDisabled(False)
+
+	def onBtnLoginReleased(self):
+		js.console.log("ON LOGIN")
+		self.setDisabled(True)
+		self.loginTask = LoginTask({
+			"authMethod": "X-VIUR-AUTH-User-Password",
+			"username": self.ui.usernameEdit.text(),
+			"password": self.ui.passwordEdit.text(),
+		})
+		self.loginTask.loginFailed.connect(self.onLoginFailed)
+		self.loginTask.loginSucceeded.connect(self.onLoginSucceeded)
+		self.loginTask.startAuthenticationFlow()
+
+	def onLoginFailed(self, reason):
+		js.console.log("onLoginFailed")
+		js.console.log(reason)
+		self.ui.label_3.setText(reason)
+		self.setDisabled(False)
+
+	def onLoginSucceeded(self, *args, **kwargs):
+		js.console.log("onLoginSucceeded")
+		logger.debug("onLoginSucceeded")
+		#self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful"))
+		#config.conf.loadPortalConfig(NetworkService.url, withCookies=False)
+		event.emit("loginSucceeded")
+		self.hide()
+

@@ -110,13 +110,12 @@ class SelectOneEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(SelectOneEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		self.editWidget = editWidget
 		self.moduleName = moduleName
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.values = values
-		self.layout = QtWidgets.QVBoxLayout(self)
-		self.comboBox = FixedComboBox(self)
+		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.comboBox = FixedComboBox(self.editWidget)
 		self.layout.addWidget(self.comboBox)
 		tmpList = values
 		#if sortBy == "keys":
@@ -146,7 +145,7 @@ class SelectOneEditBone(BoneEditInterface):
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
 		return widgetGen()
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		if 1:  # There might be junk comming from the server
 			items = dict([(str(k), str(v)) for k, v in self.values])
 			if str(data) in items:
@@ -169,7 +168,7 @@ def CheckForSelectOneBone(
 		boneName: str,
 		skelStucture: Dict[str, Any]) -> bool:
 	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
-	return isSelect and not skelStucture[boneName]["multiple"]
+	return isSelect and not bool(skelStucture[boneName].get("multiple"))
 
 
 # Register this Bone in the global queue

@@ -183,7 +183,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			invertedOrderDir = False
 			if "orderdir" in rawFilter and str(rawFilter["orderdir"]) == "1":
 				invertedOrderDir = True
-			if rawFilter["orderby"] in self.dataCache[-1]:
+			if "orderby" in rawFilter and rawFilter["orderby"] in self.dataCache[-1]:
 				if invertedOrderDir:
 					rawFilter[rawFilter["orderby"] + "$lt"] = self.dataCache[-1][rawFilter["orderby"]]
 				else:
@@ -214,7 +214,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self._validFields = [x for x in self.fields if x in self.bones]
 		self.rebuildDelegates.emit(protoWrap.viewStructure)
 		self.dataCache.extend(skellist)
-		if len(skellist) < self._chunkSize:
+		if not cursor:
 			self.completeList = True
 		self.cursor = cursor
 		self.layoutChanged.emit()

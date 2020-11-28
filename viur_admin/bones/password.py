@@ -30,9 +30,9 @@ class PasswordEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super().__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		layout = QtWidgets.QVBoxLayout(self)
-		self.setLayout(layout)
-		self.lineEdit = QtWidgets.QLineEdit(self)
+		layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.editWidget.setLayout(layout)
+		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
 		self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
 		layout.addWidget(self.lineEdit)
 		self.lineEdit.show()
@@ -77,7 +77,7 @@ class PasswordEditBone(BoneEditInterface):
 			self.tabWidget.setCurrentWidget(self.langEdits[lang])
 			self.tabWidget.blockSignals(False)
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		if not data:
 			return
 		self.lineEdit.setText(str(data))

@@ -2,10 +2,13 @@
 
 import html.parser
 from typing import Union, Sequence, Any, List, Dict
-
+from viur_admin.pyodidehelper import isPyodide
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWebChannel import QWebChannel
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
+if isPyodide:
+	QWebEngineView = object
+else:
+	from PyQt5.QtWebChannel import QWebChannel
+	from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
@@ -300,60 +303,26 @@ class TextEditBone(BoneEditInterface):
 			**kwargs: Any):
 		super(TextEditBone, self).__init__(modulName, boneName, readOnly)
 
-		self.setLayout(QtWidgets.QVBoxLayout(self))
+		self.editWidget.setLayout(QtWidgets.QVBoxLayout(self.editWidget))
 		self.languages = languages
 		self.plaintext = plaintext
 		self.validHtml = validHtml
-		if self.languages:
-			self.languageContainer: Dict[str, QtWidgets.QWidget] = dict()
-			self.html: Dict[str, str] = dict()
-			self.tabWidget = QtWidgets.QTabWidget(self)
-			self.tabWidget.setTabBar(ViurTabBar())
-			self.tabWidget.blockSignals(True)
-			self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
-			event.connectWithPriority("tabLanguageChanged", self.onTabLanguageChanged, event.lowPriority)
-			self.layout().addWidget(self.tabWidget)
-			for lang in self.languages:
-				self.html[lang] = ""
-				container = QtWidgets.QWidget()
-				container.setLayout(QtWidgets.QVBoxLayout(container))
-				self.languageContainer[lang] = container
-				btn = QtWidgets.QPushButton(
-					QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self)
-				iconbtn = QtGui.QIcon()
-				iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
-				                  QtGui.QIcon.Off)
-				btn.setIcon(iconbtn)
-				btn.released.connect(self.openEditor)
-				btn.lang = lang
-				webView = ClickableWebView(self)
-				webView.clicked.connect(self.openEditor)
-				sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-				webView.setFixedHeight(200)
-				webView.setSizePolicy(sizePolicy)
-				container.webView = webView
-				container.layout().addWidget(webView)
-				container.layout().addWidget(btn)
-				self.tabWidget.addTab(container, lang)
-			self.tabWidget.blockSignals(False)
-			self.tabWidget.show()
-		else:
-			btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"),
-			                            self)
-			iconbtn = QtGui.QIcon()
-			iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
+		btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self.editWidget)
+		iconbtn = QtGui.QIcon()
+		iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
 			                  QtGui.QIcon.Off)
-			btn.setIcon(iconbtn)
-			btn.lang = None
-			btn.released.connect(self.openEditor)
-			self.webView = ClickableWebView(self)
+		btn.setIcon(iconbtn)
+		btn.lang = None
+		btn.released.connect(self.openEditor)
+		if not isPyodide:
+			self.webView = ClickableWebView(self.editWidget)
 			self.webView.clicked.connect(self.openEditor)
-			self.layout().addWidget(self.webView)
-			self.layout().addWidget(btn)
-			self.html = ""
-		self.setSizePolicy(
+			self.editWidget.layout().addWidget(self.webView)
+		self.editWidget.layout().addWidget(btn)
+		self.html = ""
+		self.editWidget.setSizePolicy(
 			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
-		self.installEventFilter(wheelEventFilter)
+		self.editWidget.installEventFilter(wheelEventFilter)
 
 	@classmethod
 	def fromSkelStructure(
@@ -438,11 +407,18 @@ class TextEditBone(BoneEditInterface):
 			self.languageContainer[lang].webView.setHtml(text)
 		else:
 			self.html = str(text)
-			self.webView.setHtml(text)
+			if isPyodide:
+				pass
+			else:
+				self.webView.setHtml(text)
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		self.html = str(data).replace("target=\"_blank\" href=\"", "href=\"!") if (data) else ""
-		self.webView.setHtml(self.html)
+		if isPyodide:
+			import js
+			js.console.log("Faking Textbone")
+		else:
+			self.webView.setHtml(self.html)
 
 	def serializeForPost(self) -> Dict[str, Any]:
 		return self.html.replace("href=\"!", "target=\"_blank\" href=\"")

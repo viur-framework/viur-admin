@@ -102,29 +102,28 @@ class DateEditBone(BoneEditInterface):
 			**kwargs: Any):
 		super(DateEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
 
-		self.editWidget = editWidget
 		self.boneName = boneName
-		self.layout = QtWidgets.QHBoxLayout(self)
+		layout = QtWidgets.QHBoxLayout(self.editWidget)
 
 		self.time = hasTime
 		self.date = hasDate
 
 		# builds inputspecific Widgets
 		if self.time and self.date:
-			self.lineEdit = FixedDateTimeEdit(self)
+			self.lineEdit = FixedDateTimeEdit(self.editWidget)
 			self.lineEdit.setGeometry(QtCore.QRect(170, 50, 250, 20))
 			self.lineEdit.setAccelerated(False)
 			self.lineEdit.setCalendarPopup(True)
 		elif self.date:
-			self.lineEdit = FixedDateEdit(self)
+			self.lineEdit = FixedDateEdit(self.editWidget)
 			self.lineEdit.setGeometry(QtCore.QRect(190, 90, 250, 22))
 			self.lineEdit.setCalendarPopup(True)
 		else:
-			self.lineEdit = FixedTimeEdit(self)
+			self.lineEdit = FixedTimeEdit(self.editWidget)
 			self.lineEdit.setGeometry(QtCore.QRect(190, 190, 250, 22))
 
 		self.lineEdit.setObjectName(_fromUtf8(boneName))
-		self.layout.addWidget(self.lineEdit)
+		layout.addWidget(self.lineEdit)
 		self.lineEdit.show()
 
 	@classmethod
@@ -148,7 +147,7 @@ class DateEditBone(BoneEditInterface):
 		return widgetGen()
 
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		value = str(data)
 		self.dt = datetime.now()
 		if self.time and self.date:  # date AND time

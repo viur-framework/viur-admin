@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.utils import wheelEventFilter, ViurTabBar
+from viur_admin.widgets.edit import collectBoneErrors
 
 
 class LanguageContainer(QtWidgets.QTabWidget):
@@ -29,7 +30,7 @@ class LanguageContainer(QtWidgets.QTabWidget):
 				wdg.setFocus()
 				return
 
-	def unserialize(self, data):
+	def unserialize(self, data, errors: List[Dict]):
 		if not isinstance(data, dict):
 			return  # Fixme
 		for idx, lng in enumerate(self.languages):
@@ -61,19 +62,21 @@ class MultiContainer(QtWidgets.QWidget):
 	def onAddButtonClicked(self, *args, **kwargs):
 		self.layout().addWidget(self.widgetGen())
 
-	def unserialize(self, data):
+	def unserialize(self, data, errors: List[Dict]):
+		print("---err list is ---")
+		print(errors)
 		self.clearContents()
 		if not data:
 			return
 		elif isinstance(data, list):
-			for d in data:
+			for idx, d in enumerate(data):
 				wdg = self.widgetGen()
 				self.layout().addWidget(wdg)
-				wdg.unserialize(d)
+				wdg.unserialize(d, collectBoneErrors(errors, str(idx)))
 		else:
 			wdg = self.widgetGen()
 			self.layout().addWidget(wdg)
-			wdg.unserialize(data)
+			wdg.unserialize(data, collectBoneErrors(errors, "0"))
 
 	def serializeForPost(self):
 		return [wdg.serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
@@ -104,8 +107,8 @@ class BaseEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(BaseEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		self.layout = QtWidgets.QHBoxLayout(self)
-		self.lineEdit = QtWidgets.QLineEdit()
+		self.layout = QtWidgets.QHBoxLayout(self.editWidget)
+		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
 		self.layout.addWidget(self.lineEdit)
 		self.setParams()
 		self.lineEdit.show()
@@ -122,7 +125,7 @@ class BaseEditBone(BoneEditInterface):
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		return BaseEditBone(moduleName, boneName, readOnly, **kwargs)
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		self.lineEdit.setText(str(data) if data else "")
 
 	def serializeForPost(self) -> dict:

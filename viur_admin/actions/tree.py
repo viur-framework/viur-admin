@@ -97,7 +97,7 @@ class TreeDirUpAction(QtWidgets.QAction):
 		reqWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert reqWrap is not None
 		node = reqWrap.getNode(self.parent().getNode())
-		if not node["parentdir"]:
+		if not node["parententry"]:
 			self.setEnabled(False)
 		else:
 			self.setEnabled(True)
@@ -107,8 +107,8 @@ class TreeDirUpAction(QtWidgets.QAction):
 		assert reqWrap is not None
 		node = reqWrap.getNode(self.parent().getNode())
 		if node:
-			if node["parentdir"]:
-				self.parent().setNode(node["parentdir"], isInitialCall=True)
+			if node["parententry"]:
+				self.parent().setNode(node["parententry"], isInitialCall=True)
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

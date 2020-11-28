@@ -37,7 +37,7 @@ class SelectMultiEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(SelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		self.layout = QtWidgets.QVBoxLayout(self)
+		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.checkboxes: Dict[str, QtWidgets.QCheckBox] = dict()
 		tmpList = values
 		#if sortBy == "keys":
@@ -76,7 +76,7 @@ class SelectMultiEditBone(BoneEditInterface):
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
 		return widgetGen()
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		for key, checkbox in self.checkboxes.items():
 			checkbox.setChecked(isinstance(data, list) and key in data)
 
@@ -120,7 +120,7 @@ def CheckForSelectMultiBone(
 		boneName: str,
 		skelStucture: Dict[str, Any]) -> bool:
 	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
-	return isSelect and skelStucture[boneName]["multiple"]
+	return isSelect and bool(skelStucture[boneName].get("multiple"))
 
 
 # Register this Bone in the global queue

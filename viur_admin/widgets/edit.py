@@ -31,6 +31,15 @@ class ApplicationType(Enum):
 	SINGLETON = 3
 
 
+def collectBoneErrors(errorList, currentKey):
+	boneErrors = []
+	for error in errorList:
+		if error["fieldPath"] and error["fieldPath"][0] == currentKey:
+			thisError = error.copy()
+			thisError["fieldPath"] = error["fieldPath"][1:]
+			boneErrors.append(thisError)
+	return boneErrors
+
 class EditWidget(QtWidgets.QWidget):
 
 	def __init__(
@@ -269,6 +278,9 @@ class EditWidget(QtWidgets.QWidget):
 		tmpTabs.sort(key=lambda x: x[1])
 		for scrollArea, tabName in tmpTabs:
 			self.ui.tabWidget.addTab(scrollArea, tabName)
+		from pprint import pprint
+		#pprint(data)
+		pprint(data["errors"])
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
 				continue
@@ -284,7 +296,7 @@ class EditWidget(QtWidgets.QWidget):
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict, editWidget=self)
 			widget.setSizePolicy(
 				QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-			if bone["error"] and not ignoreMissing:
+			if 0 and bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
 				layout = QtWidgets.QHBoxLayout(dataWidget)
 				dataWidget.setLayout(layout)
@@ -321,7 +333,7 @@ class EditWidget(QtWidgets.QWidget):
 			tabs[tabName].addRow(lblWidget, dataWidget)
 			dataWidget.show()
 			self.bones[key] = widget
-		self.unserialize(data["values"])
+		self.unserialize(data["values"], data["errors"])
 		# self._lastData = data
 		# logger.debug("setData _lastData: %r", self._lastData)
 		event.emit("rebuildBreadCrumbs()")
@@ -329,11 +341,12 @@ class EditWidget(QtWidgets.QWidget):
 	# if self.overlay.status==self.overlay.BUSY:
 	#	self.overlay.clear()
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		logger.debug("EditWidget.unserialize - start")
 		try:
 			for key, bone in self.bones.items():
-				bone.unserialize(data.get(key))
+				boneErrors = collectBoneErrors(errors, key)
+				bone.unserialize(data.get(key), boneErrors)
 		except AssertionError as err:
 			logger.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))

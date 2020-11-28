@@ -129,12 +129,12 @@ class NumericEditBone(BoneEditInterface):
 		self.precision = precision
 		self.min = min
 		self.max = max
-		lineLayout = QtWidgets.QHBoxLayout(self)
+		lineLayout = QtWidgets.QHBoxLayout(self.editWidget)
 		if self.precision:
-			self.lineEdit = FixedQDoubleSpinBox(self)
+			self.lineEdit = FixedQDoubleSpinBox(self.editWidget)
 			self.lineEdit.setDecimals(self.precision)
 		else:  # Just ints
-			self.lineEdit = FixedQSpinBox(self)
+			self.lineEdit = FixedQSpinBox(self.editWidget)
 		self.lineEdit.setRange(self.min, self.max)
 		lineLayout.addWidget(self.lineEdit)
 
@@ -171,7 +171,7 @@ class NumericEditBone(BoneEditInterface):
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
 		return widgetGen()
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		if not self.precision:
 			self.lineEdit.setValue(int(data) if data else 0)
 		else:

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'hierarchy.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -36,10 +36,10 @@ class Ui_Hierarchy(object):
         sizePolicy.setHeightForWidth(self.treeWidget.sizePolicy().hasHeightForWidth())
         self.treeWidget.setSizePolicy(sizePolicy)
         self.treeWidget.setObjectName("treeWidget")
-        self.webView = QtWebEngineWidgets.QWebEngineView(self.splitter)
-        self.webView.setBaseSize(QtCore.QSize(300, 300))
-        self.webView.setUrl(QtCore.QUrl("about:blank"))
-        self.webView.setObjectName("webView")
+        #self.webView = QtWebEngineWidgets.QWebEngineView(self.splitter)
+        #self.webView.setBaseSize(QtCore.QSize(300, 300))
+        #self.webView.setUrl(QtCore.QUrl("about:blank"))
+        #self.webView.setObjectName("webView")
         self.verticalLayout.addWidget(self.splitter)
 
         self.retranslateUi(Hierarchy)
@@ -48,4 +48,4 @@ class Ui_Hierarchy(object):
     def retranslateUi(self, Hierarchy):
         _translate = QtCore.QCoreApplication.translate
         Hierarchy.setWindowTitle(_translate("Hierarchy", "Form"))
-from PyQt5 import QtWebEngineWidgets
+#from PyQt5 import QtWebEngineWidgets

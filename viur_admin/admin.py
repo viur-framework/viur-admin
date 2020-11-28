@@ -15,7 +15,7 @@ import sys
 import traceback
 from collections import namedtuple
 from typing import Any
-
+from viur_admin.pyodidehelper import isPyodide
 
 min_version = (3, 6)
 if sys.version_info < min_version:
@@ -59,9 +59,10 @@ try:
 	from PyQt5 import QtGui, QtCore, QtWidgets, QtSvg, QtWebEngineWidgets
 except ImportError as err:
 	# no logger objects present here
-	sys.stderr.write(
-		"QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
-	sys.exit(1)
+	if not isPyodide:
+		sys.stderr.write(
+			"QT Bindings are missing or incomplete! Ensure PyQT5 is build with QtCore, QtGui, QtWidgets, QtOpenGL, QtWebKit and QtWebKitWidgets" + "\n")
+		sys.exit(1)
 
 from PyQt5.QtWidgets import QStyleFactory
 
@@ -73,41 +74,51 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 styleKeys = QStyleFactory.keys()
 styleKeys.append("Viur")
 
-from pkg_resources import resource_filename, resource_listdir
+if not isPyodide:
+	from pkg_resources import resource_filename, resource_listdir
 
-parser = ArgumentParser()
-parser.add_argument(
-	'-d', '--debug', dest='debug', default='info',
-	help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
-	choices=["debug", "info", "warning", "critical"])
-parser.add_argument(
-	'--remote-debugging-port', dest='remote_debugging_port', default='8080',
-	help="WebView remote debugging port", type=int)
-parser.add_argument(
-	'-r', '--report', dest='report', default='auto',
-	help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
-	choices=["yes", "no", "auto"])
-parser.add_argument(
-	'-i', '--no-ignore', dest='noignore', default=False,
-	help="Disable automatic exclusion of temporary files on upload", action="store_true")
-parser.add_argument(
-		'-s', '--show_sortindex', action="store_true",
-		help="Shows Handler sortIndex (helpful for reordering modules)")
-parser.add_argument(
-	"-t", "--theme", dest="theme", default="Viur",
-	help="Choose your prefered widget style from the list",
-	choices=styleKeys
-)
+	parser = ArgumentParser()
+	parser.add_argument(
+		'-d', '--debug', dest='debug', default='info',
+		help="Debug-Level ('debug', 'info', 'warning' or 'critical')", type=str,
+		choices=["debug", "info", "warning", "critical"])
+	parser.add_argument(
+		'--remote-debugging-port', dest='remote_debugging_port', default='8080',
+		help="WebView remote debugging port", type=int)
+	parser.add_argument(
+		'-r', '--report', dest='report', default='auto',
+		help="Report exceptions to viur.is ('yes', 'no' or 'auto')", type=str,
+		choices=["yes", "no", "auto"])
+	parser.add_argument(
+		'-i', '--no-ignore', dest='noignore', default=False,
+		help="Disable automatic exclusion of temporary files on upload", action="store_true")
+	parser.add_argument(
+			'-s', '--show_sortindex', action="store_true",
+			help="Shows Handler sortIndex (helpful for reordering modules)")
+	parser.add_argument(
+		"-t", "--theme", dest="theme", default="Viur",
+		help="Choose your prefered widget style from the list",
+		choices=styleKeys
+	)
+	args = parser.parse_args()
+	args = args
+	prepareLogger(args.debug)
+	from viur_admin.config import conf
+	conf.cmdLineOpts = args
+	app = QtWidgets.QApplication(sys.argv)
+else:
+	prepareLogger(False)
+	app = None
+	import js, traceback, io
+	def customExceptHook(etype, value, tb):  # Log Python exceptions to console
+		ioStr = io.StringIO()
+		traceback.print_exception(etype, value, tb, file=ioStr)
+		ioStr.seek(0)
+		js.console.log(str(ioStr.read()))
+		sys.__excepthook__(etype, value, traceback)
+	sys.excepthook = customExceptHook
 
-args = parser.parse_args()
-args = args
-prepareLogger(args.debug)
-from viur_admin.config import conf
 
-conf.cmdLineOpts = args
-
-
-app = QtWidgets.QApplication(sys.argv)
 
 import viur_admin.protocolwrapper
 import viur_admin.handler
@@ -117,22 +128,22 @@ import viur_admin.actions
 import viur_admin.ui.icons_rc
 
 
-from viur_admin.login import Login
+from viur_admin.login import Login, SimpleLogin
 from viur_admin.mainwindow import MainWindow
 
-
-if args.theme != "Viur":
-	try:
-		QtWidgets.QApplication.setStyle(QStyleFactory.create(args.theme))
-		QtWidgets.QApplication.setPalette(QtWidgets.QApplication.style().standardPalette())
-	except Exception as err:
-		print(err)
-else:
-	css = QtCore.QFile(":icons/app.css")
-	css.open(QtCore.QFile.ReadOnly)
-	data = str(css.readAll(), encoding='ascii')
-	# data = str(open("app.css", "rb").read(), encoding="ascii")
-	app.setStyleSheet(data)
+if not isPyodide:
+	if args.theme != "Viur":
+		try:
+			QtWidgets.QApplication.setStyle(QStyleFactory.create(args.theme))
+			QtWidgets.QApplication.setPalette(QtWidgets.QApplication.style().standardPalette())
+		except Exception as err:
+			print(err)
+	else:
+		css = QtCore.QFile(":icons/app.css")
+		css.open(QtCore.QFile.ReadOnly)
+		data = str(css.readAll(), encoding='ascii')
+		# data = str(open("app.css", "rb").read(), encoding="ascii")
+		app.setStyleSheet(data)
 
 cwd = os.getcwd()
 prgc = sys.argv[0]
@@ -180,27 +191,27 @@ def reportError(type: Any, value: Any, tb: Any) -> Any:
 	n.deliver()
 
 
-if 0 and (args.report == "auto" and not os.path.exists(
-		".git")) or args.report == "yes":  # Report errors only if not being a local development instance
-	sys.excepthook = reportError
+#if 0 and (args.report == "auto" and not os.path.exists(".git")) or args.report == "yes":  # Report errors only if not being a local development instance
+#	sys.excepthook = reportError
 
 
 def main() -> None:
-	transFiles = resource_listdir("viur_admin", "locales")
-	for file in transFiles:
-		if file.endswith(".qm"):
-			translator = QtCore.QTranslator()
-			filename = resource_filename("viur_admin", os.path.join("locales", file))
+	if not isPyodide:
+		transFiles = resource_listdir("viur_admin", "locales")
+		for file in transFiles:
+			if file.endswith(".qm"):
+				translator = QtCore.QTranslator()
+				filename = resource_filename("viur_admin", os.path.join("locales", file))
 
-			translator.load(filename)
-			conf.availableLanguages[file[: -3]] = translator
-			if "language" in conf.adminConfig and conf.adminConfig["language"] == file[: -3]:
-				app.installTranslator(translator)
+				translator.load(filename)
+				conf.availableLanguages[file[: -3]] = translator
+				if "language" in conf.adminConfig and conf.adminConfig["language"] == file[: -3]:
+					app.installTranslator(translator)
 
-	if conf.migrateConfig:
-		from viur_admin.config_migration_wizard import ConfigMigrationWizard
-		wizard = ConfigMigrationWizard()
-		wizard.exec()
+		if conf.migrateConfig:
+			from viur_admin.config_migration_wizard import ConfigMigrationWizard
+			wizard = ConfigMigrationWizard()
+			wizard.exec()
 
 	moduleWhitelist = None
 	groupWhitelist = None
@@ -214,14 +225,18 @@ def main() -> None:
 	mainWindow = MainWindow(
 		moduleWhitelist=moduleWhitelist,
 		groupWhitelist=groupWhitelist)
-
-	l = Login()
+	if isPyodide:
+		l = SimpleLogin()
+	else:
+		l = Login()
 	l.show()
-	app.exec_()
-	print("after AppExec")
-	conf.savePortalConfig()
-	conf.saveConfig()
-	print("after SaveConfig")
+	if not isPyodide:
+		app.exec_()
+		print("after AppExec")
+		conf.savePortalConfig()
+		conf.saveConfig()
+		print("after SaveConfig")
+	return mainWindow, l
 
 
 if __name__ == '__main__':

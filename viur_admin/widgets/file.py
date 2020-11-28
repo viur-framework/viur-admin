@@ -9,7 +9,9 @@ from typing import Union, List, Any, Dict
 from urllib.parse import quote
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from requests import Session
+from viur_admin.pyodidehelper import isPyodide
+if not isPyodide:
+	from requests import Session
 
 from viur_admin.config import conf
 from viur_admin.log import getLogger
@@ -31,23 +33,25 @@ class PreviewDownloadWorker(QtCore.QObject):
 	def __init__(self, cookies: Any, parent: QtWidgets.QWidget = None, pixmapMode=False):
 		super(PreviewDownloadWorker, self).__init__(parent)
 		self.taskQueue: deque = deque()
-		self.session = Session()
+		if not isPyodide:
+			self.session = Session()
 		self.running = True
 		self.pixmapMode = pixmapMode
 
-		cookieJar = self.session.cookies
-		for cookie in cookies:
-			logger.debug("raw cookie: %r, sessionCookie: %r", cookie.toRawForm(), cookie.isSessionCookie())
-			dictCookie = {
-				"name": bytes(cookie.name()).decode(),
-				"value": bytes(cookie.value()).decode(),
-				"secure": cookie.isSecure(),
-				"path": cookie.path(),
-				"domain": cookie.domain()
-			}
-			if not cookie.isSessionCookie():
-				dictCookie["expires"] = cookie.expirationDate().toPyDateTime().timestamp()
-			cookieJar.set(**dictCookie)
+		if cookies:
+			cookieJar = self.session.cookies
+			for cookie in cookies:
+				logger.debug("raw cookie: %r, sessionCookie: %r", cookie.toRawForm(), cookie.isSessionCookie())
+				dictCookie = {
+					"name": bytes(cookie.name()).decode(),
+					"value": bytes(cookie.value()).decode(),
+					"secure": cookie.isSecure(),
+					"path": cookie.path(),
+					"domain": cookie.domain()
+				}
+				if not cookie.isSessionCookie():
+					dictCookie["expires"] = cookie.expirationDate().toPyDateTime().timestamp()
+				cookieJar.set(**dictCookie)
 
 		self.baseUrl = NetworkService.url.replace("/admin", "")
 
@@ -249,27 +253,32 @@ class FileListView(TreeListView):
 			**kwargs: Any):
 		super(FileListView, self).__init__(module, rootNode, node, *args, **kwargs)
 		# raise Exception("here we are")
-		self.thread = QtCore.QThread(self)
-		self.thread.setObjectName('FileListView.previewDownloadThread')
-		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
-		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
-		self.previewDownloadWorker.moveToThread(self.thread)
-		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
-		self.thread.started.connect(self.previewDownloadWorker.work)
-		self.thread.start(QtCore.QThread.IdlePriority)
-		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
-		self.thread.finished.connect(self.thread.deleteLater)
+		if isPyodide:
+			self.previewDownloadWorker = None
+		else:
+			self.thread = QtCore.QThread(self)
+			self.thread.setObjectName('FileListView.previewDownloadThread')
+			self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
+			self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
+			self.previewDownloadWorker.moveToThread(self.thread)
+			self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
+			self.thread.started.connect(self.previewDownloadWorker.work)
+			self.thread.start(QtCore.QThread.IdlePriority)
+			self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
+			self.thread.finished.connect(self.thread.deleteLater)
 		logger.debug("FileListView.__init__: thread started")
 
 	def prepareDeletion(self) -> None:
-		self.previewDownloadWorker.onRequestStopRunning()
-		self.thread.quit()
-		self.thread.wait()
+		if not isPyodide:
+			self.previewDownloadWorker.onRequestStopRunning()
+			self.thread.quit()
+			self.thread.wait()
 
 	def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-		self.previewDownloadWorker.onRequestStopRunning()
-		self.thread.quit()
-		super(FileListView, self).closeEvent(a0)
+		if not isPyodide:
+			self.previewDownloadWorker.onRequestStopRunning()
+			self.thread.quit()
+			super(FileListView, self).closeEvent(a0)
 
 	def addItem(self, item: Dict[str, Any]) -> None:
 		try:
@@ -281,7 +290,8 @@ class FileListView(TreeListView):
 	@QtCore.pyqtSlot(str)
 	def onRequestPreview(self, dlKey: str) -> None:
 		logger.debug("FileListView.onRequestPreview: %r", dlKey)
-		self.requestPreview.emit(dlKey)
+		if not isPyodide:
+			self.requestPreview.emit(dlKey)
 
 	def onPreviewImageAvailable(
 			self,

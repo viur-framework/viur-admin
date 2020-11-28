@@ -46,8 +46,8 @@ class BooleanEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(BooleanEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
-		self.layout = QtWidgets.QVBoxLayout(self)
-		self.checkBox = QtWidgets.QCheckBox(self)
+		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.checkBox = QtWidgets.QCheckBox(self.editWidget)
 		if readOnly:
 			self.checkBox.setDisabled(True)
 		self.layout.addWidget(self.checkBox)
@@ -71,7 +71,7 @@ class BooleanEditBone(BoneEditInterface):
 		return widgetGen()
 
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		if data:
 			self.checkBox.setChecked(True)
 

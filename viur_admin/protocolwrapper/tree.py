@@ -75,7 +75,7 @@ class TreeWrapper(QtCore.QObject):
 			node["_type"] = "node"
 			node["key"] = node["key"]
 			node["_isRootNode"] = 1
-			node["parentdir"] = None
+			node["parententry"] = None
 			self.dataCache[node["key"]] = node
 
 	def onStructureAvailable(self, req: RequestWrapper) -> None:
@@ -118,7 +118,7 @@ class TreeWrapper(QtCore.QObject):
 		res = []
 		for item in self.dataCache.values():
 			if isinstance(item, dict):  # It's a "normal" item, not a customQuery result
-				if item["parentdir"] == node:
+				if item["parententry"] == node:
 					res.append(item)
 		return res
 

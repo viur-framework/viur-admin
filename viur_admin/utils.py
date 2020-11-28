@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Callable, Any, Dict, List, Tuple, Union
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin.log import getLogger
 
 logger = getLogger(__name__)
@@ -179,6 +179,8 @@ class Overlay(QtWidgets.QWidget):
 		Starts displaying.
 		Dont call this directly
 		"""
+		if isPyodide:
+			return
 		if self.timer:
 			self.show()
 			return
@@ -198,6 +200,8 @@ class Overlay(QtWidgets.QWidget):
 		display-time)
 		@type force: Bool
 		"""
+		if isPyodide:
+			return
 		if not (force or self.status == self.BUSY):
 			return
 		if self.timer:
@@ -219,6 +223,8 @@ class Overlay(QtWidgets.QWidget):
 		@param message: Text to display
 		TODO: change status into real enum
 		"""
+		if isPyodide:
+			return
 		assert (status in [self.BUSY, self.MISSING, self.ERROR, self.SUCCESS])
 		self.status = status
 		self.message = message
@@ -275,7 +281,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 		except ValueError as err:
 			pass
 		self.setText(0, descr)
-		if conf.cmdLineOpts.show_sortindex:
+		if conf.cmdLineOpts and conf.cmdLineOpts.show_sortindex:
 			self.setText(1, str(sortIndex))
 		self.sortIndex = sortIndex
 		if icon:

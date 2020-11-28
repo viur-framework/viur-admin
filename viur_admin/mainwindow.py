@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin import startpages
 from viur_admin.config import conf
 from viur_admin.event import event
@@ -19,7 +19,8 @@ from viur_admin.startpages.default import DefaultWidget
 from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
 from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler
-import viur_admin.plugins
+if not isPyodide:
+	import viur_admin.plugins
 
 
 class Preloader(QtWidgets.QWidget):
@@ -288,13 +289,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs()
-		settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
-		try:
-			self.restoreGeometry(settings.value("geometry"))
-			self.restoreState(settings.value("windowState"))
-		except Exception as err:
-			# print(err)
-			pass
+		if not isPyodide:
+			settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
+			try:
+				self.restoreGeometry(settings.value("geometry"))
+				self.restoreState(settings.value("windowState"))
+			except Exception as err:
+				# print(err)
+				pass
 
 		if self.dockWidget.isFloating():
 			self.dockWidget.hide()

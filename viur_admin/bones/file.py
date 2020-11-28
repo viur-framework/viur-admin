@@ -202,7 +202,7 @@ def CheckForFileBone(
 		moduleName: str,
 		boneName: str,
 		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("treeitem.file")
+	return skelStucture[boneName]["type"].startswith("relational.tree.leaf.file")
 
 
 # Register this Bone in the global queue

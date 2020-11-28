@@ -74,7 +74,7 @@ class SpatialEditBone(BoneEditInterface):
 		return widgetGen()
 
 
-	def unserialize(self, data: Dict[str, Any]) -> None:
+	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		if not data:
 			return
 		try:

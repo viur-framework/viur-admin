@@ -25,10 +25,10 @@ class ColorEditBone(BoneEditInterface):
 		super(ColorEditBone, self).__init__(moduleName, boneName, readOnly, **kwargs)
 
 		self.skelStructure = skelStructure
-		lineLayout = QtWidgets.QHBoxLayout(self)
-		self.lineEdit = QtWidgets.QLineEdit(self)
-		self.button = QtWidgets.QPushButton('Auswählen', self)
-		self.colordisplay = ClickableLineEdit(self)
+		lineLayout = QtWidgets.QHBoxLayout(self.editWidget)
+		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
+		self.button = QtWidgets.QPushButton('Auswählen', self.editWidget)
+		self.colordisplay = ClickableLineEdit(self.editWidget)
 		self.colordisplay.setReadOnly(readOnly is True)
 		# self.lineEdit.editingFinished.connect(self.refreshColor)
 		self.button.clicked.connect(self.showDialog)
@@ -62,7 +62,7 @@ class ColorEditBone(BoneEditInterface):
 	def refreshColor(self) -> None:
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % str(self.lineEdit.displayText()))
 
-	def unserialize(self, data: dict) -> None:
+	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		data = str(data)
 		self.lineEdit.setText(data)
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)
