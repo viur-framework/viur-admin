@@ -6,7 +6,6 @@ logger = getLogger(__name__)
 from viur_admin.pyodidehelper import isPyodide
 if isPyodide:
 	from PyQt5 import QtCore, QtWidgets, QtGui
-	import js
 	QtWebEngineWidgets = None
 else:
 	from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
@@ -187,7 +186,8 @@ class AuthUserPassword(AuthProviderBase):
 		logger.debug("onViurAuth: %r", res)
 		if str(res).lower() == "okay":
 			print("onViurAuth: okay")
-			securityTokenProvider.reset(staticSecurityKey = staticSkey)  # User-login flushes the session, invalidate all skeys
+			if staticSkey:  # Pass the static skey to the securityTokenProvider so it can skip fetching new skeys
+				securityTokenProvider.staticSecurityKey = staticSkey
 			self.loginSucceeded.emit()
 		elif str(res).startswith("X-VIUR-2FACTOR-"):
 			secondFactor = str(res).replace("X-VIUR-2FACTOR-", "")
@@ -528,19 +528,15 @@ class SimpleLogin(QtWidgets.QMainWindow):
 
 	def onHasSession(self, req):
 		data = NetworkService.decode(req)
-		js.console.log("onHASSEssion")
-		js.console.log(data)
 		if data["values"] and data["values"]["access"] and "root" in data["values"]["access"]:
 			self.onLoginSucceeded()
 		else:
 			self.onNoSession()
 
 	def onNoSession(self, *args, **kwargs):
-		js.console.log("onNoSession")
 		self.setDisabled(False)
 
 	def onBtnLoginReleased(self):
-		js.console.log("ON LOGIN")
 		self.setDisabled(True)
 		self.loginTask = LoginTask({
 			"authMethod": "X-VIUR-AUTH-User-Password",
@@ -552,13 +548,10 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.loginTask.startAuthenticationFlow()
 
 	def onLoginFailed(self, reason):
-		js.console.log("onLoginFailed")
-		js.console.log(reason)
 		self.ui.label_3.setText(reason)
 		self.setDisabled(False)
 
 	def onLoginSucceeded(self, *args, **kwargs):
-		js.console.log("onLoginSucceeded")
 		logger.debug("onLoginSucceeded")
 		#self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful"))
 		#config.conf.loadPortalConfig(NetworkService.url, withCookies=False)

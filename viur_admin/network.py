@@ -27,6 +27,7 @@ import viur_admin.ui.icons_rc
 from viur_admin.config import conf
 from viur_admin.log import getLogger
 import io
+from functools import partial
 
 logger = getLogger(__name__)
 logger.debug("icons_rc found: %r", viur_admin.ui.icons_rc)  # import guard
@@ -130,102 +131,44 @@ for k, v in NetworkErrorDescrs.copy().items():
 
 
 class SecurityTokenProvider(QObject):
-	"""Provides an pool of valid security keys.
-
-	As they don't have to be requested before the original request can be send,
-	the whole process speeds up
-	"""
-
-	errorCount = 0
-
 	def __init__(
 			self,
 			*args: Any,
 			**kwargs: Any):
 		super(SecurityTokenProvider, self).__init__(*args, **kwargs)
-		self.queue = Queue(1)  # Queue of valid tokens
-		self.isRequesting = False
+		self.queue = Queue()  # Queue of valid tokens
+		self.currentRequest = None
 		self.staticSecurityKey = None
 
-	def reset(self, staticSecurityKey = None):
-		"""
-			Flushes the cache and tries to rebuild it
-		"""
-
-		logger.debug("Reset")
-		while not self.queue.empty():
-			self.queue.get(False)
-		self.staticSecurityKey = staticSecurityKey
-		self.isRequesting = False
-
-	def fetchNext(self) -> None:
-		"""Requests a new SKey if theres currently no request pending
-		"""
-		if not self.isRequesting and self.staticSecurityKey is None:
-			if SecurityTokenProvider.errorCount > 5:  # We got 5 Errors in a row
-				raise RuntimeError("Error-limit exceeded on fetching skey")
-			logger.debug("Fetching new skey")
-			self.isRequesting = True
-			NetworkService.request("/skey", successHandler=self.onSkeyAvailable, failureHandler=self.onError)
-
-	def onError(
-			self,
-			request: Any,
-			error: Any) -> None:
-		self.logger.warning("onError: %r", error)
-		SecurityTokenProvider.errorCount += 1
-		self.isRequesting = False
-
-	# TODO: should we raise an error here?
-	# raise ValueError("onError")
-
-	def onSkeyAvailable(self, request: Any = None) -> None:
-		"""New SKey got available
-		"""
-
-		self.isRequesting = False
-		try:
-			skey = NetworkService.decode(request)
-		except Exception as err:
-			logger.error("cannot decode get skey response")
-			logger.exception(err)
-			SecurityTokenProvider.errorCount += 1
-			self.isRequesting = False
-			return
-		if SecurityTokenProvider.errorCount > 0:
-			SecurityTokenProvider.errorCount = 0
-		self.isRequesting = False
-		if not skey:
-			return
-		try:
-			self.queue.put((skey, time.time()), False)
-		except QFull:
-			pass
-
-	def getKey(self) -> Union[int, None]:
-		"""Returns a fresh, valid SKey from the pool.
-
-		Blocks and requests a new one if the Pool is currently empty.
-		"""
-
-		# self.logger.debug("Consuming a new skey")
-		skey = None
-		while not skey:
+	def addRequest(self, callback):
+		self.queue.put(callback)
+		if not self.currentRequest:
 			self.fetchNext()
-			try:
-				skey, creationTime = self.queue.get(False)
-				if creationTime < time.time() - 600:  # Its older than 10 minutes - dont use
-					# self.logger.debug("Discarding old skey")
-					skey = None
-					raise QEmpty()
-			except QEmpty as err:
-				# logger.debug("Empty cache! Please wait...")
-				QtCore.QCoreApplication.processEvents()
-			except ValueError as err:
-				logger.exception(err)
-		# self.logger.debug("Using skey: %s", skey)
-		return skey
 
+	def fetchNext(self):
+		req = QNetworkRequest(QUrl("/admin/skey"))
+		self.currentRequest = nam.get(req)
+		self.currentRequest.finished.connect(self.onFinished)
+
+	def onFinished(self, *args, **kwargs):
+		print("SecurityTokenProvider2 FINISHED")
+		if self.currentRequest.error() == self.currentRequest.NoError:
+			skey = json.loads(self.currentRequest.readAll().data().decode("utf-8"))
+			print(skey)
+			cb = self.queue.get()
+			try:
+				cb(skey)
+			except:
+				print("Error calling SKEY CB")
+				print(cb)
+				print(skey)
+		else:
+			print("ERROR FETCHING SKEY")
+
+		if not self.queue.empty():
+			self.fetchNext()
+		else:
+			self.currentRequest = None
 
 securityTokenProvider = SecurityTokenProvider()
 
@@ -240,34 +183,86 @@ class RequestWrapper(QtCore.QObject):
 
 	def __init__(
 			self,
-			request: QNetworkReply,
-			successHandler: Callable = None,
-			failureHandler: Callable = None,
-			finishedHandler: Callable = None,
-			parent: QtWidgets.QWidget = None,
-			url: str = None,
-			failSilent: bool = False):
+			url: str,
+			params: Union[dict, None] = None,
+			secure: bool = False,
+			extraHeaders: Union[dict, None] = None,
+			successHandler: Union[Callable, None] = None,
+			failureHandler: Union[Callable, None] = None,
+			finishedHandler: Union[Callable, None] = None,
+			parent: Union[QtCore.QObject, None] = None,
+			failSilent: bool = False
+			):
 		super(RequestWrapper, self).__init__()
 		logger.debug("New network request: %s", str(self))
-		self.startTime = time.time()
-		self.request = request
-		self.url = url
-		self.failSilent = failSilent
-		request.setParent(self)
 		self.hasFinished = False
-		self.successHandler = None
-		self.failureHandler = None
-		self.finishedHandler = None
-		if successHandler and "__self__" in dir(successHandler) and isinstance(successHandler.__self__, QtCore.QObject):
-			parent = parent or successHandler.__self__
-			self.requestSucceeded.connect(successHandler)
-		if failureHandler and "__self__" in dir(failureHandler) and isinstance(failureHandler.__self__, QtCore.QObject):
-			parent = parent or failureHandler.__self__
-			self.requestFailed.connect(failureHandler)
-		if finishedHandler and "__self__" in dir(finishedHandler) and isinstance(finishedHandler.__self__,
-		                                                                         QtCore.QObject):
-			parent = parent or finishedHandler.__self__
-			self.finished.connect(finishedHandler)
+		self.url = url
+		self.params = params
+		self.extraHeaders = extraHeaders
+		self.successHandler = successHandler
+		self.failureHandler = failureHandler
+		self.finishedHandler = finishedHandler
+		self._parent = parent
+		self.failSilent = failSilent
+		if secure:
+			if securityTokenProvider.staticSecurityKey:
+				if not self.extraHeaders:
+					self.extraHeaders = {}
+				self.extraHeaders["Sec-X-ViUR-StaticSKey"] = securityTokenProvider.staticSecurityKey
+				if not self.params:
+					self.params = {}
+				self.params["skey"] = "staticSessionKey"
+				self.startRequest()
+			else:  # Wait for a fresh skey to arrive
+				securityTokenProvider.addRequest(self.insertSkey)
+		else:
+			self.startRequest()
+
+	def insertSkey(self, skey):
+		if not self.params:
+			self.params = {}
+		self.params["skey"] = skey
+		self.startRequest()
+
+	def startRequest(self):
+		self.startTime = time.time()
+		if self.url.lower().startswith("http"):
+			reqURL = QUrl(self.url)
+		else:
+			reqURL = QUrl(NetworkService.url + self.url)
+		req = QNetworkRequest(reqURL)
+		if self.extraHeaders:
+			for k, v in self.extraHeaders.items():
+				req.setRawHeader(k.encode("LATIN-1", "ignore"), v.encode("LATIN-1", "ignore"))
+		print("REq: %s; Header: %s; Params: %s" % (self.url, self.extraHeaders, self.params))
+		if self.params:
+			if isinstance(self.params, dict):
+				multipart = NetworkService.genReqStr(self.params)
+				request = nam.post(req, multipart)
+				multipart.setParent(request)
+				logger.debug("after reply setparent")
+			elif isinstance(self.params, bytes):
+				req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
+				request = nam.post(req, self.params)
+				logger.debug("after nam post")
+			else:
+				raise ValueError("cannot differentiate headers to that param type")
+			logger.debug("params: %r", self.params)
+			logger.debug("reply: %r", request)
+		else:
+			request = nam.get(req)
+		self.request = request
+		request.setParent(self)
+		parent = self._parent
+		if self.successHandler and "__self__" in dir(self.successHandler) and isinstance(self.successHandler.__self__, QtCore.QObject):
+			parent = parent or self.successHandler.__self__
+			self.requestSucceeded.connect(self.successHandler)
+		if self.failureHandler and "__self__" in dir(self.failureHandler) and isinstance(self.failureHandler.__self__, QtCore.QObject):
+			parent = parent or self.failureHandler.__self__
+			self.requestFailed.connect(self.failureHandler)
+		if self.finishedHandler and "__self__" in dir(self.finishedHandler) and isinstance(self.finishedHandler.__self__, QtCore.QObject):
+			parent = parent or self.finishedHandler.__self__
+			self.finished.connect(self.finishedHandler)
 		assert parent is not None
 		self.setParent(parent)
 		request.downloadProgress.connect(self.onDownloadProgress)
@@ -650,6 +645,8 @@ class NetworkService:
 		:param failSilent:
 		:return: RequestWrapper
 		"""
+		#if secure == True:
+		#	SP2.addRequest(partial(NetworkService.request, url=url, params=params, extraHeaders=extraHeaders, successHandler=successHandler, failureHandler=failureHandler, finishedHandler=finishedHandler,parent=parent, failSilent=failSilent))
 		global nam, _isSecureSSL
 		if _isSecureSSL == False:  # Warn the user of a potential security risk
 			msgRes = QtWidgets.QMessageBox.warning(
@@ -666,61 +663,7 @@ class NetworkService:
 				_isSecureSSL = None
 			else:
 				sys.exit(1)
-		if secure:
-			if securityTokenProvider.staticSecurityKey:
-				key = "staticSessionKey"
-				if not extraHeaders:
-					extraHeaders = {}
-				extraHeaders["Sec-X-ViUR-StaticSKey"] = securityTokenProvider.staticSecurityKey
-			else:
-				if isPyodide:
-					key = "--USE SKEY--"
-				else:
-					securityTokenProvider.getKey()
-			if not params:
-				params = {}
-			params["skey"] = key
-		if url.lower().startswith("http"):
-			reqURL = QUrl(url)
-		else:
-			reqURL = QUrl(NetworkService.url + url)
-		logger.debug("preparing request: %r", reqURL)
-		req = QNetworkRequest(reqURL)
-		if extraHeaders:
-			for k, v in extraHeaders.items():
-				req.setRawHeader(k.encode("LATIN-1", "ignore"), v.encode("LATIN-1", "ignore"))
-		print("REq: %s; Header: %s; Params: %s" % (url, extraHeaders, params))
-		if params:
-			if isinstance(params, dict):
-				multipart = NetworkService.genReqStr(params)
-				reply = nam.post(req, multipart)
-				multipart.setParent(reply)
-				logger.debug("after reply setparent")
-			elif isinstance(params, bytes):
-				req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
-				reply = nam.post(req, params)
-				logger.debug("after nam post")
-			else:
-				raise ValueError("cannot differentiate headers to that param type")
-			logger.debug("params: %r", params)
-			logger.debug("reply: %r", reply)
-			return RequestWrapper(
-				reply,
-				successHandler,
-				failureHandler,
-				finishedHandler,
-				parent,
-				url=url,
-				failSilent=failSilent)
-		else:
-			return RequestWrapper(
-				nam.get(req),
-				successHandler,
-				failureHandler,
-				finishedHandler,
-				parent,
-				url=url,
-				failSilent=failSilent)
+		return RequestWrapper(url=url, params=params, secure=secure, extraHeaders=extraHeaders,successHandler=successHandler, failureHandler=failureHandler, finishedHandler=finishedHandler, parent=parent, failSilent=failSilent)
 
 	@staticmethod
 	def decode(req: RequestWrapper) -> Any:

@@ -109,14 +109,14 @@ if not isPyodide:
 else:
 	prepareLogger(False)
 	app = None
-	import js, traceback, io
-	def customExceptHook(etype, value, tb):  # Log Python exceptions to console
-		ioStr = io.StringIO()
-		traceback.print_exception(etype, value, tb, file=ioStr)
-		ioStr.seek(0)
-		js.console.log(str(ioStr.read()))
-		sys.__excepthook__(etype, value, traceback)
-	sys.excepthook = customExceptHook
+	#import js, traceback, io
+	#def customExceptHook(etype, value, tb):  # Log Python exceptions to console
+	#	ioStr = io.StringIO()
+	#	traceback.print_exception(etype, value, tb, file=ioStr)
+	#	ioStr.seek(0)
+	#	js.console.log(str(ioStr.read()))
+	#	sys.__excepthook__(etype, value, traceback)
+	#sys.excepthook = customExceptHook
 
 
 

@@ -130,8 +130,6 @@ class PathListView(QtWidgets.QListWidget):
 				return
 			node = protoWrap.dataCache[node].copy()
 			revList.append(node)
-			import js
-			js.console.log(str(node))
 			node = node["parententry"]
 		for node in revList[:: -1]:
 			aitem = NodeItem(node, self)

@@ -415,8 +415,7 @@ class TextEditBone(BoneEditInterface):
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		self.html = str(data).replace("target=\"_blank\" href=\"", "href=\"!") if (data) else ""
 		if isPyodide:
-			import js
-			js.console.log("Faking Textbone")
+			pass
 		else:
 			self.webView.setHtml(self.html)
 
