@@ -194,8 +194,47 @@ def reportError(type: Any, value: Any, tb: Any) -> Any:
 #if 0 and (args.report == "auto" and not os.path.exists(".git")) or args.report == "yes":  # Report errors only if not being a local development instance
 #	sys.excepthook = reportError
 
+def dragOverEvent(event):
+	event.stopPropagation()
+	event.preventDefault()
+	event.dataTransfer.dropEffect = 'copy'
+	QtGui.QGuiApplication.processEvents()
+	return False
+
+def dropEvent(event):
+	event.stopPropagation()
+	event.preventDefault()
+	QtGui.QGuiApplication.processEvents()
+	screen = QtGui.QGuiApplication.screens()[0]
+	sp = QtGui.QCursor.pos(screen)
+	for widget in widgets_at(sp):
+		if "htmlDropEvent" in dir(widget):
+			widget.htmlDropEvent(event.dataTransfer.files)
+			break
+
+
+mainWindowRef = None
+
+def widgets_at(pos):
+	"""Return ALL widgets at `pos`
+	Arguments:
+	    pos (QPoint): Position at which to get widgets
+	   """
+	global mainWindowRef
+	widgets = []
+	widget_at = mainWindowRef.childAt(pos)
+	while widget_at:
+		widgets.append(widget_at)
+		# Make widget invisible to further enquiries
+		widget_at.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+		widget_at = mainWindowRef.childAt(pos)
+	# Restore attribute
+	for widget in widgets:
+		widget.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, False)
+	return widgets
 
 def main() -> None:
+	global mainWindowRef
 	if not isPyodide:
 		transFiles = resource_listdir("viur_admin", "locales")
 		for file in transFiles:
@@ -212,6 +251,11 @@ def main() -> None:
 			from viur_admin.config_migration_wizard import ConfigMigrationWizard
 			wizard = ConfigMigrationWizard()
 			wizard.exec()
+	else:
+		import js
+		canvas = js.document.getElementById("qtcanvas")
+		canvas.addEventListener("dragover", dragOverEvent, False)
+		canvas.addEventListener("drop", dropEvent, False)
 
 	moduleWhitelist = None
 	groupWhitelist = None
@@ -236,8 +280,10 @@ def main() -> None:
 		conf.savePortalConfig()
 		conf.saveConfig()
 		print("after SaveConfig")
+	mainWindowRef = mainWindow
 	return mainWindow, l
 
 
 if __name__ == '__main__':
 	main()
+

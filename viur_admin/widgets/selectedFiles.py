@@ -3,7 +3,7 @@ from typing import Any, List, Union, Dict
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin.network import nam
 from viur_admin.log import getLogger
 from viur_admin.utils import itemFromUrl
@@ -42,16 +42,17 @@ class SelectedFilesWidget(QtWidgets.QListWidget):
 		self.itemCache: Dict[str, Any] = dict()
 		self.setAcceptDrops(True)
 		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
-		self.thread = QtCore.QThread(self)
-		self.thread.setObjectName('SelectedFilesWidget.previewDownloadThread')
-		self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
-		self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
-		self.previewDownloadWorker.moveToThread(self.thread)
-		self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
-		self.thread.started.connect(self.previewDownloadWorker.work)
-		self.thread.start(QtCore.QThread.IdlePriority)
-		self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
-		self.thread.finished.connect(self.thread.deleteLater)
+		if not isPyodide:
+			self.thread = QtCore.QThread(self)
+			self.thread.setObjectName('SelectedFilesWidget.previewDownloadThread')
+			self.previewDownloadWorker = PreviewDownloadWorker(nam.cookieJar().allCookies())
+			self.previewDownloadWorker.previewImageAvailable.connect(self.onPreviewImageAvailable)
+			self.previewDownloadWorker.moveToThread(self.thread)
+			self.requestPreview.connect(self.previewDownloadWorker.onRequestPreviewImage)
+			self.thread.started.connect(self.previewDownloadWorker.work)
+			self.thread.start(QtCore.QThread.IdlePriority)
+			self.destroyed.connect(self.previewDownloadWorker.onRequestStopRunning)
+			self.thread.finished.connect(self.thread.deleteLater)
 		for s in self.selection:
 			self.addItem(FileItem(s, self))
 		# raise Exception("here!!!")

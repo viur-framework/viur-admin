@@ -2,7 +2,7 @@
 from typing import Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin.bones.base import BaseViewBoneDelegate
 from viur_admin.bones.relational import InternalEdit
 from viur_admin.bones.treeitem import TreeItemBone, TreeBoneSelector
@@ -93,6 +93,18 @@ class MultiItemWidget(QtWidgets.QWidget):
 class FileItemBone(TreeItemBone):
 	skelType = "leaf"
 
+	def htmlDropEvent(self, fileList):
+		if fileList:
+			self.setDisabled(True)
+			fileList = [fileList[0]]  # Crop to first file
+			protoWrap = protocolWrapperInstanceSelector.select(self.toModule)
+			uploader = protoWrap.upload(fileList, None)
+			uploader.finished.connect(self.htmlUploadFinished)
+
+	def htmlUploadFinished(self, uploader):
+		self.setDisabled(False)
+		self.unserialize({"dest": uploader.uploadResults[0], "rel": None}, {})
+
 	def onAddBtnReleased(self, *args: Any, **kwargs: Any) -> None:
 		editWidget = FileBoneSelector(
 			self.moduleName,
@@ -174,7 +186,7 @@ class FileItemBone(TreeItemBone):
 			else:
 				if self.selection:
 					logger.debug("selection: %r", self.selection)
-					if self.selection["dest"]["mimetype"].startswith("image/"):
+					if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
 						RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
 					self.entry.setText(formatString(self.format, self.selection, structure))
 				else:

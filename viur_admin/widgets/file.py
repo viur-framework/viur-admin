@@ -349,6 +349,12 @@ class FileListView(TreeListView):
 		downloader = protoWrap.download(targetDir, files, dirs)
 		self.parent().layout().addWidget(DownloadStatusWidget(downloader))
 
+	def htmlDropEvent(self, fileList):
+		fileList = [fileList.item(x) for x in range(0, fileList.length)]
+		if fileList:
+			print("Got Valid drop")
+			self.doUpload(fileList, self.getNode())
+
 	def dropEvent(self, event: QtGui.QDropEvent) -> None:
 		"""Allow Drag&Drop'ing from the local filesystem into our fileview
 		"""

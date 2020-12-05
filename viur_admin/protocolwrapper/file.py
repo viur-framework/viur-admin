@@ -8,7 +8,7 @@ from collections import deque
 from typing import Sequence, List, Any, Dict
 
 from PyQt5 import QtCore
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin.config import conf
 from viur_admin.log import getLogger
 from viur_admin.network import NetworkService, RequestWrapper
@@ -170,9 +170,14 @@ class RecursiveUploader(QtCore.QObject):
 		self.hasFinished = False
 		self.taskQueue: deque = deque()
 		self.runningTasks = 0
-		filteredFiles = [
-			x for x in files if
-			conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
+		self.currentHtmlUpload = None
+		self.uploadResults = []
+		if isPyodide:
+			filteredFiles = files
+		else:
+			filteredFiles = [
+				x for x in files if
+				conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
 		# self.recursionInfo = [ (  ) ] , [node], {}) ]
 		self.cancel.connect(self.onCanceled)
 		self.isCanceled = False
@@ -189,27 +194,36 @@ class RecursiveUploader(QtCore.QObject):
 				"bytesDone": 0
 			}
 
-		for fileName in filteredFiles:
-			name, fname = os.path.split(fileName)
-			if not fname:
-				name, fname = os.path.split(name)
-			if not conf.cmdLineOpts.noignore and any([pattern(fname) for pattern in ignorePatterns]):
-				# We can ignore that file
-				continue
-			if os.path.isdir(fileName.encode(sys.getfilesystemencoding())):
+		if isPyodide:
+			for file in files:
 				task = {
-					"type": "netreq",
-					"args": ["/{0}/list/node/{1}".format(self.module, self.node)],
-					"kwargs": {"successHandler": self.onDirListAvailable},
-					"uploadDirName": fileName}
-				self.taskQueue.append(task)
-			else:
-				task = {
-					"type": "upload",
-					"args": [fileName, self.node],
+					"type": "htmlupload",
+					"args": [file, self.node],
 					"kwargs": {"parent": self}}
 				self.taskQueue.append(task)
+		else:
+			for fileName in filteredFiles:
+				name, fname = os.path.split(fileName)
+				if not fname:
+					name, fname = os.path.split(name)
+				if not conf.cmdLineOpts.noignore and any([pattern(fname) for pattern in ignorePatterns]):
+					# We can ignore that file
+					continue
+				if os.path.isdir(fileName.encode(sys.getfilesystemencoding())):
+					task = {
+						"type": "netreq",
+						"args": ["/{0}/list/node/{1}".format(self.module, self.node)],
+						"kwargs": {"successHandler": self.onDirListAvailable},
+						"uploadDirName": fileName}
+					self.taskQueue.append(task)
+				else:
+					task = {
+						"type": "upload",
+						"args": [fileName, self.node],
+						"kwargs": {"parent": self}}
+					self.taskQueue.append(task)
 		logger.debug("RecursiveUploader.init: %r", self.stats)
+		self.uploadProgress.emit(self.stats["filesDone"], self.stats["filesTotal"])
 		# self.uploadProgress.emit(0, 0)
 		self.launchNextRequest()
 		self.tid = self.startTimer(150)
@@ -234,8 +248,44 @@ class RecursiveUploader(QtCore.QObject):
 			r.uploadProgress.connect(self.uploadProgress)
 			r.finished.connect(self.onRequestFinished)
 			self.cancel.connect(r.cancel)
+		elif task["type"] == "htmlupload":
+			node = task["args"][1]
+			ns = NetworkService.request("/file/getUploadURL", {"node": node} if node else {}, secure=True, successHandler=self.onHtmlUploadUrlAvailable)
+			ns.fileUploadTask = task
 		else:
 			raise NotImplementedError()
+
+	def onHtmlUploadUrlAvailable(self, req):
+		import js
+		data = NetworkService.decode(req)["values"]
+		fileObj, dirKey = req.fileUploadTask["args"]
+		formData = js.eval("new FormData();")
+		for key, value in data["params"].items():
+			if key == "key":
+				targetKey = value[:-16]  # Truncate source/file.dat
+				fileName = fileObj.name
+				value = value.replace("file.dat", fileName)
+			formData.append(key, value)
+		formData.append("file", fileObj)
+		self.currentHtmlUpload = {"key": targetKey, "node": dirKey, "skelType": "leaf", "fileSize": fileObj.size}
+		js.window.fetch(data["url"], {"method": "POST", "body": formData, "mode": "no-cors"}).then(self.onHtmlBucketUploadFinished)
+
+	def onHtmlBucketUploadFinished(self, *args, **kwargs):
+		# The upload has been written to cloudstore
+		self.stats["filesDone"] += 1
+		self.stats["bytesDone"] += self.currentHtmlUpload["fileSize"]
+		self.uploadProgress.emit(self.stats["filesDone"], self.stats["filesTotal"])
+		NetworkService.request(
+			"/file/add", self.currentHtmlUpload,
+			successHandler=self.onHtmlFileModuleUploadFinished,
+			secure=True
+		)
+
+	def onHtmlFileModuleUploadFinished(self, req):
+		# we sucessfully notified ViUR of that new file
+		fileData = NetworkService.decode(req)
+		self.uploadResults.append(fileData["values"])
+		self.onRequestFinished()
 
 	def onRequestFinished(self, *args: Any, **kwargs: Any) -> None:
 		self.runningTasks -= 1
@@ -526,24 +576,30 @@ class FileWrapper(TreeWrapper):
 			"bytesTotal": 0,
 			"bytesDone": 0
 		}
+		if isPyodide:
+			stats["filesTotal"] = len(filteredFiles)
+			stats["bytesTotal"] = sum([x.size for x in filteredFiles])
+			print("GOT SIZE TOTALXXXXXXXXXXXXXXXXXXXXX")
+			print(stats["bytesTotal"])
+			print(stats["filesTotal"])
+		else:
+			for myPath in filteredFiles:
+				if os.path.isdir(myPath.encode(sys.getfilesystemencoding())):
+					stats["dirsTotal"] += 1  # for the root
 
-		for myPath in filteredFiles:
-			if os.path.isdir(myPath.encode(sys.getfilesystemencoding())):
-				stats["dirsTotal"] += 1  # for the root
-
-				for root, directories, files in os.walk(myPath):
-					encodedRoot = root.encode(sys.getfilesystemencoding())
-					for item in files:
-						encodedItem = item.encode(sys.getfilesystemencoding())
-						print(repr(encodedRoot), repr(encodedItem))
-						stats["bytesTotal"] += os.path.getsize(os.path.join(encodedRoot, encodedItem))
-					stats["filesTotal"] += len(files)
-					lenDirectories = len(directories)
-					stats["dirsTotal"] += lenDirectories
-					stats["bytesTotal"] += 15 * lenDirectories
-			else:
-				stats["filesTotal"] += 1
-				stats["bytesTotal"] += os.path.getsize(myPath.encode(sys.getfilesystemencoding()))
+					for root, directories, files in os.walk(myPath):
+						encodedRoot = root.encode(sys.getfilesystemencoding())
+						for item in files:
+							encodedItem = item.encode(sys.getfilesystemencoding())
+							print(repr(encodedRoot), repr(encodedItem))
+							stats["bytesTotal"] += os.path.getsize(os.path.join(encodedRoot, encodedItem))
+						stats["filesTotal"] += len(files)
+						lenDirectories = len(directories)
+						stats["dirsTotal"] += lenDirectories
+						stats["bytesTotal"] += 15 * lenDirectories
+				else:
+					stats["filesTotal"] += 1
+					stats["bytesTotal"] += os.path.getsize(myPath.encode(sys.getfilesystemencoding()))
 
 		logger.debug("buildStats finished: %r, %r", stats["filesTotal"], stats["bytesTotal"])
 		return stats
@@ -558,10 +614,12 @@ class FileWrapper(TreeWrapper):
 		"""
 		if not files:
 			return
-
-		filteredFiles = [
-			x for x in files if
-			conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
+		if isPyodide:
+			filteredFiles = files
+		else:
+			filteredFiles = [
+				x for x in files if
+				conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
 		stats = self.buildStats(filteredFiles)
 		uploader = RecursiveUploader(filteredFiles, node, self.module, stats, parent=self)
 		uploader.finished.connect(self.delayEmitEntriesChanged)
