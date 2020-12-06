@@ -477,17 +477,27 @@ class TreeListView(QtWidgets.QListWidget):
 	# self.copy( self.clipboard, self.rootNode, self.getPath() )
 
 	def requestDelete(self, nodes: Sequence[dict], leafs: Sequence[dict]) -> bool:
-		if QtWidgets.QMessageBox.question(
-				self,
-				QtCore.QCoreApplication.translate("TreeListView", "Confirm delete"),
-				QtCore.QCoreApplication.translate(
-					"TreeListView", "Delete %s nodes and %s leafs?") % (len(nodes), len(leafs)),
-				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
-			return False
-		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert protoWrap is not None
-		protoWrap.deleteEntities(nodes, leafs)
+		self.requestDeleteBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
+			QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+			QtCore.QCoreApplication.translate(
+				"TreeListView", "Delete %s nodes and %s leafs?") % (len(nodes), len(leafs)),
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestDeleteBox.buttonClicked.connect(self.reqDeleteCallback)
+		self.requestDeleteBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestDeleteBox.adjustSize()
+		self.requestDeleteBox.deleteNode = nodes
+		self.requestDeleteBox.deleteLeafs = leafs
+
+	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
+		if clickedBtn == self.requestDeleteBox.button(self.requestDeleteBox.Yes):
+			protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
+			assert protoWrap is not None
+			protoWrap.deleteEntities(self.requestDeleteBox.deleteNode, self.requestDeleteBox.deleteLeafs)
+			self.requestDeleteBox = None
 		return True
 
 	def getLeafItemClass(self) -> Any:

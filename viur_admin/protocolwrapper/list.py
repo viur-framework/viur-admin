@@ -8,7 +8,7 @@ logger = getLogger(__name__)
 
 from collections import OrderedDict
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui
 
 from time import time
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
@@ -17,7 +17,7 @@ from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapp
 
 class ListWrapper(QtCore.QObject):
 	maxCacheTime = 60  # Cache results for max. 60 Seconds
-	updateDelay = 1500  # 1,5 Seconds gracetime before reloading
+	updateDelay = 0  # Refresh instantly
 	entitiesChanged = QtCore.pyqtSignal()
 	entityAvailable = QtCore.pyqtSignal((object,))
 	queryResultAvailable = QtCore.pyqtSignal((str,))
@@ -47,12 +47,14 @@ class ListWrapper(QtCore.QObject):
 	def checkBusyStatus(self) -> None:
 		busy = False
 		for child in self.children():
-			if isinstance(child, RequestWrapper) and not child.hasFinished:
+			if (isinstance(child, RequestWrapper) or isinstance(child, RequestGroup)) and not child.hasFinished:
 				busy = True
 				break
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
+		QtGui.QGuiApplication.processEvents()
+		QtCore.QCoreApplication.processEvents()
 
 	def execNetworkAction(self, *args: Any, **kwargs: Any) -> RequestWrapper:
 		"""

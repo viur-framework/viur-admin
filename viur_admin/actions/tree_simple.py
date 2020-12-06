@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.log import getLogger
 from viur_admin.mainwindow import WidgetHandler
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 logger = getLogger(__name__)
 
@@ -49,7 +49,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 				skelType = "node"
 			module = self.parent().module
 			key = entry["key"]
-			widget = lambda: EditWidget(module, EditWidget.appTree, key, skelType=skelType)
+			widget = lambda: EditWidget(module, ApplicationType.TREE, key, skelType=skelType)
 			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
 			handler.stackHandler()
 
@@ -72,20 +72,22 @@ class TreeMkDirAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self) -> None:
-		(dirName, okay) = QtWidgets.QInputDialog.getText(
-			self.parent(),
-			QtCore.QCoreApplication.translate(
-				"TreeHandler",
-				"Create "
-				"directory"),
-			QtCore.QCoreApplication.translate(
+		self.inputDialog =  QtWidgets.QInputDialog(self.parent())
+		self.inputDialog.setInputMode(self.inputDialog.TextInput)
+		self.inputDialog.setLabelText(QtCore.QCoreApplication.translate(
 				"TreeHandler",
 				"Directory name"))
-		if dirName and okay:
-			logger.debug("TreeMkDirAction.onTriggered: %r, %r", self.parent(), self.parent().realModule)
-			reqWrap = protocolWrapperInstanceSelector.select(self.parent().realModule)
-			assert reqWrap is not None
-			reqWrap.add(self.parent().getNode(), "node", name=dirName)
+		self.inputDialog.textValueSelected.connect(self.onInputDialogFinished)
+		self.inputDialog.show()
+		QtGui.QGuiApplication.processEvents()
+		self.inputDialog.adjustSize()
+
+	def onInputDialogFinished(self, result):
+		self.inputDialog = None
+		logger.debug("TreeMkDirAction.onTriggered: %r, %r", self.parent(), self.parent().realModule)
+		reqWrap = protocolWrapperInstanceSelector.select(self.parent().realModule)
+		assert reqWrap is not None
+		reqWrap.add(self.parent().getNode(), "node", name=result)
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
@@ -129,25 +131,31 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
 		entry = entries[0]
 		if not isinstance(entry, self.parent().getNodeItemClass()):  # Cant rename an leaf
 			return
-		name, res = QtWidgets.QInputDialog.getText(
-			self.parent(),
-			QtCore.QCoreApplication.translate(
-				"TreeSimpleRenameAction",
-				"Rename directory"),
-			QtCore.QCoreApplication.translate(
-				"TreeSimpleRenameAction",
-				"New name:"),
-			text=entry.entryData["name"]
-		)
-		if not res:
-			return  # Cancel was clicked
+
+		self.inputDialog =  QtWidgets.QInputDialog(self.parent())
+		self.inputDialog.setInputMode(self.inputDialog.TextInput)
+		self.inputDialog.setLabelText(QtCore.QCoreApplication.translate(
+				"TreeHandler",
+				"Directory name"))
+		self.inputDialog.textValueSelected.connect(self.onInputDialogFinished)
+		self.inputDialog.setTextValue(entry.entryData["name"])
+		self.inputDialog.show()
+		QtGui.QGuiApplication.processEvents()
+		self.inputDialog.adjustSize()
+		self.inputDialog.entry = entry
+
+	def onInputDialogFinished(self, result):
+		if not result:
+			self.inputDialog = None
+			return
 		protpWrap = protocolWrapperInstanceSelector.select(self.parent().module)
 		assert protpWrap is not None
-		data = entry.entryData.copy()
-		data["name"] = name
+		data = self.inputDialog.entry.entryData.copy()
+		data["name"] = result
 		key = data["key"]
 		del data["key"]
 		protpWrap.edit(key, "node", **data)
+		self.inputDialog = None
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

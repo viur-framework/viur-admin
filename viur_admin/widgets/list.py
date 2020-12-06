@@ -470,16 +470,25 @@ class ListTableView(QtWidgets.QTableView):
 			self.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
 
 	def requestDelete(self, ids: Sequence[str]) -> None:
-		if QtWidgets.QMessageBox.question(
-				self,
-				QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
-				QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(ids),
-				QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
-			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.model().module)
-		assert protoWrap is not None
-		protoWrap.deleteEntities(ids)
+		self.requestDeleteBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
+			QtCore.QCoreApplication.translate("ListTableView", "Confirm delete"),
+			QtCore.QCoreApplication.translate("ListTableView", "Delete %s entries?") % len(ids),
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestDeleteBox.buttonClicked.connect(self.reqDeleteCallback)
+		self.requestDeleteBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestDeleteBox.adjustSize()
+		self.requestDeleteBox.deleteList = ids
+
+	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
+		if clickedBtn == self.requestDeleteBox.button(self.requestDeleteBox.Yes):
+			protoWrap = protocolWrapperInstanceSelector.select(self.model().module)
+			assert protoWrap is not None
+			protoWrap.deleteEntities(self.requestDeleteBox.deleteList)
+		self.requestDeleteBox = None
 
 	def onProgessUpdate(self, request: RequestWrapper, done: bool, maximum: int) -> None:
 		if request.queryType == "delete":
@@ -703,8 +712,10 @@ class ListWidget(QtWidgets.QWidget):
 
 	def onBusyStateChanged(self, busy: bool) -> None:
 		if busy:
+			self.setDisabled(True)
 			self.overlay.inform(self.overlay.BUSY)
 		else:
+			self.setDisabled(False)
 			self.overlay.clear()
 
 	def setActions(self, actions: List[str]) -> None:

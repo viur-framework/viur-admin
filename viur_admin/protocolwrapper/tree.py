@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 
 class TreeWrapper(QtCore.QObject):
 	maxCacheTime = 60  # Cache results for max. 60 Seconds
-	updateDelay = 1500  # 1,5 Seconds grace time before reloading
+	updateDelay = 0  # 1,5 Seconds grace time before reloading
 	batchSize = 30  # Fetch 30 entries at once
 	protocolWrapperInstancePriority = 1
 
@@ -312,7 +312,7 @@ class TreeWrapper(QtCore.QObject):
 				{
 					"key": node,
 					"skelType": "node",
-					"destNode": destNode
+					"parentNode": destNode
 				},
 				parent=self, secure=True))
 		for leaf in leafs:
@@ -321,7 +321,7 @@ class TreeWrapper(QtCore.QObject):
 				{
 					"key": leaf,
 					"skelType": "leaf",
-					"destNode": destNode
+					"parentNode": destNode
 				},
 				parent=self, secure=True))
 		request.queryType = "move"

@@ -13,7 +13,7 @@ from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapp
 
 class HierarchyWrapper(QtCore.QObject):
 	maxCacheTime = 60  # Cache results for max. 60 Seconds
-	updateDelay = 1500  # 1,5 Seconds gracetime before reloading
+	updateDelay = 0  # 1,5 Seconds gracetime before reloading
 
 	entitiesChanged = QtCore.pyqtSignal()
 	childrenAvailable = QtCore.pyqtSignal((object,))  # A recently queried entity was fetched and is now avaiable

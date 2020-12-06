@@ -14,6 +14,7 @@ from urllib import request
 from viur_admin.pyodidehelper import isPyodide
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QObject, QUrl
+import string, random
 if isPyodide:
 	from PyQt5.QtNetwork import QHttpMultiPart, QHttpPart, QNetworkAccessManager, QNetworkReply, QNetworkRequest
 
@@ -138,6 +139,7 @@ class SecurityTokenProvider(QObject):
 		super(SecurityTokenProvider, self).__init__(*args, **kwargs)
 		self.queue = Queue()  # Queue of valid tokens
 		self.currentRequest = None
+		self.lockKey = None
 		self.staticSecurityKey = None
 
 	def addRequest(self, callback):
@@ -146,18 +148,20 @@ class SecurityTokenProvider(QObject):
 			self.fetchNext()
 
 	def fetchNext(self):
+		self.lockKey = "".join(random.choices(string.ascii_letters + string.digits, k=10))
 		req = QNetworkRequest(QUrl("/admin/skey"))
 		self.currentRequest = nam.get(req)
 		self.currentRequest.finished.connect(self.onFinished)
 
 	def onFinished(self, *args, **kwargs):
-		print("SecurityTokenProvider2 FINISHED")
+		lockKey = self.lockKey
+		QtCore.QTimer.singleShot(3000, lambda: self.unlockKey(lockKey))
 		if self.currentRequest.error() == self.currentRequest.NoError:
 			skey = json.loads(self.currentRequest.readAll().data().decode("utf-8"))
 			print(skey)
 			cb = self.queue.get()
 			try:
-				cb(skey)
+				cb(skey, self.lockKey)
 			except:
 				print("Error calling SKEY CB")
 				print(cb)
@@ -165,6 +169,10 @@ class SecurityTokenProvider(QObject):
 		else:
 			print("ERROR FETCHING SKEY")
 
+	def unlockKey(self, lockKey):
+		if lockKey != self.lockKey:
+			return
+		self.lockKey = None
 		if not self.queue.empty():
 			self.fetchNext()
 		else:
@@ -204,6 +212,7 @@ class RequestWrapper(QtCore.QObject):
 		self.finishedHandler = finishedHandler
 		self._parent = parent
 		self.failSilent = failSilent
+		self.unlockSkey = None
 		if secure:
 			if securityTokenProvider.staticSecurityKey:
 				if not self.extraHeaders:
@@ -218,7 +227,8 @@ class RequestWrapper(QtCore.QObject):
 		else:
 			self.startRequest()
 
-	def insertSkey(self, skey):
+	def insertSkey(self, skey, unlockKey):
+		self.unlockSkey = unlockKey
 		if not self.params:
 			self.params = {}
 		self.params["skey"] = skey
@@ -289,6 +299,8 @@ class RequestWrapper(QtCore.QObject):
 
 	def onFinished(self) -> None:
 		# logger.debug("onFinished")
+		if self.unlockSkey:
+			securityTokenProvider.unlockKey(self.unlockSkey)
 		self.hasFinished = True
 		print("Req TIME: %.3f" % (time.time() - self.startTime))
 		if self.request.error() == self.request.NoError:
