@@ -6,9 +6,11 @@ from viur_admin.pyodidehelper import isPyodide
 from PyQt5 import QtCore, QtGui, QtWidgets
 if isPyodide:
 	QWebEngineView = object
+	import js
 else:
 	from PyQt5.QtWebChannel import QWebChannel
 	from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
+	js = None
 
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
@@ -19,7 +21,7 @@ from viur_admin.network import RemoteFile, nam
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
-from viur_admin.utils import wheelEventFilter, ViurTabBar
+from viur_admin.utils import wheelEventFilter, ViurTabBar, switchToSummernote
 
 logger = getLogger(__name__)
 
@@ -380,6 +382,12 @@ class TextEditBone(BoneEditInterface):
 		return QtCore.QSize(150, 150)
 
 	def openEditor(self, *args: Any, **kwargs: Any) -> None:
+		if isPyodide:
+			switchToSummernote(self.html, self.onSave)
+			#js.switchToEditor(self.html)
+			#js.document.getElementById("editorframe").style.setProperty("display", "")
+			#js.document.getElementById("textBone").value = "asdasdas"
+			return
 		if self.languages:
 			lang = self.languages[self.tabWidget.currentIndex()]
 			if self.plaintext:

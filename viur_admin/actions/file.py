@@ -2,10 +2,10 @@
 from typing import Sequence, Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from viur_admin.pyodidehelper import isPyodide
 from viur_admin.log import getLogger
 from viur_admin.priorityqueue import actionDelegateSelector
-
+from viur_admin.utils import showSingleFileSelect
 logger = getLogger(__name__)
 
 
@@ -20,6 +20,9 @@ class FileUploadAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self) -> None:
+		if isPyodide:
+			showSingleFileSelect(self.onFileSelected)
+			return
 		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
 		logger.debug("homeDirs: %r", homeDirs)
 		fd = QtWidgets.QFileDialog()
@@ -44,6 +47,12 @@ class FileUploadAction(QtWidgets.QAction):
 	# 	files = dlg.selectedFiles()
 	# 	logger.debug("FileUploadAction upload instance: %r", self.parent())
 	# 	self.parent().doUpload(files, self.parent().getNode())
+
+	def onFileSelected(self, files):
+		print("ON FILE SELECTED")
+		print(files)
+		print(dir(files))
+		self.parent().doUpload([files], self.parent().getNode())
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
@@ -73,11 +82,15 @@ class FileDownloadAction(QtWidgets.QAction):
 				files.append(item.entryData)
 		if not files and not dirs:
 			return
-		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
-		targetDir = QtWidgets.QFileDialog.getExistingDirectory(self.parentWidget(), directory=homeDirs[0])
-		if not targetDir:
-			return
-		self.parent().doDownload(targetDir, files, dirs)
+		if isPyodide:
+			for file in files:
+				QtGui.QDesktopServices.openUrl(QtCore.QUrl(file["downloadUrl"]))
+		else:
+			homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
+			targetDir = QtWidgets.QFileDialog.getExistingDirectory(self.parentWidget(), directory=homeDirs[0])
+			if not targetDir:
+				return
+			self.parent().doDownload(targetDir, files, dirs)
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

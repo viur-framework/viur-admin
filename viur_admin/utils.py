@@ -9,7 +9,46 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.config import conf
 from viur_admin.network import NetworkService, RemoteFile, RequestWrapper
+from viur_admin.pyodidehelper import isPyodide
 
+
+if isPyodide:
+	import js
+	_singleFileCallback = None
+	_summernoteAcceptCallback = None
+	_fileSelectElem = js.document.getElementById("singlefileupload")
+	def _singeFileSelectChange(event):
+		global _singleFileCallback, _fileSelectElem
+		if _singleFileCallback:
+			_singleFileCallback(_fileSelectElem.files[0])
+		_singleFileCallback = None
+	_fileSelectElem.addEventListener("change", _singeFileSelectChange, False)
+
+	def showSingleFileSelect(callback):
+		global _singleFileCallback, _fileSelectElem
+		_singleFileCallback = callback
+		_fileSelectElem.value = ""
+		_fileSelectElem.click()
+
+	def switchToSummernote(currentText, acceptCallback):
+		global _summernoteAcceptCallback
+		_summernoteAcceptCallback = acceptCallback
+		js.switchToEditor(currentText)
+
+	def _summernoteCallback(event):
+		global _summernoteAcceptCallback
+		res = js.getEditorContents()
+		if _summernoteAcceptCallback:
+			_summernoteAcceptCallback(res)
+		_summernoteAcceptCallback = None
+
+	js.document.getElementById("textBoneAcceptBtn").addEventListener("click", _summernoteCallback, False)
+else:
+	def showSingleFileSelect(callback):
+		raise NotImplementedError()
+
+	def switchToSummernote(currentText, acceptCallback):
+		raise NotImplementedError()
 
 class RegisterQueue:
 	"""
