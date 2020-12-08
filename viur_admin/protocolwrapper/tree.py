@@ -60,6 +60,7 @@ class TreeWrapper(QtCore.QObject):
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
+		QtCore.QCoreApplication.processEvents()
 
 	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
@@ -131,6 +132,7 @@ class TreeWrapper(QtCore.QObject):
 
 	def queryData(self, node: str, **kwargs: Any) -> str:
 		logger.debug("TreeWrapper.queryData: %r, %r", node, kwargs)
+		print("start query data", node, kwargs)
 		key = self.cacheKeyFromFilter(node, kwargs)
 		if key in self.dataCache:
 			if self.dataCache[key] is None:
@@ -143,7 +145,10 @@ class TreeWrapper(QtCore.QObject):
 		# It's a cache-miss or cache too old
 		self.dataCache[key] = None
 		queryParams = {k: v for k, v in kwargs.items()}
-		queryParams["parententry"] = node
+		if "search" in kwargs:
+			queryParams["parentrepo"] = node
+		else:
+			queryParams["parententry"] = node
 		for skelType in ["node", "leaf"]:
 			queryParams["skelType"] = skelType
 			queryParams["amount"] = self.batchSize
@@ -225,7 +230,7 @@ class TreeWrapper(QtCore.QObject):
 				if "cursor" in data and cursor:  # We have a cursor (we can continue this query)
 					# Fetch the next batch
 					tmp = {k: v for k, v in req.queryArgs.items()}
-					tmp["node"] = req.node
+					tmp["parententry"] = req.node
 					tmp["cursor"] = cursor
 					tmp["skelType"] = req.skelType
 					tmp["amount"] = self.batchSize
@@ -386,4 +391,4 @@ def CheckForTreeModul(moduleName: str, moduleList: dict) -> bool:
 	return False
 
 
-protocolWrapperClassSelector.insert(0, CheckForTreeModul, TreeWrapper)
+protocolWrapperClassSelector.insert(2, CheckForTreeModul, TreeWrapper)

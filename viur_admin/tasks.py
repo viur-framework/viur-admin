@@ -6,7 +6,7 @@ from viur_admin.event import event
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.ui.taskUI import Ui_Task
 from viur_admin.utils import Overlay, WidgetHandler, loadIcon
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
 class TaskEntryHandler(WidgetHandler):
@@ -91,4 +91,4 @@ class TaskViewer(QtWidgets.QWidget):
 		descrLbl = QtWidgets.QLabel(task["descr"], self)
 		self.ui.verticalLayout.addWidget(descrLbl)
 
-		event.emit("stackWidget", EditWidget("_tasks", EditWidget.appSingleton, taskID))
+		event.emit("stackWidget", EditWidget("_tasks", ApplicationType.SINGLETON, taskID))

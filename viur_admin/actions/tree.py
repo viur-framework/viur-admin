@@ -22,11 +22,12 @@ class TreeAddAction(QtWidgets.QAction):
 
 	def onTriggered(self) -> None:
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Add entry")
-		modul = self.parent().tree.modul
+		modul = self.parent().tree.module
 		node = self.parent().getNode()
-		widget = lambda: EditWidget(modul, ApplicationType.TREE, node=node)
+		widget = lambda: EditWidget(modul, ApplicationType.TREE, node=node, skelType="node")
 		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/add.svg"))
-		event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
+		#event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
+		handler.stackHandler()
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
@@ -35,6 +36,31 @@ class TreeAddAction(QtWidgets.QAction):
 
 actionDelegateSelector.insert(1, TreeAddAction.isSuitableFor, TreeAddAction)
 
+
+class TreeAddLeafAction(QtWidgets.QAction):
+	def __init__(self, parent: QtWidgets.QWidget = None):
+		super(TreeAddLeafAction, self).__init__(
+			QtGui.QIcon(":icons/actions/add_white.svg"),
+			QtCore.QCoreApplication.translate("TreeHandler", "Add leaf entry"), parent)
+		self.triggered.connect(self.onTriggered)
+		self.setShortcut(QtGui.QKeySequence.New)
+		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+
+	def onTriggered(self) -> None:
+		name = QtCore.QCoreApplication.translate("TreeHandler", "Add leaf entry")
+		modul = self.parent().tree.module
+		node = self.parent().getNode()
+		widget = lambda: EditWidget(modul, ApplicationType.TREE, node=node, skelType="leaf")
+		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/add_white.svg"))
+		#event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
+		handler.stackHandler()
+
+	@staticmethod
+	def isSuitableFor(module: str, actionName: str) -> bool:
+		return (module == "tree" or module.startswith("tree.")) and not module.startswith("tree.nodeonly") and actionName == "addleaf"
+
+
+actionDelegateSelector.insert(1, TreeAddLeafAction.isSuitableFor, TreeAddLeafAction)
 
 class TreeEditAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
@@ -47,21 +73,28 @@ class TreeEditAction(QtWidgets.QAction):
 
 	def onTriggered(self) -> None:
 		name = QtCore.QCoreApplication.translate("TreeHandler", "Edit entry")
-		entries = []
+		nodes = []
+		leafs = []
 		for item in self.parent().selectedItems():
 			if isinstance(item, self.parent().getLeafItemClass()):
-				entries.append(item.entryData)
-
-		for entry in entries:
-			if isinstance(entry, self.parent().getLeafItemClass()):
-				skelType = "leaf"
+				leafs.append(item.entryData)
 			else:
-				skelType = "node"
-			modul = self.parent().modul
+				nodes.append(item.entryData)
+		for entry in leafs:
+			skelType = "leaf"
+			modul = self.parent().module
 			key = entry["key"]
-			widget = lambda: EditWidget(modul, EditWidget.appTree, key, skelType=skelType)
+			widget = lambda: EditWidget(modul, ApplicationType.TREE, key, skelType=skelType)
 			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
 			handler.stackHandler()
+		for entry in nodes:
+			skelType = "node"
+			modul = self.parent().module
+			key = entry["key"]
+			widget = lambda: EditWidget(modul, ApplicationType.TREE, key, skelType=skelType)
+			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
+			handler.stackHandler()
+
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

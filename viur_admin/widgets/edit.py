@@ -81,7 +81,7 @@ class EditWidget(QtWidgets.QWidget):
 
 		if clone:
 			assert key  # Need an id if we should clone an entry
-			assert not applicationType == EditWidget.appSingleton  # We can't clone a singleton
+			assert not applicationType == ApplicationType.SINGLETON  # We can't clone a singleton
 			if applicationType == ApplicationType.HIERARCHY or applicationType == ApplicationType.TREE:
 				assert node  # We still need a rootNode for cloning
 		# End santy-checks
@@ -183,16 +183,22 @@ class EditWidget(QtWidgets.QWidget):
 			self,
 			*args: Any,
 			**kwargs: Any) -> None:
-		res = QtWidgets.QMessageBox.question(
-			self,
+		self.requestResetBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
 			QtCore.QCoreApplication.translate("EditWidget", "Confirm reset"),
-			QtCore.QCoreApplication.translate(
-				"EditWidget",
-				"Discard all unsaved changes?"),
-			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-			QtWidgets.QMessageBox.No)
-		if res == QtWidgets.QMessageBox.Yes:
+			QtCore.QCoreApplication.translate( "EditWidget", "Discard all unsaved changes?"),
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestResetBox.buttonClicked.connect(self.reqDeleteCallback)
+		self.requestResetBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestResetBox.adjustSize()
+
+	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
+		if clickedBtn == self.requestResetBox.button(self.requestResetBox.Yes):
 			self.setData(data=self.dataCache)
+		self.requestResetBox = None
 
 	def parseHelpText(self, txt: str) -> str:
 		"""Parses the HTML-Text txt and returns it with remote Images replaced with their local copies
@@ -278,9 +284,6 @@ class EditWidget(QtWidgets.QWidget):
 		tmpTabs.sort(key=lambda x: x[1])
 		for scrollArea, tabName in tmpTabs:
 			self.ui.tabWidget.addTab(scrollArea, tabName)
-		from pprint import pprint
-		#pprint(data)
-		pprint(data["errors"])
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
 				continue

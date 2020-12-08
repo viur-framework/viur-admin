@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Any, Dict, List
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
@@ -18,15 +18,15 @@ class LanguageContainer(QtWidgets.QTabWidget):
 		self.currentChanged.connect(self.onTabCurrentChanged)
 		for lang in languages:
 			edit = widgetGen()
-			#edit.setReadOnly(self.readOnly)
-			#self.langEdits[lang] = edit
+			# edit.setReadOnly(self.readOnly)
+			# self.langEdits[lang] = edit
 			self.addTab(edit, lang)
 
-	def onTabCurrentChanged(self,idx: int) -> None:
+	def onTabCurrentChanged(self, idx: int) -> None:
 		wdg = self.tabWidget.widget(idx)
 		for k, v in self.langEdits.items():
 			if v == wdg:
-				#event.emit("tabLanguageChanged", k)
+				# event.emit("tabLanguageChanged", k)
 				wdg.setFocus()
 				return
 
@@ -36,11 +36,14 @@ class LanguageContainer(QtWidgets.QTabWidget):
 		for idx, lng in enumerate(self.languages):
 			wdg = self.widget(idx)
 			langData = data.get(lng)
-			wdg.unserialize(langData)
+			wdg.unserialize(langData, collectBoneErrors(errors, str(lng)))
 
 	def serializeForPost(self):
 		r = {lng: self.widget(idx).serializeForPost() for idx, lng in enumerate(self.languages)}
 		return r
+
+iconCancel = QtGui.QIcon()
+iconCancel.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
 class MultiContainer(QtWidgets.QWidget):
 	def __init__(self, widgetGen):
@@ -59,27 +62,40 @@ class MultiContainer(QtWidgets.QWidget):
 				continue
 			self.layout().removeWidget(widget)
 
+	def _mkEntry(self):
+		containterWdg = QtWidgets.QWidget()
+		containterWdg.setLayout(QtWidgets.QHBoxLayout())
+		wdg = self.widgetGen()
+		containterWdg.layout().addWidget(wdg)
+		removeBtn = QtWidgets.QPushButton()
+		removeBtn.setIcon(iconCancel)
+		containterWdg.layout().addWidget(removeBtn)
+		self.layout().addWidget(containterWdg)
+		idx = self.children().index(containterWdg)
+		removeBtn.released.connect(lambda: self.removeLine(idx))
+		return wdg
+
+	def removeLine(self, idx):
+		self.layout().removeWidget(self.children()[idx])
+
 	def onAddButtonClicked(self, *args, **kwargs):
-		self.layout().addWidget(self.widgetGen())
+		self._mkEntry()
 
 	def unserialize(self, data, errors: List[Dict]):
-		print("---err list is ---")
-		print(errors)
 		self.clearContents()
 		if not data:
 			return
 		elif isinstance(data, list):
 			for idx, d in enumerate(data):
-				wdg = self.widgetGen()
-				self.layout().addWidget(wdg)
+				wdg = self._mkEntry()
 				wdg.unserialize(d, collectBoneErrors(errors, str(idx)))
 		else:
-			wdg = self.widgetGen()
-			self.layout().addWidget(wdg)
+			wdg = self._mkEntry()
 			wdg.unserialize(data, collectBoneErrors(errors, "0"))
 
 	def serializeForPost(self):
-		return [wdg.serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
+		return [wdg.children()[1].serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
+
 
 class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	request_repaint = QtCore.pyqtSignal()

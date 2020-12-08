@@ -158,7 +158,6 @@ class SecurityTokenProvider(QObject):
 		QtCore.QTimer.singleShot(3000, lambda: self.unlockKey(lockKey))
 		if self.currentRequest.error() == self.currentRequest.NoError:
 			skey = json.loads(self.currentRequest.readAll().data().decode("utf-8"))
-			print(skey)
 			cb = self.queue.get()
 			try:
 				cb(skey, self.lockKey)
@@ -214,7 +213,7 @@ class RequestWrapper(QtCore.QObject):
 		self.failSilent = failSilent
 		self.unlockSkey = None
 		if secure:
-			if securityTokenProvider.staticSecurityKey:
+			if securityTokenProvider.staticSecurityKey and not isPyodide:
 				if not self.extraHeaders:
 					self.extraHeaders = {}
 				self.extraHeaders["Sec-X-ViUR-StaticSKey"] = securityTokenProvider.staticSecurityKey
@@ -244,7 +243,6 @@ class RequestWrapper(QtCore.QObject):
 		if self.extraHeaders:
 			for k, v in self.extraHeaders.items():
 				req.setRawHeader(k.encode("LATIN-1", "ignore"), v.encode("LATIN-1", "ignore"))
-		print("REq: %s; Header: %s; Params: %s" % (self.url, self.extraHeaders, self.params))
 		if self.params:
 			if isinstance(self.params, dict):
 				multipart = NetworkService.genReqStr(self.params)
@@ -302,13 +300,9 @@ class RequestWrapper(QtCore.QObject):
 		if self.unlockSkey:
 			securityTokenProvider.unlockKey(self.unlockSkey)
 		self.hasFinished = True
-		print("Req TIME: %.3f" % (time.time() - self.startTime))
 		if self.request.error() == self.request.NoError:
 			self.requestSucceeded.emit(self)
 		else:
-			print(self.request)
-			print(self.request.error())
-			print(self.request.readAll())
 			try:
 				errorDescr = NetworkErrorDescrs[self.request.error()]
 			except:  # Unknown error
@@ -603,7 +597,13 @@ class NetworkService:
 				value.setParent(multiPart)
 			multiPart.append(filePart)
 		elif isinstance(value, list):
-			if any([isinstance(x, dict) for x in value]):
+			if not value:
+				otherPart = QHttpPart()
+				otherPart.setHeader(QNetworkRequest.ContentTypeHeader, "application/octet-stream")
+				otherPart.setHeader(QNetworkRequest.ContentDispositionHeader, 'form-data; name="{0}"'.format(prefix))
+				otherPart.setBody(b"")
+				multiPart.append(otherPart)
+			elif any([isinstance(x, dict) for x in value]):
 				for idx, v in enumerate(value):
 					NetworkService.genReqStr(v, (prefix+"." if prefix else "")+str(idx), multiPart)
 			else:
@@ -623,9 +623,11 @@ class NetworkService:
 				prefix += "."
 			for k, v in value.items():
 				NetworkService.genReqStr(v, prefix+k, multiPart)
-		elif value is None:
-			return multiPart
+		#elif value is None:
+			#return multiPart
 		else:
+			if value is None:
+				value = ""
 			otherPart = QHttpPart()
 			otherPart.setHeader(QNetworkRequest.ContentTypeHeader, "application/octet-stream")
 			otherPart.setHeader(QNetworkRequest.ContentDispositionHeader, 'form-data; name="{0}"'.format(prefix))

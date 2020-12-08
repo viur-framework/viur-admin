@@ -20,9 +20,22 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="label_3">
+     <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Login :)</string>
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>../icons/weihnachten-2019-gruen.jpg</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="statusLbl">
+      <property name="text">
+       <string>Login2 :)</string>
       </property>
      </widget>
     </item>

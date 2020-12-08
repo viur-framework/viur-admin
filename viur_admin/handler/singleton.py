@@ -7,7 +7,7 @@ from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.mainwindow import WidgetHandler
 from viur_admin.utils import loadIcon
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
 class SingletonEntryHandler(WidgetHandler):
@@ -18,7 +18,7 @@ class SingletonEntryHandler(WidgetHandler):
 			module: str,
 			*args: Any,
 			**kwargs: Any):
-		widgetFactory = lambda: EditWidget(module, EditWidget.appSingleton, "singleton")
+		widgetFactory = lambda: EditWidget(module, ApplicationType.SINGLETON, "singleton")
 		name = ""
 		sortIndex = 0
 		icon = None

@@ -219,7 +219,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.cursor = cursor
 		self.layoutChanged.emit()
 		self.loadingKey = None
-		print(self.editableFields)
 
 	# self.emit(QtCore.SIGNAL("dataRecived()"))
 
@@ -649,7 +648,6 @@ class ListWidget(QtWidgets.QWidget):
 		# 	self.ui.editSearch.setText(filter["search"])
 		if config is None:
 			config = conf.serverConfig["modules"][module]
-		print("config is", config)
 		self.config = config
 		handler = self.config["handler"]
 		try:

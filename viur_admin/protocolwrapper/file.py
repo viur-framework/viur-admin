@@ -395,6 +395,7 @@ class RecursiveUploader(QtCore.QObject):
 
 	def onCanceled(self, *args: Any, **kwargs: Any) -> None:
 		self.isCanceled = True
+		QtCore.QTimer.singleShot(5000, lambda: self.failed.emit(self))
 
 	def onFailed(self, *args: Any, **kwargs: Any) -> None:
 		self.failed.emit(self)
@@ -579,9 +580,6 @@ class FileWrapper(TreeWrapper):
 		if isPyodide:
 			stats["filesTotal"] = len(filteredFiles)
 			stats["bytesTotal"] = sum([x.size for x in filteredFiles])
-			print("GOT SIZE TOTALXXXXXXXXXXXXXXXXXXXXX")
-			print(stats["bytesTotal"])
-			print(stats["filesTotal"])
 		else:
 			for myPath in filteredFiles:
 				if os.path.isdir(myPath.encode(sys.getfilesystemencoding())):
@@ -591,7 +589,6 @@ class FileWrapper(TreeWrapper):
 						encodedRoot = root.encode(sys.getfilesystemencoding())
 						for item in files:
 							encodedItem = item.encode(sys.getfilesystemencoding())
-							print(repr(encodedRoot), repr(encodedItem))
 							stats["bytesTotal"] += os.path.getsize(os.path.join(encodedRoot, encodedItem))
 						stats["filesTotal"] += len(files)
 						lenDirectories = len(directories)
@@ -648,4 +645,4 @@ def CheckForFileModul(moduleName: str, moduleList: str) -> bool:
 	return False
 
 
-protocolWrapperClassSelector.insert(3, CheckForFileModul, FileWrapper)
+protocolWrapperClassSelector.insert(4, CheckForFileModul, FileWrapper)

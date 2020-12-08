@@ -91,6 +91,13 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		self.itemExpanded.connect(self.onItemExpanded)
 		if self.rootNode:
 			self.loadData()
+		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
+
+	def onBusyStateChanged(self, busy: bool) -> None:
+		if busy:
+			self.setDisabled(True)
+		else:
+			self.setDisabled(False)
 
 	def onHierarchyChanged(self) -> None:
 		"""
@@ -221,10 +228,11 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 		# event.accept()
 		super(HierarchyTreeWidget, self).dropEvent(event)
 		if not targetItem:  # Moved to the end of the list
-			self.reparent(draggedItem.entryData["key"], self.rootNode)
 			if self.topLevelItemCount() > 1:
-				self.updateSortIndex(draggedItem.entryData["key"],
-				                     self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1)
+				newSortIndex = self.topLevelItem(self.topLevelItemCount() - 2).entryData["sortindex"] + 1
+			else:
+				newSortIndex = None
+			self.reparent(draggedItem.entryData["key"], self.rootNode, sortIndex=newSortIndex)
 		else:
 			if draggedItem.parent() is targetItem:  # Moved to subitem
 				self.reparent(draggedItem.entryData["key"], targetItem.entryData["key"])
@@ -234,19 +242,16 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 					while childIndex < targetItem.childCount():
 						currChild = targetItem.child(childIndex)
 						if currChild is draggedItem:
-							self.reparent(draggedItem.entryData["key"], targetItem.entryData["key"])
 							if childIndex == 0 and targetItem.childCount() > 1:  # is now 1st item
-								self.updateSortIndex(draggedItem.entryData["key"],
-								                     targetItem.child(1).entryData["sortindex"] - 1)
+								newSortIndex = targetItem.child(1).entryData["sortindex"] - 1
 							elif childIndex == (targetItem.childCount() - 1) and childIndex > 0:  # is now lastitem
-								self.updateSortIndex(draggedItem.entryData["key"],
-								                     targetItem.child(childIndex - 1).entryData["sortindex"] + 1)
+								newSortIndex = targetItem.child(childIndex - 1).entryData["sortindex"] + 1
 							elif childIndex > 0 and childIndex < (targetItem.childCount() - 1):  # in between
 								newSortIndex = (targetItem.child(childIndex - 1).entryData["sortindex"] +
 								                targetItem.child(childIndex + 1).entryData["sortindex"]) / 2.0
-								self.updateSortIndex(draggedItem.entryData["key"], newSortIndex)
 							else:  # We are the only one in this layer
-								pass
+								newSortIndex = None
+							self.reparent(draggedItem.entryData["key"], targetItem.entryData["key"], newSortIndex)
 							return
 						childIndex += 1
 					targetItem = targetItem.parent()
@@ -254,52 +259,58 @@ class HierarchyTreeWidget(QtWidgets.QTreeWidget):
 				currChild = self.topLevelItem(childIndex)
 				while currChild:
 					if currChild is draggedItem:
-						self.reparent(draggedItem.entryData["key"], self.rootNode)
 						if childIndex == 0 and self.topLevelItemCount() > 1:  # is now 1st item
-							self.updateSortIndex(draggedItem.entryData["key"],
-							                     self.topLevelItem(1).entryData["sortindex"] - 1)
+							newSortIndex = self.topLevelItem(1).entryData["sortindex"] - 1
 						elif childIndex == (self.topLevelItemCount() - 1) and childIndex > 0:  # is now lastitem
-							self.updateSortIndex(draggedItem.entryData["key"],
-							                     self.topLevelItem(childIndex - 1).entryData["sortindex"] + 1)
+							newSortIndex = self.topLevelItem(childIndex - 1).entryData["sortindex"] + 1
 						elif childIndex > 0 and childIndex < (self.topLevelItemCount() - 1):  # in between
 							newSortIndex = (self.topLevelItem(childIndex - 1).entryData["sortindex"] +
 							                self.topLevelItem(childIndex + 1).entryData["sortindex"]) / 2.0
-							self.updateSortIndex(draggedItem.entryData["key"], newSortIndex)
 						else:  # We are the only one in this layer
-							pass
+							newSortIndex = None
+						self.reparent(draggedItem.entryData["key"], self.rootNode, newSortIndex)
 						return
 					childIndex += 1
 					currChild = self.topLevelItem(childIndex)
 
-	def reparent(self, itemKey: str, destParent: str) -> None:
+	def reparent(self, itemKey: str, destParent: str, sortIndex: int = None) -> None:
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
-		protoWrap.reparent(itemKey, destParent)
+		self.setDisabled(True)
+		protoWrap.reparent(itemKey, destParent, sortIndex)
 		self.overlay.inform(self.overlay.BUSY)
+
 
 	def updateSortIndex(self, itemKey: str, newIndex: str) -> None:
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
+		self.setDisabled(True)
 		protoWrap.updateSortIndex(itemKey, newIndex)
 		self.overlay.inform(self.overlay.BUSY)
 
+
 	def requestDelete(self, key: str) -> None:
-		"""
-			Delete the entity with the given key
-		"""
-		if QtWidgets.QMessageBox.question(
-				self,
-				QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
-						QtCore.QCoreApplication.translate(
-								"HierarchyTreeWidget",
-								"Delete %s entries and everything below?") % 1,
-						QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-				QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.No:
-			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		protoWrap.delete(key)
-		self.overlay.inform(self.overlay.BUSY)
+		self.requestDeleteBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
+			QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Confirm delete"),
+			QtCore.QCoreApplication.translate("HierarchyTreeWidget", "Delete %s entries and everything below?") % 1,
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestDeleteBox.buttonClicked.connect(self.reqDeleteCallback)
+		self.requestDeleteBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestDeleteBox.adjustSize()
+		self.requestDeleteBox.deleteList = key
+
+	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
+		if clickedBtn == self.requestDeleteBox.button(self.requestDeleteBox.Yes):
+			protoWrap = protocolWrapperInstanceSelector.select(self.module)
+			assert protoWrap is not None
+			self.setDisabled(True)
+			protoWrap.delete(self.requestDeleteBox.deleteList)
+		self.requestDeleteBox = None
+
 
 
 class HierarchyWidget(QtWidgets.QWidget):
@@ -336,7 +347,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		self.request = None
 		self.overlay = Overlay(self)
 		self.setAcceptDrops(True)
-		self.ui.webView.hide()
+		#self.ui.webView.hide()
 		self._currentActions: List[str] = None
 		self.setActions(actions if actions is not None else ["add", "edit", "clone", "preview", "delete"])
 		self.hierarchy.itemClicked.connect(self.onItemClicked)
@@ -360,7 +371,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 			return
 		self._currentActions = actions[:]
 		for action in actions:
-			actionWdg = actionDelegateSelector.select("hierarchy.%s" % self.module, action)
+			actionWdg = actionDelegateSelector.select("tree.nodeonly.%s" % self.module, action)
 			if actionWdg is not None:
 				actionWdg = actionWdg(self)
 				if isinstance(actionWdg, QtWidgets.QAction):
@@ -420,7 +431,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		self.ui.webView.show()
 
 	def getModul(self) -> str:
-		return self.modul
+		return self.module
 
 	def getRootNode(self) -> str:
 		return self.hierarchy.getRootNode()

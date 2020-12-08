@@ -320,6 +320,11 @@ class TextEditBone(BoneEditInterface):
 			self.webView = ClickableWebView(self.editWidget)
 			self.webView.clicked.connect(self.openEditor)
 			self.editWidget.layout().addWidget(self.webView)
+		else:
+			self.webView = QtWidgets.QTextEdit(self.editWidget)
+			self.webView.setReadOnly(True)
+			self.editWidget.layout().addWidget(self.webView)
+			#self.webView.setText
 		self.editWidget.layout().addWidget(btn)
 		self.html = ""
 		self.editWidget.setSizePolicy(
@@ -416,14 +421,14 @@ class TextEditBone(BoneEditInterface):
 		else:
 			self.html = str(text)
 			if isPyodide:
-				pass
+				self.webView.setText(text)
 			else:
 				self.webView.setHtml(text)
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
 		self.html = str(data).replace("target=\"_blank\" href=\"", "href=\"!") if (data) else ""
 		if isPyodide:
-			pass
+			self.webView.setText(self.html)
 		else:
 			self.webView.setHtml(self.html)
 

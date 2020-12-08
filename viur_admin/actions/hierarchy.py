@@ -22,7 +22,7 @@ class HierarchyAddAction(QtWidgets.QAction):
 		node = self.parent().hierarchy.rootNode
 
 		def widgetFactory() -> EditWidget:
-			return EditWidget(modul, EditWidget.appHierarchy, node=node)
+			return EditWidget(modul, ApplicationType.HIERARCHY, node=node)
 
 		handler = WidgetHandler(
 			widgetFactory, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"),
@@ -33,10 +33,10 @@ class HierarchyAddAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
-		return (module == "hierarchy" or module.startswith("hierarchy.")) and actionName == "add"
+		return (module == "tree.nodeonly" or module.startswith("tree.nodeonly.")) and actionName == "add"
 
 
-actionDelegateSelector.insert(1, HierarchyAddAction.isSuitableFor, HierarchyAddAction)
+actionDelegateSelector.insert(2, HierarchyAddAction.isSuitableFor, HierarchyAddAction)
 
 
 class HierarchyCloneAction(QtWidgets.QAction):
@@ -67,10 +67,10 @@ class HierarchyCloneAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
-		return module == "hierarchy" or module.startswith("hierarchy.") and actionName == "clone"
+		return module == "tree.nodeonly" or module.startswith("tree.nodeonly.") and actionName == "clone"
 
 
-actionDelegateSelector.insert(1, HierarchyCloneAction.isSuitableFor, HierarchyCloneAction)
+actionDelegateSelector.insert(2, HierarchyCloneAction.isSuitableFor, HierarchyCloneAction)
 
 
 class HierarchyEditAction(QtWidgets.QAction):
@@ -98,10 +98,10 @@ class HierarchyEditAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
-		return (module == "hierarchy" or module.startswith("hierarchy.")) and actionName == "edit"
+		return (module == "tree.nodeonly" or module.startswith("tree.nodeonly.")) and actionName == "edit"
 
 
-actionDelegateSelector.insert(1, HierarchyEditAction.isSuitableFor, HierarchyEditAction)
+actionDelegateSelector.insert(2, HierarchyEditAction.isSuitableFor, HierarchyEditAction)
 
 
 class HierarchyDeleteAction(QtWidgets.QAction):
@@ -121,7 +121,7 @@ class HierarchyDeleteAction(QtWidgets.QAction):
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:
-		return (module == "hierarchy" or module.startswith("hierarchy.")) and actionName == "delete"
+		return (module == "tree.nodeonly" or module.startswith("tree.nodeonly.")) and actionName == "delete"
 
 
-actionDelegateSelector.insert(1, HierarchyDeleteAction.isSuitableFor, HierarchyDeleteAction)
+actionDelegateSelector.insert(2, HierarchyDeleteAction.isSuitableFor, HierarchyDeleteAction)

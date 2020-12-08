@@ -49,9 +49,6 @@ class FileUploadAction(QtWidgets.QAction):
 	# 	self.parent().doUpload(files, self.parent().getNode())
 
 	def onFileSelected(self, files):
-		print("ON FILE SELECTED")
-		print(files)
-		print(dir(files))
 		self.parent().doUpload([files], self.parent().getNode())
 
 	@staticmethod

@@ -280,7 +280,7 @@ class TreeListView(QtWidgets.QListWidget):
 		"""
 
 		self.node = self.rootNode
-		self.nodeChanged.emit(self.node)
+		#self.nodeChanged.emit(self.node)
 		if searchStr:
 			protoWrap = protocolWrapperInstanceSelector.select(self.module)
 			assert protoWrap is not None
@@ -378,10 +378,13 @@ class TreeListView(QtWidgets.QListWidget):
 		self.setDisplayData(res)
 
 	def onCustomQueryFinished(self, queryKey: str) -> None:
+		print("onCustomQueryFinished", queryKey)
+		self.clear()
 		if queryKey != self.customQueryKey:
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
+		print("pppp1")
 		self.setDisplayData(protoWrap.getNodesForCustomQuery(queryKey))
 
 	def setDisplayData(self, nodes: List[Dict[str, Any]]) -> None:
@@ -390,7 +393,7 @@ class TreeListView(QtWidgets.QListWidget):
 		@param nodes: List of Nodes which we shall display
 		@type nodes: list of dict
 		"""
-
+		print("setDisplayData", nodes)
 		self.setSortingEnabled(False)
 		lenNodes = len(nodes)
 		logger.debug("TreeListView.setDisplayData: sort off: %r", len(nodes))
@@ -613,7 +616,7 @@ class TreeWidget(QtWidgets.QWidget):
 		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
 		self.setActions(
-			actions if actions is not None else ["dirup", "mkdir", "add", "edit", "clone", "preview", "delete",
+			actions if actions is not None else ["dirup", "mkdir", "add", "addleaf", "edit", "clone", "preview", "delete",
 			                                     "switchview"])
 
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
@@ -642,9 +645,12 @@ class TreeWidget(QtWidgets.QWidget):
 
 	def onBusyStateChanged(self, busy: bool) -> None:
 		if busy:
+			self.setDisabled(True)
 			self.overlay.inform(self.overlay.BUSY)
 		else:
+			self.setDisabled(False)
 			self.overlay.clear()
+			self.pathList.rebuild()
 
 	def onBtnSearchReleased(self, *args: Any, **kwargs: Any) -> None:
 		self.tree.search(self.ui.editSearch.text())
@@ -741,6 +747,7 @@ class TreeWidget(QtWidgets.QWidget):
 			@type searchStr: String or None
 		"""
 		# befoire = {"rootNode": self.rootNode, "path": "", "name$lk": self.searchStr}
+		self.tree.clear()
 		self.tree.search(searchStr)
 
 	def requestDelete(self, nodes: List[str], leafs: List[str]) -> None:

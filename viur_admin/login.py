@@ -19,6 +19,7 @@ from viur_admin.event import event
 from viur_admin import config
 from viur_admin.utils import Overlay, showAbout
 from viur_admin.locales import ISO639CODES
+from datetime import datetime
 
 
 class AuthProviderBase(QtWidgets.QWidget):
@@ -523,15 +524,39 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.ui.setupUi(self)
 		self.ui.loginBtn.clicked.connect(self.onBtnLoginReleased)
 		self.setDisabled(True)
+		self.ui.statusLbl.setText("Please login")
 		self.loginTask = None
 		NetworkService.request("/user/view/self", successHandler=self.onHasSession, failureHandler=self.onNoSession, failSilent=True)
 
 	def onHasSession(self, req):
 		data = NetworkService.decode(req)
 		if data["values"] and data["values"]["access"] and "root" in data["values"]["access"]:
-			self.onLoginSucceeded()
+			event.emit("loginSucceeded")
+			self.hide()
 		else:
-			self.onNoSession()
+			try:
+				userName = data["values"]["name"]
+			except:
+				userName = "unkown user"
+			self.requestLogoutBox = QtWidgets.QMessageBox(
+				QtWidgets.QMessageBox.Question,
+				QtCore.QCoreApplication.translate("SimpleLogin", "Logout?"),
+				QtCore.QCoreApplication.translate("SimpleLogin", "This user (%s) cannot be used with ViUR Admin. Do you want to log out?") % userName,
+				(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+				self
+			)
+			self.requestLogoutBox.buttonClicked.connect(self.reqLogoutCallback)
+			self.requestLogoutBox.open()
+			QtGui.QGuiApplication.processEvents()
+			self.requestLogoutBox.adjustSize()
+
+
+	def reqLogoutCallback(self, clickedBtn):
+		if clickedBtn == self.requestLogoutBox.button(self.requestLogoutBox.Yes):
+			NetworkService.request("/user/logout", secure=True, successHandler=self.onNoSession)
+		else:
+			self.ui.statusLbl.setText("The current user has no access to ViUR Admin - please reload page")
+		self.requestLogoutBox = None
 
 	def onNoSession(self, *args, **kwargs):
 		self.setDisabled(False)
@@ -548,13 +573,11 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.loginTask.startAuthenticationFlow()
 
 	def onLoginFailed(self, reason):
-		self.ui.label_3.setText(reason)
+		self.ui.statusLbl.setText("%s Login failed: %s" % (datetime.now().strftime("%H:%M:%S") ,reason))
 		self.setDisabled(False)
 
 	def onLoginSucceeded(self, *args, **kwargs):
 		logger.debug("onLoginSucceeded")
-		#self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful"))
-		#config.conf.loadPortalConfig(NetworkService.url, withCookies=False)
-		event.emit("loginSucceeded")
-		self.hide()
+		NetworkService.request("/user/view/self", successHandler=self.onHasSession, failureHandler=self.onNoSession,
+						   failSilent=True)
 

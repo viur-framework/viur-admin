@@ -5,7 +5,7 @@ from collections import OrderedDict
 from time import time
 from typing import Sequence, Union, Dict, List, Tuple, Any
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui
 
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -45,16 +45,21 @@ class HierarchyWrapper(QtCore.QObject):
 		NetworkService.request("/%s/listRootNodes" % self.module, successHandler=self.onRootNodesAvailable)
 		req = NetworkService.request("/getStructure/%s" % self.module, successHandler=self.onStructureAvailable)
 		protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
+		self.checkBusyStatus()
 
 	def checkBusyStatus(self) -> None:
+		QtGui.QGuiApplication.processEvents()
+		QtCore.QCoreApplication.processEvents()
 		busy = False
 		for child in self.children():
-			if isinstance(child, RequestWrapper) and not child.hasFinished:
+			if (isinstance(child, RequestWrapper) or isinstance(child, RequestGroup)) and not child.hasFinished:
 				busy = True
 				break
 		if busy != self.busy:
 			self.busy = busy
 			self.busyStateChanged.emit(busy)
+		QtGui.QGuiApplication.processEvents()
+		QtCore.QCoreApplication.processEvents()
 
 	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
@@ -106,7 +111,7 @@ class HierarchyWrapper(QtCore.QObject):
 			QtCore.QTimer.singleShot(25, self.execDeferred)
 			return key
 		# It's a cache-miss or cache too old
-		r = NetworkService.request("/%s/list/%s" % (self.module, node), kwargs, successHandler=self.addCacheData)
+		r = NetworkService.request("/%s/list?skelType=node&parententry=%s" % (self.module, node), kwargs, successHandler=self.addCacheData)
 		r.wrapperCbCacheKey = key
 		r.node = node
 		self.checkBusyStatus()
@@ -164,7 +169,8 @@ class HierarchyWrapper(QtCore.QObject):
 
 	def add(self, parent: QtCore.QObject = None, **kwargs: Any) -> str:
 		tmp = {k: v for k, v in kwargs.items()}
-		tmp["parent"] = parent
+		tmp["node"] = parent
+		tmp["skelType"] = "node"
 		req = NetworkService.request(
 			"/%s/add/" % self.module, tmp, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
@@ -178,7 +184,7 @@ class HierarchyWrapper(QtCore.QObject):
 
 	def edit(self, key: str, **kwargs: Any) -> str:
 		req = NetworkService.request(
-			"/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs) > 0),
+			"/%s/edit?skelType=node&key=%s" % (self.module, key), kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
 		if not kwargs:
 			# This is our first request to fetch the data, don't show a missing hint
@@ -192,24 +198,27 @@ class HierarchyWrapper(QtCore.QObject):
 		if isinstance(keys, list):
 			req = RequestGroup(finishedHandler=self.delayEmitEntriesChanged)
 			for key in keys:
-				r = NetworkService.request("/%s/delete/%s" % (self.module, key), secure=True)
+				r = NetworkService.request("/%s/delete?skelType=node&key=%s" % (self.module, key), secure=True)
 				req.addQuery(r)
 		else:  # We just delete one
 			NetworkService.request(
-				"/%s/delete/%s" % (self.module, keys), secure=True,
+				"/%s/delete?skelType=node&key=%s" % (self.module, keys), secure=True,
 				finishedHandler=self.delayEmitEntriesChanged)
 		self.checkBusyStatus()
 
-	def updateSortIndex(self, itemKey: str, newIndex: float) -> None:
-		self.request = NetworkService.request(
-			"/%s/setIndex" % self.module, {"item": itemKey, "index": newIndex}, True,
-			finishedHandler=self.delayEmitEntriesChanged)
-		self.checkBusyStatus()
+	#def updateSortIndex(self, itemKey: str, newIndex: float) -> None:
+	#	#self.request = NetworkService.request(
+	#	#	"/%s/edit" % self.module, {"key": itemKey, "sortindex": newIndex, "skelType": "node"}, True,
+	#	#	finishedHandler=self.delayEmitEntriesChanged)
+	#	self.checkBusyStatus()
 
-	def reparent(self, itemKey: str, destParent: str) -> None:
+	def reparent(self, itemKey: str, destParent: str, sortIndex: int = None) -> None:
+		data = {"key": itemKey, "parentNode": destParent, "skelType": "node"}
+		if sortIndex is not None:
+			data["sortindex"] = sortIndex
 		NetworkService.request(
-			"/%s/reparent" % self.module, {"item": itemKey, "dest": destParent}, True,
-			finishedHandler=self.delayEmitEntriesChanged)
+			"/%s/move" % self.module, data, True,
+			finishedHandler=self.delayEmitEntriesChanged, parent=self)
 		self.checkBusyStatus()
 
 	def delayEmitEntriesChanged(self, *args: Any, **kwargs: Any) -> None:
@@ -246,9 +255,9 @@ class HierarchyWrapper(QtCore.QObject):
 def CheckForHierarchyModul(moduleName: str, moduleList: dict) -> bool:
 	modulData = moduleList[moduleName]
 	if "handler" in modulData and (
-			modulData["handler"] == "hierarchy" or modulData["handler"].startswith("hierarchy.")):
+			modulData["handler"] == "tree.nodeonly" or modulData["handler"].startswith("tree.nodeonly.")):
 		return True
 	return False
 
 
-protocolWrapperClassSelector.insert(2, CheckForHierarchyModul, HierarchyWrapper)
+protocolWrapperClassSelector.insert(3, CheckForHierarchyModul, HierarchyWrapper)

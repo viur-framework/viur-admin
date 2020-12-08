@@ -81,7 +81,7 @@ class HierarchyHandler(QtCore.QObject):
 
 	def requestModuleHandler(self, queue: RegisterQueue, module: str) -> None:
 		config = conf.serverConfig["modules"][module]
-		if config["handler"] == "hierarchy" or config["handler"].startswith("hierarchy."):
+		if config["handler"] == "tree.nodeonly" or config["handler"].startswith("tree.nodeonly."):
 			f = lambda: HierarchyCoreHandler(module)
 			queue.registerHandler(5, f)
 

@@ -234,10 +234,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.menuInfo.addAction(self.actionHelp)
 		self.menuInfo.addSeparator()
 		self.menuInfo.addAction(self.actionAbout)
+		if isPyodide:
+			self.menuInfo.addAction(self.actionLogout)
 
 		self.menubar.addAction(self.menuInfo.menuAction())
 		self.menubar.addAction(self.menuErweitert.menuAction())
-		self.menuErweitert.addAction(self.searchAction)
+		if not isPyodide:
+			self.menuErweitert.addAction(self.searchAction)
 
 		self.setWindowTitle(_translate("MainWindow", "ViUR Admin"))
 		# self.iconLbl.setText(_translate("MainWindow", "TextLabel"))
@@ -280,9 +283,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		WidgetHandler.mainWindow = self
 		self.actionAbout.triggered.connect(self.onActionAboutTriggered)
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
+		self.actionLogout.triggered.connect(self.onActionLogoutTriggered)
 		self.treeWidget.itemClicked.connect(self.onTreeWidgetItemClicked)
-
-		self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
+		if not isPyodide:
+			self.menuErweitert.addAction(self.dockWidget.toggleViewAction())
 		# self.searchBTN.released.connect(self.searchHandler)
 		self.moduleSearch.returnPressed.connect(self.searchHandler)
 		self.currentWidget = None
@@ -663,6 +667,30 @@ class MainWindow(QtWidgets.QMainWindow):
 		taskHandler = TaskEntryHandler(lambda *args, **kwargs: TaskViewer())
 		self.addHandler(taskHandler)
 		taskHandler.focus()
+
+	def onActionLogoutTriggered(self):
+		self.requestLogoutBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
+			QtCore.QCoreApplication.translate("SimpleLogin", "Logout?"),
+			QtCore.QCoreApplication.translate("MainWindow",
+											  "Do you want to log out? Unsaved changes will be lost!"),
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestLogoutBox.buttonClicked.connect(self.reqLogoutCallback)
+		self.requestLogoutBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestLogoutBox.adjustSize()
+
+	def reqLogoutCallback(self, clickedBtn):
+		if clickedBtn == self.requestLogoutBox.button(self.requestLogoutBox.Yes):
+			self.setDisabled(True)
+			NetworkService.request("/user/logout", secure=True, successHandler=self.reqLogoutSucceeded)
+		self.requestLogoutBox = None
+
+	def reqLogoutSucceeded(self, req):
+		import js
+		js.document.location.reload()
 
 	def prepareCloseEverywhere(self):
 		stackedWidgetCount = self.stackedWidget.count()

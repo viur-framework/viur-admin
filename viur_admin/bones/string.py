@@ -156,7 +156,6 @@ class StringEditBone(BoneEditInterface):
 			skelStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
-		print(("string fromSkelStructure", moduleName, boneName, myStruct))
 		readOnly = bool(myStruct.get("readonly"))
 		widgetGen = lambda: StringEditBone(
 			moduleName,
@@ -191,7 +190,6 @@ class StringEditBone(BoneEditInterface):
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		self.setErrors(errors)
-		print("%s: %s" % (self.boneName, errors))
 		if not data:
 			return
 		self.lineEdit.setText(unescapeHtml(str(data)))

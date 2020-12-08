@@ -27,7 +27,6 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 			return value
 
 	def createEditor(self, parent, option, index):
-		print("In CREATE EDITOR")
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		skelStructure = protoWrap.editStructure

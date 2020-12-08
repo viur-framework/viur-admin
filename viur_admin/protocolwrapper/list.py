@@ -45,6 +45,8 @@ class ListWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 
 	def checkBusyStatus(self) -> None:
+		QtGui.QGuiApplication.processEvents()
+		QtCore.QCoreApplication.processEvents()
 		busy = False
 		for child in self.children():
 			if (isinstance(child, RequestWrapper) or isinstance(child, RequestGroup)) and not child.hasFinished:

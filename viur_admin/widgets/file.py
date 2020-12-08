@@ -108,9 +108,15 @@ class FileItem(LeafItem):
 		icon = iconByExtension.get(extension)
 		if not icon:
 			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
-			fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
+			if extension == "svg":
+				fileInfo2 = QtCore.QFileInfo(":icons/filetypes/image.svg") # FIXME
+			else:
+				fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
 			if fileInfo2.exists():
-				icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
+				if extension == "svg":
+					icon = QtGui.QIcon(":icons/filetypes/image.svg")
+				else:
+					icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
 			elif fileInfo.exists():
 				icon = QtGui.QIcon(":icons/filetypes/%s.png" % extension)
 			else:
@@ -149,15 +155,18 @@ class UploadStatusWidget(QtWidgets.QWidget):
 		self.ui.setupUi(self)
 		self.uploader = None
 		logger.debug("UploadStatusWidget.init: %r, %r", args, kwargs)
+		self.ui.btnCancel.clicked.connect(self.onBtnCancelReleased)
 
 	def setUploader(self, uploader: Any) -> None:
 		self.uploader = uploader
 		self.uploader.uploadProgress.connect(self.onUploadProgress)
 		self.uploader.finished.connect(self.onFinished)
+		self.uploader.failed.connect(self.onFinished)
 		self.ui.pbarTotal.setRange(0, uploader.stats["filesTotal"])
 
 	def onBtnCancelReleased(self) -> None:
-		self.uploader.cancelUpload()
+		self.setDisabled(True)
+		self.uploader.onCanceled()
 
 	def onUploadProgress(
 			self,
@@ -352,7 +361,6 @@ class FileListView(TreeListView):
 	def htmlDropEvent(self, fileList):
 		fileList = [fileList.item(x) for x in range(0, fileList.length)]
 		if fileList:
-			print("Got Valid drop")
 			self.doUpload(fileList, self.getNode())
 
 	def dropEvent(self, event: QtGui.QDropEvent) -> None:

@@ -21,6 +21,7 @@ from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 from viur_admin import config
+from viur_admin.pyodidehelper import isPyodide
 
 
 class BaseBone:
@@ -72,7 +73,6 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		return value
 
 	def createEditor(self, parent, option, index):
-		print("In CREATE EDITOR")
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		skelStructure = protoWrap.editStructure
@@ -131,10 +131,10 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			else:
 				return "foo"
 
-	def setCompletionPrefix(self, prefix: str) -> None:
+	def setCompletionPrefixHint(self, prefix: str) -> None:
 		NetworkService.request(
 			"/%s/list" % self.module,
-			{"name$lk": prefix, "orderby": "name"},
+			{"search": prefix},
 			successHandler=self.addCompletionData)
 
 	def addCompletionData(self, req: RequestWrapper) -> None:
@@ -142,11 +142,22 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			data = NetworkService.decode(req)
 		except ValueError:  # Query was canceled
 			return
-		self.layoutAboutToBeChanged.emit()
-		self.dataCache = []
+		self.beginResetModel()
+		#self.dataCache = []
+		changed = False
 		for skel in data["skellist"]:
-			self.dataCache.append(skel)
-		self.layoutChanged.emit()
+			if self.dataCache:
+				for s in self.dataCache:
+					if s["key"] == skel["key"]:
+						break
+				else:
+					self.dataCache.append(skel)
+					changed = True
+			else:
+				self.dataCache.append(skel)
+				changed = True
+		self.endResetModel()
+		self.parent().complete()
 
 	def getItem(self, label: str) -> Union[str, None]:
 		#res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
@@ -154,6 +165,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		if len(res):
 			return res[0]
 		return
+
 
 
 class InternalEdit(QtWidgets.QWidget):
@@ -175,13 +187,10 @@ class InternalEdit(QtWidgets.QWidget):
 		tmpDict = dict()
 		for key, bone in using:
 			tmpDict[key] = bone
-		print("-in USING--")
 		for key, bone in using:
-			print((key, bone))
 			if not bone["visible"]:
 				continue
 			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
-			print(wdgGen)
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
 			if 0 and bone["error"] and not ignoreMissing:
 				dataWidget = QtWidgets.QWidget()
@@ -256,6 +265,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.format = format
 		self.overlay = Overlay(self)
 		self.internalEdits: InternalEdit = None
+		self.blockAutoCompletion = False
 		outerLayout = QtWidgets.QVBoxLayout(self.editWidget)  # Vbox with Relational entry and optional using edit
 		hboxWidget = QtWidgets.QWidget(self.editWidget)
 		hboxLayout = QtWidgets.QHBoxLayout(hboxWidget)
@@ -272,18 +282,20 @@ class RelationalEditBone(BoneEditInterface):
 		self.entry = QtWidgets.QLineEdit(hboxWidget)
 		self.installAutoCompletion()
 		hboxLayout.addWidget(self.entry)
-		#icon6 = QtGui.QIcon()
-		#icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		#self.delBtn = QtWidgets.QPushButton("", parent=self.editWidget)
-		#self.delBtn.setIcon(icon6)
-		#self.delBtn.released.connect(self.onDelBtnReleased)
 		hboxLayout.addWidget(self.addBtn)
-		#hboxLayout.addWidget(self.delBtn)
+		if not self.multiple:  ## FIXME: AND SELF REQUIRED
+			icon6 = QtGui.QIcon()
+			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+			self.delBtn = QtWidgets.QPushButton("", parent=self.editWidget)
+			self.delBtn.setIcon(icon6)
+			self.delBtn.released.connect(self.onDelBtnReleased)
+			hboxLayout.addWidget(self.delBtn)
 		self.selection: Dict[str, Any] = None
 		self.usingEdit = QtWidgets.QWidget(hboxWidget)
 		self.previewLayout = QtWidgets.QVBoxLayout(self.usingEdit)
 		outerLayout.addWidget(self.usingEdit)
 		self.lastErrors = []  # List of errors we receveid in last unserialize call
+
 
 	@classmethod
 	def fromSkelStructure(
@@ -305,7 +317,7 @@ class RelationalEditBone(BoneEditInterface):
 			moduleName,
 			boneName,
 			readOnly,
-			multiple=False,
+			multiple=myStruct.get("multiple"),
 			destModule=destModul,
 			using=myStruct["using"],
 			format=fmt)
@@ -321,17 +333,19 @@ class RelationalEditBone(BoneEditInterface):
 		"""
 				Installs our autoCompleter on self.entry if possible
 		"""
-		if not self.multiple:
-			self.autoCompletionModel = AutocompletionModel(self.toModule, self.format, {})  # FIXME: {} was
-			self.autoCompleter = QtWidgets.QCompleter(self.autoCompletionModel)
-			self.autoCompleter.setModel(self.autoCompletionModel)
-			self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-			self.entry.setCompleter(self.autoCompleter)
-			self.entry.textChanged.connect(self.reloadAutocompletion)
-			self.autoCompleter.activated[str].connect(self.setAutoCompletion)  # Broken...
-			self.autoCompleter.highlighted.connect(self.setAutoCompletion)
+		self.autoCompleter = QtWidgets.QCompleter(self)
+		self.autoCompletionModel = AutocompletionModel(self.toModule, self.format, {}, parent=self.autoCompleter)  # FIXME: {} was
+		self.autoCompleter.setModel(self.autoCompletionModel)
+		self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+		self.autoCompleter.setCompletionMode(self.autoCompleter.UnfilteredPopupCompletion)
+		self.autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
+		self.entry.setCompleter(self.autoCompleter)
+		self.entry.textChanged.connect(self.reloadAutocompletion)
+		self.autoCompleter.activated[str].connect(self.setAutoCompletion)  # Broken...
+		self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
 	def updateVisiblePreview(self) -> None:
+		self.blockAutoCompletion = True
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None, "Unknown module: %s" % self.realModule
 		if self.skelType is None:
@@ -340,12 +354,12 @@ class RelationalEditBone(BoneEditInterface):
 			structure = protoWrap.viewLeafStructure
 		elif self.skelType == "node":
 			structure = protoWrap.viewNodeStructure
-		if structure is None:
+		else:
 			return
 		if self.using:
 			while self.previewLayout.takeAt(0):
 				pass
-			item = InternalEdit(self.usingEdit, self.using, "FIXME", self.selection["rel"], errors=self.lastErrors)
+			item = InternalEdit(self.usingEdit, self.using, "FIXME", self.selection["rel"] if self.selection else {}, errors=self.lastErrors)
 			item.show()
 			self.previewLayout.addWidget(item)
 			self.internalEdits = item
@@ -354,10 +368,12 @@ class RelationalEditBone(BoneEditInterface):
 			self.entry.setText(formatString(self.format, self.selection, structure))
 		else:
 			self.entry.setText("")
+		self.blockAutoCompletion = False
 
 	def reloadAutocompletion(self, text: str) -> None:
-		if text and len(text) > 2:
-			self.autoCompletionModel.setCompletionPrefix(text)
+		if text and len(text) > 2 and not self.blockAutoCompletion:
+			self.autoCompletionModel.setCompletionPrefixHint(text)
+			QtGui.QGuiApplication.processEvents()
 
 	def setAutoCompletion(self, label: str) -> None:
 		res = self.autoCompletionModel.getItem(label)
@@ -366,9 +382,7 @@ class RelationalEditBone(BoneEditInterface):
 
 	def setSelection(self, selection: Union[list, dict, None]) -> None:
 		data = [{"dest": x, "rel": {}} if "dest" not in x else x for x in selection]
-		if self.multiple:
-			self.selection = data
-		elif len(selection) > 0:
+		if len(selection) > 0:
 			self.selection = data[0]
 		else:
 			self.selection = None
@@ -378,16 +392,13 @@ class RelationalEditBone(BoneEditInterface):
 		editWidget = RelationalBoneSelector(
 			self.moduleName,
 			self.boneName,
-			self.multiple,
+			False, #self.multiple,
 			self.toModule,
 			self.selection)
 		editWidget.selectionChanged.connect(self.setSelection)
 
 	def onDelBtnReleased(self, *args: Any, **kwargs: Any) -> None:
-		if self.multiple:
-			self.selection = []
-		else:
-			self.selection = None
+		self.selection = None
 		self.updateVisiblePreview()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
@@ -442,8 +453,8 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		self.selection = self.displaySelectionWidget(self.module, selection, parent=self)
 		layout.addWidget(self.selection)
 		self.selection.show()
+		# self.list.setSelectionMode( self.list.SingleSelection )
 		if not self.multiple:
-			# self.list.setSelectionMode( self.list.SingleSelection )
 			self.selection.hide()
 			self.ui.lblSelected.hide()
 		self.list.itemDoubleClicked.connect(self.onSourceItemDoubleClicked)
@@ -488,11 +499,8 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		"""
 		logger.debug("RelationalEditBone.onSourceItemDoubleClicked: %r", item)
 		data = item
-		if self.multiple:
-			self.selection.extend([data])
-		else:
-			self.selectionChanged.emit([data])
-			event.emit("popWidget", self)
+		self.selectionChanged.emit([data])
+		event.emit("popWidget", self)
 
 	def onBtnSelectReleased(self, *args: Any, **kwargs: Any) -> None:
 		logger.debug("onBtnSelectReleased")
