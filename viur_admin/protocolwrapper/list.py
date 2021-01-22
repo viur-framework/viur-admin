@@ -112,7 +112,9 @@ class ListWrapper(QtCore.QObject):
 		self.dataCache[key] = None
 		r = NetworkService.request("/%s/list" % self.module, kwargs, successHandler=self.addCacheData)
 		r.wrapperCbCacheKey = key
-		self.checkBusyStatus()
+		# THIS IS BROKEN... Remove Busystatus and Loading-Overlay..
+		#QtCore.QTimer.singleShot(1, lambda: self.checkBusyStatus())  # Prevent
+		#self.checkBusyStatus()
 		return key
 
 	def queryEntry(self, key: str) -> str:

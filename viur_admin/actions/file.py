@@ -26,10 +26,9 @@ class FileUploadAction(QtWidgets.QAction):
 		homeDirs = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)
 		logger.debug("homeDirs: %r", homeDirs)
 		fd = QtWidgets.QFileDialog()
-		fd.show()
-		#files, other = QtWidgets.QFileDialog.getOpenFileNames(directory=homeDirs[0])
-		#print("file on triggered", files, repr(other))
-		#self.parent().doUpload(files, self.parent().getNode())
+		files, other = QtWidgets.QFileDialog.getOpenFileNames(directory=homeDirs[0])
+		print("file on triggered", files, repr(other))
+		self.parent().doUpload(files, self.parent().getNode())
 
 	# TODO: all this shit would be needed for being able to select both dirs and files, but it's also buggy.
 	# TODO: if you go down into a directory hierarchy, all directories on the path and the files get selected. SO SAD!

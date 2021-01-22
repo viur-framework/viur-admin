@@ -53,7 +53,6 @@ sys.excepthook = excepthook
 from viur_admin.log import prepareLogger
 
 from argparse import ArgumentParser
-from viur_admin.bugsnag import Notification
 
 try:
 	from PyQt5 import QtGui, QtCore, QtWidgets, QtSvg, QtWebEngineWidgets
@@ -131,7 +130,7 @@ import viur_admin.ui.icons_rc
 from viur_admin.login import Login, SimpleLogin
 from viur_admin.mainwindow import MainWindow
 
-if not isPyodide:
+if 0 and not isPyodide:
 	if args.theme != "Viur":
 		try:
 			QtWidgets.QApplication.setStyle(QStyleFactory.create(args.theme))
@@ -148,11 +147,12 @@ if not isPyodide:
 cwd = os.getcwd()
 prgc = sys.argv[0]
 
-if prgc.startswith("/") or prgc[1] == ":":
-	path = os.path.dirname(prgc)
-else:
-	path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
-os.chdir(path)
+if not isPyodide:
+	if prgc.startswith("/") or prgc[1] == ":":
+		path = os.path.dirname(prgc)
+	else:
+		path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
+	os.chdir(path)
 
 
 def reportError(type: Any, value: Any, tb: Any) -> Any:

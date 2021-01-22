@@ -36,19 +36,23 @@ class SpatialEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(SpatialEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
-		self.setLayout(QtWidgets.QVBoxLayout(self))
-		self.lat = FixedQDoubleSpinBox(self)
+		self.setLayout(QtWidgets.QVBoxLayout(self.editWidget))
+		self.lat = FixedQDoubleSpinBox(self.editWidget)
 		self.lat.setDecimals(10)
-		self.layout().addWidget(self.lat)
+		self.lat.setMaximum(91)
+		self.lat.setMinimum(-90)
+		self.editWidget.layout().addWidget(self.lat)
 		self.lat.show()
 		self.lat.setReadOnly(self.readOnly)
-		self.lng = FixedQDoubleSpinBox(self)
+		self.lng = FixedQDoubleSpinBox(self.editWidget)
 		self.lng.setDecimals(10)
-		self.layout().addWidget(self.lng)
+		self.lng.setMaximum(181)
+		self.lng.setMinimum(-180)
+		self.editWidget.layout().addWidget(self.lng)
 		self.lng.show()
 		self.lng.setReadOnly(self.readOnly)
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
-		self.installEventFilter(wheelEventFilter)
+		self.editWidget.installEventFilter(wheelEventFilter)
 
 	@staticmethod
 	def fromSkelStructure(

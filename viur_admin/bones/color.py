@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
 
 
 class ClickableLineEdit(QtWidgets.QLineEdit):
@@ -23,7 +24,6 @@ class ColorEditBone(BoneEditInterface):
 			skelStructure: dict,
 			**kwargs: Any):
 		super(ColorEditBone, self).__init__(moduleName, boneName, readOnly, **kwargs)
-
 		self.skelStructure = skelStructure
 		lineLayout = QtWidgets.QHBoxLayout(self.editWidget)
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
@@ -43,12 +43,21 @@ class ColorEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		return ColorEditBone(
+		myStruct = skelStructure[boneName]
+		readOnly = bool(myStruct.get("readonly"))
+		widgetGen = lambda: ColorEditBone(
 			moduleName,
 			boneName,
-			skelStructure[boneName]["readonly"],
+			readOnly,
 			skelStructure,
 			**kwargs)
+		if myStruct.get("multiple"):
+			preMultiWidgetGen = widgetGen
+			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+		if myStruct.get("languages"):
+			preLangWidgetGen = widgetGen
+			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+		return widgetGen()
 
 	def showDialog(self) -> None:
 		acolor = QtWidgets.QColorDialog.getColor(
@@ -63,7 +72,7 @@ class ColorEditBone(BoneEditInterface):
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % str(self.lineEdit.displayText()))
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
-		data = str(data)
+		data = str(data) if data else ""
 		self.lineEdit.setText(data)
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)
 

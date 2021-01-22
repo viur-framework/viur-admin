@@ -134,9 +134,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	def setData(self, index: QModelIndex, value: Any, role: int = None) -> None:
 		rowIndex = index.row()
 		colIndex = index.column()
-		lenDataCache = len(self.dataCache)
-		# logger.debug("setData: value=%r", value)
-		# logger.debug("indexes and length: %r, %r, %r", rowIndex, colIndex, lenDataCache)
 		destDataCacheEntry = self.dataCache[rowIndex]
 		fieldNameByIndex = self._validFields[colIndex]
 		# logger.debug("destCacheEntry: %r, fieldNameByIndex: %r", destDataCacheEntry, fieldNameByIndex)
@@ -170,12 +167,9 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return None
 
 	def loadNext(self, forceLoading: bool = False) -> None:
-		# logger.debug("loadNext - cookies: %r", [i.toRawForm() for i in nam.cookieJar().allCookies()])
 		if self.isLoading and not forceLoading:
-			# print("stopped loadNext")
 			return
 		self.isLoading += 1
-		# logger.debug("loadNext.filter, %r", self.filter)
 		rawFilter = self.filter.copy() or {}
 		if self.cursor:
 			rawFilter["cursor"] = self.cursor
@@ -195,29 +189,29 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadingKey = protoWrap.queryData(**rawFilter)
 
 	def addData(self, queryKey: str) -> None:
-		# print("addData")
 		self.isLoading -= 1
 		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
-		# logger.debug("ListTableModule.addData: %r", len(skellist))
-		self.layoutAboutToBeChanged.emit()
-
 		# Rebuild our local cache of valid fields
-		self.bones = {}
-		for key, bone in protoWrap.viewStructure.items():
-			self.bones[key] = bone
-			if not bone["readonly"]:
-				self.editableFields.add(key)
-		self._validFields = [x for x in self.fields if x in self.bones]
-		self.rebuildDelegates.emit(protoWrap.viewStructure)
+		if not self.bones:
+			for key, bone in protoWrap.viewStructure.items():
+				self.bones[key] = bone
+				if not bone["readonly"]:
+					self.editableFields.add(key)
+			self._validFields = [x for x in self.fields if x in self.bones]
+			self.rebuildDelegates.emit(protoWrap.viewStructure)
+			self.repaint()
+		self.beginInsertRows(QtCore.QModelIndex(), len(self.dataCache), len(self.dataCache) + len(skellist) - 1)
 		self.dataCache.extend(skellist)
+		self.endInsertRows()
 		if not cursor:
+			self.beginRemoveRows(QtCore.QModelIndex(), len(self.dataCache), len(self.dataCache))
 			self.completeList = True
+			self.endRemoveRows()
 		self.cursor = cursor
-		self.layoutChanged.emit()
 		self.loadingKey = None
 
 	# self.emit(QtCore.SIGNAL("dataRecived()"))
@@ -388,7 +382,6 @@ class ListTableView(QtWidgets.QTableView):
 
 		:param bones: Skeleton-structure send from the server
 		"""
-
 		logger.debug("ListTableView.rebuildDelegates - bones: %r", bones)
 
 		self.structureCache = bones
@@ -407,7 +400,7 @@ class ListTableView(QtWidgets.QTableView):
 			delegate = delegateFactory(self.module, field, self.structureCache)
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
-			delegate.request_repaint.connect(self.repaint)
+			#delegate.request_repaint.connect(self.repaint)
 			colum += 1
 
 	# logger.debug("ListTableModule.rebuildDelegates headers and fields: %r, %r, %r", modelHeaders, fields, colum)
@@ -575,7 +568,7 @@ class ListTableView(QtWidgets.QTableView):
 		"""
 		return [self.model().getData()[x] for x in set([x.row() for x in self.selectionModel().selection().indexes()])]
 
-	def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+	def paintEvent_(self, event: QtGui.QPaintEvent) -> None:
 		super(ListTableView, self).paintEvent(event)
 		if not len(self.model().getData()):
 			painter = QtGui.QPainter(self.viewport())
@@ -641,7 +634,7 @@ class ListWidget(QtWidgets.QWidget):
 		self.setContentsMargins(0, 0, 0, 0)
 		self.list.show()
 		self.toolBar = QtWidgets.QToolBar(self)
-		self.toolBar.setIconSize(QtCore.QSize(16, 16))
+		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
 		# FIXME: testing changing to placeholder text
 		# if filter is not None and "search" in filter:

@@ -14,6 +14,7 @@ from viur_admin.log import getLogger
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector
 from viur_admin.protocolwrapper.tree import TreeWrapper
+import mimetypes
 
 logger = getLogger(__name__)
 
@@ -57,17 +58,28 @@ class FileUploader(QtCore.QObject):
 		self.bytesTotal = os.path.getsize(self.fileName.encode(sys.getfilesystemencoding()))
 		logger.debug("FileUploader sizeof: %r, %r", fileName, self.bytesTotal)
 		self.bytesDone = 0
-		NetworkService.request("/file/getUploadURL", {"node": node}, successHandler=self.startUpload, secure=True)
+		try:
+			mimetype, encoding = mimetypes.guess_type(fileName, strict=False)
+			mimetype = mimetype or "application/octet-stream"
+		except:
+			mimetype = "application/octet-stream"
+		NetworkService.request("/file/getUploadURL", {"node": node, "fileName": os.path.basename(self.fileName), "mimeType": mimetype}, successHandler=self.startUpload, secure=True)
 
 	def startUpload(self, req: RequestWrapper) -> None:
 		self.uploadProgress.emit(0, 1)
 		getUploadUrlResponse = NetworkService.decode(req)["values"]
-		params = getUploadUrlResponse["params"]
-		params["file"] = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
-		self.targetFileKey = params["key"][:-16]
-		params["key"] = params["key"].replace("file.dat", os.path.basename(self.fileName))
-		#	params["node"] = self.node
-		req = NetworkService.request(getUploadUrlResponse["url"], params, successHandler=self.onUploadFinished, failureHandler=self.onUploadFailed)
+		if "uploadKey" in getUploadUrlResponse:  # New Resumeable upload format
+			fileObj = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
+			self.targetFileKey = getUploadUrlResponse["uploadKey"]
+			req = NetworkService.request(getUploadUrlResponse["uploadUrl"], fileObj, successHandler=self.onUploadFinished,
+										 failureHandler=self.onUploadFailed)
+		else:  # vvvv REMOVE AFTER 01.07.2021 (API SHUTDOWN DATE) vvvv
+			params = getUploadUrlResponse["params"]
+			params["file"] = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
+			self.targetFileKey = params["key"][:-16]
+			params["key"] = params["key"].replace("file.dat", os.path.basename(self.fileName))
+			#	params["node"] = self.node
+			req = NetworkService.request(getUploadUrlResponse["url"], params, successHandler=self.onUploadFinished, failureHandler=self.onUploadFailed)
 		req.uploadProgress.connect(self.onProgress)
 
 	def onUploadFailed(self, req):
@@ -250,7 +262,7 @@ class RecursiveUploader(QtCore.QObject):
 			self.cancel.connect(r.cancel)
 		elif task["type"] == "htmlupload":
 			node = task["args"][1]
-			ns = NetworkService.request("/file/getUploadURL", {"node": node} if node else {}, secure=True, successHandler=self.onHtmlUploadUrlAvailable)
+			ns = NetworkService.request("/file/getUploadURL", {"node": node, "fileName": task["args"][0].name, "mimeType": (task["args"][0].type or "application/octet-stream")} if node else {}, secure=True, successHandler=self.onHtmlUploadUrlAvailable)
 			ns.fileUploadTask = task
 		else:
 			raise NotImplementedError()
@@ -259,16 +271,25 @@ class RecursiveUploader(QtCore.QObject):
 		import js
 		data = NetworkService.decode(req)["values"]
 		fileObj, dirKey = req.fileUploadTask["args"]
-		formData = js.eval("new FormData();")
-		for key, value in data["params"].items():
-			if key == "key":
-				targetKey = value[:-16]  # Truncate source/file.dat
-				fileName = fileObj.name
-				value = value.replace("file.dat", fileName)
-			formData.append(key, value)
-		formData.append("file", fileObj)
-		self.currentHtmlUpload = {"key": targetKey, "node": dirKey, "skelType": "leaf", "fileSize": fileObj.size}
-		js.window.fetch(data["url"], {"method": "POST", "body": formData, "mode": "no-cors"}).then(self.onHtmlBucketUploadFinished)
+		if "uploadKey" in data:  # New Resumeable upload format
+			#fileObj = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
+			#self.targetFileKey = getUploadUrlResponse["uploadKey"]
+			#req = NetworkService.request(getUploadUrlResponse["uploadUrl"], fileObj, successHandler=self.onUploadFinished,
+			#							 failureHandler=self.onUploadFailed)
+			#targetKey = getUploadUrlResponse["uploadKey"]
+			self.currentHtmlUpload = {"key": data["uploadKey"], "node": dirKey, "skelType": "leaf", "fileSize": fileObj.size}
+			js.window.fetch(data["uploadUrl"], {"method": "POST", "body": fileObj, "mode": "no-cors"}).then(self.onHtmlBucketUploadFinished)
+		else:
+			formData = js.eval("new FormData();")
+			for key, value in data["params"].items():
+				if key == "key":
+					targetKey = value[:-16]  # Truncate source/file.dat
+					fileName = fileObj.name
+					value = value.replace("file.dat", fileName)
+				formData.append(key, value)
+			formData.append("file", fileObj)
+			self.currentHtmlUpload = {"key": targetKey, "node": dirKey, "skelType": "leaf", "fileSize": fileObj.size}
+			js.window.fetch(data["url"], {"method": "POST", "body": formData, "mode": "no-cors"}).then(self.onHtmlBucketUploadFinished)
 
 	def onHtmlBucketUploadFinished(self, *args, **kwargs):
 		# The upload has been written to cloudstore

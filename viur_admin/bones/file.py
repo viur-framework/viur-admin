@@ -147,50 +147,13 @@ class FileItemBone(TreeItemBone):
 			structure = protoWrap.viewNodeStructure
 		if structure is None:
 			return
-		if self.using:
-			if self.multiple:
-				widgetItem = self.previewLayout.takeAt(0)
-				while widgetItem:
-					widgetItem = self.previewLayout.takeAt(0)
-				if self.selection and len(self.selection) > 0:
-					for item in self.selection:
-						item = InternalEdit(self, self.using, formatString(self.format, item, structure), item, {})
-						item.show()
-						self.previewLayout.addWidget(item)
-						self.internalEdits.append(item)
-					self.addBtn.setText("Auswahl ändern")
-				else:
-					self.addBtn.setText("Dateien auswählen")
-			else:
-				if self.selection:
-					logger.debug("selection: %r", self.selection)
-					if self.selection["dest"]["mimetype"].startswith("image/"):
-						RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-					self.entry.setText(formatString(self.format, self.selection, structure))
-				else:
-					self.entry.setText("")
+		if self.selection:
+			logger.debug("selection: %r", self.selection)
+			if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
+				RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
+			self.entry.setText(formatString(self.format, self.selection, structure))
 		else:
-			if self.multiple:
-				widgetItem = self.previewLayout.takeAt(0)
-				while widgetItem:
-					widgetItem = self.previewLayout.takeAt(0)
-				if self.selection and len(self.selection) > 0:
-					for item in self.selection:
-						lbl = MultiItemWidget(formatString(self.format, item, structure), parent=self.previewWidget)
-						if item["dest"]["mimetype"].startswith("image/"):
-							RemoteFile(item["dest"]["dlkey"], successHandler=lbl.loadIconFromRequest)
-						self.previewLayout.addWidget(lbl)
-					self.addBtn.setText("Auswahl ändern")
-				else:
-					self.addBtn.setText("Dateien auswählen")
-			else:
-				if self.selection:
-					logger.debug("selection: %r", self.selection)
-					if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
-						RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-					self.entry.setText(formatString(self.format, self.selection, structure))
-				else:
-					self.entry.setText("")
+			self.entry.setText("")
 
 
 class FileBoneSelector(TreeBoneSelector):

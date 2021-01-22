@@ -157,7 +157,7 @@ class TreeWrapper(QtCore.QObject):
 			r.skelType = skelType
 			r.node = node
 			r.queryArgs = kwargs
-		if node not in [x["key"] for x in self.rootNodes]:  # Don't query rootNodes again..
+		if self.rootNodes is None or node not in [x["key"] for x in self.rootNodes]:  # Don't query rootNodes again..
 			r = NetworkService.request("/%s/view/node/%s" % (self.module, node), successHandler=self.addCacheData)
 			r.wrapperCacheKey = node
 			r.skelType = "node"

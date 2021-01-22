@@ -11,7 +11,7 @@ from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.hierarchyUI import Ui_Hierarchy
 from viur_admin.utils import Overlay
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
 class HierarchyItem(QtWidgets.QTreeWidgetItem):
@@ -408,7 +408,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		"""
 
 		handler = utils.WidgetHandler(
-				lambda: EditWidget(self.module, EditWidget.appHierarchy, item.entryData["key"]),
+				lambda: EditWidget(self.module, ApplicationType.HIERARCHY, item.entryData["key"]),
 				descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
 				icon=QtGui.QIcon(":icons/actions/edit.svg"))
 		handler.stackHandler()

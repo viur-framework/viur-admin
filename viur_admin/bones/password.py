@@ -50,16 +50,12 @@ class PasswordEditBone(BoneEditInterface):
 			self.lineEdit.setReadOnly(True)
 
 	def validate(self, payload: str) -> None:
+		# FIXME: Prevent saving of form in this case?
 		if self.lineEdit.text() == self.lineEditCheck.text():
 			self.validatorResult.clear()
-			if self.editWidget:
-				self.editWidget.ui.btnSaveContinue.setEnabled(True)
-				self.editWidget.ui.btnSaveClose.setEnabled(True)
 		else:
 			self.validatorResult.setText("Passwords do not not match")
-			if self.editWidget:
-				self.editWidget.ui.btnSaveContinue.setEnabled(False)
-				self.editWidget.ui.btnSaveClose.setEnabled(False)
+
 
 	@classmethod
 	def fromSkelStructure(

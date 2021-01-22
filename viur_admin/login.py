@@ -163,6 +163,9 @@ class AuthUserPassword(AuthProviderBase):
 		username = self.currentPortalConfig["username"]
 		password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
 		if not password:
+			if isPyodide:  # No not issue getText (Its a blocking operation)
+				self.loginFailed.emit("Aborted")
+				return
 			password, isOkay = QtWidgets.QInputDialog.getText(self, "Password", "Password")
 			if not isOkay:
 				self.loginFailed.emit("Aborted")
@@ -454,7 +457,6 @@ class Login(QtWidgets.QMainWindow):
 		"""
 		logger.debug("onNotLoggedInYet: %r", req)
 		nam.setCookieJar(MyCookieJar())
-		securityTokenProvider.reset()
 		self.loginTask.startAuthenticationFlow()
 
 	def onStartAccManagerBTNReleased(self) -> None:

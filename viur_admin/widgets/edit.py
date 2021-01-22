@@ -270,16 +270,21 @@ class EditWidget(QtWidgets.QWidget):
 
 			if tabName not in tabs:
 				scrollArea = QtWidgets.QScrollArea()
-				containerWidget = QtWidgets.QWidget(scrollArea)
-				scrollArea.setWidget(containerWidget)
+				outerContainer = QtWidgets.QWidget(scrollArea)
+				outerLayout = QtWidgets.QVBoxLayout(outerContainer)
+				scrollArea.setWidget(outerContainer)
+				containerWidget = QtWidgets.QWidget(outerContainer)
+				outerLayout.addWidget(containerWidget, 1)
 				formLayout = QtWidgets.QFormLayout(containerWidget)
 				formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
 				formLayout.setLabelAlignment(QtCore.Qt.AlignLeft)
+				formLayout.setAlignment(QtCore.Qt.AlignTop)
 				tabs[tabName] = formLayout
 				containerWidget.setLayout(formLayout)
 				containerWidget.setSizePolicy(
 					QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
 				tmpTabs.append((scrollArea, tabName))
+				outerLayout.addStretch(100)
 				scrollArea.setWidgetResizable(True)
 		tmpTabs.sort(key=lambda x: x[1])
 		for scrollArea, tabName in tmpTabs:
@@ -336,6 +341,7 @@ class EditWidget(QtWidgets.QWidget):
 			tabs[tabName].addRow(lblWidget, dataWidget)
 			dataWidget.show()
 			self.bones[key] = widget
+
 		self.unserialize(data["values"], data["errors"])
 		# self._lastData = data
 		# logger.debug("setData _lastData: %r", self._lastData)

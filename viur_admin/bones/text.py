@@ -325,10 +325,9 @@ class TextEditBone(BoneEditInterface):
 			self.webView.setReadOnly(True)
 			self.editWidget.layout().addWidget(self.webView)
 			#self.webView.setText
+		self.webView.setMinimumHeight(150)
 		self.editWidget.layout().addWidget(btn)
 		self.html = ""
-		self.editWidget.setSizePolicy(
-			QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred))
 		self.editWidget.installEventFilter(wheelEventFilter)
 
 	@classmethod

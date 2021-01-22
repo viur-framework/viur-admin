@@ -76,7 +76,9 @@ class MultiContainer(QtWidgets.QWidget):
 		return wdg
 
 	def removeLine(self, idx):
-		self.layout().removeWidget(self.children()[idx])
+		c = self.children()[idx]
+		self.layout().removeWidget(c)
+		c.deleteLater()
 
 	def onAddButtonClicked(self, *args, **kwargs):
 		self._mkEntry()

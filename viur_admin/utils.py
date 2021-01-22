@@ -218,7 +218,7 @@ class Overlay(QtWidgets.QWidget):
 		Starts displaying.
 		Dont call this directly
 		"""
-		if isPyodide:
+		if 1 or isPyodide:
 			return
 		if self.timer:
 			self.show()
@@ -239,7 +239,7 @@ class Overlay(QtWidgets.QWidget):
 		display-time)
 		@type force: Bool
 		"""
-		if isPyodide:
+		if 1 or isPyodide:
 			return
 		if not (force or self.status == self.BUSY):
 			return
@@ -262,7 +262,7 @@ class Overlay(QtWidgets.QWidget):
 		@param message: Text to display
 		TODO: change status into real enum
 		"""
-		if isPyodide:
+		if 1 or isPyodide:
 			return
 		assert (status in [self.BUSY, self.MISSING, self.ERROR, self.SUCCESS])
 		self.status = status

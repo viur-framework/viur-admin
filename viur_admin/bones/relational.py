@@ -405,6 +405,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.selection = data
 		self.lastErrors = errors
 		self.updateVisiblePreview()
+		self.setErrors(errors)
 
 	def serializeForPost(self) -> Dict[str, Any]:
 		if not self.selection:

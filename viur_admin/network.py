@@ -149,7 +149,7 @@ class SecurityTokenProvider(QObject):
 
 	def fetchNext(self):
 		self.lockKey = "".join(random.choices(string.ascii_letters + string.digits, k=10))
-		req = QNetworkRequest(QUrl("/admin/skey"))
+		req = QNetworkRequest(QUrl(NetworkService.url+"/skey"))
 		self.currentRequest = nam.get(req)
 		self.currentRequest.finished.connect(self.onFinished)
 
@@ -253,7 +253,12 @@ class RequestWrapper(QtCore.QObject):
 				req.setRawHeader(b"Content-Type", b'application/x-www-form-urlencoded')
 				request = nam.post(req, self.params)
 				logger.debug("after nam post")
+			elif isinstance(self.params, io.BufferedReader):
+				req.setRawHeader(b"Content-Type", b'application/octet-stream')
+				request = nam.post(req, self.params.read())
+				logger.debug("after nam post")
 			else:
+				print(type(self.params))
 				raise ValueError("cannot differentiate headers to that param type")
 			logger.debug("params: %r", self.params)
 			logger.debug("reply: %r", request)
@@ -661,6 +666,7 @@ class NetworkService:
 		"""
 		#if secure == True:
 		#	SP2.addRequest(partial(NetworkService.request, url=url, params=params, extraHeaders=extraHeaders, successHandler=successHandler, failureHandler=failureHandler, finishedHandler=finishedHandler,parent=parent, failSilent=failSilent))
+		print( "NS-REQ", url, params)
 		global nam, _isSecureSSL
 		if _isSecureSSL == False:  # Warn the user of a potential security risk
 			msgRes = QtWidgets.QMessageBox.warning(
@@ -683,6 +689,7 @@ class NetworkService:
 	def decode(req: RequestWrapper) -> Any:
 		# logger.debug("NetworkService.decode: %r", req)
 		data = req.readAll().data().decode("utf-8")
+		#print("dedoced", data)
 		return json.loads(data)
 
 	@staticmethod
@@ -700,4 +707,3 @@ class NetworkService:
 			logger.exception(err)
 			NetworkService.serverVersion = (1, 0, 0)  # The first version of ViUR didn't support that
 		logger.info("Attached to an instance running ViUR %s", NetworkService.serverVersion)
-		securityTokenProvider.reset()
