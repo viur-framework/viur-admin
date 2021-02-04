@@ -5,40 +5,40 @@ from typing import Union, List, Dict, Any, Callable
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer, chooseLang
 from viur_admin.bones.bone_interface import BoneEditInterface
-from viur_admin.config import conf
+
 from viur_admin.event import event
 from viur_admin.log import getLogger
-from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
+from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector, protocolWrapperInstanceSelector
 from viur_admin.ui.extendedStringSearchPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter, ViurTabBar
 
 logger = getLogger(__name__)
 
 
-def chooseLang(value: Dict[str, Any], prefs: List[str]) -> Union[str, dict, None]:
-	"""
-		Tries to select the best language for the current user.
-		Value is the dictionary of lang -> text received from the server,
-		prefs the list of languages (in order of preference) for that bone.
-	"""
-	if not isinstance(value, dict):
-		return value
-	try:
-		lang = conf.adminConfig["language"]
-	except KeyError:
-		lang = ""
-	if lang in value and value[lang]:
-		return value[lang]
-	for lang in prefs:
-		if lang in value:
-			if value[lang]:
-				return value[lang]
-	return None
 
 
 class StringViewBoneDelegate(BaseViewBoneDelegate):
+	def isEditable(self):
+		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages") \
+				or self.skelStructure[self.boneName].get("multiple"):
+			return False
+		return True
+
+	def createEditor(self, parent, option, index):
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		skelStructure = protoWrap.editStructure
+		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure)
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=parent)
+		widget.unserialize(self.editingItem.get(self.boneName), {})
+		widget.setParent(parent)
+		widget.layout().setSpacing(0)
+		widget.layout().setContentsMargins(0, 0, 0, 0)
+		QtCore.QTimer.singleShot(1, lambda: widget.lineEdit.setFocus())
+		return widget
+
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		# print("StringViewBoneDelegate.displayText:", value, locale)
 		if self.boneName in self.skelStructure:
@@ -52,16 +52,23 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 				languages = None
 			if multiple and languages:
 				try:
-					value = ", ".join(chooseLang(value, languages))
+					value = ", ".join(chooseLang(value, languages, self.language))
 				except:
 					value = ""
 			elif multiple and not languages:
 				value = ", ".join(value)
 			elif not multiple and languages:
-				value = chooseLang(value, languages)
+				value = chooseLang(value, languages, self.language)
 			else:  # Not multiple nor languages
 				pass
 		return super(StringViewBoneDelegate, self).displayText(str(value), locale)
+
+	def commitDataCb(self, editor):
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		assert protoWrap is not None
+		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		self.editingModel = None
+		self.editingIndex = None
 
 
 class Tag(QtWidgets.QWidget):
@@ -134,12 +141,13 @@ class StringEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			multiple: bool = False,
 			languages: List[str] = None,
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(StringEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
+		super(StringEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget=editWidget, *args, **kwargs)
 		self.editWidget.setLayout(QtWidgets.QVBoxLayout(self.editWidget))
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
 		self.editWidget.layout().addWidget(self.lineEdit)
@@ -157,10 +165,12 @@ class StringEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = bool(myStruct.get("readonly"))
+		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
 		widgetGen = lambda: StringEditBone(
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			multiple=False,
 			languages=None,
 			**kwargs)
@@ -171,22 +181,6 @@ class StringEditBone(BoneEditInterface):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
 		return widgetGen()
-
-		multiple = False
-		languages = None
-		if boneName in skelStructure:
-			if "multiple" in skelStructure[boneName]:
-				multiple = skelStructure[boneName]["multiple"]
-
-			if "languages" in skelStructure[boneName]:
-				languages = skelStructure[boneName]["languages"]
-		return StringEditBone(
-			moduleName,
-			boneName,
-			readOnly,
-			multiple=multiple,
-			languages=languages,
-			**kwargs)
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		self.setErrors(errors)

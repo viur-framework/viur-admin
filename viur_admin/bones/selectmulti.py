@@ -31,12 +31,13 @@ class SelectMultiEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			values: List[Any],
 			sortBy: str = "keys",
 			editWidget: QtWidgets.QWidget = None,
 			*args: Any,
 			**kwargs: Any):
-		super(SelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super(SelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.checkboxes: Dict[str, QtWidgets.QCheckBox] = dict()
 		tmpList = values
@@ -59,6 +60,7 @@ class SelectMultiEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		required = "required" in myStruct and myStruct["required"]
 		if "sortBy" in myStruct:
 			sortBy = myStruct["sortBy"]
 		else:
@@ -68,6 +70,7 @@ class SelectMultiEditBone(BoneEditInterface):
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			values=values,
 			sortBy=sortBy,
 			**kwargs)
@@ -77,6 +80,7 @@ class SelectMultiEditBone(BoneEditInterface):
 		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		for key, checkbox in self.checkboxes.items():
 			checkbox.setChecked(isinstance(data, list) and key in data)
 

@@ -120,12 +120,13 @@ class NumericEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			precision: int = 0,
 			min: Union[int, float] = -pow(2, 30),
 			max: Union[int, float] = pow(2, 30),
 			*args: Any,
 			**kwargs: Any):
-		super(NumericEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
+		super(NumericEditBone, self).__init__(moduleName, boneName, readOnly, required, *args, **kwargs)
 		self.precision = precision
 		self.min = min
 		self.max = max
@@ -155,10 +156,12 @@ class NumericEditBone(BoneEditInterface):
 			maxVal = pow(2, 30)
 		myStruct = skelStructure[boneName]
 		readOnly = bool(myStruct.get("readonly"))
+		required = bool(myStruct.get("required"))
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			precision=precision,
 			min=minVal,
 			max=maxVal,
@@ -172,6 +175,7 @@ class NumericEditBone(BoneEditInterface):
 		return widgetGen()
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if not self.precision:
 			self.lineEdit.setValue(int(data) if data else 0)
 		else:

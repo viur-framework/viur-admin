@@ -81,12 +81,13 @@ class RecordEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			multiple: bool,
 			using: Dict[str, Any] = None,
 			format: str="$(name)",
 			*args: Any,
 			**kwargs: Any):
-		super(RecordEditBone, self).__init__(moduleName, boneName, readOnly, *args, **kwargs)
+		super(RecordEditBone, self).__init__(moduleName, boneName, readOnly, required, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self)
 		self.setLayout(self.layout)
 		logger.debug("RecordEditBone: %r, %r, %r", moduleName, boneName, readOnly)
@@ -109,10 +110,12 @@ class RecordEditBone(BoneEditInterface):
 		logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			skelStructure[boneName]["multiple"],
 			using=skelStructure[boneName]["using"],
 			format=skelStructure[boneName].get("format", "$(name)")
@@ -127,6 +130,7 @@ class RecordEditBone(BoneEditInterface):
 
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		return self.internalEdit.unserialize(data, errors)
 
 	def serializeForPost(self) -> dict:

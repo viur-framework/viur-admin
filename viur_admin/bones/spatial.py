@@ -30,12 +30,13 @@ class SpatialEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			multiple: bool = False,
 			languages: List[str] = None,
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(SpatialEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
+		super(SpatialEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget=editWidget, *args, **kwargs)
 		self.setLayout(QtWidgets.QVBoxLayout(self.editWidget))
 		self.lat = FixedQDoubleSpinBox(self.editWidget)
 		self.lat.setDecimals(10)
@@ -62,10 +63,12 @@ class SpatialEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = bool(myStruct.get("readonly"))
+		required = bool(myStruct.get("required"))
 		widgetGen = lambda: SpatialEditBone(
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			multiple=False,
 			languages=None,
 			**kwargs)
@@ -79,6 +82,7 @@ class SpatialEditBone(BoneEditInterface):
 
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if not data:
 			return
 		try:

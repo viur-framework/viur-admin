@@ -19,6 +19,7 @@ from viur_admin.startpages.default import DefaultWidget
 from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
 from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler
+from viur_admin import log
 if not isPyodide:
 	import viur_admin.plugins
 
@@ -58,6 +59,7 @@ class Preloader(QtWidgets.QWidget):
 			total = 1
 			missing = 0
 		self.ui.progressBar.setValue(10 + int(100.0 * ((total - missing) / total)))
+		#print("%s - %s" % (total, missing))
 		if not missing:
 			event.emit("preloadingFinished")
 			self.finished.emit()
@@ -293,6 +295,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.helpBrowser = None
 		self.startPage = None
 		self.rebuildBreadCrumbs()
+		self.setStatusBar(QtWidgets.QStatusBar())
+		log.statusBarRef = self.statusBar()
 		if not isPyodide:
 			settings = QtCore.QSettings("Mausbrand", "ViurAdmin")
 			try:
@@ -328,6 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	def onPreloaderFinished(self) -> None:
 		self.preloader.deleteLater()
 		self.preloader = None
+		log.logToUser("Welcome to ViUR Admin")
 		self.show()
 
 	def onLoadConfig(self, request: RequestWrapper) -> None:

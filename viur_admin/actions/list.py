@@ -268,3 +268,52 @@ class CsvExportAction(QtWidgets.QAction):
 
 
 actionDelegateSelector.insert(1, CsvExportAction.isSuitableFor, CsvExportAction)
+
+
+class SelectTableRowsAction(QtWidgets.QAction):
+	def __init__(self, parent: QtWidgets.QWidget = None):
+		super(SelectTableRowsAction, self).__init__(
+			QtGui.QIcon(":icons/actions/change_selection.svg"),
+			QtCore.QCoreApplication.translate("ListHandler", "Select table headers"),
+			parent)
+		self.triggered.connect(self.onTriggered)
+		self.module = self.parentWidget().list.module
+
+
+	def onTriggered(self) -> None:
+		class FieldAction(QtWidgets.QAction):
+			def __init__(
+					self,
+					key: str,
+					name: str,
+					parent: QtWidgets.QWidget = None):
+				super(FieldAction, self).__init__(parent=parent)
+				self.key = key
+				self.name = name
+				self.setText(self.name)
+
+		menu = QtWidgets.QMenu(self.parentWidget())
+		activeFields = self.parentWidget().list.model().fields
+		actions: List[FieldAction] = []
+		if not self.parentWidget().list.structureCache:
+			return
+		for key in self.parentWidget().list.structureCache:
+			action = FieldAction(
+				key,
+				self.parentWidget().list.structureCache[key]["descr"],
+				parent=self.parentWidget())
+			action.setCheckable(True)
+			action.setChecked(key in activeFields)
+			menu.addAction(action)
+			actions.append(action)
+		selection = menu.exec_(self.parentWidget().mapToGlobal(QtCore.QPoint(50,50)))
+		if selection:
+			self.parentWidget().list.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
+
+
+	@staticmethod
+	def isSuitableFor(module: str, actionName: str) -> bool:
+		return (module == "list" or module.startswith("list.")) and actionName == "selecttablerows"
+
+
+actionDelegateSelector.insert(1, SelectTableRowsAction.isSuitableFor, SelectTableRowsAction)

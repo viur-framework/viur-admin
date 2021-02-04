@@ -42,10 +42,11 @@ class BooleanEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(BooleanEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super(BooleanEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.checkBox = QtWidgets.QCheckBox(self.editWidget)
 		if readOnly:
@@ -61,7 +62,8 @@ class BooleanEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		widgetGen = lambda: cls(moduleName, boneName, readOnly, **kwargs)
+		required = "required" in myStruct and myStruct["required"]
+		widgetGen = lambda: cls(moduleName, boneName, readOnly, required, **kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
@@ -72,6 +74,7 @@ class BooleanEditBone(BoneEditInterface):
 
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if data:
 			self.checkBox.setChecked(True)
 

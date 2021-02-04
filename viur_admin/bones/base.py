@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -7,6 +7,7 @@ from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.utils import wheelEventFilter, ViurTabBar
 from viur_admin.widgets.edit import collectBoneErrors
+from viur_admin.config import conf
 
 
 class LanguageContainer(QtWidgets.QTabWidget):
@@ -99,6 +100,29 @@ class MultiContainer(QtWidgets.QWidget):
 		return [wdg.children()[1].serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
 
 
+def chooseLang(value: Dict[str, Any], prefs: List[str], currentLanguageSelection: str = None) -> Union[str, dict, None]:
+	"""
+		Tries to select the best language for the current user.
+		Value is the dictionary of lang -> text received from the server,
+		prefs the list of languages (in order of preference) for that bone.
+	"""
+	if not isinstance(value, dict):
+		return value
+	if currentLanguageSelection:
+		lang = currentLanguageSelection
+		return value.get(lang)
+	try:
+		lang = conf.adminConfig["language"]
+	except KeyError:
+		lang = ""
+	if lang in value and value[lang]:
+		return value[lang]
+	for lang in prefs:
+		if lang in value:
+			if value[lang]:
+				return value[lang]
+	return None
+
 class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	request_repaint = QtCore.pyqtSignal()
 
@@ -113,7 +137,87 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.moduleName = moduleName
+		self.language = None
+		self.editingModel = None
+		self.editingIndex = None
+		self.editingItem = None
+		self.commitData.connect(self.commitDataCb)
 
+	def isEditable(self):
+		return False
+
+	def openContextMenu(self, point: QtCore.QPoint, parentWidget) -> None:
+		if self.boneName not in self.skelStructure:
+			return
+		if "languages" in self.skelStructure[self.boneName]:
+			languages = self.skelStructure[self.boneName]["languages"]
+		else:
+			languages = None
+		menu = QtWidgets.QMenu(parentWidget)
+		languagesMenu = menu.addMenu("Languages")
+		if languages:
+			lngGroup = QtWidgets.QActionGroup(menu)
+			defaultAction = lngGroup.addAction("Preferred Language")
+			defaultAction.setCheckable(True)
+			defaultAction.setChecked(not bool(self.language))
+			defaultAction.language = None
+			for lng in languages:
+				lngAction = lngGroup.addAction(lng)
+				lngAction.setCheckable(True)
+				lngAction.setChecked(self.language == lng)
+				lngAction.language = lng
+			lngGroup.setExclusive(True)
+			languagesMenu.addActions(lngGroup.actions())
+		else:
+			languagesMenu.setDisabled(True)
+		editAction = menu.addAction("Edit")
+		editAction.setCheckable(True)
+		if not self.isEditable():
+			editAction.setEnabled(False)
+		else:
+			editAction.setChecked(parentWidget.getColumEditMode(self.boneName))
+		editAction.action = "editable"
+		selection = menu.exec_(parentWidget.mapToGlobal(point))
+		if selection:
+			if "language" in dir(selection):
+				self.language = selection.language
+			elif "action" in dir(selection):
+				if selection.action == "editable":
+					parentWidget.setColumEditMode(self.boneName, editAction.isChecked())
+			#parentWidget.list.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
+
+	def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
+		self.editingModel = model
+		self.editingIndex = index
+		self.editingItem = model.dataCache[index.row()]
+		return False
+
+	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+		# print("StringViewBoneDelegate.displayText:", value, locale)
+		if self.boneName in self.skelStructure:
+			if "multiple" in self.skelStructure[self.boneName]:
+				multiple = self.skelStructure[self.boneName]["multiple"]
+			else:
+				multiple = False
+			if "languages" in self.skelStructure[self.boneName]:
+				languages = self.skelStructure[self.boneName]["languages"]
+			else:
+				languages = None
+			if multiple and languages:
+				try:
+					value = ", ".join(chooseLang(value, languages))
+				except:
+					value = ""
+			elif multiple and not languages:
+				value = ", ".join(value)
+			elif not multiple and languages:
+				value = chooseLang(value, languages)
+			else:  # Not multiple nor languages
+				pass
+		return super(BaseViewBoneDelegate, self).displayText(str(value), locale)
+
+	def commitDataCb(self, editor):
+		raise NotImplementedError
 
 class BaseEditBone(BoneEditInterface):
 	def __init__(
@@ -121,10 +225,11 @@ class BaseEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			editWidget: QtWidgets.QWidget = None,
 			*args: Any,
 			**kwargs: Any):
-		super(BaseEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super(BaseEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		self.layout = QtWidgets.QHBoxLayout(self.editWidget)
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
 		self.layout.addWidget(self.lineEdit)
@@ -141,9 +246,11 @@ class BaseEditBone(BoneEditInterface):
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		return BaseEditBone(moduleName, boneName, readOnly, **kwargs)
+		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		return BaseEditBone(moduleName, boneName, readOnly, required, **kwargs)
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		self.lineEdit.setText(str(data) if data else "")
 
 	def serializeForPost(self) -> dict:

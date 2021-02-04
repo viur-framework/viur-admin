@@ -22,6 +22,7 @@ from viur_admin.config import conf
 from viur_admin.ui.editUI import Ui_Edit
 from viur_admin.priorityqueue import editBoneSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
+from viur_admin.log import logToUser
 
 
 class ApplicationType(Enum):
@@ -178,6 +179,7 @@ class EditWidget(QtWidgets.QWidget):
 			self.editTaskID = protoWrap.edit(**data)
 		else:
 			raise NotImplementedError()  # Should never reach this
+		self.setDisabled(True)
 
 	def onBtnResetReleased(
 			self,
@@ -257,6 +259,7 @@ class EditWidget(QtWidgets.QWidget):
 		tmpDict = {}
 		tabs: Dict[str, QtWidgets.QFormLayout] = dict()
 		tmpTabs: List[Tuple[QtWidgets.QScrollArea, str]] = list()  # Sort tabs by their description
+		tabMaxError: Dict[str, int] = {} # Map of max-error code per tap
 		for key, bone in data["structure"]:
 			tmpDict[key] = bone
 		for key, bone in data["structure"]:
@@ -286,9 +289,26 @@ class EditWidget(QtWidgets.QWidget):
 				tmpTabs.append((scrollArea, tabName))
 				outerLayout.addStretch(100)
 				scrollArea.setWidgetResizable(True)
+			for error in data["errors"]:
+				if error["fieldPath"] and error["fieldPath"][0] == key:
+					severity = error["severity"]
+					if severity == 2 and bone.get("required"):
+						severity = 3
+					if severity > tabMaxError.get(tabName, 0):
+						tabMaxError[tabName] = severity
 		tmpTabs.sort(key=lambda x: x[1])
 		for scrollArea, tabName in tmpTabs:
-			self.ui.tabWidget.addTab(scrollArea, tabName)
+			tabIndex = self.ui.tabWidget.addTab(scrollArea, tabName)
+			maxErrCode = tabMaxError.get(tabName, 0)
+			if maxErrCode == 1:
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_normal.png"))
+			elif maxErrCode == 2:
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_okay.png"))
+			elif maxErrCode == 3:
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_bad.png"))
+			else:
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_good.png"))
+
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
 				continue
@@ -393,7 +413,9 @@ class EditWidget(QtWidgets.QWidget):
 		logger.debug("onSaveSuccess: %r, %r", editTaskID, self.editTaskID)
 		if editTaskID != self.editTaskID:  # Not our task
 			return
-		self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditWidget", "Entry saved"))
+		self.setDisabled(False)
+		logToUser(QtCore.QCoreApplication.translate("EditWidget", "Entry saved"))
+		#self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("EditWidget", "Entry saved"))
 		if self.closeOnSuccess:
 			event.emit('popWidget', self)
 		else:
@@ -406,6 +428,7 @@ class EditWidget(QtWidgets.QWidget):
 		logger.debug("onDataAvailable: %r, %r", editTaskID, self.editTaskID)
 		if editTaskID != self.editTaskID:  # Not our task
 			return
+		self.setDisabled(False)
 		self.setData(data=data, ignoreMissing=wasInitial)
 		if not wasInitial:
 			self.overlay.inform(self.overlay.MISSING, QtCore.QCoreApplication.translate("EditWidget", "Missing data"))
@@ -414,9 +437,11 @@ class EditWidget(QtWidgets.QWidget):
 		"""
 			Unspecified error on saving/editing
 		"""
-		self.overlay.inform(
-			self.overlay.ERROR,
-			QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes"))
+		#self.overlay.inform(
+		#	self.overlay.ERROR,
+		#	QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes"))
+		logToUser(QtCore.QCoreApplication.translate("EditWidget", "There was an error saving your changes"))
+		self.setDisabled(False)
 		return
 
 	def taskAdded(self) -> None:

@@ -298,12 +298,13 @@ class TextEditBone(BoneEditInterface):
 			modulName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			languages: Sequence[str] = None,
 			plaintext: bool = False,
 			validHtml: Union[dict, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(TextEditBone, self).__init__(modulName, boneName, readOnly)
+		super(TextEditBone, self).__init__(modulName, boneName, readOnly, required)
 
 		self.editWidget.setLayout(QtWidgets.QVBoxLayout(self.editWidget))
 		self.languages = languages
@@ -338,7 +339,8 @@ class TextEditBone(BoneEditInterface):
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct
+		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		required = "required" in myStruct and myStruct["required"]
 		languages = None
 		plaintext = False
 		validHtml = None
@@ -352,6 +354,7 @@ class TextEditBone(BoneEditInterface):
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			languages=None,
 			plaintext=plaintext,
 			validHtml=validHtml,
@@ -425,6 +428,7 @@ class TextEditBone(BoneEditInterface):
 				self.webView.setHtml(text)
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		self.html = str(data).replace("target=\"_blank\" href=\"", "href=\"!") if (data) else ""
 		if isPyodide:
 			self.webView.setText(self.html)

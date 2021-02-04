@@ -26,7 +26,7 @@ else:
 
 import viur_admin.ui.icons_rc
 from viur_admin.config import conf
-from viur_admin.log import getLogger
+from viur_admin.log import getLogger, getStatusBar, logToUser
 import io
 from functools import partial
 
@@ -304,6 +304,7 @@ class RequestWrapper(QtCore.QObject):
 		# logger.debug("onFinished")
 		if self.unlockSkey:
 			securityTokenProvider.unlockKey(self.unlockSkey)
+		print("Request-time: %s" % (time.time()-self.startTime))
 		self.hasFinished = True
 		if self.request.error() == self.request.NoError:
 			self.requestSucceeded.emit(self)
@@ -380,6 +381,8 @@ class RequestGroup(QtCore.QObject):
 		self.runningRequests = 0
 		self.hadErrors = False
 		self.hasFinished = False
+		self.finishedMessage = None
+		self.progressBar: QtWidgets.QProgressBar = None
 
 	def addQuery(self, query: RequestWrapper) -> None:
 		"""Add an RequestWrapper to the Group
@@ -393,6 +396,10 @@ class RequestGroup(QtCore.QObject):
 		self.queryCount += 1
 		self.maxQueryCount += 1
 		self.runningRequests += 1
+		if self.progressBar:
+			self.progressBar.setMaximum(self.maxQueryCount)
+		if self.runningMessage:
+			logToUser(self.formatLogMessage(self.runningMessage))
 
 	def addRequest(
 			self,
@@ -419,6 +426,8 @@ class RequestGroup(QtCore.QObject):
 			bytesTotal: int) -> None:
 		if bytesReceived == bytesTotal:
 			self.progressUpdate.emit(self, self.maxQueryCount - self.queryCount, self.maxQueryCount)
+		if self.runningMessage:
+			logToUser(self.formatLogMessage(self.runningMessage))
 
 	def onError(self, myRequest: RequestWrapper, error: Any) -> None:
 		self.requestFailed.emit(self)
@@ -432,6 +441,8 @@ class RequestGroup(QtCore.QObject):
 		self.launchNextRequest()
 		if self.queryCount == 0:
 			QtCore.QTimer.singleShot(1000, self.recheckFinished)
+		if self.progressBar:
+			self.progressBar.setValue(self.maxQueryCount-self.queryCount)
 
 	def recheckFinished(self) -> None:
 		"""Delays emitting of our onFinished signal.
@@ -441,6 +452,11 @@ class RequestGroup(QtCore.QObject):
 		if self.queryCount == 0:
 			self.hasFinished = True
 			self.finished.emit(self)
+			if self.finishedMessage:
+				logToUser(self.formatLogMessage(self.finishedMessage))
+			if self.progressBar:
+				self.progressBar.deleteLater()
+				self.progressBar = None
 			self.deleteLater()
 
 	def isIdle(self) -> bool:
@@ -456,6 +472,33 @@ class RequestGroup(QtCore.QObject):
 		If there was at least one running query, the finishedHandler will be called shortly after.
 		"""
 		self.cancel.emit()
+
+	def addToStatusBar(self, runningMessage: str, finishedMessage: str, cancelable=False) -> None:
+		"""
+			Calling this method will create a progressbar in the statusbar
+			:param startMessage:
+			:param finishedMessage:
+
+		"""
+		self.runningMessage = runningMessage
+		self.finishedMessage = finishedMessage
+		self.progressBar = QtWidgets.QProgressBar()
+		self.progressBar.setMinimum(0)
+		self.progressBar.setMaximum(self.maxQueryCount)
+		getStatusBar().addWidget(self.progressBar)
+		self.progressBar.show()
+		logToUser(self.formatLogMessage(self.runningMessage))
+
+	def formatLogMessage(self, msg: str) -> str:
+		"""
+			Formats a Logmessage according to our current status.
+			Valid replacements are: {{total}}, {{finished}} {{remaining}} {{running}}
+		"""
+		return msg.replace("{{total}}", str(self.maxQueryCount)) \
+			.replace("{{finished}}", str(self.maxQueryCount-self.queryCount)) \
+			.replace("{{remaining}}", str(self.queryCount)) \
+			.replace("{{running}}", str(self.runningRequests))
+
 
 
 class RemoteFile(QtCore.QObject):

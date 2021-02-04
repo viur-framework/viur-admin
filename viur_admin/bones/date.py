@@ -95,12 +95,13 @@ class DateEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			hasDate: bool,
 			hasTime: bool,
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(DateEditBone, self).__init__(moduleName, boneName, readOnly, editWidget=editWidget, *args, **kwargs)
+		super(DateEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget=editWidget, *args, **kwargs)
 
 		self.boneName = boneName
 		layout = QtWidgets.QHBoxLayout(self.editWidget)
@@ -135,9 +136,10 @@ class DateEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		required = "required" in myStruct and myStruct["required"]
 		hasDate = myStruct["date"]
 		hasTime = myStruct["time"]
-		widgetGen = lambda: DateEditBone(moduleName, boneName, readOnly, hasDate, hasTime, **kwargs)
+		widgetGen = lambda: DateEditBone(moduleName, boneName, readOnly, required, hasDate, hasTime, **kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
@@ -148,6 +150,7 @@ class DateEditBone(BoneEditInterface):
 
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		value = str(data)
 		self.dt = datetime.now()
 		if self.time and self.date:  # date AND time

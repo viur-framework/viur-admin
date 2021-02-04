@@ -56,12 +56,13 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			values: list,
 			sortBy: str = "keys",
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(AccessSelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super(AccessSelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.checkboxes: Dict[Any, Any] = dict()
 		self.flags: Dict[Any, Any] = dict()
@@ -152,6 +153,7 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
+		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
 		if "sortBy" in skelStructure[boneName]:
 			sortBy = skelStructure[boneName]["sortBy"]
 		else:
@@ -161,11 +163,13 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			values=values,
 			sortBy=sortBy,
 			**kwargs)
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if self.boneName not in data:
 			return
 		for key, checkbox in self.checkboxes.items():

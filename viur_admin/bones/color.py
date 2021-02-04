@@ -21,9 +21,10 @@ class ColorEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			skelStructure: dict,
 			**kwargs: Any):
-		super(ColorEditBone, self).__init__(moduleName, boneName, readOnly, **kwargs)
+		super(ColorEditBone, self).__init__(moduleName, boneName, readOnly, required, **kwargs)
 		self.skelStructure = skelStructure
 		lineLayout = QtWidgets.QHBoxLayout(self.editWidget)
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
@@ -45,10 +46,12 @@ class ColorEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = bool(myStruct.get("readonly"))
+		required = bool(myStruct.get("required"))
 		widgetGen = lambda: ColorEditBone(
 			moduleName,
 			boneName,
 			readOnly,
+			required,
 			skelStructure,
 			**kwargs)
 		if myStruct.get("multiple"):
@@ -72,6 +75,7 @@ class ColorEditBone(BoneEditInterface):
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % str(self.lineEdit.displayText()))
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		data = str(data) if data else ""
 		self.lineEdit.setText(data)
 		self.colordisplay.setStyleSheet("QWidget { background-color: %s }" % data)

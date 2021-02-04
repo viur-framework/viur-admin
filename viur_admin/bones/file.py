@@ -43,12 +43,12 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		model = index.model()
 		try:
 			index_column = index.column()
-			logger.debug("model and fields: %r, %r, %r", index_column, model.fields, model)
+			#logger.debug("model and fields: %r, %r, %r", index_column, model.fields, model)
 			model_fields = model.fields[index_column]
 			index_row = index.row()
 			cache_row = model.dataCache[index_row]
 			record = cache_row[model_fields]
-			logger.info("record cache row: %r", record)
+			#logger.info("record cache row: %r", record)
 			if record and isinstance(record, list) and len(record) > 0:
 				record = record[0]
 		except (IndexError, KeyError) as err:

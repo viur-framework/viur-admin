@@ -272,11 +272,6 @@ class RecursiveUploader(QtCore.QObject):
 		data = NetworkService.decode(req)["values"]
 		fileObj, dirKey = req.fileUploadTask["args"]
 		if "uploadKey" in data:  # New Resumeable upload format
-			#fileObj = open(self.fileName.encode(sys.getfilesystemencoding()), "rb")
-			#self.targetFileKey = getUploadUrlResponse["uploadKey"]
-			#req = NetworkService.request(getUploadUrlResponse["uploadUrl"], fileObj, successHandler=self.onUploadFinished,
-			#							 failureHandler=self.onUploadFailed)
-			#targetKey = getUploadUrlResponse["uploadKey"]
 			self.currentHtmlUpload = {"key": data["uploadKey"], "node": dirKey, "skelType": "leaf", "fileSize": fileObj.size}
 			js.window.fetch(data["uploadUrl"], {"method": "POST", "body": fileObj, "mode": "no-cors"}).then(self.onHtmlBucketUploadFinished)
 		else:

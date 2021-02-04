@@ -26,10 +26,11 @@ class PasswordEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			editWidget: QtWidgets.QWidget = None,
 			*args: Any,
 			**kwargs: Any):
-		super().__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super().__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		layout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.editWidget.setLayout(layout)
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
@@ -65,7 +66,8 @@ class PasswordEditBone(BoneEditInterface):
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		return PasswordEditBone(moduleName, boneName, readOnly, **kwargs)
+		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		return PasswordEditBone(moduleName, boneName, readOnly, required, **kwargs)
 
 	def onTabLanguageChanged(self, lang: str) -> None:
 		if lang in self.langEdits:
@@ -74,6 +76,7 @@ class PasswordEditBone(BoneEditInterface):
 			self.tabWidget.blockSignals(False)
 
 	def unserialize(self, data: dict, errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if not data:
 			return
 		self.lineEdit.setText(str(data))

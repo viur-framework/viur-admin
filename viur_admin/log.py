@@ -5,9 +5,26 @@ __author__ = 'Stefan Kögl'
 
 import os.path
 import logging
+from datetime import datetime
+from PyQt5.QtWidgets import QLabel
 
 logger = None
+statusBarRef = None
+statusBarLabel = None
 
+def logToUser(message):
+	global statusBarRef, statusBarLabel
+	if not statusBarLabel and statusBarRef:
+		statusBarLabel = QLabel()
+		statusBarRef.addWidget(statusBarLabel)
+		statusBarRef.addWidget(QLabel("     "))  # Spacer Item...
+	if not statusBarLabel:
+		return
+	statusBarLabel.setText("[%s] %s" % (datetime.now().strftime("%H:%M:%S"), message))
+
+def getStatusBar():
+	global statusBarRef
+	return statusBarRef
 
 def prepareLogger(level: int) -> None:
 	if level == "info":

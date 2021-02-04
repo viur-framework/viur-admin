@@ -12,36 +12,33 @@ from viur_admin.utils import wheelEventFilter
 
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		self.editingModel = None
-		self.editingIndex = None
-		self.editingItem = None
-		self.commitData.connect(self.commitDataCb)
+	def isEditable(self):
+		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages"):
+			return False
+		return True
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"]])
 		if str(value) in items:
 			return items[str(value)]
 		else:
-			return value
+			return str(value)
 
 	def createEditor(self, parent, option, index):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		skelStructure = protoWrap.editStructure
 		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure)
-		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=self)
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=parent)
+		widget.unserialize(self.editingItem.get(self.boneName), {})
 		widget.setParent(parent)
-		#print(self.skelStructure)
-
+		# Remove all margins so the combobox can fill the entire table
+		widget.innerLayout.setSpacing(0)
+		widget.innerLayout.setContentsMargins(0, 0, 0, 0)
+		widget.layout().setSpacing(0)
+		widget.layout().setContentsMargins(0, 0, 0, 0)
+		QtCore.QTimer.singleShot(1, lambda: widget.comboBox.showPopup())
 		return widget
-
-	def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
-		self.editingModel = model
-		self.editingIndex = index
-		self.editingItem = model.dataCache[index.row()]
-		return False
 
 	def commitDataCb(self, editor):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
@@ -103,19 +100,20 @@ class SelectOneEditBone(BoneEditInterface):
 			moduleName: str,
 			boneName: str,
 			readOnly: bool,
+			required: bool,
 			values: List[Tuple[str, Any]],
 			sortBy: str="keys",
 			editWidget: Union[QtWidgets.QWidget, None] = None,
 			*args: Any,
 			**kwargs: Any):
-		super(SelectOneEditBone, self).__init__(moduleName, boneName, readOnly, editWidget, *args, **kwargs)
+		super(SelectOneEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
 		self.moduleName = moduleName
 		self.boneName = boneName
 		self.readOnly = readOnly
 		self.values = values
-		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.innerLayout = QtWidgets.QHBoxLayout(self.editWidget)
 		self.comboBox = FixedComboBox(self.editWidget)
-		self.layout.addWidget(self.comboBox)
+		self.innerLayout.addWidget(self.comboBox)
 		tmpList = values
 		#if sortBy == "keys":
 		#	tmpList.sort(key=lambda x: x[0])  # Sort by keys
@@ -131,6 +129,7 @@ class SelectOneEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in myStruct and myStruct["readonly"]
+		required = "required" in myStruct and myStruct["required"]
 		if "sortBy" in myStruct:
 			sortBy = myStruct["sortBy"]
 		else:
@@ -138,13 +137,14 @@ class SelectOneEditBone(BoneEditInterface):
 		values = list(myStruct["values"])
 		if "required" not in myStruct or not myStruct["required"]:
 			values.insert(0, ["", ""])
-		widgetGen = lambda: SelectOneEditBone(moduleName, boneName, readOnly, values=values, sortBy=sortBy, **kwargs)
+		widgetGen = lambda: SelectOneEditBone(moduleName, boneName, readOnly, required, values=values, sortBy=sortBy, **kwargs)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
+		self.setErrors(errors)
 		if 1:  # There might be junk comming from the server
 			items = dict([(str(k), str(v)) for k, v in self.values])
 			if str(data) in items:
