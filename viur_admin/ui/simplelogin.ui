@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>:icons/viup.png</normaloff>:icons/viup.png</iconset>
+    <normaloff>:icons/viur_logo.png</normaloff>:icons/viur_logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -25,7 +25,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../icons/weihnachten-2019-gruen.jpg</pixmap>
+       <pixmap>:icons/login.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

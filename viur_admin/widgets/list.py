@@ -88,11 +88,15 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			if entry["key"] == errorKey:
 				if idx not in self.pendingUpdates:
 					return
-				print("--- IN PENDING UPDATES")
-				print(self.pendingUpdates)
 				self.pendingUpdates.remove(idx)
 				self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
-				QtWidgets.QMessageBox.warning(self.parent(), "Updating failed", "Updating of %s failed!" % entry["key"])
+				self.msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information,
+					QtCore.QCoreApplication.translate("ListTableView", "Updating failed"),
+					QtCore.QCoreApplication.translate("ListTableView", "Updating of %s failed!") % entry["key"],
+					(QtWidgets.QMessageBox.Ok),
+				)
+				self.msgBox.open()
+				#QtWidgets.QMessageBox.warning(self.parent(), "Updating failed", "Updating of %s failed!" % entry["key"])
 				print("warning up")
 
 
@@ -586,7 +590,7 @@ class ListTableView(QtWidgets.QTableView):
 
 		:param bones: Skeleton-structure send from the server
 		"""
-		logger.debug("ListTableView.rebuildDelegates - bones: %r", bones)
+		#logger.debug("ListTableView.rebuildDelegates - bones: %r", bones)
 
 		self.structureCache = bones
 		modelHeaders = self.model().headers = []

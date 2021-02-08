@@ -107,7 +107,7 @@ class RecordEditBone(BoneEditInterface):
 			boneName: str,
 			skelStructure: dict,
 			**kwargs: Any) -> Any:
-		logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
+		#logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
 		myStruct = skelStructure[boneName]
 		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
 		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]

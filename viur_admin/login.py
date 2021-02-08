@@ -391,6 +391,7 @@ class Login(QtWidgets.QMainWindow):
 		self.overlay.inform(self.overlay.SUCCESS, QtCore.QCoreApplication.translate("Login", "Login successful"))
 		# config.conf.loadPortalConfig(NetworkService.url, withCookies=False)
 		event.emit("loginSucceeded")
+		self.setDisabled(False)
 		self.hide()
 
 	def statusMessageUpdate(self, type: str, message: str) -> None:
@@ -400,6 +401,8 @@ class Login(QtWidgets.QMainWindow):
 		self.onBtnLoginReleased()
 
 	def onBtnLoginReleased(self) -> None:
+		self.setDisabled(True)
+		QtGui.QGuiApplication.processEvents()
 		if self.loginTask:
 			self.loginTask.deleteLater()
 		cb = self.ui.cbPortal
@@ -497,14 +500,19 @@ class Login(QtWidgets.QMainWindow):
 		loginTask.loginFailed.connect(self.onLoginFailed)
 
 	def onLoginFailed(self, msg: str) -> None:
-		self.overlay.inform(self.overlay.ERROR, msg)
+		#self.overlay.inform(self.overlay.ERROR, msg)
+		self.setDisabled(False)
+		QtWidgets.QMessageBox.warning(self, "Error logging in", msg)
 		self.loadAccounts()
 
 	def enableForm(self, msg: str = None) -> None:
+		self.setDisabled(False)
 		if msg:
-			self.overlay.inform(self.overlay.ERROR, msg)
+			QtWidgets.QMessageBox.warning(self, "Error logging in", msg)
+			#self.overlay.inform(self.overlay.ERROR, msg)
 		else:
-			self.overlay.clear()
+			#self.overlay.clear()
+			pass
 		self.show()
 
 	def onCbLanguagesCurrentIndexChanged(self, index: Any) -> None:
@@ -528,7 +536,16 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.setDisabled(True)
 		self.ui.statusLbl.setText("Please login")
 		self.loginTask = None
+		self.ui.label_4.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+		self.pixMap = QtGui.QPixmap(":icons/login.png")
+		self.resizeEvent()
 		NetworkService.request("/user/view/self", successHandler=self.onHasSession, failureHandler=self.onNoSession, failSilent=True)
+
+	def resizeEvent(self, event = None):
+		print("GOT RESIZE EVENT")
+		if event:
+			super().resizeEvent(event)
+		self.ui.label_4.setPixmap(self.pixMap.scaled(self.ui.label_4.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
 
 	def onHasSession(self, req):
 		data = NetworkService.decode(req)
