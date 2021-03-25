@@ -155,7 +155,10 @@ class DateEditBone(BoneEditInterface):
 		self.dt = datetime.now()
 		if self.time and self.date:  # date AND time
 			try:
-				self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S")
+				try:
+					self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S%z")
+				except:
+					self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S")
 			except:
 				pass
 			self.lineEdit.setDateTime(
