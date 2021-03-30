@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.log import getLogger
-from viur_admin.network import NetworkService, RequestWrapper
+from viur_admin.network import NetworkService, RequestWrapper, securityTokenProvider
 from viur_admin.ui.accountmanagerUI import Ui_AccountManager
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 
@@ -271,5 +271,6 @@ class AccountManager(QtWidgets.QMainWindow):
 		conf.accounts = []
 		for itemIndex in range(0, self.ui.acclistWidget.count()):
 			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)
+		securityTokenProvider.staticSecurityKey = None
 		event.emit("accountListChanged")
 		self.close()

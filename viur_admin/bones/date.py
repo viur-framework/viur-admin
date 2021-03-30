@@ -153,30 +153,41 @@ class DateEditBone(BoneEditInterface):
 		self.setErrors(errors)
 		value = str(data)
 		self.dt = datetime.now()
-		if self.time and self.date:  # date AND time
-			try:
+		try:
+			self.dt = datetime.fromisoformat(value)
+		except:  # FIXME: Old Format - remove before 3.0 release
+			if self.time and self.date:  # date AND time
 				try:
-					self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S%z")
-				except:
 					self.dt = datetime.strptime(value, "%d.%m.%Y %H:%M:%S")
-			except:
-				pass
-			self.lineEdit.setDateTime(
-				QtCore.QDateTime(
-					QtCore.QDate(self.dt.year, self.dt.month, self.dt.day),
-					QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second)))
-		elif self.date:  # date only
-			try:
-				self.dt = datetime.strptime(value, "%d.%m.%Y")
-			except:
-				pass
-			self.lineEdit.setDate(QtCore.QDate(self.dt.year, self.dt.month, self.dt.day))
-		else:  # time only
-			try:
-				self.dt = datetime.strptime(value, "%H:%M:%S")
-			except:
-				pass
+				except:
+					pass
+				self.lineEdit.setDateTime(
+					QtCore.QDateTime(
+						QtCore.QDate(self.dt.year, self.dt.month, self.dt.day),
+						QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second)))
+			elif self.date:  # date only
+				try:
+					self.dt = datetime.strptime(value, "%d.%m.%Y")
+				except:
+					pass
+				self.lineEdit.setDate(QtCore.QDate(self.dt.year, self.dt.month, self.dt.day))
+			else:  # time only
+				try:
+					self.dt = datetime.strptime(value, "%H:%M:%S")
+				except:
+					pass
 			self.lineEdit.setTime(QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second))
+		else:
+			if self.time and self.date:  # date AND time
+				self.lineEdit.setDateTime(
+					QtCore.QDateTime(
+						QtCore.QDate(self.dt.year, self.dt.month, self.dt.day),
+						QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second)))
+			elif self.date:  # date only
+				self.lineEdit.setDate(QtCore.QDate(self.dt.year, self.dt.month, self.dt.day))
+			else:
+				self.lineEdit.setTime(QtCore.QTime(self.dt.hour, self.dt.minute, self.dt.second))
+
 
 	def serializeForPost(self) -> dict:
 		# FIXME: what's about deleted or not set date / times?

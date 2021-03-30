@@ -57,17 +57,17 @@ class AuthGoogle(AuthProviderBase):
 			isWizard=isWizard,
 			parent=parent)
 		self.didSucceed = False
-		self.webView = QtWebEngineWidgets.QWebEngineView()
-		self.setLayout(QtWidgets.QVBoxLayout())
-		self.layout().addWidget(self.webView)
-		self.chromeCookieJar = self.webView.page().profile().cookieStore()
-		self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
-		self.chromeCookieJar.loadAllCookies()
-		for cookie in nam.cookieJar().allCookies():
-			self.chromeCookieJar.setCookie(cookie)
-		self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "admin/user/auth_googleaccount/login"))
-		self.webView.urlChanged.connect(self.onUrlChanged)
-		self.webView.loadFinished.connect(self.onLoadFinished)
+		#self.webView = QtWebEngineWidgets.QWebEngineView()
+		#self.setLayout(QtWidgets.QVBoxLayout())
+		#self.layout().addWidget(self.webView)
+		#self.chromeCookieJar = self.webView.page().profile().cookieStore()
+		#self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
+		#self.chromeCookieJar.loadAllCookies()
+		#for cookie in nam.cookieJar().allCookies():
+		#	self.chromeCookieJar.setCookie(cookie)
+		#self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "admin/user/auth_googleaccount/login"))
+		#self.webView.urlChanged.connect(self.onUrlChanged)
+		#self.webView.loadFinished.connect(self.onLoadFinished)
 
 	def onCookieAdded(self, cookie: Any) -> None:
 		# logger.debug("onCookieAdded: %r", cookie)
