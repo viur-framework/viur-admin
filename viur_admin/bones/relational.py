@@ -436,6 +436,8 @@ class RelationalEditBone(BoneEditInterface):
 			return None
 			#return {self.boneName: None}
 		if self.using:
+			if not self.internalEdits:
+				return None
 			resDict = self.internalEdits.serializeForPost()
 			resDict["key"] = self.selection["dest"]["key"]
 			return resDict

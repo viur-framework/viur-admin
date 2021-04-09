@@ -192,12 +192,11 @@ class DateEditBone(BoneEditInterface):
 	def serializeForPost(self) -> dict:
 		# FIXME: what's about deleted or not set date / times?
 		if self.time and self.date:  # date AND time
-			arg = self.lineEdit.dateTime().toString("dd.MM.yyyy hh:mm:ss")
+			arg = self.lineEdit.dateTime().toString(QtCore.Qt.ISODate)
 		elif self.date:  # date only
 			arg = self.lineEdit.date().toString("dd.MM.yyyy")
 		else:  # time only
 			arg = self.lineEdit.time().toString("hh:mm:ss")
-
 		return arg
 
 	def serializeForDocument(self) -> dict:

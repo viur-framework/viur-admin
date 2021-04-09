@@ -39,10 +39,9 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		logger.debug("ListTableModel.init: %r, %r, %r, %r", module, fields, viewFilter, parent)
 		QtCore.QAbstractTableModel.__init__(self, parent)
 		self.module = module
-		self.fields = fields or ["name"]
-		self._validFields: List[
-			str] = list()  # Due to miss-use, someone might request displaying fields which dont exists. These
-		# are the fields that are valid
+		self.fields = fields
+		# Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
+		self._validFields: List[str] = list()
 		self.filter = viewFilter or {}
 		self.skippedkeys: List[str] = list()
 		self.dataCache: List[Dict[str, Any]] = list()
@@ -231,22 +230,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		except:
 			return 0
 
-	def setData__(self, index: QModelIndex, value: Any, role: int = None) -> None:
-		print("Set Data called!")
-		print(index, value, role)
-		rowIndex = index.row()
-		colIndex = index.column()
-		destDataCacheEntry = self.dataCache[rowIndex]
-		fieldNameByIndex = self._validFields[colIndex]
-		# logger.debug("destCacheEntry: %r, fieldNameByIndex: %r", destDataCacheEntry, fieldNameByIndex)
-		if index.isValid():
-			self.pendingUpdates.add(rowIndex)
-			#destDataCacheEntry[fieldNameByIndex] = value
-			# logger.debug("data before emitting change: %r", destDataCacheEntry[fieldNameByIndex])
-			self.dataChanged.emit(self.index(index.row(), 0), self.index(index.row(), 999))
-			return True
-		return False
-
 	def data(self, index: QModelIndex, role: int = None) -> Any:
 		if not index.isValid():
 			return None
@@ -312,6 +295,11 @@ class ListTableModel(QtCore.QAbstractTableModel):
 				self.bones[key] = bone
 			self._validFields = [x for x in self.fields if x in self.bones]
 			self.fields = [x for x in self.fields if x in self._validFields]
+			if not self.fields:  # Select the 10 first bones that do exist to prevent an empty table
+				# Don't show these bones by default in the table
+				systemBones = {"key","creationdate", "changedate", "viurCurrentSeoKeys"}
+				self.fields = [x for x in self.bones if x not in systemBones][:10]
+				self._validFields = self.fields[:]
 			self.rebuildDelegates.emit(protoWrap.viewStructure)
 			self.repaint()
 		self.beginInsertRows(QtCore.QModelIndex(), len(self.dataCache), len(self.dataCache) + len(skellist) - 1)

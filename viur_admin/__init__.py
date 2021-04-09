@@ -6,4 +6,6 @@ if isPyodide:
 	print("Pyodide-main")
 	from viur_admin.ui import icons_rc
 	from viur_admin.admin import main
+	from viur_admin.config import conf
+	conf.currentPortalConfigDirectory = "/tmp/"
 	_ = main()

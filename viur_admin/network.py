@@ -529,6 +529,7 @@ class RemoteFile(QtCore.QObject):
 			self.failureHandlerSelf = weakref.ref(failureHandler.__self__)
 			self.failureHandlerName = failureHandler.__name__
 		self.dlKey = dlKey
+		# conf.currentPortalConfigDirectory will not be set if running on wasm
 		fileName = os.path.join(conf.currentPortalConfigDirectory, sha1(dlKey.encode("UTF-8")).hexdigest())
 		if os.path.isfile(fileName):
 			logger.debug("RemoteFile: file exists %r", fileName)

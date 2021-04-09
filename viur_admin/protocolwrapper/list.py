@@ -186,7 +186,6 @@ class ListWrapper(QtCore.QObject):
 		return addTaskId
 
 	def edit(self, key: str, **kwargs: Any) -> str:
-		self.entityChanging.emit(key)
 		req = NetworkService.request(
 			"/%s/edit/%s" % (self.module, key), kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
@@ -195,6 +194,7 @@ class ListWrapper(QtCore.QObject):
 			req.wasInitial = True
 		else:
 			req.wasInitial = False
+			self.entityChanging.emit(key)
 		self.checkBusyStatus()
 		editTaskId = str(id(req))
 		logger.debug("proto list edit id: %r", editTaskId)

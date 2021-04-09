@@ -24,7 +24,6 @@ class PredefinedViewHandler(WidgetHandler):  # EntryHandler
 			viewName: str,
 			*args: Any,
 			**kwargs: Any):
-		logger.debug("icon?: %r", config)
 		icon = loadIcon(config.get("icon", None))
 		super(PredefinedViewHandler, self).__init__(
 			lambda: ListWidget(module, config, config.get("columns", list()), config.get("filter", dict())),
@@ -47,7 +46,6 @@ class ListCoreHandler(WidgetHandler):  # EntryHandler
 			**kwargs: Any):
 		# Config parsen
 		ListCoreHandlerConfig = conf.serverConfig["modules"][module]
-		logger.debug("ListCoreHandler configuration: %r", ListCoreHandlerConfig)
 		actions = ListCoreHandlerConfig.get("actions")
 		widgetGen = lambda: ListWidget(
 			module,
