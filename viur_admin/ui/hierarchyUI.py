@@ -45,3 +45,4 @@ class Ui_Hierarchy(object):
     def retranslateUi(self, Hierarchy):
         _translate = QtCore.QCoreApplication.translate
         Hierarchy.setWindowTitle(_translate("Hierarchy", "Form"))
+

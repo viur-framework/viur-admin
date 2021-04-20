@@ -119,12 +119,23 @@ class ListWrapper(QtCore.QObject):
 				return key
 		# Its a cache-miss or cache too old
 		self.queryCache[key] = None
-		r = NetworkService.request("/%s/list" % self.module, kwargs, successHandler=self.addCacheData)
+		r = NetworkService.request("/%s/list" % self.module, kwargs, successHandler=self.addCacheData, failureHandler=self.fetchFailed)
 		r.wrapperCbCacheKey = key
 		# THIS IS BROKEN... Remove Busystatus and Loading-Overlay..
 		#QtCore.QTimer.singleShot(1, lambda: self.checkBusyStatus())  # Prevent
 		#self.checkBusyStatus()
 		return key
+
+	def fetchFailed(self, req: RequestWrapper, err):
+		print("FETCH FAILED!")
+		print(err)
+		self.queryCache[req.wrapperCbCacheKey] = {
+			"ctime": time(),
+			"skelkeys": [],
+			"cursor": None,
+			"failed": True
+		}
+		self.queryResultAvailable.emit(req.wrapperCbCacheKey)
 
 	def queryEntry(self, key: str) -> str:
 		if key in self.entryCache:

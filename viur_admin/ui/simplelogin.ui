@@ -72,11 +72,22 @@
      </layout>
     </item>
     <item>
-     <widget class="QPushButton" name="loginBtn">
-      <property name="text">
-       <string>Login</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="googleLoginBtn">
+        <property name="text">
+         <string>Login with Google</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="loginBtn">
+        <property name="text">
+         <string>Login with Password</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

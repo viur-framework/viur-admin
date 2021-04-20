@@ -311,6 +311,9 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			self.endRemoveRows()
 		self.cursor = cursor
 		self.loadingKey = None
+		if protoWrap.queryCache[queryKey].get("failed"):
+			QtWidgets.QMessageBox.warning(self.parent(), "Failed", "A Network-Request failed")
+
 
 	# self.emit(QtCore.SIGNAL("dataRecived()"))
 

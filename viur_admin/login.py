@@ -9,7 +9,9 @@ if isPyodide:
 	QtWebEngineWidgets = None
 else:
 	from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
-
+	import webbrowser
+	import http.server
+	import socketserver
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.simpleloginUI import Ui_simpleLogin
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
@@ -20,6 +22,9 @@ from viur_admin import config
 from viur_admin.utils import Overlay, showAbout
 from viur_admin.locales import ISO639CODES
 from datetime import datetime
+import random
+import string
+from time import sleep
 
 
 class AuthProviderBase(QtWidgets.QWidget):
@@ -39,6 +44,100 @@ class AuthProviderBase(QtWidgets.QWidget):
 	def getUpdatedPortalConfig(self) -> Dict[str, Any]:
 		raise NotImplementedError()
 
+if isPyodide:
+	class GoogleAuthenticationHandler():
+		pass
+	class LocalAuthGoogleThread():
+		pass
+else:
+	class GoogleAuthenticationHandler(http.server.BaseHTTPRequestHandler):
+		skey = "".join(random.choices(string.ascii_letters + string.digits, k=13))
+
+		def do_HEAD(self):
+			self.send_response(200)
+			self.send_header("Content-type", "text/html")
+			self.end_headers()
+		def do_GET(self):
+			if self.path == "/":
+				self.send_response(200)
+				self.send_header("Content-type", "text/html")
+				self.end_headers()
+				stream = QtCore.QFile(':resources/user_google_login.html')
+				assert stream.open(QtCore.QFile.ReadOnly), "user_google_login.html missing from resource"
+				data = str(stream.readAll(), 'utf-8')
+				stream.close()
+				self.wfile.write(data.replace("{{ clientID }}", "1089595641925-1n8i66ftevttsm6h2t2m6dccksvuat8r.apps.googleusercontent.com").replace("{{ skey }}", self.skey).encode("UTF-8"))
+			elif self.path == "/user_google_login.js":
+				stream = QtCore.QFile(':resources/user_google_login.js')
+				assert stream.open(QtCore.QFile.ReadOnly), "user_google_login.js missing from resource"
+				data = str(stream.readAll(), 'utf-8')
+				stream.close()
+				self.send_response(200)
+				self.send_header("Content-type", "text/html")
+				self.end_headers()
+				self.wfile.write(data.encode("UTF-8"))
+
+			elif self.path.startswith("/login?"):
+				data = self.path.replace("/login?", "")
+				token = skey = None
+				for param in data.split("&"):
+					if param.startswith("token="):
+						print("token", param)
+						token = param.replace("token=", "")
+					elif param.startswith("skey="):
+						skey = param.replace("skey=", "")
+				if token and skey and skey == self.skey:
+					print(("Okay", token, skey))
+					self.send_response(200)
+					self.send_header("Content-type", "text/html")
+					self.end_headers()
+					self.wfile.write(b"Okay")
+					#self.authProvider.tokenReceived(token)
+					self.qthread.tokenReceived.emit(token)
+					#self.authProvider.loginSucceeded.emit()
+				else:
+					self.send_response(500)
+					self.send_header("Content-type", "text/html")
+					self.end_headers()
+					self.wfile.write(b"Failed")
+					self.qthread.tokenErrorOccured.emit("Unknown error")
+			else:
+				self.send_response(404)
+				self.end_headers()
+				print("%s not found" % self.path)
+
+
+	class LocalAuthGoogleThread(QtCore.QThread):
+		port = 9090
+		tokenReceived = QtCore.pyqtSignal(str)
+		tokenErrorOccured = QtCore.pyqtSignal(str)
+
+		def start(self) -> None:
+			self.httpdRef = None
+			self.shouldStart = True
+			super().start()
+
+		def run(self):
+			try:
+				with socketserver.TCPServer(("localhost", self.port), GoogleAuthenticationHandler) as httpd:
+					self.httpdRef = httpd
+					GoogleAuthenticationHandler.qthread = self
+					print("serving at port", self.port)
+					webbrowser.open("http://%s:%s" % ("localhost", self.port))
+					if self.shouldStart:
+						httpd.serve_forever()
+			except OSError as e:
+				self.tokenErrorOccured.emit(str(e))
+
+		def abort(self):
+			if self.httpdRef:
+				self.httpdRef.shutdown()
+			else:
+				self.shouldStart = False
+				sleep(1)
+				if self.httpdRef:
+					self.httpdRef.shutdown()
+			self.wait()
 
 class AuthGoogle(AuthProviderBase):
 	loginFailed = QtCore.pyqtSignal((str,))
@@ -57,58 +156,54 @@ class AuthGoogle(AuthProviderBase):
 			isWizard=isWizard,
 			parent=parent)
 		self.didSucceed = False
-		#self.webView = QtWebEngineWidgets.QWebEngineView()
-		#self.setLayout(QtWidgets.QVBoxLayout())
-		#self.layout().addWidget(self.webView)
-		#self.chromeCookieJar = self.webView.page().profile().cookieStore()
-		#self.chromeCookieJar.cookieAdded.connect(self.onCookieAdded)
-		#self.chromeCookieJar.loadAllCookies()
-		#for cookie in nam.cookieJar().allCookies():
-		#	self.chromeCookieJar.setCookie(cookie)
-		#self.webView.setUrl(QtCore.QUrl(currentPortalConfig["server"] + "admin/user/auth_googleaccount/login"))
-		#self.webView.urlChanged.connect(self.onUrlChanged)
-		#self.webView.loadFinished.connect(self.onLoadFinished)
+		self.authThread = None
+		GoogleAuthenticationHandler.authProvider = self
+		if isWizard:
+			self.startAuthenticating()
 
-	def onCookieAdded(self, cookie: Any) -> None:
-		# logger.debug("onCookieAdded: %r", cookie)
-		nam.cookieJar().insertCookie(cookie)
+
 
 	def startAuthenticating(self) -> None:
+		print("LoginTask using method x-google")
 		logger.debug("LoginTask using method x-google")
-		if not self.isWizard:
-			self.show()
+		if self.authThread:
+			self.authThread.abort()
+		self.authThread = LocalAuthGoogleThread()
+		self.authThread.tokenReceived.connect(self.tokenReceived)
+		self.authThread.tokenErrorOccured.connect(self.tokenErrorOccured)
+		self.authThread.start()
 
-	# username = self.currentPortalConfig["username"]
-	# password = self.currentPortalConfig["password"] or self.ui.editPassword.text()
+	def tokenErrorOccured(self, error: str):
+		if self.authThread:
+			self.authThread.abort()
+			self.authThread = None
+		self.loginFailed.emit(error)
 
-	def onUrlChanged(self, url: str) -> None:
-		logger.debug("urlChanged: %r", url)
-		self.checkAuthenticationStatus()
+	def tokenReceived(self, token: str):
+		"""
+			Callback from the GoogleAuthenticationHandler.
+			We received a token and now going to exchange it with the server for a session
+		"""
+		if self.authThread:
+			self.authThread.abort()
+			self.authThread = None
+		NetworkService.request("/user/auth_googleaccount/login", {"token": token}, secure=True,
+							   successHandler=self.authStatusCallback, failureHandler=self.onError)
 
-	def onLoadFinished(self, status: Any) -> None:
-		logger.debug("loadFinished: %r", status)
-		self.checkAuthenticationStatus()
 
-	def authStatusCallback(self, data: str) -> None:
+	def authStatusCallback(self, nsReq: RequestWrapper) -> None:
+		data = NetworkService.decode(nsReq)
 		logger.debug("authStatusCallback: %r", data)
 		okayFound = data.find("OKAY")
 		logger.debug("checkAuthenticationStatus: %r", okayFound)
 		if okayFound != -1:
-			if not self.isWizard:
-				self.close()
 			self.loginSucceeded.emit()
 		elif data.find("X-VIUR-2FACTOR-") != -1:
 			html = self.webView.page().mainFrame().toHtml()
 			startPos = html.find("X-VIUR-2FACTOR-")
 			secondFactorType = html[startPos, html.find("\"", startPos + 1)]
 			secondFactorType = secondFactorType.replace("X-VIUR-2FACTOR-", "")
-			if not self.isWizard:
-				self.close()
 			self.secondFactorRequired.emit(secondFactorType)
-
-	def checkAuthenticationStatus(self) -> None:
-		page = self.webView.page()
-		page.toPlainText(self.authStatusCallback)
 
 	def onError(
 			self,
@@ -533,6 +628,7 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.ui = Ui_simpleLogin()
 		self.ui.setupUi(self)
 		self.ui.loginBtn.clicked.connect(self.onBtnLoginReleased)
+		self.ui.googleLoginBtn.clicked.connect(self.onBtnGoogleLoginReleased)
 		self.setDisabled(True)
 		self.ui.statusLbl.setText("Please login")
 		self.loginTask = None
@@ -542,7 +638,6 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		NetworkService.request("/user/view/self", successHandler=self.onHasSession, failureHandler=self.onNoSession, failSilent=True)
 
 	def resizeEvent(self, event = None):
-		print("GOT RESIZE EVENT")
 		if event:
 			super().resizeEvent(event)
 		self.ui.label_4.setPixmap(self.pixMap.scaled(self.ui.label_4.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
@@ -578,7 +673,35 @@ class SimpleLogin(QtWidgets.QMainWindow):
 		self.requestLogoutBox = None
 
 	def onNoSession(self, *args, **kwargs):
-		self.setDisabled(False)
+		#/user/getAuthMethods
+		NetworkService.request("/user/getAuthMethods", successHandler=self.onAuthMethodsKnown, failureHandler=self.onLoginFailed)
+		#self.setDisabled(False)
+
+	def onBtnGoogleLoginReleased(self, *args, **kwargs):
+		import js
+		js.window.location.href = "/admin/user/auth_googleaccount/login"
+
+	def onAuthMethodsKnown(self, req: RequestWrapper):
+		data = NetworkService.decode(req)
+		userPassword = google = False
+		try:
+			for authMethod in data:
+				if authMethod[0] == "X-VIUR-AUTH-Google-Account":
+					google = True
+				elif authMethod[0] == "X-VIUR-AUTH-User-Password":
+					userPassword = True
+		except:
+			raise
+		if google and userPassword:
+			# FIXME: Button to login with both?
+			self.onLoginFailed("2 Auth Methods")
+			self.ui.googleLoginBtn.setDisabled(False)
+		elif google:
+			self.onBtnGoogleLoginReleased()
+		else: # Either neither - or user-password
+			self.ui.googleLoginBtn.setDisabled(True)
+			self.setDisabled(False)
+
 
 	def onBtnLoginReleased(self):
 		self.setDisabled(True)

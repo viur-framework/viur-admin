@@ -153,6 +153,7 @@ if not isPyodide:
 	else:
 		path = os.path.abspath(os.path.dirname(os.path.join(cwd, prgc)))
 	os.chdir(path)
+	print(path)
 
 
 def reportError(type: Any, value: Any, tb: Any) -> Any:

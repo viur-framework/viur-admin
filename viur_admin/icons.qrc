@@ -391,4 +391,8 @@
         <file>htmleditor/summernote.ttf</file>
         <file>htmleditor/summernote.woff</file>
     </qresource>
+    <qresource>
+        <file>resources/user_google_login.html</file>
+        <file>resources/user_google_login.js</file>
+    </qresource>
 </RCC>
