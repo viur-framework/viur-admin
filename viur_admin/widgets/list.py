@@ -847,6 +847,7 @@ class ListWidget(QtWidgets.QWidget):
 		self.toolBar = QtWidgets.QToolBar(self)
 		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
+		self.customActions = config["customActions"] if isinstance(config.get("customActions"), dict) else None
 		# FIXME: testing changing to placeholder text
 		# if filter is not None and "search" in filter:
 		# 	self.ui.editSearch.setText(filter["search"])
@@ -916,7 +917,7 @@ class ListWidget(QtWidgets.QWidget):
 
 	def setActions(self, actions: List[str]) -> None:
 		"""
-			Sets the actions avaiable for this widget (ie. its toolBar contents).
+			Sets the actions available for this widget (ie. its toolBar contents).
 			Setting None removes all existing actions
 			@param actions: List of actionnames
 			@type actions: List or None
@@ -941,6 +942,12 @@ class ListWidget(QtWidgets.QWidget):
 						self.addAction(actionWdg)
 					else:
 						self.toolBar.addWidget(actionWdg)
+				else:  # It may be a server-side defined action
+					if self.customActions and action in self.customActions:
+						print(self.customActions[action])
+						actionWdg = CustomAction(self.customActions[action], ApplicationType.LIST, self)
+						self.toolBar.addAction(actionWdg)
+						self.addAction(actionWdg)
 
 	def getActions(self) -> List[str]:
 		"""
@@ -1202,3 +1209,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 
 	def onBtnCloseReleased(self, *args: Any, **kwargs: Any) -> None:
 		event.emit("popWidget", self)
+
+
+# Must be imported last to prevent circular imports
+from viur_admin.actions.customAction import CustomAction
