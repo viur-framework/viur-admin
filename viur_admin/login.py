@@ -52,11 +52,13 @@ if isPyodide:
 else:
 	class GoogleAuthenticationHandler(http.server.BaseHTTPRequestHandler):
 		skey = "".join(random.choices(string.ascii_letters + string.digits, k=13))
+		clientID = "NotSet"
 
 		def do_HEAD(self):
 			self.send_response(200)
 			self.send_header("Content-type", "text/html")
 			self.end_headers()
+
 		def do_GET(self):
 			if self.path == "/":
 				self.send_response(200)
@@ -66,7 +68,7 @@ else:
 				assert stream.open(QtCore.QFile.ReadOnly), "user_google_login.html missing from resource"
 				data = str(stream.readAll(), 'utf-8')
 				stream.close()
-				self.wfile.write(data.replace("{{ clientID }}", "1089595641925-1n8i66ftevttsm6h2t2m6dccksvuat8r.apps.googleusercontent.com").replace("{{ skey }}", self.skey).encode("UTF-8"))
+				self.wfile.write(data.replace("{{ clientID }}", self.clientID).replace("{{ skey }}", self.skey).encode("UTF-8"))
 			elif self.path == "/user_google_login.js":
 				stream = QtCore.QFile(':resources/user_google_login.js')
 				assert stream.open(QtCore.QFile.ReadOnly), "user_google_login.js missing from resource"
@@ -168,6 +170,20 @@ class AuthGoogle(AuthProviderBase):
 		logger.debug("LoginTask using method x-google")
 		if self.authThread:
 			self.authThread.abort()
+		# Fetch the HTML-File and extract the ClientID from it
+		NetworkService.request("/user/auth_googleaccount/login", successHandler=self.onClientIDAvailable,
+							   failureHandler=self.onError)
+
+	def onClientIDAvailable(self, req):
+		# Double-Check that we don't have an authThread running
+		if self.authThread:
+			self.authThread.abort()
+		htmlData = req.readAll().data().decode("utf-8")
+		# FIXME: This string-matching is fragile...
+		tokenStart = htmlData.find("content=", htmlData.find("google-signin-client_id"))
+		tokenEnd = htmlData.find("\"", tokenStart+20)
+		token = htmlData[tokenStart:tokenEnd].split("\"")[1]
+		GoogleAuthenticationHandler.clientID = token
 		self.authThread = LocalAuthGoogleThread()
 		self.authThread.tokenReceived.connect(self.tokenReceived)
 		self.authThread.tokenErrorOccured.connect(self.tokenErrorOccured)
