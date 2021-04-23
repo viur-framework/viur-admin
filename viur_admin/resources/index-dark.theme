@@ -1,0 +1,8 @@
+[Icon Theme]
+Name=viur-dark
+Comment=Viur Theme
+Inherits=hicolor
+Directories=icons-dark
+
+[icons-dark]
+Size=64

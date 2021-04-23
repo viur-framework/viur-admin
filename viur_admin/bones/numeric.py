@@ -75,7 +75,7 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 			*args: Any,
 			**kwargs: Any):
 		super(IndexSortViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
-		self.icon = QIcon(":icons/actions/icon-draggable.svg")
+		self.icon = QIcon.fromTheme("draggable")
 		self.margin = 20
 		self.mode = QIcon.Normal
 		self.state = QIcon.On

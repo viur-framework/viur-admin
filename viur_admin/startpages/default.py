@@ -16,5 +16,5 @@ class DefaultWidget(QtWidgets.QWidget):
 		scrollArea = QtWidgets.QScrollArea(self)
 		self.layout().addWidget(scrollArea)
 		imgLbl = QtWidgets.QLabel(scrollArea)
-		imgLbl.setPixmap(QtGui.QPixmap(":icons/viur_splash.png"))
+		imgLbl.setPixmap(QtGui.QPixmap(":resources/viur_splash.png"))
 		scrollArea.setWidget(imgLbl)

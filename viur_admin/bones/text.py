@@ -242,7 +242,7 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.channel.registerObject('handler', self.handler)
 		self.ui.textEdit.page().setWebChannel(self.channel)
 		self.ui.centralWidget.layout().addWidget(self.ui.textEdit)
-		self.ui.btnSave = QtWidgets.QPushButton(QtGui.QIcon(":icons/actions/accept.svg"),
+		self.ui.btnSave = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("save"),
 		                                        QtCore.QCoreApplication.translate("TextEdit", "Apply"),
 		                                        self.ui.centralWidget)
 		self.ui.centralWidget.layout().addWidget(self.ui.btnSave)
@@ -268,7 +268,7 @@ class TextEdit(QtWidgets.QMainWindow):
 	def getBreadCrumb(self) -> Any:
 		return (
 			QtCore.QCoreApplication.translate("TextEditBone", "Text edit"),
-			QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png"))
+			QtGui.QIcon.fromTheme("press")  # FIXME: QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")
 		)
 
 
@@ -311,10 +311,7 @@ class TextEditBone(BoneEditInterface):
 		self.plaintext = plaintext
 		self.validHtml = validHtml
 		btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self.editWidget)
-		iconbtn = QtGui.QIcon()
-		iconbtn.addPixmap(QtGui.QPixmap(":icons/actions/text-edit.svg"), QtGui.QIcon.Normal,
-			                  QtGui.QIcon.Off)
-		btn.setIcon(iconbtn)
+		btn.setIcon(QtGui.QIcon.fromTheme("press"))
 		btn.lang = None
 		btn.released.connect(self.openEditor)
 		if not isPyodide:

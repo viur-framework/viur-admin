@@ -27,7 +27,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 			data: Dict[str, Any],
 			parent: Union[QtWidgets.QListWidget, None] = None):
 		super(NodeItem, self).__init__(
-			QtGui.QIcon(":icons/filetypes/folder.svg"), str(data["name"]), parent=parent,
+			QtGui.QIcon.fromTheme("folder"), str(data["name"]), parent=parent,
 			type=1200)
 		self.entryData = data
 		self.setToolTip('<strong>{0}</strong>'.format(data["name"]))
@@ -64,7 +64,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 		else:
 			name = " - "
 		super(LeafItem, self).__init__(
-			QtGui.QIcon(":icons/filetypes/unknown.png"),
+			QtGui.QIcon.fromTheme("file"),
 			str(name),
 			parent=parent,
 			type=1100)

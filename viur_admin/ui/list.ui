@@ -70,17 +70,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnPrefixSearch">
-       <property name="text">
-        <string>Prefix search</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="searchBTN">
        <property name="minimumSize">
         <size>
@@ -92,22 +81,7 @@
         <string>Fulltext search</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="extendedSearchBTN">
-       <property name="text">
-        <string>Extended Search</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg</iconset>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
+        <iconset theme="search"/>
        </property>
       </widget>
      </item>

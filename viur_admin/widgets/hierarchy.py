@@ -410,7 +410,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		handler = utils.WidgetHandler(
 				lambda: EditWidget(self.module, ApplicationType.HIERARCHY, item.entryData["key"]),
 				descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
-				icon=QtGui.QIcon(":icons/actions/edit.svg"))
+				icon=QtGui.QIcon.fromTheme("edit"))
 		handler.stackHandler()
 
 	def loadPreview(self, url: str) -> None:

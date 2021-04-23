@@ -133,13 +133,13 @@ class EditWidget(QtWidgets.QWidget):
 	def getBreadCrumb(self) -> Any:
 		if self.clone:
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
-			icon = QtGui.QIcon(":icons/actions/clone.svg")
+			icon = QtGui.QIcon.fromTheme("clone")
 		elif self.key or self.applicationType == EditWidget.appSingleton:  # We're editing
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
-			icon = QtGui.QIcon(":icons/actions/edit.svg")
+			icon = QtGui.QIcon.fromTheme("edit")
 		else:
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Add entry")
-			icon = QtGui.QIcon(":icons/actions/add.svg")
+			icon = QtGui.QIcon.fromTheme("add")
 		return descr, icon
 
 	def onBtnCloseReleased(
@@ -331,9 +331,9 @@ class EditWidget(QtWidgets.QWidget):
 				layout.addWidget(widget, stretch=1)
 				iconLbl = QtWidgets.QLabel(dataWidget)
 				if bone["required"]:
-					iconLbl.setPixmap(QtGui.QPixmap(":icons/status/error.png"))
+					iconLbl.setPixmap(QtGui.QIcon.fromTheme("error").pixmap(QtCore.QSize(128, 128)))
 				else:
-					iconLbl.setPixmap(QtGui.QPixmap(":icons/status/incomplete.png"))
+					iconLbl.setPixmap(QtGui.QIcon.fromTheme("error-file").pixmap(QtCore.QSize(128, 128)))  # FIXME: QtGui.QPixmap(":icons/status/incomplete.png")
 				layout.addWidget(iconLbl, stretch=0)
 				iconLbl.setToolTip(str(bone["error"]))
 			else:

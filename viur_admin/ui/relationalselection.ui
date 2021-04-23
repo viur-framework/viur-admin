@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>843</width>
-        <height>598</height>
+        <width>841</width>
+        <height>596</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -58,8 +58,7 @@
             <string>Abort</string>
            </property>
            <property name="icon">
-            <iconset>
-             <normaloff>:icons/actions/cancel.svg</normaloff>:icons/actions/cancel.svg</iconset>
+            <iconset theme="cancel-cross"/>
            </property>
           </widget>
          </item>
@@ -82,8 +81,7 @@
             <string>Apply</string>
            </property>
            <property name="icon">
-            <iconset>
-             <normaloff>:icons/actions/accept.svg</normaloff>:icons/actions/accept.svg</iconset>
+            <iconset theme="accept"/>
            </property>
           </widget>
          </item>
@@ -95,7 +93,7 @@
    </item>
   </layout>
  </widget>
-   <resources>
+ <resources>
   <include location="../icons/icons.qrc"/>
  </resources>
  <connections/>

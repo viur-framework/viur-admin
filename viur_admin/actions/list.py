@@ -14,10 +14,9 @@ from viur_admin.widgets.list import CsvExportWidget
 class ListAddAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ListAddAction, self).__init__(
-			QtGui.QIcon(":icons/actions/add.svg"),
+			QtGui.QIcon.fromTheme("add"),
 			QtCore.QCoreApplication.translate("ListHandler", "Add entry"),
 			parent)
-
 		# self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.New)
@@ -34,7 +33,7 @@ class ListAddAction(QtWidgets.QAction):
 		handler = WidgetHandler(
 			lambda: EditWidget(modul, ApplicationType.LIST),
 			descr,
-			QtGui.QIcon(":icons/actions/add.svg"))
+			QtGui.QIcon.fromTheme("add"))
 		handler.stackHandler()
 
 	# event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
@@ -49,7 +48,7 @@ actionDelegateSelector.insert(1, ListAddAction.isSuitableFor, ListAddAction)
 
 class ListReloadAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
-		super(ListReloadAction, self).__init__(QtGui.QIcon(":icons/actions/refresh.svg"),
+		super(ListReloadAction, self).__init__(QtGui.QIcon.fromTheme("reload"),
 		                                       QtCore.QCoreApplication.translate("ListHandler", "Reload"), parent)
 
 		# self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )
@@ -70,7 +69,7 @@ actionDelegateSelector.insert(1, ListReloadAction.isSuitableFor, ListReloadActio
 
 class ListEditAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
-		super(ListEditAction, self).__init__(QtGui.QIcon(":icons/actions/edit.svg"),
+		super(ListEditAction, self).__init__(QtGui.QIcon.fromTheme("edit"),
 		                                     QtCore.QCoreApplication.translate("ListHandler", "Edit entry"), parent)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.Open)
@@ -107,7 +106,7 @@ actionDelegateSelector.insert(1, ListEditAction.isSuitableFor, ListEditAction)
 class ListCloneAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ListCloneAction, self).__init__(
-			QtGui.QIcon(":icons/actions/clone.svg"),
+			QtGui.QIcon.fromTheme("clone"),
 			QtCore.QCoreApplication.translate("ListHandler", "Clone entry"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -132,7 +131,7 @@ actionDelegateSelector.insert(1, ListCloneAction.isSuitableFor, ListCloneAction)
 class ListDeleteAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ListDeleteAction, self).__init__(
-			QtGui.QIcon(":icons/actions/delete.svg"),
+			QtGui.QIcon.fromTheme("delete"),
 			QtCore.QCoreApplication.translate("ListHandler", "Delete"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -203,7 +202,7 @@ class Preview(QtWidgets.QDialog):
 class ListPreviewAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ListPreviewAction, self).__init__(
-			QtGui.QIcon(":icons/actions/preview.svg"),
+			QtGui.QIcon.fromTheme("preview"),
 			QtCore.QCoreApplication.translate("ListHandler", "Preview"),
 			parent)
 		self.module = self.parentWidget().list.module
@@ -241,7 +240,7 @@ actionDelegateSelector.insert(1, ListPreviewAction.isSuitableFor, ListPreviewAct
 class CsvExportAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(CsvExportAction, self).__init__(
-			QtGui.QIcon(":icons/actions/download.svg"),
+			QtGui.QIcon.fromTheme("logbook"),  # FIXME: QtGui.QIcon(":icons/download.svg")
 			QtCore.QCoreApplication.translate("ListHandler", "CSV Export"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -251,7 +250,7 @@ class CsvExportAction(QtWidgets.QAction):
 	# self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self) -> None:
-		icon = QtGui.QIcon(":icons/actions/download.svg")
+		icon = QtGui.QIcon.fromTheme("logbook")
 		myHandler = WidgetHandler.mainWindow.handlerForWidget(self.parentWidget())  # Always stack them as my child
 		assert myHandler is not None
 		handler = WidgetHandler(
@@ -273,7 +272,7 @@ actionDelegateSelector.insert(1, CsvExportAction.isSuitableFor, CsvExportAction)
 class SelectTableRowsAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(SelectTableRowsAction, self).__init__(
-			QtGui.QIcon(":icons/actions/change_selection.svg"),
+			QtGui.QIcon.fromTheme("menu"),
 			QtCore.QCoreApplication.translate("ListHandler", "Select table headers"),
 			parent)
 		self.triggered.connect(self.onTriggered)

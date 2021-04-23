@@ -129,6 +129,7 @@ import viur_admin.ui.icons_rc
 
 from viur_admin.login import Login, SimpleLogin
 from viur_admin.mainwindow import MainWindow
+from viur_admin import utils
 
 if 0 and not isPyodide:
 	if args.theme != "Viur":
@@ -284,6 +285,8 @@ def main() -> None:
 	mainWindowRef = mainWindow
 	return mainWindow, l
 
+# Check the Icon-Theme
+QtGui.QIcon().setThemeName(utils.getIconTheme()[1])
 
 if __name__ == '__main__':
 	main()

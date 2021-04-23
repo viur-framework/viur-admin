@@ -51,8 +51,7 @@
            <string>New Account</string>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>:/icons/actions/add.svg</normaloff>:/icons/actions/add.svg</iconset>
+           <iconset theme="add"/>
           </property>
          </widget>
         </item>
@@ -65,8 +64,7 @@
            <string>Delete Account</string>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>:/icons/actions/delete.svg</normaloff>:/icons/actions/delete.svg</iconset>
+           <iconset theme="delete"/>
           </property>
          </widget>
         </item>
@@ -82,8 +80,7 @@
          <string>Back to Loginscreen</string>
         </property>
         <property name="icon">
-         <iconset>
-          <normaloff>:/icons/actions/accept.svg</normaloff>:/icons/actions/accept.svg</iconset>
+         <iconset theme="save"/>
         </property>
        </widget>
       </item>
@@ -97,7 +94,7 @@
      <x>0</x>
      <y>0</y>
      <width>480</width>
-     <height>26</height>
+     <height>29</height>
     </rect>
    </property>
   </widget>

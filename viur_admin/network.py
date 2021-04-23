@@ -36,7 +36,7 @@ logger.debug("icons_rc found: %r", viur_admin.ui.icons_rc)  # import guard
 if not isPyodide:
 	# Setup the SSL-Configuration. We accept only the two known Certificates from google; reject all other
 	try:
-		css = QtCore.QFile(":icons/cacert.pem")
+		css = QtCore.QFile(":resources/cacert.pem")
 		css.open(QtCore.QFile.ReadOnly)
 		certs = css.readAll()
 	except:

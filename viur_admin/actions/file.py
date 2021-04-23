@@ -12,7 +12,7 @@ logger = getLogger(__name__)
 class FileUploadAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(FileUploadAction, self).__init__(
-			QtGui.QIcon(":icons/actions/upload.svg"),
+			QtGui.QIcon.fromTheme("upload"),
 			QtCore.QCoreApplication.translate("FileHandler", "Upload files"),
 			parent=parent)
 		self.triggered.connect(self.onTriggered)
@@ -61,7 +61,7 @@ actionDelegateSelector.insert(3, FileUploadAction.isSuitableFor, FileUploadActio
 class FileDownloadAction(QtWidgets.QAction):
 	def __init__(self, parent: QtCore.QObject = None):
 		super(FileDownloadAction, self).__init__(
-			QtGui.QIcon(":icons/actions/download.svg"),
+			QtGui.QIcon.fromTheme("download"),
 			QtCore.QCoreApplication.translate("FileHandler", "Download files"),
 			parent)
 		self.triggered.connect(self.onTriggered)

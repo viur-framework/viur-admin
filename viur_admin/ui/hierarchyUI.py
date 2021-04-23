@@ -37,6 +37,10 @@ class Ui_Hierarchy(object):
         sizePolicy.setHeightForWidth(self.treeWidget.sizePolicy().hasHeightForWidth())
         self.treeWidget.setSizePolicy(sizePolicy)
         self.treeWidget.setObjectName("treeWidget")
+        self.webView = QtWebEngineWidgets.QWebEngineView(self.splitter)
+        self.webView.setBaseSize(QtCore.QSize(300, 300))
+        self.webView.setUrl(QtCore.QUrl("about:blank"))
+        self.webView.setObjectName("webView")
         self.verticalLayout.addWidget(self.splitter)
 
         self.retranslateUi(Hierarchy)
@@ -45,4 +49,4 @@ class Ui_Hierarchy(object):
     def retranslateUi(self, Hierarchy):
         _translate = QtCore.QCoreApplication.translate
         Hierarchy.setWindowTitle(_translate("Hierarchy", "Form"))
-
+from PyQt5 import QtWebEngineWidgets

@@ -36,7 +36,7 @@
                             </property>
                             <property name="icon">
                                 <iconset>
-                                    <normaloff>:icons/actions/search.svg</normaloff>:icons/actions/search.svg
+                                    <normaloff>:icons/search.svg</normaloff>:icons/search.svg
                                 </iconset>
                             </property>
                         </widget>

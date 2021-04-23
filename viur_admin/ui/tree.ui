@@ -73,7 +73,7 @@
           </property>
           <property name="icon">
            <iconset resource="../icons/icons.qrc">
-            <normaloff>:/icons/actions/search.svg</normaloff>:/icons/actions/search.svg</iconset>
+            <normaloff>:/icons/search.svg</normaloff>:/icons/search.svg</iconset>
           </property>
          </widget>
         </item>

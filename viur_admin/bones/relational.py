@@ -294,19 +294,15 @@ class RelationalEditBone(BoneEditInterface):
 		self.addBtn = QtWidgets.QPushButton(
 			QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
 			parent=hboxWidget)
-		iconadd = QtGui.QIcon()
-		iconadd.addPixmap(QtGui.QPixmap(":icons/actions/change_selection.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-		self.addBtn.setIcon(iconadd)
+		self.addBtn.setIcon(QtGui.QIcon.fromTheme("select"))
 		self.addBtn.released.connect(self.onAddBtnReleased)
 		self.entry = QtWidgets.QLineEdit(hboxWidget)
 		self.installAutoCompletion()
 		self.hboxLayout.addWidget(self.entry)
 		self.hboxLayout.addWidget(self.addBtn)
 		if not self.multiple:  ## FIXME: AND SELF REQUIRED
-			icon6 = QtGui.QIcon()
-			icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 			self.delBtn = QtWidgets.QPushButton("", parent=self.editWidget)
-			self.delBtn.setIcon(icon6)
+			self.delBtn.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
 			self.delBtn.released.connect(self.onDelBtnReleased)
 			self.hboxLayout.addWidget(self.delBtn)
 		self.selection: Dict[str, Any] = None
@@ -514,7 +510,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		assert skel is not None
 		assert self.boneName in skel
 		return QtCore.QCoreApplication.translate("ExtendedRelationalBoneSelector", "Select %s") % skel[self.boneName][
-			"descr"], QtGui.QIcon(":icons/actions/change_selection.svg")
+			"descr"], QtGui.QIcon.fromTheme("select")
 
 	def onSourceItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		pass

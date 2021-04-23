@@ -107,20 +107,25 @@ class FileItem(LeafItem):
 		extension = self.entryData["name"].split(".")[-1].lower()
 		icon = iconByExtension.get(extension)
 		if not icon:
-			fileInfo = QtCore.QFileInfo(":icons/filetypes/%s.png" % extension)
-			if extension == "svg":
-				fileInfo2 = QtCore.QFileInfo(":icons/filetypes/image.svg") # FIXME
+			extensionToIconMap = {
+				"png": "image-file",
+				"jpg": "image-file",
+				"jpeg": "image-file",
+				"tiff": "image-file",
+				"bmp": "image-file",
+				"avi": "video-file",
+				"mpg": "video-file",
+				"mpeg": "video-file",
+				"flv": "video-file",
+				"ts": "video-file",
+				"mp3": "audio-file",
+				"wav": "audio-file",
+				"pdf": "pdf-file",
+			}
+			if extension in extensionToIconMap:
+				icon = QtGui.QIcon.fromTheme(extensionToIconMap[extension])
 			else:
-				fileInfo2 = QtCore.QFileInfo(":icons/filetypes/%s.svg" % extension)
-			if fileInfo2.exists():
-				if extension == "svg":
-					icon = QtGui.QIcon(":icons/filetypes/image.svg")
-				else:
-					icon = QtGui.QIcon(":icons/filetypes/%s.svg" % extension)
-			elif fileInfo.exists():
-				icon = QtGui.QIcon(":icons/filetypes/%s.png" % extension)
-			else:
-				icon = QtGui.QIcon(":icons/filetypes/document.png")
+				icon = QtGui.QIcon.fromTheme("file")
 			iconByExtension[extension] = icon
 		self.setIcon(icon)
 		#if ("mimetype" in data and str(data["mimetype"]).lower().startswith("image")):

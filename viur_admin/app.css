@@ -379,7 +379,7 @@ QComboBox:on {
 QComboBox::down-arrow,
 QDateEdit::down-arrow,
 QDateTimeEdit::down-arrow {
-    background-image: url(:/icons/actions/dropdownarrow.svg);
+    background-image: url(:/icons/dropdownarrow.svg);
     background-position: center;
     width: 20px;
     height: 24px;
@@ -392,7 +392,7 @@ QComboBox::down-arrow:on,
 QDateEdit::down-arrow:on,
 QDateTimeEdit::down-arrow:on {
     /* shift the arrow when popup is open */
-    background: url(:/icons/actions/dropdownarrow_on.svg);
+    background: url(:/icons/dropdownarrow_on.svg);
     left: 6px;
 }
 

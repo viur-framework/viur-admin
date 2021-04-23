@@ -17,7 +17,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSimpleEditAction, self).__init__(
-			QtGui.QIcon(":icons/actions/edit.svg"),
+			QtGui.QIcon.fromTheme("edit"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"),
 			parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
@@ -50,7 +50,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 			module = self.parent().module
 			key = entry["key"]
 			widget = lambda: EditWidget(module, ApplicationType.TREE, key, skelType=skelType)
-			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon(":icons/actions/edit.svg"))
+			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("edit"))
 			handler.stackHandler()
 
 	@staticmethod
@@ -64,7 +64,7 @@ actionDelegateSelector.insert(3, TreeSimpleEditAction.isSuitableFor, TreeSimpleE
 class TreeMkDirAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeMkDirAction, self).__init__(
-			QtGui.QIcon(":icons/actions/folder_add.svg"),
+			QtGui.QIcon.fromTheme("folder-add"),
 			QtCore.QCoreApplication.translate("TreeHandler", "New directory"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -104,7 +104,7 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
 
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSimpleRenameAction, self).__init__(
-			QtGui.QIcon(":icons/actions/rename.svg"),
+			QtGui.QIcon.fromTheme("rename"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"),
 			parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)

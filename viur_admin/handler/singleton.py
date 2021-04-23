@@ -30,7 +30,7 @@ class SingletonEntryHandler(WidgetHandler):
 				else:
 					icon = loadIcon(config["icon"])
 			else:
-				icon = loadIcon(":icons/modules/singleton.svg")
+				icon = loadIcon("singleton")
 			name = config["name"]
 			sortIndex = config.get("sortIndex", 0)
 		super(SingletonEntryHandler, self).__init__(

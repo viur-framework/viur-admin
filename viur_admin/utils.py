@@ -332,9 +332,9 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			elif isinstance(icon, str):
 				RemoteFile(icon, successHandler=self.loadIconFromRequest)
 			else:
-				self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
+				self.setIcon(0, QtGui.QIcon.fromTheme("list"))
 		else:
-			self.setIcon(0, QtGui.QIcon(":icons/modules/list.svg"))
+			self.setIcon(0, QtGui.QIcon.fromTheme("list"))
 		self.vanishOnClose = vanishOnClose
 
 	def loadIconFromRequest(self, request: RequestWrapper) -> None:
@@ -352,7 +352,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			self.widgets.append(self.widgetGenerator())
 			self.mainWindow.addWidget(self.widgets[-1])
 			# event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
-			self.setIcon(1, QtGui.QIcon(":icons/actions/cancel.svg"))
+			self.setIcon(1, QtGui.QIcon.fromTheme("cancel-cross"))
 		self.mainWindow.focusHandler(self)
 
 	# event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
@@ -611,16 +611,16 @@ def loadIcon(icon: Union[QtGui.QIcon, str]) -> Union[QtGui.QIcon, str]:
 	"""
 	if isinstance(icon, QtGui.QIcon):
 		return icon
-	elif isinstance(icon, str) and not icon.startswith("/") and ".." not in icon and not icon.startswith(
-			"https://") and not icon.startswith("http://"):
+	elif isinstance(icon, str):
 		if icon.startswith(":"):
 			return QtGui.QIcon(icon)
-		else:
-			return QtGui.QIcon(":{0}".format(icon))
-	elif isinstance(icon, str):
-		return icon
-	else:
-		return QtGui.QIcon(":/icons/modules/list.svg")
+		elif  "/" not in icon and not "." in icon:
+			if icon.startswith("icon-"):
+				icon = icon[5:]
+			return QtGui.QIcon.fromTheme(icon)
+		elif icon.startswith("/"):
+			return icon
+	return QtGui.QIcon.fromTheme("question")
 
 
 def showAbout(parent: QtWidgets.QWidget = None) -> None:
@@ -651,3 +651,10 @@ def showAbout(parent: QtWidgets.QWidget = None) -> None:
 	appDescr += "Version: %s\n" % vdate
 	appDescr += "Revision: %s" % version
 	QtWidgets.QMessageBox.about(parent, appName, appDescr)
+
+def getIconTheme() -> Tuple[bool, str]:
+	"""
+		Tries to guess if the user uses a dark theme and switch to the white icons if needed.
+		:return: (True, "viur-dark") if the user uses a dark theme else (False, "viur-light")
+	"""
+	return False, "viur-light"

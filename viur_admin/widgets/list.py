@@ -413,7 +413,7 @@ class ListTableView(QtWidgets.QTableView):
 			**kwargs: Any):
 		super(ListTableView, self).__init__(parent, *args, **kwargs)
 		logger.debug("ListTableView.init: %r, %r, %r, %r", parent, module, fields, viewFilter)
-		self.missingImage = QtGui.QImage(":icons/status/missing.png")
+		self.missingImage = QtGui.QIcon.fromTheme("message-news")  # FIXME: QtGui.QImage(":icons/status/missing.png")
 		self.module = module
 		self.sortableBones = sortableBones
 		# Which (if any) colum the table is sorted by. Tuple of column-index (0-based) and sortOrder (True for descending)
@@ -887,20 +887,14 @@ class ListWidget(QtWidgets.QWidget):
 		# self.ui.splitter.setSizes([])
 		# self.ui.splitter.splitterMoved.connect(self.list.realignHeaders)
 		self.ui.extendedSearchArea.setVisible(False)
-		self.ui.extendedSearchBTN.toggled.connect(self.toggleExtendedSearchArea)
 		self.overlay = Overlay(self)
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
 		self.ui.searchBTN.released.connect(self.search)
 		self.ui.editSearch.returnPressed.connect(self.search)
-		self.ui.btnPrefixSearch.released.connect(self.doPrefixSearch)
-		self.ui.btnPrefixSearch.setEnabled(
-			"orderby" in self.list.model().getFilter() and self.list.model().getFilter()["orderby"] == "name")
 		self.ui.editSearch.textEdited.connect(self.prefixSearch)
 		self.prefixSearchTimer = None
-		self.extendedSearchPlugins: List[Any] = list()
-		self.initExtendedSearchPlugins()
 
 	# self.overlay.inform( self.overlay.BUSY )
 
@@ -1010,7 +1004,7 @@ class ListWidget(QtWidgets.QWidget):
 		myHandler = WidgetHandler.mainWindow.handlerForWidget(self)  # Always stack them as my child
 		assert myHandler is not None
 		if clone:
-			icon = QtGui.QIcon(":icons/actions/clone.svg")
+			icon = QtGui.QIcon.fromTheme("clone")
 			if self.list.module in conf.serverConfig["modules"] and "name" in conf.serverConfig["modules"][
 				self.list.module]:
 				descr = QtCore.QCoreApplication.translate("List", "Clone: %s") % \
@@ -1018,7 +1012,7 @@ class ListWidget(QtWidgets.QWidget):
 			else:
 				descr = QtCore.QCoreApplication.translate("List", "Clone entry")
 		else:
-			icon = QtGui.QIcon(":icons/actions/edit.png")
+			icon = QtGui.QIcon.fromTheme("edit")
 			if self.list.module in conf.serverConfig["modules"] and "name" in conf.serverConfig["modules"][
 				self.list.module]:
 				descr = QtCore.QCoreApplication.translate("List", "Edit: %s") % \
@@ -1042,17 +1036,6 @@ class ListWidget(QtWidgets.QWidget):
 	def getSelection(self) -> Sequence:
 		return self.list.getSelection()
 
-	def initExtendedSearchPlugins(self) -> None:
-		logger.debug("initExtendedSearchPlugins: %r", self.config.get("extendedFilters"))
-		extendedSearchLayout = self.ui.extendedSearchArea.layout()
-		if "extendedFilters" in self.config:
-			for extension in self.config["extendedFilters"]:
-				wdg = extendedSearchWidgetSelector.select(extension)
-				if wdg:
-					self.extendedSearchPlugins.append(wdg(extension, self))
-					count = extendedSearchLayout.count()
-					extendedSearchLayout.insertWidget(count - 1, self.extendedSearchPlugins[-1])
-		self.ui.extendedSearchBTN.setVisible(len(self.extendedSearchPlugins) > 0)
 
 
 class CsvExportWidget(QtWidgets.QWidget):

@@ -45,7 +45,7 @@ class HierarchyCoreHandler(WidgetHandler):  # FIXME
 			else:
 				icon = loadIcon(config["icon"])
 		else:
-			icon = loadIcon(":icons/modules/hierarchy.svg")
+			icon = loadIcon("hierarchy")
 		super(HierarchyCoreHandler, self).__init__(
 			lambda: HierarchyWidget(module),
 			sortIndex=config.get("sortIndex", 0),

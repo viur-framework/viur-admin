@@ -84,10 +84,8 @@ class Tag(QtWidgets.QWidget):
 		self.tag = tag
 		self.lblDisplay = QtWidgets.QLabel(tag, self)
 		self.editField = QtWidgets.QLineEdit(tag, self)
-		icon6 = QtGui.QIcon()
-		icon6.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 		self.btnDelete = QtWidgets.QPushButton("Löschen", self)
-		self.btnDelete.setIcon(icon6)
+		self.btnDelete.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
 		self.layout().addWidget(self.lblDisplay)
 		self.layout().addWidget(self.editField)
 		self.layout().addWidget(self.btnDelete)

@@ -19,7 +19,7 @@ class Ui_Preloader(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtWidgets.QLabel(Preloader)
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":icons/login.png"))
+        self.label.setPixmap(QtGui.QPixmap(":resources/viur_logo.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)

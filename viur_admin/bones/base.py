@@ -43,8 +43,6 @@ class LanguageContainer(QtWidgets.QTabWidget):
 		r = {lng: self.widget(idx).serializeForPost() for idx, lng in enumerate(self.languages)}
 		return r
 
-iconCancel = QtGui.QIcon()
-iconCancel.addPixmap(QtGui.QPixmap(":icons/actions/cancel.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
 class MultiContainer(QtWidgets.QWidget):
 	def __init__(self, widgetGen):
@@ -52,6 +50,7 @@ class MultiContainer(QtWidgets.QWidget):
 		self.widgetGen = widgetGen
 		self.setLayout(QtWidgets.QVBoxLayout(self))
 		self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
+		self.btnAdd.setIcon(QtGui.QIcon.fromTheme("add"))
 		self.layout().addWidget(self.btnAdd)
 		self.btnAdd.released.connect(self.onAddButtonClicked)  # TODO: check if this is working
 		# self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
@@ -69,7 +68,7 @@ class MultiContainer(QtWidgets.QWidget):
 		wdg = self.widgetGen()
 		containterWdg.layout().addWidget(wdg)
 		removeBtn = QtWidgets.QPushButton()
-		removeBtn.setIcon(iconCancel)
+		removeBtn.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
 		containterWdg.layout().addWidget(removeBtn)
 		self.layout().addWidget(containterWdg)
 		idx = self.children().index(containterWdg)
