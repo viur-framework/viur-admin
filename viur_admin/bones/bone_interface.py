@@ -74,13 +74,14 @@ class BoneEditInterface(QtWidgets.QWidget):
 			errorTxt.append(error["errorMessage"])
 		self.errorLabel.setToolTip("\n".join(errorTxt))
 		if maxError == 1:
-			self.errorLabel.setPixmap(QtGui.QIcon(":icons/status/info_normal.png").pixmap(QtCore.QSize(32, 32)))
+			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("1").pixmap(QtCore.QSize(32, 32)))
 		elif maxError == 3 or (maxError == 2 and self.required):
-			self.errorLabel.setPixmap(QtGui.QIcon(":icons/status/info_bad.png").pixmap(QtCore.QSize(32, 32)))
+			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("3").pixmap(QtCore.QSize(32, 32)))
 		elif maxError == 2:
-			self.errorLabel.setPixmap(QtGui.QIcon(":icons/status/info_okay.png").pixmap(QtCore.QSize(32, 32)))
+			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("2").pixmap(QtCore.QSize(32, 32)))
 		else:
 			self.errorLabel.clear()
+			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("4").pixmap(QtCore.QSize(32, 32)))
 
 		#for i in reversed(range(self.errorLabels.layout().count())):
 		#	self.errorLabels.layout().itemAt(i).widget().setParent(None)

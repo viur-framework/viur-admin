@@ -123,6 +123,66 @@ class EditWidget(QtWidgets.QWidget):
 		protoWrap.updatingFailedError.connect(self.onSaveError)
 		protoWrap.updatingDataAvailable.connect(self.onDataAvailable)
 		self.overlay.inform(self.overlay.BUSY)
+		# Deferred server-side form validation
+		QtWidgets.QApplication.instance().focusChanged.connect(self.onFocusEvent)  # Register for change events in bones
+		self.editedBones = set()  # Which bones where touched? (Don't update errors on untouched fields)
+		self.updateTimer = QtCore.QTimer()  # Prevent multiple updates within a short timeframe
+		self.updateTimer.setSingleShot(True)
+		self.updateTimer.timeout.connect(self.issuePreflightRequest)
+		self.lastRequestedPreflightData = {}  # Which data did we query last time (don't re-check if no change occurred)
+
+	def prepareDeletion(self):  # Called before we get disconnected from the mainwindow
+		QtWidgets.QApplication.instance().focusChanged.disconnect(self.onFocusEvent)
+
+
+	def onFocusEvent(self, old, new):
+		if not old:  # We might receive focus which was previously outside the admin, so old is none
+			return
+		for key, bone in self.bones.items():
+			if bone.isAncestorOf(old):  # Add the last focused bone to the list of bones the user might have edited
+				self.editedBones.add(key)
+		self.updateTimer.stop()
+		self.updateTimer.start(2000)
+
+	def issuePreflightRequest(self):
+		# Serialize all bones
+		data = {}
+		for key, bone in self.bones.items():
+			data[key] = bone.serializeForPost()
+		if data == self.lastRequestedPreflightData: # The values inside the bones did not change
+			return
+		self.lastRequestedPreflightData = data.copy()  # Data will be modified in protocolwrapper
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
+		assert protoWrap is not None
+		if self.applicationType == ApplicationType.LIST:  # Application: List
+			if self.key and not self.clone:
+				protoWrap.editPreflight(self.key, data, self.onPreflightDataAvailable)
+			else:
+				protoWrap.editPreflight(None, data, self.onPreflightDataAvailable)
+		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
+			raise NotImplementedError()
+			if self.key and not self.clone:
+				self.editTaskID = protoWrap.edit(self.key, self.skelType, **data)
+			else:
+				self.editTaskID = protoWrap.add(self.node, self.skelType, **data)
+		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
+			raise NotImplementedError()
+			self.editTaskID = protoWrap.edit(**data)
+		else:
+			raise NotImplementedError()  # Should never reach this
+
+
+
+
+	def onPreflightDataAvailable(self, req):
+		data = NetworkService.decode(req)
+		errors = data["errors"]
+		for key, bone in self.bones.items():
+			if key not in self.editedBones:
+				continue
+			boneErrors = collectBoneErrors(errors, key)
+			bone.setErrors(boneErrors)
+
 
 	def onBusyStateChanged(self, busy: str) -> None:
 		if busy:
@@ -209,6 +269,7 @@ class EditWidget(QtWidgets.QWidget):
 		@param txt: HTML-Text
 		@return: String
 		"""
+		return txt  # FIXME
 		res = ""
 		while txt:
 			idx = txt.find("<img src=")
@@ -297,17 +358,18 @@ class EditWidget(QtWidgets.QWidget):
 					if severity > tabMaxError.get(tabName, 0):
 						tabMaxError[tabName] = severity
 		tmpTabs.sort(key=lambda x: x[1])
+
 		for scrollArea, tabName in tmpTabs:
 			tabIndex = self.ui.tabWidget.addTab(scrollArea, tabName)
 			maxErrCode = tabMaxError.get(tabName, 0)
 			if maxErrCode == 1:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_normal.png"))
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("1"))
 			elif maxErrCode == 2:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_okay.png"))
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("2"))
 			elif maxErrCode == 3:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_bad.png"))
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("3"))
 			else:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon(":icons/status/info_good.png"))
+				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("4"))
 
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
@@ -426,6 +488,7 @@ class EditWidget(QtWidgets.QWidget):
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
 		logger.debug("onDataAvailable: %r, %r", editTaskID, self.editTaskID)
+		print(("onDataAvailable: %r, %r", editTaskID, self.editTaskID, wasInitial, data))
 		if editTaskID != self.editTaskID:  # Not our task
 			return
 		self.setDisabled(False)

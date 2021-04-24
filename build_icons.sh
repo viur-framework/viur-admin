@@ -9,9 +9,9 @@ pushd viur_admin
 rm -rf icons-light
 cp -r icons-dark icons-light
 pushd icons-light
-sed -i "s+fill:#FFFFFF;+fill:#000000;+g" *.svg
-sed -i "s+\"#fff\"+\"#000\"+g" *.svg
-sed -i "s+\"#FFFFFF\"+\"#000000\"+g" *.svg
+sed -i "s+fill:#FFFFFF;+fill:#232627;+g" *.svg
+sed -i "s+\"#fff\"+\"#232627\"+g" *.svg
+sed -i "s+\"#FFFFFF\"+\"#232627\"+g" *.svg
 popd
 #cp -r app.css icons.qrc htmleditor resources icons
 #pushd icons

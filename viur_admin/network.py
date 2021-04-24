@@ -710,7 +710,6 @@ class NetworkService:
 		"""
 		#if secure == True:
 		#	SP2.addRequest(partial(NetworkService.request, url=url, params=params, extraHeaders=extraHeaders, successHandler=successHandler, failureHandler=failureHandler, finishedHandler=finishedHandler,parent=parent, failSilent=failSilent))
-		print( "NS-REQ", url, params)
 		global nam, _isSecureSSL
 		if _isSecureSSL == False:  # Warn the user of a potential security risk
 			msgRes = QtWidgets.QMessageBox.warning(

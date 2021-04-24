@@ -183,6 +183,7 @@ class ListWrapper(QtCore.QObject):
 		return setSortIndexTaskId
 
 	def add(self, **kwargs: Any) -> str:
+		print(("IN add,", kwargs))
 		req = NetworkService.request(
 			"/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
@@ -192,6 +193,7 @@ class ListWrapper(QtCore.QObject):
 		else:
 			req.wasInitial = False
 		self.checkBusyStatus()
+		print(("INITIAL", req.wasInitial))
 		addTaskId = str(id(req))
 		logger.debug("proto list add id: %r", addTaskId)
 		return addTaskId
@@ -210,6 +212,12 @@ class ListWrapper(QtCore.QObject):
 		editTaskId = str(id(req))
 		logger.debug("proto list edit id: %r", editTaskId)
 		return editTaskId
+
+	def editPreflight(self, key: str, data, callback) -> None:
+		data["bounce"] = "1"
+		data["skey"] = "-"
+		url = "/%s/edit/%s" % (self.module, key) if key else "/%s/add" % self.module
+		req = NetworkService.request(url, data, finishedHandler=callback)
 
 	def deleteEntities(self, keys: Sequence[str]) -> None:
 		def internalDeleteEntity(key):

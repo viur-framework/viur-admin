@@ -614,7 +614,7 @@ def loadIcon(icon: Union[QtGui.QIcon, str]) -> Union[QtGui.QIcon, str]:
 	elif isinstance(icon, str):
 		if icon.startswith(":"):
 			return QtGui.QIcon(icon)
-		elif  "/" not in icon and not "." in icon:
+		elif "/" not in icon and not "." in icon:
 			if icon.startswith("icon-"):
 				icon = icon[5:]
 			return QtGui.QIcon.fromTheme(icon)
