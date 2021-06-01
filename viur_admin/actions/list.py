@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.config import conf
 from viur_admin.network import NetworkService
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
-from viur_admin.utils import WidgetHandler
+from viur_admin.utils import WidgetHandler, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 from viur_admin.widgets.list import CsvExportWidget
 
@@ -14,7 +14,8 @@ from viur_admin.widgets.list import CsvExportWidget
 class ListAddAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(ListAddAction, self).__init__(
-			QtGui.QIcon.fromTheme("add"),
+			#QtGui.QIcon.fromTheme("add"),
+			loadIcon("add"),
 			QtCore.QCoreApplication.translate("ListHandler", "Add entry"),
 			parent)
 		# self.connect( self, QtCore.SIGNAL( "triggered(bool)"), self.onTriggered )

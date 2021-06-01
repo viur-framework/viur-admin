@@ -603,6 +603,18 @@ def formatString(format: str, data: Dict[str, Any], structure: Dict[str, Any] = 
 	# logger.debug("in formatString: %r, %r, %r", format, data, err)
 	return res
 
+def colorizeIcon(inData: bytes) -> QtGui.QIcon:
+	"""
+		Rewrites the fill-color in the given SVG-Data with the text-color from the current palette and returns
+		it as an QIcon
+	"""
+	palette = QtWidgets.QApplication.instance().palette()
+	print(palette.text().color().name())
+	targetColor = b"#FF0000"
+	inData = inData.replace(b"#FFFFFF", targetColor) \
+		.replace(b"#fff", targetColor) \
+		.replace(b"\"#FFFFFF\"", b"\"%s\"" % targetColor)
+	return QtGui.QIcon(QtGui.QPixmap.fromImage(QtGui.QImage.fromData(inData)))
 
 def loadIcon(icon: Union[QtGui.QIcon, str]) -> Union[QtGui.QIcon, str]:
 	"""
@@ -613,11 +625,21 @@ def loadIcon(icon: Union[QtGui.QIcon, str]) -> Union[QtGui.QIcon, str]:
 		return icon
 	elif isinstance(icon, str):
 		if icon.startswith(":"):
-			return QtGui.QIcon(icon)
+			svgData = QtCore.QFile(icon)
+			if not svgData.open(QtCore.QFile.ReadOnly):
+				svgData = QtCore.QFile(":icons/question.svg")
+				assert svgData.open(QtCore.QFile.ReadOnly)
+				#return QtGui.QIcon.fromTheme("question")
+			return colorizeIcon(svgData.readAll())
 		elif "/" not in icon and not "." in icon:
 			if icon.startswith("icon-"):
 				icon = icon[5:]
-			return QtGui.QIcon.fromTheme(icon)
+			svgData = QtCore.QFile(":icons/%s.svg" % icon)
+			if not svgData.open(QtCore.QFile.ReadOnly):
+				svgData = QtCore.QFile(":icons/question.svg")
+				assert svgData.open(QtCore.QFile.ReadOnly)
+				#return QtGui.QIcon.fromTheme("question")
+			return colorizeIcon(svgData.readAll())
 		elif icon.startswith("/"):
 			return icon
 	return QtGui.QIcon.fromTheme("question")
