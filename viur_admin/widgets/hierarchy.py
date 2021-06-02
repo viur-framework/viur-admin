@@ -10,7 +10,7 @@ from viur_admin.config import conf
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.hierarchyUI import Ui_Hierarchy
-from viur_admin.utils import Overlay
+from viur_admin.utils import Overlay, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
@@ -410,7 +410,7 @@ class HierarchyWidget(QtWidgets.QWidget):
 		handler = utils.WidgetHandler(
 				lambda: EditWidget(self.module, ApplicationType.HIERARCHY, item.entryData["key"]),
 				descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
-				icon=QtGui.QIcon.fromTheme("edit"))
+				icon=loadIcon("edit"))
 		handler.stackHandler()
 
 	def loadPreview(self, url: str) -> None:

@@ -18,7 +18,7 @@ from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapp
 from viur_admin.startpages.default import DefaultWidget
 from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
-from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler
+from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler, loadIcon
 from viur_admin import log
 if not isPyodide:
 	import viur_admin.plugins
@@ -177,8 +177,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.moduleSearch.setObjectName("moduleSearch")
 		self.moduleSearch.textChanged.connect(self.searchHandler)
 		self.handlerSearchLayout.addWidget(self.moduleSearch)
-		icon = QtGui.QIcon.fromTheme("search")
-		#icon.addPixmap(QtGui.QIcon.fromTheme("search")QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+		icon = loadIcon("search")
+		#icon.addPixmap(loadIcon("search")QtGui.QPixmap(":icons/actions/search.svg"), QtGui.QIcon.Normal, QtGui.QIcon.On)
 		self.searchAction = QtWidgets.QAction(icon, _translate("MainWindow", "Handler Search"), self)
 		self.searchAction.setShortcut(QtGui.QKeySequence.Find)
 		self.searchAction.triggered.connect(self.moduleSearch.setFocus)
@@ -194,24 +194,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
 		self.actionQuit = QtWidgets.QAction(self)
-		icon = QtGui.QIcon.fromTheme("application-exit")
+		icon = loadIcon("application-exit")
 		self.actionQuit.setIcon(icon)
 		self.actionQuit.setObjectName("actionQuit")
 		self.actionErste_Schritte = QtWidgets.QAction(self)
-		icon = QtGui.QIcon.fromTheme("help-contents")
+		icon = loadIcon("help-contents")
 		self.actionErste_Schritte.setIcon(icon)
 		self.actionErste_Schritte.setObjectName("actionErste_Schritte")
 		self.actionHelp = QtWidgets.QAction(self)
-		icon = QtGui.QIcon.fromTheme("help-contents")
+		icon = loadIcon("help-contents")
 		self.actionHelp.setIcon(icon)
 		self.actionHelp.setShortcut("")
 		self.actionHelp.setObjectName("actionHelp")
 		self.actionAbout = QtWidgets.QAction(self)
-		icon = QtGui.QIcon.fromTheme("help-about")
+		icon = loadIcon("help-about")
 		self.actionAbout.setIcon(icon)
 		self.actionAbout.setObjectName("actionAbout")
 		self.actionLogout = QtWidgets.QAction(self)
-		icon = QtGui.QIcon.fromTheme("system-log-out")
+		icon = loadIcon("system-log-out")
 		self.actionLogout.setIcon(icon)
 		self.actionLogout.setObjectName("actionLogout")
 

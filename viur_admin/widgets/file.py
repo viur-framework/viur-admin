@@ -20,6 +20,7 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.ui.fileDownloadProgressUI import Ui_FileDownloadProgress
 from viur_admin.ui.fileUploadProgressUI import Ui_FileUploadProgress
 from viur_admin.widgets.tree import TreeWidget, LeafItem, TreeListView
+from viur_admin.utils import loadIcon
 from time import sleep
 
 logger = getLogger(__name__)
@@ -123,9 +124,9 @@ class FileItem(LeafItem):
 				"pdf": "pdf-file",
 			}
 			if extension in extensionToIconMap:
-				icon = QtGui.QIcon.fromTheme(extensionToIconMap[extension])
+				icon = loadIcon(extensionToIconMap[extension])
 			else:
-				icon = QtGui.QIcon.fromTheme("file")
+				icon = loadIcon("file")
 			iconByExtension[extension] = icon
 		self.setIcon(icon)
 		#if ("mimetype" in data and str(data["mimetype"]).lower().startswith("image")):

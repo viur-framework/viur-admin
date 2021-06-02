@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.utils import wheelEventFilter, ViurTabBar
+from viur_admin.utils import wheelEventFilter, ViurTabBar, loadIcon, boneErrorCodeToIcon
 from viur_admin.widgets.edit import collectBoneErrors
 from viur_admin.config import conf
 
@@ -44,13 +44,82 @@ class LanguageContainer(QtWidgets.QTabWidget):
 		return r
 
 
-class MultiContainer(QtWidgets.QWidget):
+class TabMultiContainer(QtWidgets.QTabWidget):
+	# For extended relations / recordBones. They will be rendered as a tabbar
+	def __init__(self, widgetGen, textFormatFunc=None):
+		super().__init__()
+		self.widgetGen = widgetGen
+		self.textFormatFunc = textFormatFunc
+		self.setMovable(True)
+		self.setTabsClosable(True)
+		self.btn = QtWidgets.QPushButton("Hinzufügen", self)
+		self.btn.setIcon(loadIcon("add"))
+		self.btn.pressed.connect(self.onAddButtonClicked)
+		self.setCornerWidget(self.btn)
+		self.btn.setMinimumSize(self.btn.width(), self.btn.height())
+		self.tabCloseRequested.connect(self.onTabCloseRequested)
+		self.newIndex = 0
+
+	def onTabCloseRequested(self, index: int):
+		self.removeTab(index)
+		if not self.count():  # Ensure the "add" button stayes visible
+			self.btn.setMinimumSize(self.btn.width(), self.btn.height())
+
+	def _mkEntry(self):
+		self.newIndex += 1
+		wdg = self.widgetGen()
+		self.addTab(wdg, loadIcon("bookmark-add"), "Neuer Eintrag %s" % self.newIndex)
+		self.btn.setMinimumSize(0,0)
+		return wdg
+
+	def onAddButtonClicked(self, *args, **kwargs):
+		self._mkEntry()
+
+	def unserialize(self, data, errors: List[Dict]):
+		self.clear()
+		if not data:
+			return
+		elif isinstance(data, list):
+			for idx, d in enumerate(data):
+				wdg = self._mkEntry()
+				wdg.unserialize(d, collectBoneErrors(errors, str(idx)))
+				if self.textFormatFunc:
+					self.setTabText(idx, self.textFormatFunc(d))
+		else:
+			wdg = self._mkEntry()
+			wdg.unserialize(data, collectBoneErrors(errors, "0"))
+			if self.textFormatFunc:
+				self.setTabText(0, self.textFormatFunc(d))
+
+	def getChildBones(self):
+		for x in range(0, self.count()):
+			yield self.widget(x)
+
+	def serializeForPost(self):
+		return [x.serializeForPost() for x in self.getChildBones()]
+
+	def setErrors(self, boneErrors):
+		for idx, childBone in enumerate(self.getChildBones()):
+			tmpErrs = []
+			for error in boneErrors:
+				if error["fieldPath"] and error["fieldPath"][0] == str(idx):
+					error["fieldPath"] = error["fieldPath"][1:]
+					tmpErrs.append(error)
+			childBone.setErrors(tmpErrs)
+			icon = boneErrorCodeToIcon(childBone.getEffectiveMaximumBoneError(False))  # FIXME
+			self.setTabIcon(idx, icon)
+
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
+		return max([x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.getChildBones()])
+
+class ListMultiContainer(QtWidgets.QWidget):
+	# For simple relations, multi stringBones etc. They will be rendered in a list, top to bottom
 	def __init__(self, widgetGen):
 		super().__init__()
 		self.widgetGen = widgetGen
 		self.setLayout(QtWidgets.QVBoxLayout(self))
 		self.btnAdd = QtWidgets.QPushButton("Hinzufügen", self)
-		self.btnAdd.setIcon(QtGui.QIcon.fromTheme("add"))
+		self.btnAdd.setIcon(loadIcon("add"))
 		self.layout().addWidget(self.btnAdd)
 		self.btnAdd.released.connect(self.onAddButtonClicked)  # TODO: check if this is working
 		# self.btnAdd.released.connect(lambda *args, **kwargs: self.genTag("", True))  # FIXME: Lambda
@@ -68,7 +137,7 @@ class MultiContainer(QtWidgets.QWidget):
 		wdg = self.widgetGen()
 		containterWdg.layout().addWidget(wdg)
 		removeBtn = QtWidgets.QPushButton()
-		removeBtn.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
+		removeBtn.setIcon(loadIcon("cancel"))
 		containterWdg.layout().addWidget(removeBtn)
 		self.layout().addWidget(containterWdg)
 		idx = self.children().index(containterWdg)
@@ -95,9 +164,24 @@ class MultiContainer(QtWidgets.QWidget):
 			wdg = self._mkEntry()
 			wdg.unserialize(data, collectBoneErrors(errors, "0"))
 
-	def serializeForPost(self):
-		return [wdg.children()[1].serializeForPost() for wdg in self.children() if wdg not in [self.btnAdd, self.layout()]]
+	def getChildBones(self):
+		yield from (wdg.children()[1] for wdg in self.children() if wdg not in [self.btnAdd, self.layout()])
 
+	def serializeForPost(self):
+		return [wdg.serializeForPost() for wdg in self.getChildBones()]
+
+	def setErrors(self, boneErrors):
+		# FIXME: We should handle errors directly assigned to this bone
+		for idx, childBone in enumerate(self.getChildBones()):
+			tmpErrs = []
+			for error in boneErrors:
+				if error["fieldPath"] and error["fieldPath"][0] == str(idx):
+					error["fieldPath"] = error["fieldPath"][1:]
+					tmpErrs.append(error)
+			childBone.setErrors(tmpErrs)
+
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
+		return max([-1]+[x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.getChildBones()])
 
 def chooseLang(value: Dict[str, Any], prefs: List[str], currentLanguageSelection: str = None) -> Union[str, dict, None]:
 	"""

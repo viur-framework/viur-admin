@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 
 
 class ClickableLineEdit(QtWidgets.QLineEdit):
@@ -56,7 +56,7 @@ class ColorEditBone(BoneEditInterface):
 			**kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

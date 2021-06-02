@@ -18,7 +18,7 @@ from viur_admin.event import event
 from viur_admin.priorityqueue import viewDelegateSelector, protocolWrapperInstanceSelector, actionDelegateSelector, \
 	extendedSearchWidgetSelector, editBoneSelector
 from viur_admin.widgets.edit import EditWidget, ApplicationType
-from viur_admin.utils import WidgetHandler
+from viur_admin.utils import WidgetHandler, loadIcon
 from viur_admin.ui.listUI import Ui_List
 from viur_admin.ui.csvexportUI import Ui_CsvExport
 from viur_admin.config import conf
@@ -413,7 +413,7 @@ class ListTableView(QtWidgets.QTableView):
 			**kwargs: Any):
 		super(ListTableView, self).__init__(parent, *args, **kwargs)
 		logger.debug("ListTableView.init: %r, %r, %r, %r", parent, module, fields, viewFilter)
-		self.missingImage = QtGui.QIcon.fromTheme("message-news")  # FIXME: QtGui.QImage(":icons/status/missing.png")
+		self.missingImage = loadIcon("message-news")  # FIXME: QtGui.QImage(":icons/status/missing.png")
 		self.module = module
 		self.sortableBones = sortableBones
 		# Which (if any) colum the table is sorted by. Tuple of column-index (0-based) and sortOrder (True for descending)
@@ -1011,7 +1011,7 @@ class ListWidget(QtWidgets.QWidget):
 		myHandler = WidgetHandler.mainWindow.handlerForWidget(self)  # Always stack them as my child
 		assert myHandler is not None
 		if clone:
-			icon = QtGui.QIcon.fromTheme("clone")
+			icon = loadIcon("clone")
 			if self.list.module in conf.serverConfig["modules"] and "name" in conf.serverConfig["modules"][
 				self.list.module]:
 				descr = QtCore.QCoreApplication.translate("List", "Clone: %s") % \
@@ -1019,7 +1019,7 @@ class ListWidget(QtWidgets.QWidget):
 			else:
 				descr = QtCore.QCoreApplication.translate("List", "Clone entry")
 		else:
-			icon = QtGui.QIcon.fromTheme("edit")
+			icon = loadIcon("edit")
 			if self.list.module in conf.serverConfig["modules"] and "name" in conf.serverConfig["modules"][
 				self.list.module]:
 				descr = QtCore.QCoreApplication.translate("List", "Edit: %s") % \

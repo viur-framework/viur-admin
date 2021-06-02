@@ -5,11 +5,11 @@ from typing import Union, Dict, Any, List
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIcon, QFocusEvent
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.log import getLogger
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.utils import wheelEventFilter
+from viur_admin.utils import wheelEventFilter, loadIcon
 
 logger = getLogger(__name__)
 
@@ -75,7 +75,7 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 			*args: Any,
 			**kwargs: Any):
 		super(IndexSortViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
-		self.icon = QIcon.fromTheme("draggable")
+		self.icon = loadIcon("draggable")
 		self.margin = 20
 		self.mode = QIcon.Normal
 		self.state = QIcon.On
@@ -168,7 +168,7 @@ class NumericEditBone(BoneEditInterface):
 			**kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

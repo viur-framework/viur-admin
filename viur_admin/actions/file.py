@@ -5,14 +5,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.pyodidehelper import isPyodide
 from viur_admin.log import getLogger
 from viur_admin.priorityqueue import actionDelegateSelector
-from viur_admin.utils import showSingleFileSelect
+from viur_admin.utils import showSingleFileSelect, loadIcon
 logger = getLogger(__name__)
 
 
 class FileUploadAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(FileUploadAction, self).__init__(
-			QtGui.QIcon.fromTheme("upload"),
+			loadIcon("upload"),
 			QtCore.QCoreApplication.translate("FileHandler", "Upload files"),
 			parent=parent)
 		self.triggered.connect(self.onTriggered)
@@ -61,7 +61,7 @@ actionDelegateSelector.insert(3, FileUploadAction.isSuitableFor, FileUploadActio
 class FileDownloadAction(QtWidgets.QAction):
 	def __init__(self, parent: QtCore.QObject = None):
 		super(FileDownloadAction, self).__init__(
-			QtGui.QIcon.fromTheme("download"),
+			loadIcon("download"),
 			QtCore.QCoreApplication.translate("FileHandler", "Download files"),
 			parent)
 		self.triggered.connect(self.onTriggered)

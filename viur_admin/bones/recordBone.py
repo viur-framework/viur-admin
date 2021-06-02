@@ -14,7 +14,7 @@ from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.utils import formatString, Overlay
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, TabMultiContainer
 from viur_admin import config
 from viur_admin.widgets.edit import collectBoneErrors
 from viur_admin.bones.relational import InternalEdit
@@ -60,7 +60,7 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 					                                language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
 				value = formatString(
-					formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+					formatString(self.format, value, self.structure[self.boneName], prefix=[],
 					             language=config.conf.adminConfig["language"]),
 					value, value, language=config.conf.adminConfig["language"]) or value[
 					        "key"]
@@ -98,6 +98,7 @@ class RecordEditBone(BoneEditInterface):
 		outerLayout = QtWidgets.QVBoxLayout(self.editWidget)
 		self.internalEdit = InternalEdit(self.editWidget, self.using, "FIXME", {}, [])
 		outerLayout.addWidget(self.internalEdit)
+		self.errorLabel.hide()  # We'll display the errors in the TabMultiContainer
 
 
 	@classmethod
@@ -121,8 +122,10 @@ class RecordEditBone(BoneEditInterface):
 			format=skelStructure[boneName].get("format", "$(name)")
 		)
 		if myStruct.get("multiple"):
+			viewDeleate = RecordViewBoneDelegate(moduleName, boneName, skelStructure)
+			textFormatFunc = lambda x: viewDeleate.displayText(x, None)
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: TabMultiContainer(preMultiWidgetGen, textFormatFunc)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
@@ -136,6 +139,11 @@ class RecordEditBone(BoneEditInterface):
 	def serializeForPost(self) -> dict:
 		return self.internalEdit.serializeForPost()
 
+	def setErrors(self, errorList):  # Just forward to internalEdit
+		self.internalEdit.setErrors(errorList)
+
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:  # Just forward to internalEdit
+		return self.internalEdit.getEffectiveMaximumBoneError(inOptionalContainer or not self.required)
 
 def CheckForRecordBoneBone(
 		moduleName: str,

@@ -10,8 +10,7 @@ from viur_admin.log import getLogger
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.treeUI import Ui_Tree
-from viur_admin.utils import Overlay
-from viur_admin.utils import WidgetHandler
+from viur_admin.utils import Overlay, WidgetHandler, loadIcon
 from viur_admin.widgets.edit import EditWidget
 
 logger = getLogger(__name__)
@@ -27,7 +26,7 @@ class NodeItem(QtWidgets.QListWidgetItem):
 			data: Dict[str, Any],
 			parent: Union[QtWidgets.QListWidget, None] = None):
 		super(NodeItem, self).__init__(
-			QtGui.QIcon.fromTheme("folder"), str(data["name"]), parent=parent,
+			loadIcon("folder"), str(data["name"]), parent=parent,
 			type=1200)
 		self.entryData = data
 		self.setToolTip('<strong>{0}</strong>'.format(data["name"]))
@@ -64,7 +63,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 		else:
 			name = " - "
 		super(LeafItem, self).__init__(
-			QtGui.QIcon.fromTheme("file"),
+			loadIcon("file"),
 			str(name),
 			parent=parent,
 			type=1100)

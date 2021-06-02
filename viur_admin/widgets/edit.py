@@ -17,7 +17,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.network import NetworkService, getFileNameForUrl, RequestWrapper
 from viur_admin.event import event
-from viur_admin.utils import Overlay
+from viur_admin.utils import Overlay, loadIcon, boneErrorCodeToIcon
 from viur_admin.config import conf
 from viur_admin.ui.editUI import Ui_Edit
 from viur_admin.priorityqueue import editBoneSelector
@@ -114,10 +114,14 @@ class EditWidget(QtWidgets.QWidget):
 		self.ui.btnClose.released.connect(self.onBtnCloseReleased)
 		if not self.key and not self.clone:
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Close"))
+			self.ui.btnSaveClose.setIcon(loadIcon("save"))
 			self.ui.btnSaveContinue.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and New"))
+			self.ui.btnSaveContinue.setIcon(loadIcon("save-all"))
 		else:
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Close"))
 			self.ui.btnSaveContinue.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Continue"))
+		self.ui.btnClose.setIcon(loadIcon("cancel"))
+		self.ui.btnReset.setIcon(loadIcon("undo"))
 		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
 		protoWrap.updatingSucceeded.connect(self.onSaveSuccess)
 		protoWrap.updatingFailedError.connect(self.onSaveError)
@@ -130,6 +134,7 @@ class EditWidget(QtWidgets.QWidget):
 		self.updateTimer.setSingleShot(True)
 		self.updateTimer.timeout.connect(self.issuePreflightRequest)
 		self.lastRequestedPreflightData = {}  # Which data did we query last time (don't re-check if no change occurred)
+		self.boneToTabMap: Dict[QtWidgets.QWidget, int] = {}
 
 	def prepareDeletion(self):  # Called before we get disconnected from the mainwindow
 		QtWidgets.QApplication.instance().focusChanged.disconnect(self.onFocusEvent)
@@ -171,18 +176,21 @@ class EditWidget(QtWidgets.QWidget):
 		else:
 			raise NotImplementedError()  # Should never reach this
 
-
-
-
 	def onPreflightDataAvailable(self, req):
 		data = NetworkService.decode(req)
 		errors = data["errors"]
+		newTabIcons: Dict[QtWidgets.QWidget, List[int]] = {}
 		for key, bone in self.bones.items():
 			if key not in self.editedBones:
 				continue
 			boneErrors = collectBoneErrors(errors, key)
 			bone.setErrors(boneErrors)
-
+			tab = self.boneToTabMap[bone]
+			if tab not in newTabIcons:
+				newTabIcons[tab] = []
+			newTabIcons[tab].append(bone.getEffectiveMaximumBoneError(False))
+		for tab, errList in newTabIcons.items():
+			self.ui.tabWidget.setTabIcon(tab, boneErrorCodeToIcon(max(errList)))
 
 	def onBusyStateChanged(self, busy: str) -> None:
 		if busy:
@@ -193,13 +201,13 @@ class EditWidget(QtWidgets.QWidget):
 	def getBreadCrumb(self) -> Any:
 		if self.clone:
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Clone entry")
-			icon = QtGui.QIcon.fromTheme("clone")
+			icon = loadIcon("clone")
 		elif self.key or self.applicationType == EditWidget.appSingleton:  # We're editing
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Edit entry")
-			icon = QtGui.QIcon.fromTheme("edit")
+			icon = loadIcon("edit")
 		else:
 			descr = QtCore.QCoreApplication.translate("EditWidget", "Add entry")
-			icon = QtGui.QIcon.fromTheme("add")
+			icon = loadIcon("add")
 		return descr, icon
 
 	def onBtnCloseReleased(
@@ -315,7 +323,8 @@ class EditWidget(QtWidgets.QWidget):
 				if "remove" in dir(item.widget()):
 					item.widget().remove()
 			self.ui.tabWidget.removeTab(0)
-		self.bones = OrderedDict()
+		self.bones = {}
+		self.boneToTabMap = {}
 		self.dataCache = data
 		tmpDict = {}
 		tabs: Dict[str, QtWidgets.QFormLayout] = dict()
@@ -363,13 +372,13 @@ class EditWidget(QtWidgets.QWidget):
 			tabIndex = self.ui.tabWidget.addTab(scrollArea, tabName)
 			maxErrCode = tabMaxError.get(tabName, 0)
 			if maxErrCode == 1:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("1"))
+				self.ui.tabWidget.setTabIcon(tabIndex, loadIcon("bone-invalidates-other"))
 			elif maxErrCode == 2:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("2"))
+				self.ui.tabWidget.setTabIcon(tabIndex, loadIcon("bone-empty"))
 			elif maxErrCode == 3:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("3"))
+				self.ui.tabWidget.setTabIcon(tabIndex, loadIcon("bone-error"))
 			else:
-				self.ui.tabWidget.setTabIcon(tabIndex, QtGui.QIcon.fromTheme("4"))
+				self.ui.tabWidget.setTabIcon(tabIndex, loadIcon("bone-valid"))
 
 		for key, bone in data["structure"]:
 			if bone["visible"] == False:
@@ -378,42 +387,22 @@ class EditWidget(QtWidgets.QWidget):
 				tabName = bone["params"]["category"]
 			else:
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
-			# queue = RegisterQueue()
-			# event.emit( QtCore.SIGNAL('requestBoneEditWidget(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject,
-			# PyQt_PyObject)'),queue, self.module, key, tmpDict )
-			# widget = queue.getBest()
 			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict, editWidget=self)
 			widget.setSizePolicy(
 				QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-			if 0 and bone["error"] and not ignoreMissing:
-				dataWidget = QtWidgets.QWidget()
-				layout = QtWidgets.QHBoxLayout(dataWidget)
-				dataWidget.setLayout(layout)
-				layout.addWidget(widget, stretch=1)
-				iconLbl = QtWidgets.QLabel(dataWidget)
-				if bone["required"]:
-					iconLbl.setPixmap(QtGui.QIcon.fromTheme("error").pixmap(QtCore.QSize(128, 128)))
-				else:
-					iconLbl.setPixmap(QtGui.QIcon.fromTheme("error-file").pixmap(QtCore.QSize(128, 128)))  # FIXME: QtGui.QPixmap(":icons/status/incomplete.png")
-				layout.addWidget(iconLbl, stretch=0)
-				iconLbl.setToolTip(str(bone["error"]))
-			else:
-				dataWidget = widget
+			dataWidget = widget
 			# TODO: Temporary MacOS Fix
-
 			if sys.platform.startswith("darwin"):
 				dataWidget.setMaximumWidth(500)
 				dataWidget.setMinimumWidth(500)
 			# TODO: Temporary MacOS Fix
-
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
 			if "params" in bone and isinstance(bone["params"], dict) and "tooltip" in bone["params"]:
 				lblWidget.setToolTip(self.parseHelpText(bone["params"]["tooltip"]))
 			descrLbl = QtWidgets.QLabel(bone["descr"], lblWidget)
 			descrLbl.setWordWrap(True)
-
 			if bone["required"]:
 				font = descrLbl.font()
 				font.setBold(True)
@@ -423,6 +412,7 @@ class EditWidget(QtWidgets.QWidget):
 			tabs[tabName].addRow(lblWidget, dataWidget)
 			dataWidget.show()
 			self.bones[key] = widget
+			self.boneToTabMap[dataWidget] = [x[1] for x in tmpTabs].index(tabName)
 
 		self.unserialize(data["values"], data["errors"])
 		# self._lastData = data
@@ -488,7 +478,6 @@ class EditWidget(QtWidgets.QWidget):
 			Adding/editing failed, cause some required fields are missing/invalid
 		"""
 		logger.debug("onDataAvailable: %r, %r", editTaskID, self.editTaskID)
-		print(("onDataAvailable: %r, %r", editTaskID, self.editTaskID, wasInitial, data))
 		if editTaskID != self.editTaskID:  # Not our task
 			return
 		self.setDisabled(False)

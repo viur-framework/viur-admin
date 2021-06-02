@@ -5,7 +5,7 @@ from typing import Union, List, Dict, Any, Callable
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.config import conf
 from viur_admin.event import event
@@ -74,7 +74,7 @@ class SpatialEditBone(BoneEditInterface):
 			**kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

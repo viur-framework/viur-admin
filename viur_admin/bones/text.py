@@ -12,7 +12,7 @@ else:
 	from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 	js = None
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.bones.string import chooseLang
 from viur_admin.event import event
@@ -21,7 +21,7 @@ from viur_admin.network import RemoteFile, nam
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
-from viur_admin.utils import wheelEventFilter, ViurTabBar, switchToSummernote
+from viur_admin.utils import wheelEventFilter, ViurTabBar, switchToSummernote, loadIcon
 
 logger = getLogger(__name__)
 
@@ -242,7 +242,7 @@ class TextEdit(QtWidgets.QMainWindow):
 		self.channel.registerObject('handler', self.handler)
 		self.ui.textEdit.page().setWebChannel(self.channel)
 		self.ui.centralWidget.layout().addWidget(self.ui.textEdit)
-		self.ui.btnSave = QtWidgets.QPushButton(QtGui.QIcon.fromTheme("save"),
+		self.ui.btnSave = QtWidgets.QPushButton(loadIcon("save"),
 		                                        QtCore.QCoreApplication.translate("TextEdit", "Apply"),
 		                                        self.ui.centralWidget)
 		self.ui.centralWidget.layout().addWidget(self.ui.btnSave)
@@ -268,7 +268,7 @@ class TextEdit(QtWidgets.QMainWindow):
 	def getBreadCrumb(self) -> Any:
 		return (
 			QtCore.QCoreApplication.translate("TextEditBone", "Text edit"),
-			QtGui.QIcon.fromTheme("press")  # FIXME: QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")
+			loadIcon("press")  # FIXME: QtGui.QIcon(QtGui.QPixmap(":icons/actions/text-edit.png")
 		)
 
 
@@ -311,7 +311,7 @@ class TextEditBone(BoneEditInterface):
 		self.plaintext = plaintext
 		self.validHtml = validHtml
 		btn = QtWidgets.QPushButton(QtCore.QCoreApplication.translate("TextEditBone", "Open editor"), self.editWidget)
-		btn.setIcon(QtGui.QIcon.fromTheme("press"))
+		btn.setIcon(loadIcon("press"))
 		btn.lang = None
 		btn.released.connect(self.openEditor)
 		if not isPyodide:
@@ -358,7 +358,7 @@ class TextEditBone(BoneEditInterface):
 			**kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

@@ -285,8 +285,6 @@ def main() -> None:
 	mainWindowRef = mainWindow
 	return mainWindow, l
 
-# Check the Icon-Theme
-QtGui.QIcon().setThemeName(utils.getIconTheme()[1])
 
 if __name__ == '__main__':
 	main()

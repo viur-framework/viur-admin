@@ -2,14 +2,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.priorityqueue import actionDelegateSelector
-from viur_admin.utils import WidgetHandler
+from viur_admin.utils import WidgetHandler, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
 class HierarchyAddAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(HierarchyAddAction, self).__init__(
-			QtGui.QIcon.fromTheme("add"),
+			loadIcon("add"),
 			QtCore.QCoreApplication.translate("Hierarchy", "Add entry"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -26,7 +26,7 @@ class HierarchyAddAction(QtWidgets.QAction):
 
 		handler = WidgetHandler(
 			widgetFactory, descr=QtCore.QCoreApplication.translate("Hierarchy", "Add entry"),
-			icon=QtGui.QIcon.fromTheme("add"))
+			icon=loadIcon("add"))
 		handler.stackHandler()
 
 	# event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
@@ -42,7 +42,7 @@ actionDelegateSelector.insert(2, HierarchyAddAction.isSuitableFor, HierarchyAddA
 class HierarchyCloneAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(HierarchyCloneAction, self).__init__(
-			QtGui.QIcon.fromTheme("clone"),
+			loadIcon("clone"),
 			QtCore.QCoreApplication.translate("HierarchyHandler", "Clone entry"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -62,7 +62,7 @@ class HierarchyCloneAction(QtWidgets.QAction):
 
 			handler = WidgetHandler(
 				widgetFactory, descr=QtCore.QCoreApplication.translate("Hierarchy", "Clone entry"),
-				icon=QtGui.QIcon.fromTheme("clone"))
+				icon=loadIcon("clone"))
 			handler.stackHandler()
 
 	@staticmethod
@@ -76,7 +76,7 @@ actionDelegateSelector.insert(2, HierarchyCloneAction.isSuitableFor, HierarchyCl
 class HierarchyEditAction(QtWidgets.QAction):
 	def __init__(self, parent: QtCore.QObject = None):
 		super(HierarchyEditAction, self).__init__(
-			QtGui.QIcon.fromTheme("edit"),
+			loadIcon("edit"),
 			QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -91,7 +91,7 @@ class HierarchyEditAction(QtWidgets.QAction):
 			widget = lambda: EditWidget(modul, ApplicationType.HIERARCHY, key)
 			handler = WidgetHandler(
 				widget, descr=QtCore.QCoreApplication.translate("Hierarchy", "Edit entry"),
-				icon=QtGui.QIcon.fromTheme("edit"))
+				icon=loadIcon("edit"))
 			handler.stackHandler()
 
 	# event.emit( QtCore.SIGNAL('stackHandler(PyQt_PyObject)'), handler )
@@ -107,7 +107,7 @@ actionDelegateSelector.insert(2, HierarchyEditAction.isSuitableFor, HierarchyEdi
 class HierarchyDeleteAction(QtWidgets.QAction):
 	def __init__(self, parent: QtCore.QObject = None):
 		super(HierarchyDeleteAction, self).__init__(
-			QtGui.QIcon.fromTheme("delete"),
+			loadIcon("delete"),
 			QtCore.QCoreApplication.translate("Hierarchy", "Delete entry"),
 			parent)
 		self.triggered.connect(self.onTriggered)

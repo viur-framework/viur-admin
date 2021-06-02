@@ -1,0 +1,3 @@
+[submodule "viur_admin/icons"]
+	path = viur_admin/icons
+	url = https://github.com/viur-framework/viur-icons.git

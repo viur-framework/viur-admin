@@ -7,14 +7,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from viur_admin.event import event
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
-from viur_admin.utils import WidgetHandler
+from viur_admin.utils import WidgetHandler, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 
 class TreeAddAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeAddAction, self).__init__(
-			QtGui.QIcon.fromTheme("add-folder"),
+			loadIcon("add-folder"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), parent)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.New)
@@ -25,7 +25,7 @@ class TreeAddAction(QtWidgets.QAction):
 		modul = self.parent().tree.module
 		node = self.parent().getNode()
 		widget = lambda: EditWidget(modul, ApplicationType.TREE, node=node, skelType="node")
-		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("add-folder"))
+		handler = WidgetHandler(widget, descr=name, icon=loadIcon("add-folder"))
 		#event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
 		handler.stackHandler()
 
@@ -40,7 +40,7 @@ actionDelegateSelector.insert(1, TreeAddAction.isSuitableFor, TreeAddAction)
 class TreeAddLeafAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeAddLeafAction, self).__init__(
-			QtGui.QIcon.fromTheme("add"),
+			loadIcon("add"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Add leaf entry"), parent)
 		self.triggered.connect(self.onTriggered)
 		self.setShortcut(QtGui.QKeySequence.New)
@@ -51,7 +51,7 @@ class TreeAddLeafAction(QtWidgets.QAction):
 		modul = self.parent().tree.module
 		node = self.parent().getNode()
 		widget = lambda: EditWidget(modul, ApplicationType.TREE, node=node, skelType="leaf")
-		handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("add"))
+		handler = WidgetHandler(widget, descr=name, icon=loadIcon("add"))
 		#event.emit(QtCore.pyqtSignal('stackHandler(PyQt_PyObject)'), handler)
 		handler.stackHandler()
 
@@ -65,7 +65,7 @@ actionDelegateSelector.insert(1, TreeAddLeafAction.isSuitableFor, TreeAddLeafAct
 class TreeEditAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeEditAction, self).__init__(
-			QtGui.QIcon.fromTheme("edit"),
+			loadIcon("edit"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"), parent)
 		self.setShortcut(QtGui.QKeySequence.Open)
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -85,14 +85,14 @@ class TreeEditAction(QtWidgets.QAction):
 			modul = self.parent().module
 			key = entry["key"]
 			widget = lambda: EditWidget(modul, ApplicationType.TREE, key, skelType=skelType)
-			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("edit"))
+			handler = WidgetHandler(widget, descr=name, icon=loadIcon("edit"))
 			handler.stackHandler()
 		for entry in nodes:
 			skelType = "node"
 			modul = self.parent().module
 			key = entry["key"]
 			widget = lambda: EditWidget(modul, ApplicationType.TREE, key, skelType=skelType)
-			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("edit"))
+			handler = WidgetHandler(widget, descr=name, icon=loadIcon("edit"))
 			handler.stackHandler()
 
 
@@ -107,7 +107,7 @@ actionDelegateSelector.insert(1, TreeEditAction.isSuitableFor, TreeEditAction)
 class TreeDirUpAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeDirUpAction, self).__init__(
-			QtGui.QIcon.fromTheme("folder-back"),
+			loadIcon("folder-back"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Directory up"),
 			parent)
 		self.parent().nodeChanged.connect(self.onNodeChanged)
@@ -154,7 +154,7 @@ actionDelegateSelector.insert(1, TreeDirUpAction.isSuitableFor, TreeDirUpAction)
 class TreeDeleteAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeDeleteAction, self).__init__(
-			QtGui.QIcon.fromTheme("delete"),
+			loadIcon("delete"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Delete"),
 			parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
@@ -193,7 +193,7 @@ actionDelegateSelector.insert(1, TreeDeleteAction.isSuitableFor, TreeDeleteActio
 class TreeSwitchViewAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSwitchViewAction, self).__init__(
-			QtGui.QIcon.fromTheme("list-items"),  ## FIXME: QtGui.QIcon(":icons/actions/switch_list.png"),
+			loadIcon("list-items"),  ## FIXME: QtGui.QIcon(":icons/actions/switch_list.png"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Switch View"),
 			parent)
 		self.triggered.connect(self.onTriggered)

@@ -19,7 +19,7 @@ from viur_admin.accountmanager import AccountManager
 from viur_admin.network import NetworkService, securityTokenProvider, nam, MyCookieJar, RequestWrapper
 from viur_admin.event import event
 from viur_admin import config
-from viur_admin.utils import Overlay, showAbout
+from viur_admin.utils import Overlay, showAbout, loadIcon
 from viur_admin.locales import ISO639CODES
 from datetime import datetime
 import random
@@ -432,6 +432,9 @@ class Login(QtWidgets.QMainWindow):
 		QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
 		self.ui = Ui_LoginWindow()
 		self.ui.setupUi(self)
+		# Fix icons
+		self.ui.startAccManagerBTN.setIcon(loadIcon("personae"))
+		self.ui.btnLogin.setIcon(loadIcon("login"))
 		self.accman = None  # Reference to our Account-MGR
 		self.helpBrowser = None
 		self.activeAccount = None

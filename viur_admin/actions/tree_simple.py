@@ -6,6 +6,7 @@ from viur_admin.log import getLogger
 from viur_admin.mainwindow import WidgetHandler
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.widgets.edit import EditWidget, ApplicationType
+from viur_admin.utils import loadIcon
 
 logger = getLogger(__name__)
 
@@ -17,7 +18,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSimpleEditAction, self).__init__(
-			QtGui.QIcon.fromTheme("edit"),
+			loadIcon("edit"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Edit entry"),
 			parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)
@@ -50,7 +51,7 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 			module = self.parent().module
 			key = entry["key"]
 			widget = lambda: EditWidget(module, ApplicationType.TREE, key, skelType=skelType)
-			handler = WidgetHandler(widget, descr=name, icon=QtGui.QIcon.fromTheme("edit"))
+			handler = WidgetHandler(widget, descr=name, icon=loadIcon("edit"))
 			handler.stackHandler()
 
 	@staticmethod
@@ -64,7 +65,7 @@ actionDelegateSelector.insert(3, TreeSimpleEditAction.isSuitableFor, TreeSimpleE
 class TreeMkDirAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeMkDirAction, self).__init__(
-			QtGui.QIcon.fromTheme("folder-add"),
+			loadIcon("folder-add"),
 			QtCore.QCoreApplication.translate("TreeHandler", "New directory"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -104,7 +105,7 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
 
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSimpleRenameAction, self).__init__(
-			QtGui.QIcon.fromTheme("rename"),
+			loadIcon("rename"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Rename entry"),
 			parent)
 		self.parent().itemSelectionChanged.connect(self.onItemSelectionChanged)

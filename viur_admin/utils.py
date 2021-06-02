@@ -609,8 +609,7 @@ def colorizeIcon(inData: bytes) -> QtGui.QIcon:
 		it as an QIcon
 	"""
 	palette = QtWidgets.QApplication.instance().palette()
-	print(palette.text().color().name())
-	targetColor = b"#FF0000"
+	targetColor = palette.text().color().name().encode("ASCII")
 	inData = inData.replace(b"#FFFFFF", targetColor) \
 		.replace(b"#fff", targetColor) \
 		.replace(b"\"#FFFFFF\"", b"\"%s\"" % targetColor)
@@ -674,9 +673,16 @@ def showAbout(parent: QtWidgets.QWidget = None) -> None:
 	appDescr += "Revision: %s" % version
 	QtWidgets.QMessageBox.about(parent, appName, appDescr)
 
-def getIconTheme() -> Tuple[bool, str]:
-	"""
-		Tries to guess if the user uses a dark theme and switch to the white icons if needed.
-		:return: (True, "viur-dark") if the user uses a dark theme else (False, "viur-light")
-	"""
-	return False, "viur-light"
+def boneErrorCodeToIcon(errorCode: int) -> Union[QtGui.QIcon, None]:
+	if errorCode == -1:
+		return loadIcon("bone-valid")
+	elif errorCode == 0:
+		return loadIcon("bookmark-add")
+	elif errorCode == 1:
+		return loadIcon("bone-invalidates-other")
+	elif errorCode == 2:
+		return loadIcon("bone-empty")
+	elif errorCode == 3:
+		return loadIcon("bone-error")
+	else:
+		return loadIcon("question")

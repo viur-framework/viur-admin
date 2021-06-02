@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
-from viur_admin.utils import formatString, Overlay, WidgetHandler
+from viur_admin.utils import formatString, Overlay, WidgetHandler, loadIcon
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
 from viur_admin.widgets.edit import EditWidget, collectBoneErrors
@@ -19,7 +19,7 @@ from viur_admin.widgets.selectedEntities import SelectedEntitiesWidget
 from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin import config
 from viur_admin.pyodidehelper import isPyodide
 
@@ -193,12 +193,11 @@ class InternalEdit(QtWidgets.QWidget):
 			errors: List[Dict]):
 		super(InternalEdit, self).__init__(parent)
 		self.layout = QtWidgets.QVBoxLayout(self)
-		self.dest = QtWidgets.QLabel(text)
-		self.layout.addWidget(self.dest)
+		#self.dest = QtWidgets.QLabel(text)
+		#self.layout.addWidget(self.dest)
 		self.bones: Dict[str, Any] = OrderedDict()
 		self.module = ""
 		self.values = values
-		ignoreMissing = True
 		tmpDict = dict()
 		for key, bone in using:
 			tmpDict[key] = bone
@@ -207,20 +206,7 @@ class InternalEdit(QtWidgets.QWidget):
 				continue
 			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
 			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
-			if 0 and bone["error"] and not ignoreMissing:
-				dataWidget = QtWidgets.QWidget()
-				layout = QtWidgets.QHBoxLayout(dataWidget)
-				dataWidget.setLayout(layout)
-				layout.addWidget(widget, stretch=1)
-				iconLbl = QtWidgets.QLabel(dataWidget)
-				if bone["required"]:
-					iconLbl.setPixmap(QtGui.QPixmap(":icons/status/error.png"))
-				else:
-					iconLbl.setPixmap(QtGui.QPixmap(":icons/status/incomplete.png"))
-				layout.addWidget(iconLbl, stretch=0)
-				iconLbl.setToolTip(str(bone["error"]))
-			else:
-				dataWidget = widget
+			dataWidget = widget
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
 			if "params" in bone and isinstance(bone["params"], dict) and "tooltip" in bone["params"]:
@@ -254,6 +240,12 @@ class InternalEdit(QtWidgets.QWidget):
 			res[key] = data
 		return res
 
+	def setErrors(self, errorList):
+		for key, bone in self.bones.items():
+			bone.setErrors(collectBoneErrors(errorList, key))
+
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
+		return max([x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.bones.values()])
 
 class RelationalEditBone(BoneEditInterface):
 	GarbageTypeName = "ExtendedRelationalEditBone"
@@ -294,7 +286,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.addBtn = QtWidgets.QPushButton(
 			QtCore.QCoreApplication.translate("RelationalEditBone", "Change selection"),
 			parent=hboxWidget)
-		self.addBtn.setIcon(QtGui.QIcon.fromTheme("select"))
+		self.addBtn.setIcon(loadIcon("select"))
 		self.addBtn.released.connect(self.onAddBtnReleased)
 		self.entry = QtWidgets.QLineEdit(hboxWidget)
 		self.installAutoCompletion()
@@ -302,7 +294,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.hboxLayout.addWidget(self.addBtn)
 		if not self.multiple:  ## FIXME: AND SELF REQUIRED
 			self.delBtn = QtWidgets.QPushButton("", parent=self.editWidget)
-			self.delBtn.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
+			self.delBtn.setIcon(loadIcon("cancel"))
 			self.delBtn.released.connect(self.onDelBtnReleased)
 			self.hboxLayout.addWidget(self.delBtn)
 		self.selection: Dict[str, Any] = None
@@ -340,7 +332,7 @@ class RelationalEditBone(BoneEditInterface):
 			format=fmt)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
@@ -510,7 +502,7 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		assert skel is not None
 		assert self.boneName in skel
 		return QtCore.QCoreApplication.translate("ExtendedRelationalBoneSelector", "Select %s") % skel[self.boneName][
-			"descr"], QtGui.QIcon.fromTheme("select")
+			"descr"], loadIcon("select")
 
 	def onSourceItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
 		pass

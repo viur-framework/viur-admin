@@ -5,14 +5,14 @@ from typing import Union, List, Dict, Any, Callable
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer, chooseLang
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer, chooseLang
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
 from viur_admin.log import getLogger
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector, protocolWrapperInstanceSelector
 from viur_admin.ui.extendedStringSearchPluginUI import Ui_Form
-from viur_admin.utils import wheelEventFilter, ViurTabBar
+from viur_admin.utils import wheelEventFilter, ViurTabBar, loadIcon
 
 logger = getLogger(__name__)
 
@@ -85,7 +85,7 @@ class Tag(QtWidgets.QWidget):
 		self.lblDisplay = QtWidgets.QLabel(tag, self)
 		self.editField = QtWidgets.QLineEdit(tag, self)
 		self.btnDelete = QtWidgets.QPushButton("Löschen", self)
-		self.btnDelete.setIcon(QtGui.QIcon.fromTheme("cancel-cross"))
+		self.btnDelete.setIcon(loadIcon("cancel-cross"))
 		self.layout().addWidget(self.lblDisplay)
 		self.layout().addWidget(self.editField)
 		self.layout().addWidget(self.btnDelete)
@@ -163,7 +163,7 @@ class StringEditBone(BoneEditInterface):
 			**kwargs: Any) -> Any:
 		myStruct = skelStructure[boneName]
 		readOnly = bool(myStruct.get("readonly"))
-		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		required = bool(myStruct.get("required"))
 		widgetGen = lambda: StringEditBone(
 			moduleName,
 			boneName,
@@ -174,7 +174,7 @@ class StringEditBone(BoneEditInterface):
 			**kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

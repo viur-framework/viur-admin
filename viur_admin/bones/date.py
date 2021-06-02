@@ -7,7 +7,7 @@ from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedDateRangeFilterPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter
-from viur_admin.bones.base import MultiContainer, LanguageContainer
+from viur_admin.bones.base import ListMultiContainer, LanguageContainer
 
 try:
 	_fromUtf8 = QtCore.QString.fromUtf8
@@ -142,7 +142,7 @@ class DateEditBone(BoneEditInterface):
 		widgetGen = lambda: DateEditBone(moduleName, boneName, readOnly, required, hasDate, hasTime, **kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)

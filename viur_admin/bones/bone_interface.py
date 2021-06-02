@@ -2,6 +2,7 @@
 from typing import Union, Any, Dict, List
 from PyQt5 import QtWidgets, QtGui, QtCore
 from viur_admin.pyodidehelper import isPyodide
+from viur_admin.utils import boneErrorCodeToIcon
 
 
 class ToolTipLabel(QtWidgets.QLabel):
@@ -58,46 +59,32 @@ class BoneEditInterface(QtWidgets.QWidget):
 		sp = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
 		self.errorLabel.setSizePolicy(sp)
 		self.layout().addWidget(self.errorLabel)
+		self.errorSeverityList = [-1]
 		#self.errorLabels.setLayout(QtWidgets.QVBoxLayout(self.errorLabels))
 
-
-
-	# lbl = QtWidgets.QLabel("Test Error")
-	# self.errorLabels.layout().addWidget(lbl)
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False):
+		maxErr = max(self.errorSeverityList)
+		if maxErr == 2 or maxErr==0:
+			if self.required and not inOptionalContainer:
+				return 3
+			elif 1 in self.errorSeverityList:
+				return 1
+			else:
+				return -1
+		else:
+			return maxErr
 
 	def setErrors(self, errorList):
-		maxError = 0
+		self.errorSeverityList = [-1]
 		errorTxt = []
 		for error in errorList:
-			if error["severity"] > maxError:
-				maxError = error["severity"]
+			self.errorSeverityList.append(error["severity"])
 			errorTxt.append(error["errorMessage"])
 		self.errorLabel.setToolTip("\n".join(errorTxt))
-		if maxError == 1:
-			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("1").pixmap(QtCore.QSize(32, 32)))
-		elif maxError == 3 or (maxError == 2 and self.required):
-			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("3").pixmap(QtCore.QSize(32, 32)))
-		elif maxError == 2:
-			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("2").pixmap(QtCore.QSize(32, 32)))
-		else:
+		maxError = self.getEffectiveMaximumBoneError(False)
+		if maxError == -1:
 			self.errorLabel.clear()
-			self.errorLabel.setPixmap(QtGui.QIcon.fromTheme("4").pixmap(QtCore.QSize(32, 32)))
-
-		#for i in reversed(range(self.errorLabels.layout().count())):
-		#	self.errorLabels.layout().itemAt(i).widget().setParent(None)
-		#for error in errorList:
-		#	dataWidget = QtWidgets.QWidget()
-		#	layout = QtWidgets.QHBoxLayout(dataWidget)
-		#	dataWidget.setLayout(layout)
-		#	iconLbl = QtWidgets.QLabel(dataWidget)
-		##	if 1 or error["severity"] >= 2:
-		#		iconLbl.setPixmap(QtGui.QIcon(":icons/status/error.svg").pixmap(QtCore.QSize(32, 32)))
-		#	else:
-		#		iconLbl.setPixmap(QtGui.QPixmap(":icons/status/incomplete.svg"))
-		#	layout.addWidget(iconLbl, stretch=0)
-		#	lbl = QtWidgets.QLabel(error["errorMessage"])
-		#	layout.addWidget(lbl, stretch=1)
-		#	self.errorLabels.layout().addWidget(dataWidget)
+		self.errorLabel.setPixmap(boneErrorCodeToIcon(maxError).pixmap(QtCore.QSize(32, 32)))
 
 	@classmethod
 	def fromSkelStructure(

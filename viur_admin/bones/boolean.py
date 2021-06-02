@@ -3,7 +3,7 @@ from typing import Union, Any, Dict, List
 
 from PyQt5 import QtCore, QtWidgets
 
-from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, MultiContainer
+from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedBooleanFilterPluginUI import Ui_Form
@@ -66,7 +66,7 @@ class BooleanEditBone(BoneEditInterface):
 		widgetGen = lambda: cls(moduleName, boneName, readOnly, required, **kwargs)
 		if myStruct.get("multiple"):
 			preMultiWidgetGen = widgetGen
-			widgetGen = lambda: MultiContainer(preMultiWidgetGen)
+			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
 		if myStruct.get("languages"):
 			preLangWidgetGen = widgetGen
 			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
