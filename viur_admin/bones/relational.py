@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
-from viur_admin.utils import formatString, Overlay, WidgetHandler, loadIcon
+from viur_admin.utils import Overlay, WidgetHandler, loadIcon
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
 from viur_admin.widgets.edit import EditWidget, collectBoneErrors
@@ -22,6 +22,7 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListMultiContainer
 from viur_admin import config
 from viur_admin.pyodidehelper import isPyodide
+import safeeval
 
 
 class BaseBone:
@@ -34,12 +35,17 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	def __init__(self, module: str, boneName: str, structure: Dict[str, Any]):
 		super(RelationalViewBoneDelegate, self).__init__(module, boneName, structure)
 		# logger.debug("RelationalViewBoneDelegate.init: %r", boneName)
-		self.format = "$(name)"
+		self.format = "value['name']"
 		if "format" in structure[boneName]:
 			self.format = structure[boneName]["format"]
 		self.module = module
 		self.structure = structure
 		self.boneName = boneName
+		self.safeEval = safeeval.SafeEval()
+		try:
+			self.ast = self.safeEval.compile(self.format)
+		except:
+			self.ast = self.safeEval.compile("value['name']")
 
 	def isEditable(self):
 		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages") \
@@ -55,22 +61,28 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
-				if relStructList:
-					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
-					value = ", ".join([(formatString(
-						formatString(self.format, x["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
-						             language=config.conf.adminConfig["language"]),
-						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x[
-						                    "key"]) for x in value])
-				else:
-					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],
-					                                language=config.conf.adminConfig["language"]) for x in value])
+				tmpList = []
+				for v in value:
+					try:
+						tmpList.append(self.safeEval.execute(self.ast, {
+							"value": v,
+							"structure": self.structure,
+							"language": config.conf.adminConfig["language"]
+						}))
+					except Exception as e:
+						logger.exception(e)
+						tmpList.append("(invalid format string)")
+				value = ", ".join(tmpList)
 			elif isinstance(value, dict):
-				value = formatString(
-					formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
-					             language=config.conf.adminConfig["language"]),
-					relStructDict, value["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or value[
-					        "key"]
+				try:
+					value = self.safeEval.execute(self.ast, {
+						"value": value,
+						"structure": self.structure,
+						"language": config.conf.adminConfig["language"]
+					})
+				except Exception as e:
+					logger.exception(e)
+					value = "(invalid format string)"
 		except Exception as err:
 			#logger.exception(err)
 			# We probably received some garbage
@@ -302,6 +314,11 @@ class RelationalEditBone(BoneEditInterface):
 		self.previewLayout = QtWidgets.QVBoxLayout(self.usingEdit)
 		self.outerLayout.addWidget(self.usingEdit)
 		self.lastErrors = []  # List of errors we receveid in last unserialize call
+		self.safeEval = safeeval.SafeEval()
+		try:
+			self.ast = self.safeEval.compile(self.format)
+		except:
+			self.ast = self.safeEval.compile("value['name']")
 
 
 	@classmethod
@@ -374,7 +391,16 @@ class RelationalEditBone(BoneEditInterface):
 			self.internalEdits = item
 			self.addBtn.setText("Auswahl ändern")
 		if self.selection:
-			self.entry.setText(formatString(self.format, self.selection, structure))
+			try:
+				text = self.safeEval.execute(self.ast, {
+					"value": self.selection,
+					"structure": structure,
+					"language": config.conf.adminConfig["language"]
+				})
+			except Exception as e:
+				logger.exception(e)
+				text = "(invalid format string)"
+			self.entry.setText(text)
 		else:
 			self.entry.setText("")
 		self.blockAutoCompletion = False

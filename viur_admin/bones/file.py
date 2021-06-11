@@ -10,9 +10,10 @@ from viur_admin.log import getLogger
 from viur_admin.network import RemoteFile, RequestWrapper
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector
-from viur_admin.utils import formatString
 from viur_admin.widgets.file import FileWidget
 from viur_admin.widgets.selectedFiles import SelectedFilesWidget
+from viur_admin import config
+import safeeval
 
 logger = getLogger(__name__)
 
@@ -24,10 +25,15 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		super(FileViewBoneDelegate, self).__init__(module, boneName, structure)
 		if not hasattr(self, "cache"):
 			self.cache: Dict[str, str] = dict()
-		self.format = "$(name)"
+		self.format = "value['name']"
 		self.structure = structure
 		if "format" in structure[boneName]:
 			self.format = structure[boneName]["format"]
+		self.safeEval = safeeval.SafeEval()
+		try:
+			self.ast = self.safeEval.compile(self.format)
+		except:
+			self.ast = self.safeEval.compile("value['name']")
 
 	def setImage(self, remoteFile: RequestWrapper) -> None:
 		fn = remoteFile.getFileName()
@@ -69,8 +75,16 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		return super(FileViewBoneDelegate, self).paint(painter, option, index)
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
-		result = formatString(self.format, value, self.structure)
-		return super(FileViewBoneDelegate, self).displayText(result, locale)
+		try:
+			value = self.safeEval.execute(self.ast, {
+				"value": value,
+				"structure": self.structure,
+				"language": config.conf.adminConfig["language"]
+			})
+		except Exception as e:
+			logger.exception(e)
+			value = "(invalid format string)"
+		return super(FileViewBoneDelegate, self).displayText(value, locale)
 
 
 class MultiItemWidget(QtWidgets.QWidget):
@@ -151,7 +165,16 @@ class FileItemBone(TreeItemBone):
 			logger.debug("selection: %r", self.selection)
 			if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
 				RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-			self.entry.setText(formatString(self.format, self.selection, structure))
+				try:
+					value = self.safeEval.execute(self.ast, {
+						"value": self.selection,
+						"structure": structure,
+						"language": config.conf.adminConfig["language"]
+					})
+				except Exception as e:
+					logger.exception(e)
+					value = "(invalid format string)"
+			self.entry.setText(value)
 		else:
 			self.entry.setText("")
 

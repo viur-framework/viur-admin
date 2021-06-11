@@ -12,12 +12,13 @@ from collections import OrderedDict
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
-from viur_admin.utils import formatString, Overlay
+from viur_admin.utils import Overlay
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, TabMultiContainer
 from viur_admin import config
 from viur_admin.widgets.edit import collectBoneErrors
 from viur_admin.bones.relational import InternalEdit
+import safeeval
 
 
 class BaseBone:
@@ -34,36 +35,45 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			structure: Dict[str, Any]):
 		super(RecordViewBoneDelegate, self).__init__(module, boneName, structure)
 		logger.debug("RecordViewBoneDelegate.init: %r, %r, %r", module, boneName, structure[self.boneName])
-		self.format = "$(name)"
+		self.format = "value['name']"
 		if "format" in structure[boneName]:
 			self.format = structure[boneName]["format"]
 		self.module = module
 		self.structure = structure
 		self.boneName = boneName
+		self.safeEval = safeeval.SafeEval()
+		try:
+			self.ast = self.safeEval.compile(self.format)
+		except:
+			self.ast = self.safeEval.compile("value['name']")
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.structure[self.boneName])
 		relStructList = self.structure[self.boneName]["using"]
 		try:
 			if isinstance(value, list):
-				if relStructList:
-					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
-					value = "\n".join([(formatString(
-						formatString(
-							self.format,
-							x, self.structure[self.boneName],
-							language=config.conf.adminConfig["language"]),
-						x, x, language=config.conf.adminConfig["language"]) or x[
-						                    "key"]) for x in value])
-				else:
-					value = ", ".join([formatString(self.format, x, self.structure,
-					                                language=config.conf.adminConfig["language"]) for x in value])
+				tmpList = []
+				for v in value:
+					try:
+						tmpList.append(self.safeEval.execute(self.ast, {
+							"value": v,
+							"structure": self.structure,
+							"language": config.conf.adminConfig["language"]
+						}))
+					except Exception as e:
+						logger.exception(e)
+						tmpList.append("(invalid format string)")
+				value = ", ".join(tmpList)
 			elif isinstance(value, dict):
-				value = formatString(
-					formatString(self.format, value, self.structure[self.boneName], prefix=[],
-					             language=config.conf.adminConfig["language"]),
-					value, value, language=config.conf.adminConfig["language"]) or value[
-					        "key"]
+				try:
+					value = self.safeEval.execute(self.ast, {
+						"value": value,
+						"structure": self.structure,
+						"language": config.conf.adminConfig["language"]
+					})
+				except Exception as e:
+					logger.exception(e)
+					value = "(invalid format string)"
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage

@@ -2,8 +2,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.config import conf
-from viur_admin.network import NetworkService, RequestGroup
-from viur_admin.utils import WidgetHandler, loadIcon
+from viur_admin.network import NetworkService, RequestGroup, RemoteFile, RequestWrapper
+from viur_admin.utils import WidgetHandler, loadIcon, colorizeIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
 from viur_admin.log import getLogger
 from viur_admin.pyodidehelper import isPyodide
@@ -18,7 +18,6 @@ class CustomAction(QtWidgets.QAction):
 	"""
 	def __init__(self, config: dict, appType:ApplicationType, parent: QtWidgets.QWidget = None):
 		super(CustomAction, self).__init__(
-			loadIcon(config.get("icon")),
 			config.get("name") or "Custom Action",
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -29,6 +28,15 @@ class CustomAction(QtWidgets.QAction):
 			self.parent().list.selectionModel().selectionChanged.connect(self.onItemSelectionChanged)
 		self.setEnabled(False)
 		self.checkEnabledAst = self.saveEval.compile(self.config["enabled"]) if self.config.get("enabled") else None
+		icon = loadIcon(config.get("icon"))
+		if isinstance(icon, QtGui.QIcon):
+			self.setIcon(icon)
+		elif isinstance(icon, str):
+			RemoteFile(icon, successHandler=self.loadIconFromRequest)
+
+	def loadIconFromRequest(self, request: RequestWrapper) -> None:
+		icon = colorizeIcon(request.getFileContents())
+		self.setIcon(icon)
 
 	def onItemSelectionChanged(self, selected, deselected) -> None:
 		if self.appType == ApplicationType.LIST:

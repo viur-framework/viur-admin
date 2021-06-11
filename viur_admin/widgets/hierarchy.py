@@ -12,6 +12,8 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDele
 from viur_admin.ui.hierarchyUI import Ui_Hierarchy
 from viur_admin.utils import Overlay, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
+from viur_admin import config
+import safeeval
 
 
 class HierarchyItem(QtWidgets.QTreeWidgetItem):
@@ -21,15 +23,21 @@ class HierarchyItem(QtWidgets.QTreeWidgetItem):
 	"""
 
 	def __init__(self, module: str, data: Dict[str, Any]):
-		config = conf.serverConfig["modules"][module]
-		if "format" in config:
-			fmt = config["format"]
+		moduleCfg = conf.serverConfig["modules"][module]
+		if "format" in moduleCfg:
+			fmt = moduleCfg["format"]
 		else:
-			fmt = "$(name)"
+			fmt = "value['name']"
 		protoWrap = protocolWrapperInstanceSelector.select(module)
 		assert protoWrap is not None
-		itemName = utils.formatString(fmt, data, protoWrap.viewStructure)
-		# print("HierarchyItem format", format, protoWrap.viewStructure, data, repr(itemName))
+		try:
+			itemName = safeeval.SafeEval().safeEval(fmt, {
+				"value": data,
+				"structure": moduleCfg,
+				"language": config.conf.adminConfig["language"]
+			})
+		except:
+			itemName = "(invalid format string)"
 		super(HierarchyItem, self).__init__([str(itemName)])
 		self.loaded = False
 		self.entryData = data
