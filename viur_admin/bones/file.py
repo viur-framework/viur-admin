@@ -18,6 +18,7 @@ import safeeval
 logger = getLogger(__name__)
 
 
+# This class has been disabled (it's currently rendered by the normal relational view delegate)
 class FileViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
@@ -205,4 +206,4 @@ def CheckForFileBone(
 
 # Register this Bone in the global queue
 editBoneSelector.insert(4, CheckForFileBone, FileItemBone)
-viewDelegateSelector.insert(4, CheckForFileBone, FileViewBoneDelegate)
+# viewDelegateSelector.insert(4, CheckForFileBone, FileViewBoneDelegate)  # Disable the fileViewDelegate

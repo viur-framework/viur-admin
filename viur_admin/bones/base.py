@@ -43,6 +43,19 @@ class LanguageContainer(QtWidgets.QTabWidget):
 		r = {lng: self.widget(idx).serializeForPost() for idx, lng in enumerate(self.languages)}
 		return r
 
+	def setErrors(self, boneErrors):
+		# FIXME: We should handle errors directly assigned to this bone
+		for idx, lng in enumerate(self.languages):
+			widget = self.widget(idx)
+			tmpErrs = []
+			for error in boneErrors:
+				if error["fieldPath"] and error["fieldPath"][0] == lng:
+					error["fieldPath"] = error["fieldPath"][1:]
+					tmpErrs.append(error)
+			widget.setErrors(tmpErrs)
+
+	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
+			return max([self.widget(idx) for idx, lng in enumerate(self.languages)])
 
 class TabMultiContainer(QtWidgets.QTabWidget):
 	# For extended relations / recordBones. They will be rendered as a tabbar

@@ -144,7 +144,7 @@ class RecordEditBone(BoneEditInterface):
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
 		self.setErrors(errors)
-		return self.internalEdit.unserialize(data, errors)
+		return self.internalEdit.unserialize(data or {}, errors)  # New, non-multipe record-bones may be none
 
 	def serializeForPost(self) -> dict:
 		return self.internalEdit.serializeForPost()
