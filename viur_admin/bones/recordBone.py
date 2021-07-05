@@ -46,10 +46,14 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			self.ast = self.safeEval.compile(self.format)
 		except:
 			self.ast = self.safeEval.compile("value['name']")
+		self._cache = {}
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.structure[self.boneName])
 		relStructList = self.structure[self.boneName]["using"]
+		inValue = str(value)
+		if inValue in self._cache:
+			return self._cache[inValue]
 		try:
 			if isinstance(value, list):
 				tmpList = []
@@ -78,8 +82,8 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			logger.exception(err)
 			# We probably received some garbage
 			value = ""
+		self._cache[inValue] = value
 		return value
-
 
 
 class RecordEditBone(BoneEditInterface):

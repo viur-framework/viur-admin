@@ -53,7 +53,7 @@ bdist_msi_options = {
 executables = [
 	Executable(
 			os.path.join("viur_admin", "admin.py"),
-			icon=os.path.join("viur_admin", "icons", "viur_win.ico"),
+			icon=os.path.join("viur_admin", "resources", "viur.ico"),
 			base=base,
 			shortcutName="ViurAdmin",
 			shortcutDir="ProgramMenuFolder"

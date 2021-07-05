@@ -46,6 +46,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 			self.ast = self.safeEval.compile(self.format)
 		except:
 			self.ast = self.safeEval.compile("value['name']")
+		self._cache = {}
 
 	def isEditable(self):
 		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages") \
@@ -58,6 +59,9 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		if value == "-Lade-":
 			return value
+		inValue = str(value)
+		if inValue in self._cache:
+			return self._cache[inValue]
 		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
@@ -87,6 +91,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 			#logger.exception(err)
 			# We probably received some garbage
 			value = ""
+		self._cache[inValue] = value
 		return value
 
 	def createEditor(self, parent, option, index):

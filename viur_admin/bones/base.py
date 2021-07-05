@@ -55,7 +55,7 @@ class LanguageContainer(QtWidgets.QTabWidget):
 			widget.setErrors(tmpErrs)
 
 	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
-			return max([self.widget(idx) for idx, lng in enumerate(self.languages)])
+		return max([self.widget(idx).getEffectiveMaximumBoneError() for idx, lng in enumerate(self.languages)])
 
 class TabMultiContainer(QtWidgets.QTabWidget):
 	# For extended relations / recordBones. They will be rendered as a tabbar

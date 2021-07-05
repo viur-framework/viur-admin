@@ -37,7 +37,7 @@ shortcut_table = [
 msi_data = {"Shortcut": shortcut_table}  # This will be part of the 'data' option of bdist_msi
 
 includes = ["atexit", "PyQt5.QtPrintSupport"]
-includefiles = [r"viur_admin/icons/viur_win.ico", r"viur_admin/cacert.pem"]
+includefiles = [r"viur_admin/resources/viur.ico", r"viur_admin/resources/cacert.pem"]
 
 buildOptions = dict(packages=[], excludes=[], includes=includes, include_files=includefiles, include_msvcr=True)
 
