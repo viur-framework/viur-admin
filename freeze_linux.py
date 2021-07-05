@@ -60,7 +60,7 @@ executables = [
 		'viur_admin/admin.py',
 		base=base,
 		targetName='viurAdmin.exe',
-		icon=r"viur_admin/icons/viur_win.ico",
+		icon=r"viur_admin/resources/viur.ico",
 		shortcutName="ViurAdmin",
 		shortcutDir="ProgramMenuFolder")
 ]
@@ -69,7 +69,7 @@ setup(
 	name='ViurAdmin',
 	author="Mausbrand Informationssysteme GmbH",
 	author_email="info@mausbrand.de",
-	version='1.0',
+	version='3.0.0',
 	description='Content Management application for written in Qt5',
 	options=dict(build_exe=buildOptions, bdist_msi=bdist_msi_options),
 	executables=executables)

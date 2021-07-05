@@ -65,7 +65,7 @@ options = {
 		"includes": ["atexit", "re", "PyQt5.QtPrintSupport", "html2text", "markdown2"],
 		"include_files": [
 			"viur_admin/icons",
-			"viur_admin/cacert.pem",
+			"viur_admin/resources/cacert.pem",
 			"viur_admin/license.txt",
 			"viur_admin/mime.types",
 			"viur_admin/plugins",
@@ -76,7 +76,7 @@ options = {
 
 setup(
 		name='Viur Admin',
-		version='1.0.1',
+		version='3.0.0',
 		description=viur_admin_descr,
 		author=company_name,
 		author_email='info@mausbrand.de',
