@@ -65,7 +65,7 @@ actionDelegateSelector.insert(3, TreeSimpleEditAction.isSuitableFor, TreeSimpleE
 class TreeMkDirAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeMkDirAction, self).__init__(
-			loadIcon("folder-add"),
+			loadIcon("folder"),
 			QtCore.QCoreApplication.translate("TreeHandler", "New directory"),
 			parent)
 		self.triggered.connect(self.onTriggered)

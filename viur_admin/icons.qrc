@@ -76,6 +76,7 @@
         <file>icons/pdf-file.svg</file>
         <file>icons/redo.svg</file>
         <file>icons/select-invert.svg</file>
+        <file>icons/transfer.svg</file>
         <file alias="icons/bone-invalidates-other.svg">icons/transfer.svg</file>
         <file>icons/zoom-in.svg</file>
         <file>icons/arrow-left.svg</file>
@@ -116,6 +117,7 @@
         <file>icons/loader.svg</file>
         <file>icons/order-cancelled.svg</file>
         <file>icons/phone.svg</file>
+        <file>icons/rename.svg</file>
         <file alias="icons/bone-empty.svg">icons/rename.svg</file>
         <file>icons/share.svg</file>
         <file>icons/upload-file.svg</file>

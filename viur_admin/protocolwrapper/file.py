@@ -364,6 +364,8 @@ class RecursiveUploader(QtCore.QObject):
 			return
 		data = NetworkService.decode(req)
 		for skel in data["skellist"]:
+			if skel["name"] is None:
+				continue
 			if skel["name"].lower() == self.getDirName(req.uploadDirName).lower():
 				logger.debug("onDirListAvailable: directory %r already exists", skel["name"])
 				self.stats["dirsDone"] += 1
@@ -471,16 +473,16 @@ class RecursiveDownloader(QtCore.QObject):
 		self.remainingRequests = 0
 		for file in files:
 			self.remainingRequests += 1
-			dlkey = "/%s/download/%s/file.dat" % (self.module, file["dlkey"])
+			dlkey = file["downloadUrl"]
 			request = NetworkService.request(
 				dlkey, successHandler=self.saveFile,
 				finishedHandler=self.onRequestFinished)
 			request.fname = file["name"]
-			request.fsize = file["size"]
+			request.fsize = int(file["size"])
 			request.downloadProgress.connect(self.onDownloadProgress)
 			self.canceled.connect(request.abort)
 			self.stats["filesTotal"] += 1
-			self.stats["bytesTotal"] += file["size"]
+			self.stats["bytesTotal"] += int(file["size"])
 		for directory in dirs:
 			assert "~" not in directory["name"] and ".." not in directory["name"]
 			for nodeType in ["node", "leaf"]:
@@ -489,7 +491,7 @@ class RecursiveDownloader(QtCore.QObject):
 					os.mkdir(os.path.join(self.localTargetDir, directory["name"]))
 
 				request = NetworkService.request(
-					"/{0}/list/{1}/{2}".format(self.module, nodeType, directory["key"]),
+					"/{0}/list/{1}?parententry={2}".format(self.module, nodeType, directory["key"]),
 					successHandler=self.onListDir,
 					finishedHandler=self.onRequestFinished)
 
@@ -512,6 +514,7 @@ class RecursiveDownloader(QtCore.QObject):
 	def saveFile(self, req: RequestWrapper) -> None:
 		if self._cancel:
 			return
+		print("xxx", os.path.join(self.localTargetDir, req.fname))
 		fh = open(os.path.join(self.localTargetDir, req.fname), "wb+")
 		fh.write(req.readAll().data())
 		self.stats["filesDone"] += 1

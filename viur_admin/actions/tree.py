@@ -193,7 +193,7 @@ actionDelegateSelector.insert(1, TreeDeleteAction.isSuitableFor, TreeDeleteActio
 class TreeSwitchViewAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeSwitchViewAction, self).__init__(
-			loadIcon("list-items"),  ## FIXME: QtGui.QIcon(":icons/actions/switch_list.png"),
+			loadIcon("transfer"),  ## FIXME: QtGui.QIcon(":icons/actions/switch_list.png"),
 			QtCore.QCoreApplication.translate("TreeHandler", "Switch View"),
 			parent)
 		self.triggered.connect(self.onTriggered)
@@ -204,10 +204,10 @@ class TreeSwitchViewAction(QtWidgets.QAction):
 
 	def onTriggered(self) -> None:
 		self.parent().setIconMode(not self.parent().isIconMode())
-		if not self.parent().isIconMode():
-			self.setIcon(QtGui.QIcon(":icons/actions/switch_icon.png"))
-		else:
-			self.setIcon(QtGui.QIcon(":icons/actions/switch_list.png"))
+		#if not self.parent().isIconMode():
+		#	self.setIcon(QtGui.QIcon(":icons/actions/switch_icon.png"))
+		#else:
+		#	self.setIcon(QtGui.QIcon(":icons/actions/switch_list.png"))
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

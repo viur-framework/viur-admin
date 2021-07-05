@@ -382,6 +382,7 @@ class RequestGroup(QtCore.QObject):
 		self.hadErrors = False
 		self.hasFinished = False
 		self.finishedMessage = None
+		self.runningMessage = None
 		self.progressBar: QtWidgets.QProgressBar = None
 
 	def addQuery(self, query: RequestWrapper) -> None:
