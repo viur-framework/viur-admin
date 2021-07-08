@@ -119,7 +119,9 @@ class EditWidget(QtWidgets.QWidget):
 			self.ui.btnSaveContinue.setIcon(loadIcon("save-all"))
 		else:
 			self.ui.btnSaveClose.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Close"))
+			self.ui.btnSaveClose.setIcon(loadIcon("save"))
 			self.ui.btnSaveContinue.setText(QtCore.QCoreApplication.translate("EditWidget", "Save and Continue"))
+			self.ui.btnSaveContinue.setIcon(loadIcon("save-all"))
 		self.ui.btnClose.setIcon(loadIcon("cancel"))
 		self.ui.btnReset.setIcon(loadIcon("undo"))
 		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
