@@ -38,6 +38,7 @@ class FileUploader(QtCore.QObject):
 			self,
 			fileName: str,
 			node: str = None,
+			module: str = "file",
 			*args: Any,
 			**kwargs: Any):
 		"""
@@ -51,6 +52,7 @@ class FileUploader(QtCore.QObject):
 		super(FileUploader, self).__init__(*args, **kwargs)
 		self.fileName = fileName
 		self.node = node
+		self.module = module
 		self.targetFileKey = None
 		self.isCanceled = False
 		self.hasFinished = False
@@ -63,7 +65,7 @@ class FileUploader(QtCore.QObject):
 			mimetype = mimetype or "application/octet-stream"
 		except:
 			mimetype = "application/octet-stream"
-		NetworkService.request("/file/getUploadURL", {"node": node, "fileName": os.path.basename(self.fileName), "mimeType": mimetype}, successHandler=self.startUpload, secure=True)
+		NetworkService.request("/%s/getUploadURL" % self.module, {"node": node, "fileName": os.path.basename(self.fileName), "mimeType": mimetype}, successHandler=self.startUpload, secure=True)
 
 	def startUpload(self, req: RequestWrapper) -> None:
 		self.uploadProgress.emit(0, 1)
@@ -89,7 +91,7 @@ class FileUploader(QtCore.QObject):
 	def onUploadFinished(self, req):
 		self.bytesDone = self.bytesTotal
 		if self.node and self.targetFileKey:  # We have to append that file into the file-tree
-			req = NetworkService.request("/file/add", {
+			req = NetworkService.request("/%s/add" % self.module, {
 				"key": self.targetFileKey,
 				"node": self.node,
 				"skelType": "leaf",
@@ -232,7 +234,7 @@ class RecursiveUploader(QtCore.QObject):
 					task = {
 						"type": "upload",
 						"args": [fileName, self.node],
-						"kwargs": {"parent": self}}
+						"kwargs": {"parent": self, "module": self.module}}
 					self.taskQueue.append(task)
 		logger.debug("RecursiveUploader.init: %r", self.stats)
 		self.uploadProgress.emit(self.stats["filesDone"], self.stats["filesTotal"])
@@ -262,7 +264,7 @@ class RecursiveUploader(QtCore.QObject):
 			self.cancel.connect(r.cancel)
 		elif task["type"] == "htmlupload":
 			node = task["args"][1]
-			ns = NetworkService.request("/file/getUploadURL", {"node": node, "fileName": task["args"][0].name, "mimeType": (task["args"][0].type or "application/octet-stream")} if node else {}, secure=True, successHandler=self.onHtmlUploadUrlAvailable)
+			ns = NetworkService.request("/%s/getUploadURL" % self.module, {"node": node, "fileName": task["args"][0].name, "mimeType": (task["args"][0].type or "application/octet-stream")} if node else {}, secure=True, successHandler=self.onHtmlUploadUrlAvailable)
 			ns.fileUploadTask = task
 		else:
 			raise NotImplementedError()
