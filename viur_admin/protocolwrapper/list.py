@@ -51,6 +51,10 @@ class ListWrapper(QtCore.QObject):
 		self.deferredTaskQueue: List[Tuple[str, str]] = []
 		self.checkBusyStatus()
 
+	def reload(self):
+		self.queryCache: Mapping[str, dict] = {}  # Map of URL-Request params to a /list request to the entities returned
+		self.entryCache: Mapping[str, dict] = {}  # Map of str()-Keys of entries to their contents
+
 	def checkBusyStatus(self) -> None:
 		return
 		QtGui.QGuiApplication.processEvents()

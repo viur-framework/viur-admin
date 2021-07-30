@@ -24,7 +24,6 @@ class Config(object):
 				os.path.expanduser("~"),
 				".viuradmin-{0}.{1}".format(*viur_admin.__version__[:2])))
 		self.payload: List[Any] = list()
-		self.migrateConfig = False
 		if not os.path.isdir(self.storagePath):
 			try:
 				os.makedirs(self.storagePath)
@@ -45,8 +44,6 @@ class Config(object):
 
 	def _checkConfigurationMigration(self) -> None:
 		oldDirectoriesRaw = glob.glob("{0}/.viuradmin*".format(os.path.expanduser("~")))
-		if oldDirectoriesRaw:
-			self.migrateConfig = True
 		for path in oldDirectoriesRaw:
 			itemData = {
 				"lastUsed": 0, #datetime.fromtimestamp(os.stat(os.path.join(self.storagePath, "accounts.dat")).st_mtime),

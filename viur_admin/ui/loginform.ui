@@ -69,29 +69,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="accountManagerLabel">
-        <property name="text">
-         <string>Account Manager</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="startAccManagerBTN">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>32</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Open</string>
-        </property>
-        <property name="icon">
-         <iconset theme="personae"/>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item>
@@ -110,7 +87,8 @@
       </property>
       <property name="icon">
        <iconset theme="login">
-        <normaloff>.</normaloff>.</iconset>
+        <normaloff/>
+       </iconset>
       </property>
      </widget>
     </item>
@@ -137,14 +115,16 @@
     <addaction name="actionAbout"/>
     <addaction name="actionFirst_steps"/>
    </widget>
-   <widget class="QMenu" name="menuEinstellungen">
+   <widget class="QMenu" name="menuPortal">
     <property name="title">
-     <string>Setti&amp;ngs</string>
+     <string>P&amp;ortal</string>
     </property>
-    <addaction name="actionAccountmanager"/>
+    <addaction name="actionAddPortal"/>
+    <addaction name="actionEditPortal"/>
+    <addaction name="actionDeletePortal"/>
    </widget>
    <addaction name="menuInfo"/>
-   <addaction name="menuEinstellungen"/>
+   <addaction name="menuPortal"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionHelp">
@@ -157,14 +137,33 @@
     <string>&amp;About this Software</string>
    </property>
   </action>
-  <action name="actionAccountmanager">
+  <action name="actionAddPortal">
    <property name="text">
-    <string>&amp;Accountmanager</string>
+    <string>&amp;Add Portal</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
    </property>
   </action>
   <action name="actionFirst_steps">
    <property name="text">
     <string>First steps</string>
+   </property>
+  </action>
+  <action name="actionEditPortal">
+   <property name="text">
+    <string>&amp;Edit Portal</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionDeletePortal">
+   <property name="text">
+    <string>Delete Portal</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
  </widget>

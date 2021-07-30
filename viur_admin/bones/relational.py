@@ -378,7 +378,9 @@ class RelationalEditBone(BoneEditInterface):
 	def updateVisiblePreview(self) -> None:
 		self.blockAutoCompletion = True
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert protoWrap is not None, "Unknown module: %s" % self.realModule
+		if protoWrap is None:
+			QtWidgets.QMessageBox.critical(self, "Error in skeleton", "Bone %s references unknown module %s" % (self.boneName, self.realModule))
+		assert protoWrap is not None, "Unknown module: %s" % self.realModule  # Still throw the assertion - causes edit to be read-only
 		if self.skelType is None:
 			structure = protoWrap.viewStructure
 		elif self.skelType == "leaf":

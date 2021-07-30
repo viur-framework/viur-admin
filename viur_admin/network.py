@@ -141,6 +141,7 @@ class SecurityTokenProvider(QObject):
 		self.currentRequest = None
 		self.lockKey = None
 		self.staticSecurityKey = None
+		self.errorCount = 0
 
 	def addRequest(self, callback):
 		self.queue.put(callback)
@@ -155,7 +156,7 @@ class SecurityTokenProvider(QObject):
 
 	def onFinished(self, *args, **kwargs):
 		lockKey = self.lockKey
-		QtCore.QTimer.singleShot(3000, lambda: self.unlockKey(lockKey))
+		QtCore.QTimer.singleShot(5000, lambda: self.unlockKey(lockKey, True))
 		if self.currentRequest.error() == self.currentRequest.NoError:
 			skey = json.loads(self.currentRequest.readAll().data().decode("utf-8"))
 			cb = self.queue.get()
@@ -167,11 +168,21 @@ class SecurityTokenProvider(QObject):
 				print(skey)
 		else:
 			print("ERROR FETCHING SKEY")
+			self.errorCount += 1
 
-	def unlockKey(self, lockKey):
+	def unlockKey(self, lockKey, errorCB = False):
 		if lockKey != self.lockKey:
 			return
 		self.lockKey = None
+		if self.errorCount > 3:
+			self.errorCount = 0
+			cb = self.queue.get()
+			try:
+				cb(None, None)
+			except:
+				raise
+		if not errorCB:
+			self.errorCount = 0
 		if not self.queue.empty():
 			self.fetchNext()
 		else:
@@ -227,6 +238,12 @@ class RequestWrapper(QtCore.QObject):
 			self.startRequest()
 
 	def insertSkey(self, skey, unlockKey):
+		if not skey and not unlockKey:  # There was an error fetching the skeys, abort request
+			if self.failureHandler:
+				self.failureHandler(None)
+			if self.finishedHandler:
+				self.finishedHandler(None)
+			return
 		self.unlockSkey = unlockKey
 		if not self.params:
 			self.params = {}
