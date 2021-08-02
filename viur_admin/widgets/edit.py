@@ -433,8 +433,8 @@ class EditWidget(QtWidgets.QWidget):
 		except AssertionError as err:
 			logger.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))
-			self.ui.btnSaveClose.setDisabled(True)
-			self.ui.btnSaveContinue.setDisabled(True)
+			self.ui.btnSaveClose.setEnabled(False)
+			self.ui.btnSaveContinue.setEnabled(False)
 		logger.debug("EditWidget.unserialize - end")
 
 	def onBtnSaveContinueReleased(

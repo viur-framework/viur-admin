@@ -61,7 +61,7 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 				value = chooseLang(value, languages, self.language)
 			else:  # Not multiple nor languages
 				pass
-		return super(StringViewBoneDelegate, self).displayText(str(value), locale)
+		return value
 
 	def commitDataCb(self, editor):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
