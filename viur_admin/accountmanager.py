@@ -6,8 +6,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.config import conf
 from viur_admin.event import event
 from viur_admin.log import getLogger
+from viur_admin.utils import loadIcon
 from viur_admin.network import NetworkService, RequestWrapper, securityTokenProvider
-from viur_admin.ui.accountmanagerUI import Ui_AccountManager
 from viur_admin.ui.addportalwizardUI import Ui_AddPortalWizard
 
 """
@@ -149,7 +149,7 @@ class AddPortalWizard(QtWidgets.QWizard):
 class AccountItem(QtWidgets.QListWidgetItem):
 	def __init__(self, account: Dict[str, Any], parent: QtWidgets.QWidget = None) -> None:
 		super(AccountItem, self).__init__(
-			QtGui.QIcon(":icons/profile.png"),
+			loadIcon("personae"), #QtGui.QIcon(":icons/profile.png"),
 			account["name"],
 			parent=parent)
 		self.account = account
@@ -159,118 +159,3 @@ class AccountItem(QtWidgets.QListWidgetItem):
 		self.setText(self.account["name"])
 
 
-class AccountManager(QtWidgets.QMainWindow):
-	def __init__(self, parent: QtWidgets.QWidget = None):
-		super(AccountManager, self).__init__(parent=parent)
-		self.ui = Ui_AccountManager()
-		self.ui.setupUi(self)
-		self.loadAccountList()
-		self.oldAccountName = None
-		self.portalWizard: Union[AddPortalWizard, None] = None
-		self.ui.addAccBTN.released.connect(self.onAddAccBTNReleased)
-		self.ui.acclistWidget.itemClicked.connect(self.onAcclistWidgetItemClicked)
-		self.ui.acclistWidget.itemDoubleClicked.connect(self.onEditAccount)
-		self.ui.delAccBTN.released.connect(self.onDelAccBTNReleased)
-		self.ui.FinishedBTN.released.connect(self.onFinishedBTNReleased)
-		if len(conf.accounts) == 0:
-			self.onAddAccBTNReleased()
-
-	def loadAccountList(self) -> None:
-		guiList = self.ui.acclistWidget
-		guiList.setIconSize(QtCore.QSize(128, 128))
-		guiList.clear()
-		currentPortalName = conf.adminConfig.get("currentPortalName")
-		logger.debug("currentPortalName %r", currentPortalName)
-		currentIndex = 0
-		for ix, account in enumerate(conf.accounts):
-			if account["name"] == currentPortalName:
-				currentIndex = ix
-			item = AccountItem(account)
-			guiList.addItem(item)
-		if len(conf.accounts) > 0:
-			guiList.setCurrentRow(currentIndex)
-			self.onAcclistWidgetItemClicked(None)
-
-	def closeEvent(self, e: QtGui.QCloseEvent) -> None:
-		conf.accounts = []
-		for itemIndex in range(0, self.ui.acclistWidget.count()):
-			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)
-		conf.saveConfig()
-		event.emit("accountListChanged()")
-		self.close()
-
-	def onAddAccBTNReleased(self) -> None:
-		if self.portalWizard:
-			self.portalWizard.deleteLater()
-			self.portalWizard = None
-		self.portalWizard = AddPortalWizard()
-		self.portalWizard.show()
-		self.setDisabled(True)
-		self.portalWizard.finished.connect(self.onPortalWizardFinished)
-
-	# guiList = self.ui.acclistWidget
-	# item = AccountItem(
-	# 		{
-	# 			"name": QtCore.QCoreApplication.translate("AccountManager", "New"),
-	# 			"user": "",
-	# 			"password": "",
-	# 			"server": ""
-	# 		}
-	# )
-	# guiList.addItem(item)
-	# guiList.setCurrentItem(item)
-	# self.updateUI()
-
-	def onPortalWizardFinished(self) -> None:
-		logger.debug("AddPortalWizard.onPortalWizardFinished")
-		self.setDisabled(False)
-		self.loadAccountList()
-
-	def onAcclistWidgetItemClicked(self, clickedItem: Union[AccountItem, None] = None) -> None:
-		self.updateUI()
-
-	def onDelAccBTNReleased(self) -> None:
-		item = self.ui.acclistWidget.currentItem()
-		if not item:
-			return
-
-		reply = QtWidgets.QMessageBox.question(
-			self.centralWidget(),
-			QtCore.QCoreApplication.translate("AccountManager", "Account deletion"),
-			QtCore.QCoreApplication.translate("AccountManager",
-			                                  'Really delete the account "%s"?' % item.account["name"]),
-			QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-			QtWidgets.QMessageBox.No)
-		if reply == QtWidgets.QMessageBox.No:
-			return
-		self.ui.acclistWidget.takeItem(self.ui.acclistWidget.row(item))
-		self.updateUI()
-
-	def onEditAccount(self, clickedItem: AccountItem) -> None:
-		logger.debug("onEditAccount")
-		if self.portalWizard:
-			self.portalWizard.deleteLater()
-			self.portalWizard = None
-		self.portalWizard = AddPortalWizard(currentPortalConfig=self.ui.acclistWidget.currentItem().account)
-		self.portalWizard.show()
-		self.setDisabled(True)
-		self.portalWizard.finished.connect(self.onPortalWizardFinished)
-
-	def updateUI(self) -> None:
-		item = self.ui.acclistWidget.currentItem()
-		self.ui.acclistWidget.sortItems()
-		if not item:
-			self.ui.delAccBTN.setEnabled(False)
-		else:
-
-			self.oldAccountName = item.account["name"]
-			self.ui.delAccBTN.setEnabled(True)
-
-	def onFinishedBTNReleased(self) -> None:
-		logger.debug("onFinishedBTNReleased")
-		conf.accounts = []
-		for itemIndex in range(0, self.ui.acclistWidget.count()):
-			conf.accounts.append(self.ui.acclistWidget.item(itemIndex).account)
-		securityTokenProvider.staticSecurityKey = None
-		event.emit("accountListChanged")
-		self.close()

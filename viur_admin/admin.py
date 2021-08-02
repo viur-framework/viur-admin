@@ -249,10 +249,6 @@ def main() -> None:
 				if "language" in conf.adminConfig and conf.adminConfig["language"] == file[: -3]:
 					app.installTranslator(translator)
 
-		if conf.migrateConfig:
-			from viur_admin.config_migration_wizard import ConfigMigrationWizard
-			wizard = ConfigMigrationWizard()
-			wizard.exec()
 	else:
 		import js
 		canvas = js.document.getElementById("qtcanvas")

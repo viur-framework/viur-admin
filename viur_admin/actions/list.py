@@ -57,6 +57,7 @@ class ListReloadAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 
 	def onTriggered(self) -> None:
+		protocolWrapperInstanceSelector.select(self.parentWidget().module).reload()
 		self.parentWidget().list.model().reload()
 
 	@staticmethod

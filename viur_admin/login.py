@@ -15,7 +15,7 @@ else:
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.simpleloginUI import Ui_simpleLogin
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
-from viur_admin.accountmanager import AccountManager
+from viur_admin.accountmanager import AccountItem, AddPortalWizard
 from viur_admin.network import NetworkService, securityTokenProvider, nam, MyCookieJar, RequestWrapper
 from viur_admin.event import event
 from viur_admin import config
@@ -433,12 +433,11 @@ class Login(QtWidgets.QMainWindow):
 		self.ui = Ui_LoginWindow()
 		self.ui.setupUi(self)
 		# Fix icons
-		self.ui.startAccManagerBTN.setIcon(loadIcon("personae"))
 		self.ui.btnLogin.setIcon(loadIcon("login"))
-		self.accman = None  # Reference to our Account-MGR
+		self.portalWizard = None # Reference to an add portal wizard (if any)
 		self.helpBrowser = None
-		self.activeAccount = None
 		self.loginTask = None
+		self.isFirstShown = True  # Don't reopen the add wizard a second time if aborted
 		event.connectWithPriority('resetLoginWindow', self.enableForm, event.lowPriority)
 		event.connectWithPriority('accountListChanged', self.loadAccounts, event.lowPriority)
 		self.ui.cbPortal.currentRowChanged.connect(self.onCbPortalCurrentRowChanged)
@@ -460,11 +459,12 @@ class Login(QtWidgets.QMainWindow):
 			self.ui.cbLanguages.setCurrentIndex(self.langKeys.index(currentLang))
 		self.ui.actionAbout.triggered.connect(self.onActionAboutTriggered)
 		self.ui.actionHelp.triggered.connect(self.onActionHelpTriggered)
-		self.ui.actionAccountmanager.triggered.connect(self.onActionAccountmanagerTriggered)
 		self.ui.cbLanguages.blockSignals(False)
 		self.ui.btnLogin.clicked.connect(self.onBtnLoginReleased)
-		self.ui.startAccManagerBTN.released.connect(self.onStartAccManagerBTNReleased)
 		self.ui.cbLanguages.currentIndexChanged.connect(self.onCbLanguagesCurrentIndexChanged)
+		self.ui.actionAddPortal.triggered.connect(self.openPortalWizard)
+		self.ui.actionDeletePortal.triggered.connect(self.deletePortal)
+		self.ui.actionEditPortal.triggered.connect(self.editPortal)
 
 	def changeEvent(
 			self,
@@ -480,16 +480,67 @@ class Login(QtWidgets.QMainWindow):
 		logger.debug("currentPortalName: %r", currentPortalName)
 		currentIndex = 0
 		for ix, account in enumerate(config.conf.accounts):
-			cb.addItem(account["name"])
+			cb.addItem(AccountItem(account))
 			if account["name"] == currentPortalName:
 				currentIndex = ix
 		if len(config.conf.accounts) > 0:
 			cb.setCurrentRow(currentIndex)
 			self.onCbPortalCurrentRowChanged(currentIndex)
-		if self.accman:
-			self.accman.deleteLater()
-			self.accman = None
-		cb.setFocus()
+			cb.setFocus()
+			self.ui.actionEditPortal.setDisabled(False)
+			self.ui.actionDeletePortal.setDisabled(False)
+		elif self.isFirstShown:
+			self.isFirstShown = False
+			self.openPortalWizard()
+		else:
+			self.ui.actionEditPortal.setDisabled(True)
+			self.ui.actionDeletePortal.setDisabled(True)
+
+	def editPortal(self, *args, **kwargs):
+		try:
+			account = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
+		except:
+			return
+		self.openPortalWizard(account)
+
+	def deletePortal(self, *args, **kwargs):
+		try:
+			account = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
+		except:
+			return
+		self.requestDeleteBox = QtWidgets.QMessageBox(
+			QtWidgets.QMessageBox.Question,
+			QtCore.QCoreApplication.translate("Login", "Confirm delete"),
+			QtCore.QCoreApplication.translate("Login", "Delete Portal %s?") % account["name"],
+			(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No),
+			self
+		)
+		self.requestDeleteBox.buttonClicked.connect(self.reqDeleteCallback)
+		self.requestDeleteBox.open()
+		QtGui.QGuiApplication.processEvents()
+		self.requestDeleteBox.adjustSize()
+		self.requestDeleteBox.deleteList = account
+
+	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
+		if clickedBtn == self.requestDeleteBox.button(self.requestDeleteBox.Yes):
+			config.conf.accounts.remove(self.requestDeleteBox.deleteList)
+			self.isFirstShown = False
+			self.loadAccounts()
+		self.requestDeleteBox = None
+
+	def openPortalWizard(self, portalData=None):
+		self.portalWizard = AddPortalWizard(portalData)
+		self.portalWizard.show()
+		self.setDisabled(True)
+		self.portalWizard.finished.connect(self.onPortalWizardFinished)
+		self.portalWizard.raise_()
+		self.portalWizard.activateWindow()
+
+	def onPortalWizardFinished(self, *args, **kwargs):
+		self.setDisabled(False)
+		self.loadAccounts()
+		securityTokenProvider.staticSecurityKey = None  # Reset a maybe set static skey
+
 
 	def onCbPortalCurrentRowChanged(self, index: Any) -> None:
 		if isinstance(index, str):
@@ -497,10 +548,12 @@ class Login(QtWidgets.QMainWindow):
 		if self.ui.cbPortal.currentIndex() == -1:
 			activeaccount = {"name": "", "user": "", "password": "", "server": ""}
 		else:
-			activeaccount = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
+			try:
+				activeaccount = config.conf.accounts[self.ui.cbPortal.currentIndex().row()]
+			except:
+				return
 			config.conf.adminConfig["currentPortalName"] = activeaccount["name"]
 			config.conf.saveConfig()
-		self.activeAccount = activeaccount
 
 	def onLoginSucceeded(self) -> None:
 		logger.debug("onLoginSucceeded")
@@ -535,9 +588,6 @@ class Login(QtWidgets.QMainWindow):
 		self.loginTask.loginSucceeded.connect(self.onLoginSucceeded)
 		self.loginTask.loginFailed.connect(self.onLoginFailed)
 		self.overlay.inform(self.overlay.BUSY, QtCore.QCoreApplication.translate("Login", "Login in progress"))
-		if self.accman:
-			self.accman.deleteLater()
-			self.accman = None
 		if self.helpBrowser:
 			self.helpBrowser.deleteLater()
 			self.helpBrowser = None
@@ -577,16 +627,6 @@ class Login(QtWidgets.QMainWindow):
 		logger.debug("onNotLoggedInYet: %r", req)
 		nam.setCookieJar(MyCookieJar())
 		self.loginTask.startAuthenticationFlow()
-
-	def onStartAccManagerBTNReleased(self) -> None:
-		if self.accman:
-			self.accman.deleteLater()
-			self.accman = None
-		self.accman = AccountManager()
-		self.accman.show()
-
-	def onActionAccountmanagerTriggered(self) -> None:
-		self.onStartAccManagerBTNReleased()
 
 	def onActionAboutTriggered(self, checked: bool = None) -> None:
 		if checked is None:

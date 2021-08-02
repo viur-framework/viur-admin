@@ -20,9 +20,10 @@ from viur_admin.tasks import TaskViewer, TaskEntryHandler
 from viur_admin.ui.preloaderUI import Ui_Preloader
 from viur_admin.utils import RegisterQueue, showAbout, WidgetHandler, GroupHandler, loadIcon
 from viur_admin import log
-if not isPyodide:
+try:
 	import viur_admin.plugins
-
+except:
+	print("No plugins loaded")
 
 class Preloader(QtWidgets.QWidget):
 	finished = QtCore.pyqtSignal()
