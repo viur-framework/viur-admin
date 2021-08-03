@@ -166,15 +166,15 @@ class FileItemBone(TreeItemBone):
 			logger.debug("selection: %r", self.selection)
 			if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
 				RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
-				try:
-					value = self.safeEval.execute(self.ast, {
-						"value": self.selection,
-						"structure": structure,
-						"language": config.conf.adminConfig["language"]
-					})
-				except Exception as e:
-					logger.exception(e)
-					value = "(invalid format string)"
+			try:
+				value = self.safeEval.execute(self.ast, {
+					"value": self.selection,
+					"structure": structure,
+					"language": config.conf.adminConfig["language"]
+				})
+			except Exception as e:
+				logger.exception(e)
+				value = "(invalid format string)"
 			self.entry.setText(value)
 		else:
 			self.entry.setText("")

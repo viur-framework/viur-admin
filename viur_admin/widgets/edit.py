@@ -430,7 +430,7 @@ class EditWidget(QtWidgets.QWidget):
 			for key, bone in self.bones.items():
 				boneErrors = collectBoneErrors(errors, key)
 				bone.unserialize(data.get(key), boneErrors)
-		except AssertionError as err:
+		except Exception as err:
 			logger.exception(err)
 			self.overlay.inform(self.overlay.ERROR, str(err))
 			self.ui.btnSaveClose.setEnabled(False)
