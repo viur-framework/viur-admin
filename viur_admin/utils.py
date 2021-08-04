@@ -352,7 +352,7 @@ class WidgetHandler(QtWidgets.QTreeWidgetItem):
 			self.widgets.append(self.widgetGenerator())
 			self.mainWindow.addWidget(self.widgets[-1])
 			# event.emit( QtCore.SIGNAL("addWidget(PyQt_PyObject)"), self.widgets[ -1 ] )
-			self.setIcon(1, QtGui.QIcon.fromTheme("cancel-cross"))
+			self.setIcon(1, loadIcon("cancel"))
 		self.mainWindow.focusHandler(self)
 
 	# event.emit( QtCore.SIGNAL("focusHandler(PyQt_PyObject)"), self )
