@@ -68,22 +68,22 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 				tmpList = []
 				for v in value:
 					try:
-						tmpList.append(self.safeEval.execute(self.ast, {
+						tmpList.append(str(self.safeEval.execute(self.ast, {
 							"value": v,
 							"structure": self.structure,
 							"language": config.conf.adminConfig["language"]
-						}))
+						})))
 					except Exception as e:
 						logger.exception(e)
 						tmpList.append("(invalid format string)")
 				value = ", ".join(tmpList)
 			elif isinstance(value, dict):
 				try:
-					value = self.safeEval.execute(self.ast, {
+					value = str(self.safeEval.execute(self.ast, {
 						"value": value,
 						"structure": self.structure,
 						"language": config.conf.adminConfig["language"]
-					})
+					}))
 				except Exception as e:
 					logger.exception(e)
 					value = "(invalid format string)"
@@ -407,7 +407,7 @@ class RelationalEditBone(BoneEditInterface):
 			except Exception as e:
 				logger.exception(e)
 				text = "(invalid format string)"
-			self.entry.setText(text)
+			self.entry.setText(str(text))
 		else:
 			self.entry.setText("")
 		self.blockAutoCompletion = False
