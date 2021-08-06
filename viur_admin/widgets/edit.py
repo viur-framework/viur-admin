@@ -167,18 +167,17 @@ class EditWidget(QtWidgets.QWidget):
 			else:
 				protoWrap.editPreflight(None, data, self.onPreflightDataAvailable)
 		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
-			raise NotImplementedError()
 			if self.key and not self.clone:
-				self.editTaskID = protoWrap.edit(self.key, self.skelType, **data)
+				protoWrap.editPreflight(self.key, self.skelType, data, self.onPreflightDataAvailable)
 			else:
-				self.editTaskID = protoWrap.add(self.node, self.skelType, **data)
+				protoWrap.editPreflight(None, self.skelType, data, self.onPreflightDataAvailable)
 		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
-			raise NotImplementedError()
-			self.editTaskID = protoWrap.edit(**data)
+			protoWrap.editPreflight(self.key, data, self.onPreflightDataAvailable)
 		else:
 			raise NotImplementedError()  # Should never reach this
 
 	def onPreflightDataAvailable(self, req):
+		print("onPreflightDataAvailable")
 		data = NetworkService.decode(req)
 		errors = data["errors"]
 		newTabIcons: Dict[QtWidgets.QWidget, List[int]] = {}

@@ -42,6 +42,12 @@ class TaskWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(req))
 
+	def editPreflight(self, key: str, data, callback) -> None:
+		data["bounce"] = "1"
+		data["skey"] = "-"
+		url = "/%s/execute/%s" % (self.module, key)
+		req = NetworkService.request(url, data, finishedHandler=callback)
+
 	def onSaveResult(self, req: RequestWrapper) -> None:
 		try:
 			data = NetworkService.decode(req)

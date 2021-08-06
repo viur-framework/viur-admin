@@ -277,6 +277,12 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(req))
 
+	def editPreflight(self, key: str, skelType: str, data, callback) -> None:
+		data["bounce"] = "1"
+		data["skey"] = "-"
+		url = "/%s/edit/%s/%s" % (self.module, skelType, key) if key else "/%s/add/%s" % (self.module, skelType)
+		req = NetworkService.request(url, data, finishedHandler=callback)
+
 	def deleteEntities(self, nodes: list, leafs: list) -> None:
 		"""Delete files and/or directories from the server.
 
