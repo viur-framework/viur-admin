@@ -71,6 +71,13 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			logger.exception(err)
 		self.reload()
 
+	def canFetchMore(self, QModelIndex):
+		return not self.completeList
+
+	def fetchMore(self, QModelIndex):
+		self.loadNext()
+
+
 	def updatingDataAvailable(self, reqId, data, wasInitial):
 		"""
 			Signal from the protocoll-wrapper that an add/edit request bounced back. Check if we have it
@@ -219,10 +226,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadNext(True)
 
 	def rowCount(self, parent: QModelIndex = None, *args: Any, **kwargs: Any) -> int:
-		if self.completeList:
-			return len(self.dataCache)
-		else:
-			return len(self.dataCache) + 1
+		return len(self.dataCache)
 
 	def columnCount(self, parent: QModelIndex = None) -> int:
 		try:
@@ -245,8 +249,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 				logger.exception(err)
 				return ""
 		else:
-			if not self.completeList:
-				self.loadNext()
 			return "--- Lade ---"
 
 	def headerData(self, col: int, orientation: int, role: int = None) -> Any:
@@ -485,8 +487,8 @@ class ListTableView(QtWidgets.QTableView):
 				self.model().setSortColumn(delegate.boneName, self.currentSortColumn[1])
 			else:
 				self.model().setSortColumn(None, False)
-		elif delegate.boneName not in self.sortableBones:
-			# No change had happen, but we neet to reset the sort-indicator as qt deleted it
+		elif self.sortableBones and delegate.boneName not in self.sortableBones:
+			# No change had happen, but we need to reset the sort-indicator as qt deleted it
 			QtCore.QTimer.singleShot(1, self.applySortOrder)
 
 
