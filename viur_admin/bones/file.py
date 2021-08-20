@@ -80,7 +80,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 			value = self.safeEval.execute(self.ast, {
 				"value": value,
 				"structure": self.structure,
-				"language": config.conf.adminConfig["language"]
+				"language": config.conf.adminConfig.get("language", "en")
 			})
 		except Exception as e:
 			logger.exception(e)
@@ -170,7 +170,7 @@ class FileItemBone(TreeItemBone):
 				value = self.safeEval.execute(self.ast, {
 					"value": self.selection,
 					"structure": structure,
-					"language": config.conf.adminConfig["language"]
+					"language": config.conf.adminConfig.get("language", "en")
 				})
 			except Exception as e:
 				logger.exception(e)

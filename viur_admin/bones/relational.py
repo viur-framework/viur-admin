@@ -71,7 +71,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 						tmpList.append(str(self.safeEval.execute(self.ast, {
 							"value": v,
 							"structure": self.structure,
-							"language": config.conf.adminConfig["language"]
+							"language": config.conf.adminConfig.get("language", "en")
 						})))
 					except Exception as e:
 						logger.exception(e)
@@ -82,7 +82,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 					value = str(self.safeEval.execute(self.ast, {
 						"value": value,
 						"structure": self.structure,
-						"language": config.conf.adminConfig["language"]
+						"language": config.conf.adminConfig.get("language", "en")
 					}))
 				except Exception as e:
 					logger.exception(e)
@@ -402,7 +402,7 @@ class RelationalEditBone(BoneEditInterface):
 				text = self.safeEval.execute(self.ast, {
 					"value": self.selection,
 					"structure": structure,
-					"language": config.conf.adminConfig["language"]
+					"language": config.conf.adminConfig.get("language", "en")
 				})
 			except Exception as e:
 				logger.exception(e)
