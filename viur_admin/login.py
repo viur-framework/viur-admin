@@ -180,8 +180,14 @@ class AuthGoogle(AuthProviderBase):
 			self.authThread.abort()
 		htmlData = req.readAll().data().decode("utf-8")
 		# FIXME: This string-matching is fragile...
-		tokenStart = htmlData.find("content=", htmlData.find("google-signin-client_id"))+9
-		tokenEnd = htmlData.find("\"", tokenStart+5)
+		if "google-signin-client_id" in htmlData:
+			# This is the old Google-Sign-in
+			tokenStart = htmlData.find("content=", htmlData.find("google-signin-client_id"))+9
+			tokenEnd = htmlData.find("\"", tokenStart+5)
+		else:
+			# Hopefully the new identity services
+			tokenStart = htmlData.find("data-client_id=\"")+16
+			tokenEnd = htmlData.find("\"", tokenStart+5)
 		token = htmlData[tokenStart:tokenEnd]
 		# Prevent possible XSS-Attacks from a compromised project
 		assert not any([x not in string.ascii_letters+string.digits+".-_@" for x in token]), "Invalid Token!"
