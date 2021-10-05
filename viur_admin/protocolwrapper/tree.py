@@ -277,10 +277,10 @@ class TreeWrapper(QtCore.QObject):
 		self.checkBusyStatus()
 		return str(id(req))
 
-	def editPreflight(self, key: str, skelType: str, data, callback) -> None:
+	def editPreflight(self, key: str, node: str, skelType: str, data, callback) -> None:
 		data["bounce"] = "1"
 		data["skey"] = "-"
-		url = "/%s/edit/%s/%s" % (self.module, skelType, key) if key else "/%s/add/%s" % (self.module, skelType)
+		url = "/%s/edit/%s/%s" % (self.module, skelType, key) if key else "/%s/add/%s/%s" % (self.module, skelType, node)
 		req = NetworkService.request(url, data, finishedHandler=callback)
 
 	def deleteEntities(self, nodes: list, leafs: list) -> None:

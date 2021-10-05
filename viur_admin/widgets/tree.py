@@ -82,7 +82,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 	def __lt__(self, other: Any) -> bool:
 		if isinstance(other, self.listWidget().nodeItem):
 			return False
-		elif isinstance(other, self.listWidget().leafItem):
+		elif isinstance(other, self.listWidget().leafItem) and "name" in self.entryData and "name" in other.entryData["name"]:
 			return self.entryData["name"] < other.entryData["name"]
 		else:
 			return str(self) < str(other)
