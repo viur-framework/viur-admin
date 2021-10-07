@@ -143,12 +143,17 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		self.format = format
 		self.structure = structure
 		self.dataCache: List[Dict[str, Any]] = list()
+		self.safeEval = safeeval.SafeEval()
+		try:
+			self.ast = self.safeEval.compile(self.format)
+		except:
+			self.ast = self.safeEval.compile("value['name']")
 
 	def rowCount(self, *args: Any, **kwargs: Any) -> int:
 		return len(self.dataCache)
 
 	def columnCount(self, *args: Any, **kwargs: Any) -> int:
-		return 2
+		return 1
 
 	def data(self, index: QtCore.QModelIndex, role: Union[int, None] = None) -> Any:
 		if not index.isValid():
@@ -157,9 +162,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			return
 		if 0 <= index.row() < self.rowCount():
 			if index.column() == 0:
-				#print(formatString("$(name)", self.structure, self.dataCache[index.row()]))
-				#return formatString("$(name)", self.structure, self.dataCache[index.row()])
-				return str(self.dataCache[index.row()].get("name"))
+				return str(self.dataCache[index.row()]["__descr__"])
 			else:
 				return "foo"
 
@@ -174,10 +177,16 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			data = NetworkService.decode(req)
 		except ValueError:  # Query was canceled
 			return
-		self.beginResetModel()
+		#self.beginResetModel()
+		self.layoutAboutToBeChanged.emit()
 		#self.dataCache = []
-		changed = False
+		initial = not self.dataCache
 		for skel in data["skellist"]:
+			skel["__descr__"] = self.safeEval.execute(self.ast, {
+				"value": {"dest": skel, "rel": None},
+				"structure": self.structure,
+				"language": config.conf.adminConfig.get("language", "en")
+			})
 			if self.dataCache:
 				for s in self.dataCache:
 					if s["key"] == skel["key"]:
@@ -188,8 +197,10 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			else:
 				self.dataCache.append(skel)
 				changed = True
-		self.endResetModel()
-		self.parent().complete()
+		#self.endResetModel()
+		self.layoutChanged.emit()
+		if initial:
+			self.parent().complete()
 
 	def getItem(self, label: str) -> Union[str, None]:
 		#res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
@@ -340,7 +351,7 @@ class RelationalEditBone(BoneEditInterface):
 			destModul = myStruct["module"]
 		else:
 			destModul = myStruct["type"].split(".")[1]
-		fmt = "$(name)"
+		fmt = "value['dest']['name']"
 		if "format" in myStruct:
 			fmt = myStruct["format"]
 		widgetGen = lambda: cls(
@@ -368,12 +379,12 @@ class RelationalEditBone(BoneEditInterface):
 		self.autoCompletionModel = AutocompletionModel(self.toModule, self.format, {}, parent=self.autoCompleter)  # FIXME: {} was
 		self.autoCompleter.setModel(self.autoCompletionModel)
 		self.autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-		self.autoCompleter.setCompletionMode(self.autoCompleter.UnfilteredPopupCompletion)
+		self.autoCompleter.setCompletionMode(self.autoCompleter.PopupCompletion)
 		self.autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
+		self.autoCompleter.setWidget(self.entry)
 		self.entry.setCompleter(self.autoCompleter)
 		self.entry.textChanged.connect(self.reloadAutocompletion)
 		self.autoCompleter.activated[str].connect(self.setAutoCompletion)  # Broken...
-		#self.autoCompleter.highlighted.connect(self.setAutoCompletion)
 
 	def updateVisiblePreview(self) -> None:
 		self.blockAutoCompletion = True
