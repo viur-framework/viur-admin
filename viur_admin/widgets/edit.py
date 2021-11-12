@@ -124,10 +124,10 @@ class EditWidget(QtWidgets.QWidget):
 			self.ui.btnSaveContinue.setIcon(loadIcon("save-all"))
 		self.ui.btnClose.setIcon(loadIcon("cancel"))
 		self.ui.btnReset.setIcon(loadIcon("undo"))
-		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
-		protoWrap.updatingSucceeded.connect(self.onSaveSuccess)
-		protoWrap.updatingFailedError.connect(self.onSaveError)
-		protoWrap.updatingDataAvailable.connect(self.onDataAvailable)
+		#protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
+		#protoWrap.updatingSucceeded.connect(self.onSaveSuccess)
+		#protoWrap.updatingFailedError.connect(self.onSaveError)
+		#protoWrap.updatingDataAvailable.connect(self.onDataAvailable)
 		self.overlay.inform(self.overlay.BUSY)
 		# Deferred server-side form validation
 		QtWidgets.QApplication.instance().focusChanged.connect(self.onFocusEvent)  # Register for change events in bones
@@ -153,6 +153,7 @@ class EditWidget(QtWidgets.QWidget):
 
 	def issuePreflightRequest(self):
 		# Serialize all bones
+		return
 		data = {}
 		for key, bone in self.bones.items():
 			data[key] = bone.serializeForPost()
@@ -231,9 +232,9 @@ class EditWidget(QtWidgets.QWidget):
 		# successHandler=self.onSaveResult )
 		elif self.applicationType == ApplicationType.LIST:  # Application: List
 			if self.key and (not self.clone or not data):
-				self.editTaskID = protoWrap.edit(self.key, **data)
+				self.editTaskID = protoWrap.edit(self.key, self.onEditResultAvailable, **data)
 			else:
-				self.editTaskID = protoWrap.add(**data)
+				self.editTaskID = protoWrap.add(self.onEditResultAvailable, **data)
 		elif self.applicationType == ApplicationType.HIERARCHY:  # Application: Hierarchy
 			if self.key and (not self.clone or not data):
 				self.editTaskID = protoWrap.edit(self.key, **data)
@@ -249,6 +250,10 @@ class EditWidget(QtWidgets.QWidget):
 		else:
 			raise NotImplementedError()  # Should never reach this
 		self.setDisabled(True)
+
+	def onEditResultAvailable(self, data):
+		self.setData(data=data)
+		self.setDisabled(False)
 
 	def onBtnResetReleased(
 			self,

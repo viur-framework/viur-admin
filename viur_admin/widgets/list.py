@@ -52,31 +52,76 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.completeList = False  # Have we all items?
 		self.isLoading = 0
 		self.cursor = None
+		self._rowCount = 0
 		# As loading is performed in background, they might return results for a dataset which isn't displayed anymore
 		self.loadingKey = None
 		# Tuple of Sort-Properties we should include in queries (Bonename and ascending/descending)
 		self.currentSortBone: Tuple[str, bool] = None
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		protoWrap.entitiesChanged.connect(self.reload)
-		protoWrap.entityChanged.connect(self.updateSingleEntity)
-		protoWrap.entityDeleted.connect(self.entityDeleted)
-		protoWrap.entityChanging.connect(self.entityChanging)
-		protoWrap.updatingFailedError.connect(self.updatingFailed)
-		protoWrap.updatingDataAvailable.connect(self.updatingDataAvailable)
-		try:
-			protoWrap.queryResultAvailable.connect(self.addData)
-		except Exception as err:
-			logger.error("Error: here we should look again, what queryResultAvailable provides us...")
-			logger.exception(err)
-		self.reload()
+		#self.protoWrap.insertRowsEvent.connect(self.onInsertRows)
+		#self.protoWrap.removeRowsEvent.connect(self.onRemoveRows)
+		#self.protoWrap.changeRowsEvent.connect(self.onChangeRows)
+		#self.queryKey = self.protoWrap.registerQuery(self.filter.copy() or {})
+		self.viewProxy = protoWrap.registerView(
+			{"orderby": "changedate", "orderdir": "1"},
+			{
+				"beforeInsertRows": self.beforeInsertRows,
+				"afterInsertRows": self.afterInsertRows,
+				"beforeRemovetRows": self.beforeRemovetRows,
+				"afterRemoveRows": self.afterRemoveRows,
+				"rowChanged": self.rowChanged,
+			 }
+		)
 
 	def canFetchMore(self, QModelIndex):
+		return self._rowCount == 0
+		print("canFetchMore", not self.completeList)
 		return not self.completeList
 
 	def fetchMore(self, QModelIndex):
-		self.loadNext()
+		print("fetchMore")
+		self.viewProxy.fetchMore()
+		#protoWrap = protocolWrapperInstanceSelector.select(self.module)
+		#protoWrap.requestNextBatch(self.queryKey)
 
+	def beforeInsertRows(self, index: int, numRows:int):
+		print("beforeInsertRows: %r, %r" % (index, numRows))
+
+		if not self.bones:
+			for key, bone in self.viewProxy.listWrapper.viewStructure.items():
+				self.bones[key] = bone
+			self._validFields = [x for x in self.fields if x in self.bones]
+			self.fields = [x for x in self.fields if x in self._validFields]
+			if not self.fields:  # Select the 10 first bones that do exist to prevent an empty table
+				# Don't show these bones by default in the table
+				systemBones = {"key","creationdate", "changedate", "viurCurrentSeoKeys"}
+				self.fields = [x for x in self.bones if x not in systemBones][:10]
+				self._validFields = self.fields[:]
+			self.rebuildDelegates.emit(self.viewProxy.listWrapper.viewStructure)
+			self.repaint()
+		self.beginInsertRows(QModelIndex(), index, index + numRows - 1)
+		self._rowCount += numRows
+		#for rowIndex in range(row, row + count):
+		#	self.dataCache.pop(rowIndex)
+
+	def afterInsertRows(self, index: int, numRows:int):
+		print("afterInsertRows: %r, %r" % (index, numRows))
+		self.endInsertRows()
+		return True
+
+	def beforeRemovetRows(self, index, numRows):
+		self.beginRemoveRows(QtCore.QModelIndex(), index, index + numRows - 1)
+		self._rowCount -= numRows
+
+	def afterRemoveRows(self, index, numRows):
+		self.endRemoveRows()
+
+	def rowChanged(self, index, numRows):
+		self.dataChanged.emit(self.index(index, 0), self.index(index + numRows - 1, 999))
+
+		#self.beginRemoveRows(QtCore.QModelIndex(), index, index + numRows - 1)
+		#self._rowCount -= numRows
+		#self.endRemoveRows()
 
 	def updatingDataAvailable(self, reqId, data, wasInitial):
 		"""
@@ -172,6 +217,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			the colums - so we can't rely on the bone-order in the skeleton.
 		:param fields: The new list of bones to display
 		"""
+		print("setDisplayedFields")
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		for field in self.fields[:]:
@@ -226,7 +272,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.loadNext(True)
 
 	def rowCount(self, parent: QModelIndex = None, *args: Any, **kwargs: Any) -> int:
-		return len(self.dataCache)
+		return self._rowCount
 
 	def columnCount(self, parent: QModelIndex = None) -> int:
 		try:
@@ -239,24 +285,18 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			return None
 		elif role != QtCore.Qt.DisplayRole:
 			return None
-		if index.row() >= 0 and (index.row() < len(self.dataCache)):
-			if index.row() in self.pendingUpdates:
-				return "--- Saving ---"
-			try:
-				# logger.debug("data role: %r, %r, %r", index.row(), index.column(), self._validFields)
-				return self.dataCache[index.row()][self.fields[index.column()]]
-			except Exception as err:
-				logger.exception(err)
-				return ""
-		else:
-			return "--- Lade ---"
+		return self.viewProxy.getRow(index.row())[self.fields[index.column()]]
+
 
 	def headerData(self, col: int, orientation: int, role: int = None) -> Any:
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
 			return self.headers[col]
 		return None
 
-	def loadNext(self, forceLoading: bool = False) -> None:
+	def loadNext___(self, forceLoading: bool = False) -> None:
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
+		protoWrap.requestNextBatch(self.queryKey)
+		return
 		if self.isLoading and not forceLoading:
 			return
 		self.isLoading += 1
@@ -323,8 +363,8 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		self.layoutAboutToBeChanged.emit()
 		self.layoutChanged.emit()
 
-	def getData(self) -> list:
-		return self.dataCache
+	def getData(self, row: int) -> dict:
+		return self.viewProxy.getRow(row)
 
 	def sort(self, p_int: int, order: Any = None) -> None:
 		return
@@ -414,7 +454,7 @@ class ListTableView(QtWidgets.QTableView):
 			*args: Any,
 			**kwargs: Any):
 		super(ListTableView, self).__init__(parent, *args, **kwargs)
-		logger.debug("ListTableView.init: %r, %r, %r, %r", parent, module, fields, viewFilter)
+		logger.error("ListTableView.init: %r, %r, %r, %r", parent, module, fields, viewFilter)
 		self.missingImage = loadIcon("message-news")  # FIXME: QtGui.QImage(":icons/status/missing.png")
 		self.module = module
 		self.sortableBones = sortableBones
@@ -776,7 +816,7 @@ class ListTableView(QtWidgets.QTableView):
 		"""
 			Returns a list of items currently selected.
 		"""
-		return [self.model().getData()[x] for x in set([x.row() for x in self.selectionModel().selection().indexes()])]
+		return [self.model().getData(x) for x in set([x.row() for x in self.selectionModel().selection().indexes()])]
 
 	def paintEvent_(self, event: QtGui.QPaintEvent) -> None:
 		super(ListTableView, self).paintEvent(event)
@@ -831,7 +871,7 @@ class ListWidget(QtWidgets.QWidget):
 			*args: Any,
 			**kwargs: Any):
 		super(ListWidget, self).__init__(*args, **kwargs)
-		logger.debug("ListWidget.init: modul: %r, fields: %r, filter: %r", module, fields, filter)
+		logger.error("ListWidget.init: modul: %r, fields: %r, filter: %r", module, fields, filter)
 		self.module = module
 		if config is None:
 			config = conf.serverConfig["modules"][module]
@@ -891,9 +931,9 @@ class ListWidget(QtWidgets.QWidget):
 		# self.ui.splitter.splitterMoved.connect(self.list.realignHeaders)
 		self.ui.extendedSearchArea.setVisible(False)
 		self.overlay = Overlay(self)
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
+		#protoWrap = protocolWrapperInstanceSelector.select(self.module)  #FIXME - Noch nötig?
+		#assert protoWrap is not None
+		#protoWrap.busyStateChanged.connect(self.onBusyStateChanged)
 		self.ui.searchBTN.released.connect(self.search)
 		self.ui.editSearch.returnPressed.connect(self.search)
 		self.ui.editSearch.textEdited.connect(self.prefixSearch)
