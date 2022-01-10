@@ -227,7 +227,7 @@ class EditWidget(QtWidgets.QWidget):
 		protoWrap = protocolWrapperInstanceSelector.select(self.module)
 		assert protoWrap is not None
 		if self.module == "_tasks":
-			self.editTaskID = protoWrap.edit(self.key, **data)
+			self.editTaskID = protoWrap.edit(self.key, self.onEditResultAvailable, **data)
 		# request = NetworkService.request("/%s/execute/%s" % ( self.module, self.id ), data, secure=True,
 		# successHandler=self.onSaveResult )
 		elif self.applicationType == ApplicationType.LIST:  # Application: List

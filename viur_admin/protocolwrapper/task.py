@@ -28,7 +28,7 @@ class TaskWrapper(QtCore.QObject):
 	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
 
-	def edit(self, key: str, **kwargs: Any) -> str:
+	def edit(self, key: str, callback, **kwargs: Any) -> str:
 		req = NetworkService.request(
 			"/%s/execute/%s" % (self.module, key),
 			kwargs,
@@ -39,6 +39,7 @@ class TaskWrapper(QtCore.QObject):
 			req.wasInitial = True
 		else:
 			req.wasInitial = False
+		req.callback = callback
 		self.checkBusyStatus()
 		return str(id(req))
 
@@ -55,10 +56,12 @@ class TaskWrapper(QtCore.QObject):
 			self.updatingFailedError.emit(str(id(req)))
 			return
 		if data["action"] in ["addSuccess"]:  # Saving succeeded
-			self.updatingSucceeded.emit(str(id(req)))
-			self.checkBusyStatus()
+			#self.updatingSucceeded.emit(str(id(req)))
+			#self.checkBusyStatus()
+			req.callback(data)
 		else:  # There were missing fields
-			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
+			#self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
+			req.callback(data)
 		self.checkBusyStatus()
 
 	def checkBusyStatus(self) -> None:

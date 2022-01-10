@@ -52,9 +52,9 @@ class SingletonWrapper(QtCore.QObject):
 		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
-	def edit(self, **kwargs: Any) -> str:
+	def edit(self, key, callback, **kwargs: Any) -> str:
 		req = NetworkService.request(
-			"/%s/edit" % self.module,
+			"/%s/edit/%s" % (self.module, key),
 			kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
 		if not kwargs:
@@ -62,6 +62,7 @@ class SingletonWrapper(QtCore.QObject):
 			req.wasInitial = True
 		else:
 			req.wasInitial = False
+		req.callback = callback
 		self.checkBusyStatus()
 		return str(id(req))
 
@@ -72,10 +73,12 @@ class SingletonWrapper(QtCore.QObject):
 			self.updatingFailedError.emit(str(id(req)))
 			return
 		if data["action"] in ["editSuccess", "deleteSuccess"]:  # Saving succeeded
-			self.updatingSucceeded.emit(str(id(req)))
-			self.checkBusyStatus()
+			req.callback(data)
+			#self.updatingSucceeded.emit(str(id(req)))
+			#self.checkBusyStatus()
 		else:  # There were missing fields
-			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
+			req.callback(data)
+			#self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
 		self.checkBusyStatus()
 
 	def checkBusyStatus(self) -> None:

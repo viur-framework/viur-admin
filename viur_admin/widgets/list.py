@@ -74,9 +74,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		)
 
 	def canFetchMore(self, QModelIndex):
-		return self._rowCount == 0
-		print("canFetchMore", not self.completeList)
-		return not self.completeList
+		return self.viewProxy.canFetchMore
 
 	def fetchMore(self, QModelIndex):
 		print("fetchMore")

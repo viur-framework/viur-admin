@@ -39,6 +39,7 @@ class ListView():
 		self._hasQueryRunning = False
 		self._cursorList = []
 		self._keys = []
+		self._canFetchMore = True  # Whereever there might be additional pages to fetch
 
 	def fetchMore(self):
 		if not self._hasQueryRunning:
@@ -54,6 +55,10 @@ class ListView():
 			cb = self.callbackMap.get("rowChanged")
 			if cb:
 				cb(self._keys.index(key), 1)
+
+	@property
+	def canFetchMore(self):
+		return self._canFetchMore
 
 class ListWrapper(QtCore.QObject):
 	insertRowsEvent = QtCore.pyqtSignal((int, int))  # New rows have been inserted (index, num-rows)
@@ -161,6 +166,8 @@ class ListWrapper(QtCore.QObject):
 			postCb = listView.callbackMap.get("afterInsertRows")
 			if postCb:
 				postCb(oldLength, extLength)
+			if extLength == 0 and not cursor:
+				listView._canFetchMore = False
 		elif data["action"] == "view":
 			assert False
 			self.entryCache[data["values"]["key"]] = data["values"]
@@ -200,7 +207,7 @@ class ListWrapper(QtCore.QObject):
 
 	def fetchFailed(self, req: RequestWrapper, *args, **kwargs):
 		print("FETCH FAILED !!!!!!")
-		listView = r.listView
+		listView = req.listView
 		listView._hasQueryRunning = False
 
 	def checkForOurModul(self, moduleName: str) -> bool:
