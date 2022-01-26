@@ -338,15 +338,12 @@ class FileListView(TreeListView):
 		:param files: List of local filenames including their full, absolute path
 		:param node: the rootNode which will receive the uploads
 		"""
-
 		logger.debug("doUpload: %r, %r", files, node)
 		if not files:
 			return
-		uploadStatusWidget = UploadStatusWidget()
-		self.parent().layout().addWidget(uploadStatusWidget)
 		protoWrap = protocolWrapperInstanceSelector.select(self.getModul())
-		uploader = protoWrap.upload(files, node)
-		uploadStatusWidget.setUploader(uploader)
+		protoWrap.upload(files, node)
+
 
 	def doDownload(
 			self,
@@ -379,6 +376,15 @@ class FileListView(TreeListView):
 			self.doUpload([file.toLocalFile() for file in event.mimeData().urls()], self.getNode())
 		else:
 			super(FileListView, self).dropEvent(event)
+
+	def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
+		logger.debug("TreeListWidget.dragMoveEvent")
+		if (all([str(file.toLocalFile()).startswith("file://") or str(file.toLocalFile()).startswith("/") or (
+				len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
+				 event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
+			event.accept()  # We have to accept external drops separately
+		else:
+			return super().dragMoveEvent(event)
 
 	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
 		"""Allow Drag&Drop'ing from the local filesystem into our fileview and dragging files out again

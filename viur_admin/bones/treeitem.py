@@ -43,14 +43,14 @@ class TreeBoneSelector(RelationalBoneSelector):
 	displaySourceWidget = TreeWidget
 	displaySelectionWidget = TreeSelectedEntities
 
-	def onSourceItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
+	def onSourceItemDoubleClicked(self, data: dict) -> None:
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		if not isinstance(item, self.list.getLeafItemClass()):
+		print("llllloooo", )
+		if data["_type"] != "leaf":
 			return
-		data = item.entryData
 		if self.multiple:
 			self.selection.extend([data])
 		else:

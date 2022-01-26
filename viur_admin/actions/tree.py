@@ -163,9 +163,8 @@ class TreeDeleteAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 		self.setEnabled(False)
 
-	def onItemSelectionChanged(self) -> None:
-		entries = self.parent().selectedItems()
-		if len(entries) == 0:
+	def onItemSelectionChanged(self, selected, deselected) -> None:
+		if len(selected) == 0:
 			self.setEnabled(False)
 			return
 		self.setEnabled(True)
@@ -174,10 +173,10 @@ class TreeDeleteAction(QtWidgets.QAction):
 		nodes: List[dict] = []
 		leafs: List[dict] = []
 		for item in self.parent().selectedItems():
-			if isinstance(item, self.parent().getNodeItemClass()):
-				nodes.append(item.entryData["key"])
+			if item["_type"] == "node":
+				nodes.append(item["key"])
 			else:
-				leafs.append(item.entryData["key"])
+				leafs.append(item["key"])
 		self.parent().requestDelete(nodes, leafs)
 
 	# self.parent().delete( self.parent().rootNode, self.parent().getPath(), [ x["name"] for x in files], dirs )

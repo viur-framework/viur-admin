@@ -220,10 +220,14 @@ class RequestWrapper(QtCore.QObject):
 		self.successHandler = successHandler
 		self.failureHandler = failureHandler
 		self.finishedHandler = finishedHandler
-		self._parent = parent
+		if parent:
+			self.setParent(parent)
 		self.failSilent = failSilent
 		self.unlockSkey = None
-		if secure:
+		self.secure = secure
+
+	def startRequest(self):
+		if self.secure:
 			if securityTokenProvider.staticSecurityKey and not isPyodide:
 				if not self.extraHeaders:
 					self.extraHeaders = {}
@@ -231,11 +235,11 @@ class RequestWrapper(QtCore.QObject):
 				if not self.params:
 					self.params = {}
 				self.params["skey"] = "staticSessionKey"
-				self.startRequest()
+				self.internalStartRequest()
 			else:  # Wait for a fresh skey to arrive
 				securityTokenProvider.addRequest(self.insertSkey)
 		else:
-			self.startRequest()
+			self.internalStartRequest()
 
 	def insertSkey(self, skey, unlockKey):
 		if not skey and not unlockKey:  # There was an error fetching the skeys, abort request
@@ -248,9 +252,9 @@ class RequestWrapper(QtCore.QObject):
 		if not self.params:
 			self.params = {}
 		self.params["skey"] = skey
-		self.startRequest()
+		self.internalStartRequest()
 
-	def startRequest(self):
+	def internalStartRequest(self):
 		self.startTime = time.time()
 		if self.url.lower().startswith("http"):
 			reqURL = QUrl(self.url)
@@ -283,7 +287,7 @@ class RequestWrapper(QtCore.QObject):
 			request = nam.get(req)
 		self.request = request
 		request.setParent(self)
-		parent = self._parent
+		parent = self.parent()
 		if self.successHandler and "__self__" in dir(self.successHandler) and isinstance(self.successHandler.__self__, QtCore.QObject):
 			parent = parent or self.successHandler.__self__
 			self.requestSucceeded.connect(self.successHandler)
@@ -394,7 +398,7 @@ class RequestGroup(QtCore.QObject):
 		self.setParent(parent)
 		self.queryCount = 0  # Total amount of subqueries remaining
 		self.maxQueryCount = 0  # Total amount of all queries
-		self.pendingRequests: List[Any] = list()
+		self.pendingRequests: List[RequestWrapper] = list()
 		self.runningRequests = 0
 		self.hadErrors = False
 		self.hasFinished = False
@@ -418,12 +422,10 @@ class RequestGroup(QtCore.QObject):
 			self.progressBar.setMaximum(self.maxQueryCount)
 		if self.runningMessage:
 			logToUser(self.formatLogMessage(self.runningMessage))
+		query.startRequest()
 
-	def addRequest(
-			self,
-			*args: Any,
-			**kwargs: Any) -> None:
-		self.pendingRequests.append((args, kwargs))
+	def addRequest(self, reqWrap: RequestWrapper) -> None:
+		self.pendingRequests.append(reqWrap)
 		self.launchNextRequest()
 
 	def launchNextRequest(self) -> None:
@@ -431,11 +433,8 @@ class RequestGroup(QtCore.QObject):
 			return
 		if self.runningRequests > 2:
 			return
-		args, kwargs = self.pendingRequests.pop(0)
-		if "parent" in kwargs:
-			del kwargs["parent"]
-		req = NetworkService.request(*args, parent=self, **kwargs)
-		self.addQuery(req)
+		reqWrap = self.pendingRequests.pop(0)
+		self.addQuery(reqWrap)
 
 	def onProgress(
 			self,
@@ -744,7 +743,16 @@ class NetworkService:
 				_isSecureSSL = None
 			else:
 				sys.exit(1)
-		return RequestWrapper(url=url, params=params, secure=secure, extraHeaders=extraHeaders,successHandler=successHandler, failureHandler=failureHandler, finishedHandler=finishedHandler, parent=parent, failSilent=failSilent)
+		reqWrap = RequestWrapper(url=url,
+						   params=params,
+						   secure=secure,
+						   extraHeaders=extraHeaders,
+						   successHandler=successHandler,
+						   failureHandler=failureHandler,
+						   finishedHandler=finishedHandler,
+						   parent=parent, failSilent=failSilent)
+		reqWrap.startRequest()
+		return reqWrap
 
 	@staticmethod
 	def decode(req: RequestWrapper) -> Any:

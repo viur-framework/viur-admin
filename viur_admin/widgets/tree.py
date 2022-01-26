@@ -3,7 +3,7 @@ import json
 from typing import Union, Sequence, Any, Dict, List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5.QtCore import QModelIndex
 from viur_admin import utils
 from viur_admin.config import conf
 from viur_admin.log import getLogger
@@ -88,7 +88,7 @@ class LeafItem(QtWidgets.QListWidgetItem):
 			return str(self) < str(other)
 
 
-class PathListView(QtWidgets.QListWidget):
+class PathListView__UNUNSED(QtWidgets.QListWidget):
 	rootNodeChanged = QtCore.pyqtSignal((str,))
 	nodeChanged = QtCore.pyqtSignal((str,))
 
@@ -118,6 +118,7 @@ class PathListView(QtWidgets.QListWidget):
 		self.rebuild()
 
 	def rebuild(self) -> None:
+		return #Fixme 111
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		self.clear()
@@ -176,7 +177,8 @@ class PathListView(QtWidgets.QListWidget):
 # self.pathChanged.emit( self.path )
 
 
-class TreeListView(QtWidgets.QListWidget):
+
+class TreeListView(QtWidgets.QTreeView):
 	gridSizeIcon = (128, 128)
 	gridSizeList = (32, 32)
 
@@ -185,6 +187,8 @@ class TreeListView(QtWidgets.QListWidget):
 
 	rootNodeChanged = QtCore.pyqtSignal((str,))
 	nodeChanged = QtCore.pyqtSignal((str,))
+	itemSelectionChanged = QtCore.pyqtSignal((list, list))
+	itemDoubleClicked = QtCore.pyqtSignal((dict,))
 
 	def __init__(
 			self,
@@ -212,29 +216,53 @@ class TreeListView(QtWidgets.QListWidget):
 		# which isnt displayed anymore
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
-		protoWrap.entitiesChanged.connect(self.onTreeChanged)
-		protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
-		protoWrap.entitiesChanged.connect(self.onTreeChanged)
-		protoWrap.entitiesAppended.connect(self.onAppendedData)
-		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
-		self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
+		model = protoWrap.registerView(self)
+		model.setRootNode(self.rootNode)
+		self.setModel(model)
+		self.setItemsExpandable(True)
+		self.setUniformRowHeights(True)
+		self.setSortingEnabled(False)
+		self.setSelectionMode(self.ExtendedSelection)
+		#self.setSelectionBehavior(self.SelectRows)
+		self.setDragDropMode(self.DragDrop)
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)
-		self.setSortingEnabled(False)
-		self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
-		self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
-		self.setSelectionMode(self.ExtendedSelection)
-		if self.rootNode is not None:
-			self.loadData()
-		sizePol = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-		self.setSizePolicy(sizePol)
-		self.setResizeMode(QtWidgets.QListWidget.Adjust)
-		self.setViewMode(0)
-		self.setViewMode(1)
-		self.itemCache: Dict[str, Any] = dict()
+
+		#protoWrap.entitiesChanged.connect(self.onTreeChanged)
+		#protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
+		#protoWrap.entitiesChanged.connect(self.onTreeChanged)
+		#protoWrap.entitiesAppended.connect(self.onAppendedData)
+		#self.mouseDoubleClickEvent.connect(self.onMouseDoubleClickEvent)
+		#self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		#self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+		#self.setDragEnabled(True)
+		#self.setAcceptDrops(True)
+		#self.setSortingEnabled(False)
+		#self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
+		#self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
+		#self.setSelectionMode(self.ExtendedSelection)
+		#if self.rootNode is not None:
+		#	self.loadData()
+		#sizePol = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+		#self.setSizePolicy(sizePol)
+		#self.setResizeMode(QtWidgets.QListWidget.Adjust)
+		#self.setViewMode(0)
+		#self.setViewMode(1)
+		#self.itemCache: Dict[str, Any] = dict()
 
 	## Getters & Setters
+
+	def selectionChanged(self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection) -> None:
+		super().selectionChanged(selected, deselected)
+		newSelection = []
+		oldSelection = []
+		model = self.model()
+		for idx in selected.indexes():
+			newSelection.append(model.data(idx, QtCore.Qt.UserRole))
+		for idx in deselected.indexes():
+			oldSelection.append(model.data(idx, QtCore.Qt.UserRole))
+		self.itemSelectionChanged.emit(newSelection, oldSelection)
 
 	def getNode(self) -> str:
 		return self.node
@@ -267,7 +295,8 @@ class TreeListView(QtWidgets.QListWidget):
 			return
 		self.rootNode = rootNode
 		self.node = rootNode
-		self.loadData()
+		self.model().setRootNode(rootNode)
+		#self.loadData()
 		if isInitialCall:
 			self.rootNodeChanged.emit(self.rootNode)
 
@@ -288,25 +317,36 @@ class TreeListView(QtWidgets.QListWidget):
 			self.customQueryKey = None
 			self.loadData()
 
-	def onItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
-		logger.debug("TreeListView.onItemDoubleClicked: %r, %r", item, self.nodeItem)
-		if isinstance(item, self.nodeItem):
-			self.setNode(item.entryData["key"], isInitialCall=True)
+	def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+		super().mouseDoubleClickEvent(event)
+		print("DOUBLECLICK")
+		destItem = self.model().data(self.indexAt(event.pos()), QtCore.Qt.UserRole)
+		print(destItem)
+		if destItem["key"] != self.model()._rootNode:
+			print(destItem)
+			self.itemDoubleClicked.emit(destItem)
+		#logger.debug("TreeListView.onItemDoubleClicked: %r, %r", item, self.nodeItem)
+		##if isinstance(item, self.nodeItem):
+		#	self.setNode(item.entryData["key"], isInitialCall=True)
 
 	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
 		"""
 			Allow Drag&Drop inside this widget (ie. moving files to subdirs)
 		"""
-		logger.debug("TreeListWidget.dragEnterEvent")
+		logger.error("TreeListWidget.dragEnterEvent")
 		if event.source() == self:
 			event.accept()
 			nodes = []
 			leafs = []
-			for item in self.selectedItems():
-				if isinstance(item, self.nodeItem):
-					nodes.append(item.entryData)
+			for itemIndex in self.selectionModel().selection().indexes():
+				print(itemIndex)
+				print(itemIndex.isValid(), itemIndex.row(), itemIndex.column(), itemIndex.parent())
+				item = self.model().data(itemIndex, QtCore.Qt.UserRole)
+				item["dataPosition"] = itemIndex.row()
+				if item["_type"] == "node":
+					nodes.append(item)
 				else:
-					leafs.append(item.entryData)
+					leafs.append(item)
 			event.mimeData().setData("viur/treeDragData", json.dumps({"nodes": [x["key"] for x in nodes],
 			                                                          "leafs": [x["key"] for x in leafs]}).encode(
 				"utf-8"))
@@ -315,26 +355,20 @@ class TreeListView(QtWidgets.QListWidget):
 				                                                         in
 				                                                         leafs])
 
-	def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
-		logger.debug("TreeListWidget.dragMoveEvent")
-		if isinstance(self.itemAt(event.pos()), self.leafItem):
-			event.ignore()
-		else:
-			event.accept()
-
 	def dropEvent(self, event: QtGui.QDropEvent) -> None:
-		logger.debug("TreeListWidget.dropEvent")
+		logger.error("TreeListWidget.dropEvent")
 		dataDict = json.loads(event.mimeData().data("viur/treeDragData").data().decode("UTF-8"))
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
-		destItem = self.itemAt(event.pos())
-		if not isinstance(destItem, self.nodeItem):
+		destItem = self.model().data(self.indexAt(event.pos()), QtCore.Qt.UserRole)
+		if destItem["_type"] != "node":
 			# Entries have no childs, only nodeItems can have children
 			return
 		protoWrap.move(dataDict["nodes"],
 		               dataDict["leafs"],
-		               destItem.entryData["key"]
+		               destItem["key"]
 		               )
+		self.selectionModel().clearSelection()
 
 	def setDefaultRootNode(self) -> None:
 		logger.debug("setDefaultRootNode")
@@ -509,9 +543,11 @@ class TreeListView(QtWidgets.QListWidget):
 		return self.nodeItem
 
 	def isIconMode(self) -> bool:
+		return False
 		return self.viewMode() == self.IconMode
 
 	def setIconMode(self, iconMode: int) -> None:
+		return
 		if iconMode:
 			self.setDragEnabled(True)
 			self.setAcceptDrops(True)
@@ -540,8 +576,8 @@ class TreeWidget(QtWidgets.QWidget):
 	rootNodeChanged = QtCore.pyqtSignal((str,))
 	nodeChanged = QtCore.pyqtSignal((str,))
 	currentItemChanged = QtCore.pyqtSignal((QtWidgets.QListWidgetItem, QtWidgets.QListWidgetItem))
-	itemSelectionChanged = QtCore.pyqtSignal()
-	itemDoubleClicked = QtCore.pyqtSignal((QtWidgets.QListWidgetItem))
+	itemSelectionChanged = QtCore.pyqtSignal(list, list)
+	itemDoubleClicked = QtCore.pyqtSignal((dict,))
 	itemClicked = QtCore.pyqtSignal((QtWidgets.QListWidgetItem))
 	lastSeenNode: Dict[str, Any] = dict()  # allow opening the last viewed node again
 
@@ -582,22 +618,22 @@ class TreeWidget(QtWidgets.QWidget):
 		self.editOnDoubleClick = editOnDoubleClick
 		self.tree = self.treeWidget(module, rootNode, node, parent=self)
 		self.ui.listWidgetBox.layout().addWidget(self.tree)
-		self.pathList = PathListView(module, rootNode, [])
-		self.ui.pathListBox.layout().addWidget(self.pathList)
+		#self.pathList = PathListView(module, rootNode, [])
+		#self.ui.pathListBox.layout().addWidget(self.pathList)
 		self.editOnDoubleClick = True
 
 		# Inbound Signals
-		self.pathList.nodeChanged.connect(self.nodeChanged)
+		#self.pathList.nodeChanged.connect(self.nodeChanged)
 		self.tree.nodeChanged.connect(self.nodeChanged)
-		self.pathList.rootNodeChanged.connect(self.rootNodeChanged)
+		#self.pathList.rootNodeChanged.connect(self.rootNodeChanged)
 		self.tree.rootNodeChanged.connect(self.rootNodeChanged)
-		self.tree.itemSelectionChanged.connect(self.itemSelectionChanged)
+		self.tree.itemSelectionChanged.connect(self.itemSelectionChanged)# - FIXME11
 
 		# Outbound Signals
 		self.nodeChanged.connect(self.tree.setNode)
-		self.nodeChanged.connect(self.pathList.setNode)
+		#self.nodeChanged.connect(self.pathList.setNode)
 		self.rootNodeChanged.connect(self.tree.setRootNode)
-		self.rootNodeChanged.connect(self.pathList.setRootNode)
+		#self.rootNodeChanged.connect(self.pathList.setRootNode)
 
 		# Internal Signals
 		self.nodeChanged.connect(self.setNode)
@@ -621,7 +657,7 @@ class TreeWidget(QtWidgets.QWidget):
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
 		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)
 		self.tree.itemDoubleClicked.connect(self.itemDoubleClicked)
-		self.tree.itemClicked.connect(self.itemClicked)
+
 
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 
@@ -639,6 +675,7 @@ class TreeWidget(QtWidgets.QWidget):
 		elif lastSeenNode:
 			self.setNode(lastSeenNode, isInitialCall=True)
 
+
 	def onPathChanged(self, path: list) -> None:
 		self.path = path
 
@@ -649,7 +686,7 @@ class TreeWidget(QtWidgets.QWidget):
 		else:
 			self.setDisabled(False)
 			self.overlay.clear()
-			self.pathList.rebuild()
+			#self.pathList.rebuild()
 
 	def onBtnSearchReleased(self, *args: Any, **kwargs: Any) -> None:
 		self.tree.search(self.ui.editSearch.text())
@@ -705,7 +742,11 @@ class TreeWidget(QtWidgets.QWidget):
 			Dont mix these with the selectedItems from relationalBones.
 			@returns: List
 		"""
-		return self.tree.selectedItems()
+		res = []
+		model = self.tree.model()
+		for idx in self.tree.selectionModel().selection().indexes():
+			res.append(model.data(idx, QtCore.Qt.UserRole))
+		return res
 
 	def setRootNode(self, rootNode: str, isInitialCall: bool = False) -> None:
 		"""
@@ -746,8 +787,8 @@ class TreeWidget(QtWidgets.QWidget):
 			@type searchStr: String or None
 		"""
 		# befoire = {"rootNode": self.rootNode, "path": "", "name$lk": self.searchStr}
-		self.tree.clear()
-		self.tree.search(searchStr)
+		self.tree.model().search(searchStr)
+		#self.tree.search(searchStr)
 
 	def requestDelete(self, nodes: List[str], leafs: List[str]) -> None:
 		"""

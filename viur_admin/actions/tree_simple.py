@@ -27,12 +27,11 @@ class TreeSimpleEditAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 		self.setEnabled(False)
 
-	def onItemSelectionChanged(self) -> None:
-		entries = self.parent().selectedItems()
-		if len(entries) != 1:
+	def onItemSelectionChanged(self, selected, deselected) -> None:
+		if len(selected) != 1:
 			self.setEnabled(False)
 			return
-		if not isinstance(entries[0], self.parent().getLeafItemClass()):
+		if selected[0]["_type"] != "node":
 			self.setEnabled(False)
 			return
 		self.setEnabled(True)
@@ -114,12 +113,11 @@ class TreeSimpleRenameAction(QtWidgets.QAction):
 		self.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
 		self.setEnabled(False)
 
-	def onItemSelectionChanged(self) -> None:
-		entries = self.parent().selectedItems()
-		if len(entries) != 1:
+	def onItemSelectionChanged(self, selected, deselected) -> None:
+		if len(selected) != 1:
 			self.setEnabled(False)
 			return
-		if not isinstance(entries[0], self.parent().getNodeItemClass()):
+		if selected[0]["_type"]=="leaf":
 			self.setEnabled(False)
 			return
 		self.setEnabled(True)

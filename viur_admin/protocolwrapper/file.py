@@ -11,9 +11,9 @@ from PyQt5 import QtCore
 from viur_admin.pyodidehelper import isPyodide
 from viur_admin.config import conf
 from viur_admin.log import getLogger
-from viur_admin.network import NetworkService, RequestWrapper
+from viur_admin.network import NetworkService, RequestWrapper, RequestGroup
 from viur_admin.priorityqueue import protocolWrapperClassSelector
-from viur_admin.protocolwrapper.tree import TreeWrapper
+from viur_admin.protocolwrapper.tree import TreeWrapper, Task
 import mimetypes
 
 logger = getLogger(__name__)
@@ -582,45 +582,174 @@ class RecursiveDownloader(QtCore.QObject):
 		self.canceled.emit(self)
 
 
+
+
+class CreateDirectoryTask(Task):
+	def __init__(self, protoWrap, node, tempKey, directoryName):
+		super(CreateDirectoryTask, self).__init__()
+		self.protoWrap = protoWrap
+		self.node = node
+		self.tempKey = tempKey
+		self.directoryName = directoryName
+
+	def run(self):
+		if self.protoWrap.isTemporaryKey(self.node):
+			# Our parent directory might have just been created
+			self.node = self.protoWrap.lookupTemporaryKey(self.node)
+			assert self.node is not None, "Temporary key did not resolve!"
+		NetworkService.request("/%s/add/" % self.protoWrap.module,
+								 {"node": self.node,
+								  "skelType": "node",
+								  "name": self.directoryName},
+								 secure=True,
+							   successHandler=self.onDirectoryCreationSuccess,
+							   failureHandler=self.onDirectoryCreationFailed)
+
+	def onDirectoryCreationSuccess(self, req):
+		data = NetworkService.decode(req)
+		try:
+			newKey = data["values"]["key"]
+		except:
+			self.finish(success=False)
+			return
+		print("onDirectoryCreationSuccess", self.tempKey)
+		self.protoWrap.resolveTemporaryKey(self.tempKey, newKey)
+		self.finish(success=True)
+
+	def onDirectoryCreationFailed(self, req):
+		self.finish(success=False)
+
+class UploadFileTask(Task):
+	def __init__(self, protoWrap, node, tempKey, fileRef):
+		super(UploadFileTask, self).__init__()
+		self.protoWrap = protoWrap
+		self.node = node
+		self.tempKey = tempKey
+		self.fileRef = fileRef
+
+	def run(self):
+		if self.protoWrap.isTemporaryKey(self.node):
+			# Our parent directory might have just been created
+			self.node = self.protoWrap.lookupTemporaryKey(self.node)
+			assert self.node is not None, "Temporary key did not resolve!"
+
+
+		try:
+			mimetype, encoding = mimetypes.guess_type(fileName, strict=False)
+			mimetype = mimetype or "application/octet-stream"
+		except:
+			mimetype = "application/octet-stream"
+		NetworkService.request("/%s/getUploadURL" % self.protoWrap.module,
+							   {"node": self.node, "fileName": os.path.basename(self.fileRef), "mimeType": mimetype},
+							   successHandler=self.startUpload,
+							   failureHandler=self.onFileUploadFailed,
+							   secure=True)
+
+	def startUpload(self, req: RequestWrapper) -> None:
+		getUploadUrlResponse = NetworkService.decode(req)["values"]
+		assert "uploadKey" in getUploadUrlResponse, "Invalid getUploadURL response received"
+		fileObj = open(self.fileRef.encode(sys.getfilesystemencoding()), "rb")
+		self.targetFileKey = getUploadUrlResponse["uploadKey"]
+		req = NetworkService.request(getUploadUrlResponse["uploadUrl"], fileObj,
+									 successHandler=self.onUploadFinished,
+									 failureHandler=self.onFileUploadFailed)
+
+	def onUploadFinished(self, req):
+		if self.node and self.targetFileKey:  # We have to append that file into the file-tree
+			req = NetworkService.request("/%s/add" % self.protoWrap.module, {
+				"key": self.targetFileKey,
+				"node": self.node,
+				"skelType": "leaf",
+			}, successHandler=self.onTreeAddFinished, failureHandler=self.onFileUploadFailed, secure=True)
+		else:  # Anonymous upload, no need to finish that upload
+			self.protoWrap.resolveTemporaryKey(self.tempKey, self.targetFileKey)
+			self.finish(success=True)
+
+	def onTreeAddFinished(self, req):
+		# We've finished the upload
+		self.protoWrap.resolveTemporaryKey(self.tempKey, self.targetFileKey)
+		self.finish(success=True)
+
+	def onFileUploadFailed(self, req):
+		self.finish(success=False)
+
 class FileWrapper(TreeWrapper):
 	protocolWrapperInstancePriority = 3
 
-	def __init__(self, *args: Any, **kwargs: Any):
-		super(FileWrapper, self).__init__(*args, **kwargs)
-		self.transferQueues: list = list()  # Keep a reference to uploader/downloader
-
-	def buildStats(self, filteredFiles: Sequence[str]) -> dict:
-		stats = {
-			"dirsTotal": 0,
-			"dirsDone": 0,
-			"filesTotal": 0,
-			"filesDone": 0,
-			"bytesTotal": 0,
-			"bytesDone": 0
+	def uploadFileToDirectory(self, file, node):
+		# Upload a single file into the given node
+		tmpKey = self.mkTempKey(self.module)
+		# Create a fake entity
+		fileName = os.path.basename(file)
+		self._entityCache[tmpKey] = {
+			"_pending": True,
+			"key": tmpKey,
+			"name": fileName,
+			"_type": "leaf",
+			"parententry": node,
 		}
-		if isPyodide:
-			stats["filesTotal"] = len(filteredFiles)
-			stats["bytesTotal"] = sum([x.size for x in filteredFiles])
-		else:
-			for myPath in filteredFiles:
-				if os.path.isdir(myPath.encode(sys.getfilesystemencoding())):
-					stats["dirsTotal"] += 1  # for the root
+		for view in self.views:
+			# Insert these items into the destination node
+			data = view.resolveInternalDataForNodeKey(node)
+			if data:  # This view also has the destination node
+				newLeafList = data["leafKeys"].copy()
+				newLeafList.append(tmpKey)
+				# Resort nodes according to the views sort order
+				sortProp = view._sortOrder[0]
+				def getSortProp(skelKey):
+					skel = self._entityCache[skelKey]
+					return str(skel.get(sortProp))
+				newLeafList.sort(key=getSortProp)
+				for idx, newKey in enumerate(newLeafList):
+					if newKey in data["leafKeys"]:
+						continue
+					view.beforeInsertRows(node, idx, 1, "leaf")
+					data["leafKeys"].insert(idx, newKey)
+					view.afterInsertRows(node, idx, 1, "leaf")
+		if node not in self.pendingInserts:
+			self.pendingInserts[node] = ([], [])  # Tuple (nodes, leafs)
+		self.pendingInserts[node][1].append(tmpKey)
+		self.taskqueue.addTask(UploadFileTask(self, node, tmpKey, file))
+		return tmpKey
 
-					for root, directories, files in os.walk(myPath):
-						encodedRoot = root.encode(sys.getfilesystemencoding())
-						for item in files:
-							encodedItem = item.encode(sys.getfilesystemencoding())
-							stats["bytesTotal"] += os.path.getsize(os.path.join(encodedRoot, encodedItem))
-						stats["filesTotal"] += len(files)
-						lenDirectories = len(directories)
-						stats["dirsTotal"] += lenDirectories
-						stats["bytesTotal"] += 15 * lenDirectories
-				else:
-					stats["filesTotal"] += 1
-					stats["bytesTotal"] += os.path.getsize(myPath.encode(sys.getfilesystemencoding()))
-
-		logger.debug("buildStats finished: %r, %r", stats["filesTotal"], stats["bytesTotal"])
-		return stats
+	def createDirectoryInNode(self, directoryName, node):
+		tmpKey = self.mkTempKey("%s_rootNode" % self.module)
+		# Create a fake entity
+		self._entityCache[tmpKey] = {
+			"_pending": True,
+			"key": tmpKey,
+			"name": directoryName,
+			"_type": "node",
+			"parententry": node,
+		}
+		for view in self.views:
+			# Insert these items into the destination node
+			data = view.resolveInternalDataForNodeKey(node)
+			if data:  # This view also has the destination node
+				# Create the internal datastructure on that view for our temporary directory entry
+				internalStructure = view.createInternalNodeStructure(tmpKey, node)
+				# Mark them as completey fetched (as the server won't have any data for that faked key anyway)
+				internalStructure["leafListComplete"] = True
+				internalStructure["nodeListComplete"] = True
+				newNodeList = data["nodeKeys"].copy()
+				newNodeList.append(tmpKey)
+				# Resort nodes according to the views sort order
+				sortProp = view._sortOrder[0]
+				def getSortProp(skelKey):
+					skel = self._entityCache[skelKey]
+					return str(skel.get(sortProp))
+				newNodeList.sort(key=getSortProp)
+				for idx, newKey in enumerate(newNodeList):
+					if newKey in data["nodeKeys"]:
+						continue
+					view.beforeInsertRows(node, idx, 1, "node")
+					data["nodeKeys"].insert(idx, newKey)
+					view.afterInsertRows(node, idx, 1, "node")
+		if node not in self.pendingInserts:
+			self.pendingInserts[node] = ([], [])  # Tuple (nodes, leafs)
+		self.pendingInserts[node][0].append(tmpKey)
+		self.taskqueue.addTask(CreateDirectoryTask(self, node, tmpKey, directoryName))
+		return tmpKey
 
 	def upload(self, files: Sequence[str], node: Sequence[str]) -> RecursiveUploader:
 		"""
@@ -633,16 +762,22 @@ class FileWrapper(TreeWrapper):
 		if not files:
 			return
 		if isPyodide:
-			filteredFiles = files
+			for file in files:
+				self.uploadFileToDirectory(file, node)
 		else:
 			filteredFiles = [
 				x for x in files if
 				conf.cmdLineOpts.noignore or not any([pattern(x) for pattern in ignorePatterns])]
-		stats = self.buildStats(filteredFiles)
-		uploader = RecursiveUploader(filteredFiles, node, self.module, stats, parent=self)
-		uploader.finished.connect(self.delayEmitEntriesChanged)
-		logger.debug("Filewrapper.upload: %r, %r, %r", files, node, uploader)
-		return uploader
+			for fileName in filteredFiles:
+				if os.path.isdir(fileName.encode(sys.getfilesystemencoding())):
+					newNode = self.createDirectoryInNode(os.path.basename(fileName), node)
+					subFiles = [os.path.join(fileName, x.decode(sys.getfilesystemencoding())) for x in os.listdir(fileName.encode(sys.getfilesystemencoding()))]
+					self.upload(subFiles, newNode)
+					#print(os.listdir(fileName.encode(sys.getfilesystemencoding())))
+					#[os.path.join(req.uploadDirName, x) for x in os.listdir(req.uploadDirName)],
+				else:  # It's a single file
+					self.uploadFileToDirectory(fileName, node)
+		return
 
 	def download(self, targetDir: str, files: Sequence[str], dirs: Sequence[str]) -> RecursiveDownloader:
 		"""
