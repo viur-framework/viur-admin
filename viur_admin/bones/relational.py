@@ -434,6 +434,7 @@ class RelationalEditBone(BoneEditInterface):
 			self.setSelection([res])
 
 	def setSelection(self, selection: Union[list, dict, None]) -> None:
+		print("---- IN SET SELECTION", selection)
 		data = [{"dest": x, "rel": {}} if "dest" not in x else x for x in selection]
 		if len(selection) > 0:
 			self.selection = data[0]
@@ -464,17 +465,22 @@ class RelationalEditBone(BoneEditInterface):
 		self.setErrors(errors)
 
 	def serializeForPost(self) -> Dict[str, Any]:
+		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		if not self.selection:
 			return None
-			#return {self.boneName: None}
+		refKey = self.selection["dest"]["key"]
+		if protoWrap.isTemporaryKey(refKey):
+			refKey = protoWrap.lookupTemporaryKey(refKey)
+			if not refKey:
+				raise ReferenceError()  # This reference is still awaiting being synced to the server - cannot continue
 		if self.using:
 			if not self.internalEdits:
 				return None
 			resDict = self.internalEdits.serializeForPost()
-			resDict["key"] = self.selection["dest"]["key"]
+			resDict["key"] = refKey
 			return resDict
 		else:
-			return self.selection["dest"]["key"]
+			return refKey
 
 
 class RelationalBoneSelector(QtWidgets.QWidget):

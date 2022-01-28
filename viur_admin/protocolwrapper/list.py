@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui
-
+from viur_admin.protocolwrapper.base import ProtocolWrapper
 from time import time
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -60,7 +60,7 @@ class ListView():
 	def canFetchMore(self):
 		return self._canFetchMore
 
-class ListWrapper(QtCore.QObject):
+class ListWrapper(ProtocolWrapper):
 	insertRowsEvent = QtCore.pyqtSignal((int, int))  # New rows have been inserted (index, num-rows)
 	removeRowsEvent = QtCore.pyqtSignal((int, int))  # Rows have been removed (index, num-rows)
 	changeRowsEvent = QtCore.pyqtSignal((int, int))  # Rows have been changed (index, num-rows)

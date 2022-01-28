@@ -586,7 +586,7 @@ class ListTableView(QtWidgets.QTableView):
 			self.edit(index)
 			return
 		try:
-			self.itemClicked.emit(self.model().getData()[index.row()])
+			self.itemClicked.emit(self.model().getData(index, QtCore.Qt.UserRole))
 		except IndexError:
 			# someone probably clicked on the 'loading more' row - but why the the row stays so long
 			pass

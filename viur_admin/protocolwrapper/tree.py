@@ -11,70 +11,11 @@ from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
 from viur_admin.log import getLogger, getStatusBar, logToUser
 from weakref import WeakSet, ref as weakRef
+from viur_admin.protocolwrapper.base import Task, ProtocolWrapper
 import copy
 
 logger = getLogger(__name__)
 
-class TaskQueue(QtCore.QObject):
-	def __init__(self, parent):
-		super().__init__(parent)
-		self.pendingTasks = []
-		self.hasTaskRunning = False
-		self.progressBar: QtWidgets.QProgressBar = None
-		self.finishedTasks = 0
-
-	def addTask(self, task):
-		task.setParent(self)
-		self.pendingTasks.append(task)
-		self.tryRunNext()
-
-	def updateDisplay(self):
-		if not self.progressBar and self.pendingTasks:
-			# Create a progress bar and add it to the status-bar
-			self.progressBar = QtWidgets.QProgressBar()
-			self.progressBar.setMaximum(len(self.pendingTasks)+self.finishedTasks)
-			self.progressBar.setValue(self.finishedTasks)
-			self.progressBar.setFormat("Syncing changes in module %s: %%v/%%m" % self.parent().module)
-			getStatusBar().addWidget(self.progressBar)
-			self.progressBar.show()
-		elif self.progressBar and not self.pendingTasks:
-			# We've finished, remove our progressbar from the status-bar
-			getStatusBar().removeWidget(self.progressBar)
-			self.progressBar.deleteLater()
-			self.progressBar = None
-		elif self.progressBar:
-			# Just update the progress
-			self.progressBar.setMaximum(len(self.pendingTasks)+self.finishedTasks)
-			self.progressBar.setValue(self.finishedTasks)
-
-
-	def tryRunNext(self):
-		self.updateDisplay()
-		if not self.pendingTasks:
-			return
-		if self.hasTaskRunning:
-			return
-		self.hasTaskRunning = True
-		task = self.pendingTasks.pop(0)
-		task.start(self)
-
-	def taskFinished(self, success:bool):
-		self.hasTaskRunning = False
-		assert success, "TASK FAILED"
-		self.finishedTasks += 1
-		self.tryRunNext()
-
-class Task(QtCore.QObject):
-	def start(self, queue):
-		self.queue = queue
-		self.run()
-
-	def run(self):
-		raise NotImplementedError()
-
-	def finish(self, success:bool):
-		self.queue.taskFinished(success)
-		self.deleteLater()
 
 
 class MoveItemsTask(Task):
@@ -368,7 +309,7 @@ class TreeView(QtCore.QAbstractItemModel):
 
 
 
-class TreeWrapper(QtCore.QObject):
+class TreeWrapper(ProtocolWrapper):
 	maxCacheTime = 60  # Cache results for max. 60 Seconds
 	updateDelay = 0  # 1,5 Seconds grace time before reloading
 	batchSize = 30  # Fetch 30 entries at once
@@ -401,41 +342,14 @@ class TreeWrapper(QtCore.QObject):
 		self._entityCache: dict[str, dict] = {}  # Map of database-key -> entity data
 		self.temporaryKeyIndex: int = 0  # We'll assign temp. keys using this index
 		self.temporaryKeyMap: dict[str, str] = {}  # Map of temp key -> finally assignend key from the server
-		self.taskqueue = TaskQueue(self)
 
-	def mkTempKey(self, kind):
-		"""
-			Create a new temporary key. That key is guranteed to be unique for this module.
-			:param kind: usually self.module, may be also self.module+"_rootNode"
-			:return: A unique identifier usable as temporary key
-		"""
-		idx = self.temporaryKeyIndex
-		self.temporaryKeyIndex += 1
-		return "temp:%s_%s" % (kind, idx)
-
-	def isTemporaryKey(self, key: str) -> bool:
-		"""
-			Checks if the given key is temporary. If so, it may be resolved using meth:lookupTemporaryKey.
-			:param key: The key to check
-			:return: True, if the given key is temporary
-		"""
-		return key.startswith("temp:")
-
-	def lookupTemporaryKey(self, tempKey: str) -> Optional[str]:
-		"""
-			Resolves a temporary key to the final one assigned by the server. May return None if the changes
-			have not been synced to the server yet.
-			:param tempKey: The temporary key to resolve
-			:return: The final, server-assigned key or None
-		"""
-		return self.temporaryKeyMap.get(tempKey)
 
 	def resolveTemporaryKey(self, tempKey, finalKey):
 		"""
 			Sets the final, server-assgined key for the given tempoary key. Must be called if the entry has been
 			successfully created on the server and we got it's final key in addSuccess or the like.
 		"""
-		self.temporaryKeyMap[tempKey] = finalKey
+		super().resolveTemporaryKey(tempKey, finalKey)
 		self._entityCache[finalKey] = self._entityCache[tempKey]
 		self._entityCache[tempKey]["_pending"] = False
 		isNode = "%s_rootNode" % self.module in tempKey
@@ -542,14 +456,14 @@ class TreeWrapper(QtCore.QObject):
 
 	def queryNode(self, treeView, node, treeType, sortOrder, cursor=None):
 		if self.isTemporaryKey(node) and not self.lookupTemporaryKey(node):
-			dataDict = treeView.resolveInternalDataForNodeKey(req.node)
+			dataDict = treeView.resolveInternalDataForNodeKey(node)
 			# Nothing to fetch here, it's still awaiting upload
-			if req.treeType == "node":
+			if treeType == "node":
 				dataDict["nodeListComplete"] = True
-				self.injectPendingInsertsIfNeeded(treeView, "node", req.node)
+				self.injectPendingInsertsIfNeeded(treeView, "node", node)
 			else:
 				dataDict["leafListComplete"] = True
-				self.injectPendingInsertsIfNeeded(treeView, "leaf", req.node)
+				self.injectPendingInsertsIfNeeded(treeView, "leaf", node)
 		else:
 			queryDict = {"orderby": sortOrder[0], "orderdir": sortOrder[1], "parententry": node}
 			if cursor:

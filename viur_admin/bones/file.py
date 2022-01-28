@@ -164,7 +164,7 @@ class FileItemBone(TreeItemBone):
 			return
 		if self.selection:
 			logger.debug("selection: %r", self.selection)
-			if self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
+			if not self.selection["dest"].get("_pending") and self.selection["dest"]["mimetype"].startswith("image/") and not isPyodide:
 				RemoteFile(self.selection["dest"]["dlkey"], successHandler=self.loadIconFromRequest)
 			try:
 				value = self.safeEval.execute(self.ast, {

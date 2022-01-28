@@ -459,9 +459,13 @@ class EditWidget(QtWidgets.QWidget):
 		self.closeOnSuccess = True
 		# self.overlay.inform( self.overlay.BUSY )
 		res: Dict[str, Any] = dict()
-		for key, bone in self.bones.items():
-			res[key] = bone.serializeForPost()
-			#res.update(bone.serializeForPost())
+		try:
+			for key, bone in self.bones.items():
+				res[key] = bone.serializeForPost()
+				#res.update(bone.serializeForPost())
+		except ReferenceError:  # One or more items are still awaiting upload
+			QtWidgets.QMessageBox.information(self, "Upload pending", "One or more Items are still being synced to the server. Please try again shortly.")
+			return
 		self.save(res)
 
 	def onSaveSuccess(self, editTaskID: int) -> None:
