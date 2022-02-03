@@ -460,9 +460,11 @@ class TreeWrapper(ProtocolWrapper):
 			# Nothing to fetch here, it's still awaiting upload
 			if treeType == "node":
 				dataDict["nodeListComplete"] = True
+				dataDict["hasQueryRunning"] = False
 				self.injectPendingInsertsIfNeeded(treeView, "node", node)
 			else:
 				dataDict["leafListComplete"] = True
+				dataDict["hasQueryRunning"] = False
 				self.injectPendingInsertsIfNeeded(treeView, "leaf", node)
 		else:
 			queryDict = {"orderby": sortOrder[0], "orderdir": sortOrder[1], "parententry": node}
