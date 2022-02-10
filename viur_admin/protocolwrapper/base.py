@@ -42,9 +42,9 @@ class TaskQueue(QtCore.QObject):
 			return
 		if self.hasTaskRunning:
 			return
-		#self.hasTaskRunning = True
-		#task = self.pendingTasks.pop(0)
-		#task.start(self)
+		self.hasTaskRunning = True
+		task = self.pendingTasks.pop(0)
+		task.start(self)
 
 	def taskFinished(self, success:bool):
 		self.hasTaskRunning = False

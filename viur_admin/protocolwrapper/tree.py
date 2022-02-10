@@ -647,7 +647,7 @@ class TreeWrapper(ProtocolWrapper):
 					view.beforeRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
 					data["leafKeys"].remove(leaf)
 					view.afterRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
-					nodeData["pendingDeletes"].add(data["nodeKey"])
+					data["pendingDeletes"].add(leaf)
 			# Insert these items into the destination node
 			data = view.resolveInternalDataForNodeKey(destNode)
 			if data:  # This view also has the destination node
