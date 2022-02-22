@@ -235,16 +235,11 @@ class EditWidget(QtWidgets.QWidget):
 				self.editTaskID = protoWrap.edit(self.key, self.onEditResultAvailable, **data)
 			else:
 				self.editTaskID = protoWrap.add(self.onEditResultAvailable, **data)
-		elif self.applicationType == ApplicationType.HIERARCHY:  # Application: Hierarchy
-			if self.key and (not self.clone or not data):
-				self.editTaskID = protoWrap.edit(self.key, **data)
-			else:
-				self.editTaskID = protoWrap.add(self.node, **data)
 		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
 			if self.key and not self.clone:
-				self.editTaskID = protoWrap.edit(self.key, self.skelType, **data)
+				self.editTaskID = protoWrap.edit(self.key, self.skelType, self.onEditResultAvailable, **data)
 			else:
-				self.editTaskID = protoWrap.add(self.node, self.skelType, **data)
+				self.editTaskID = protoWrap.add(self.node, self.skelType, self.onEditResultAvailable, **data)
 		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
 			self.editTaskID = protoWrap.edit(**data)
 		else:
@@ -253,7 +248,6 @@ class EditWidget(QtWidgets.QWidget):
 
 	def onEditResultAvailable(self, data):
 		self.setData(data=data)
-		self.setDisabled(False)
 
 	def onBtnResetReleased(
 			self,
@@ -322,6 +316,14 @@ class EditWidget(QtWidgets.QWidget):
 		assert request or data
 		if request:
 			data = NetworkService.decode(request)
+		if data["action"] in ["addSuccess", "editSuccess"]:
+			if self.closeOnSuccess:
+				event.emit('popWidget', self)
+			else:
+				if data["action"] == "addSuccess":  # Clear the form to be able to add another one
+					self.reloadData()
+					return
+		self.setDisabled(False)
 		# Clear the UI
 		while self.ui.tabWidget.count():
 			item = self.ui.tabWidget.widget(0)

@@ -190,7 +190,7 @@ class TreeView(QtCore.QAbstractItemModel):
 			"nodeListComplete": False,
 			"nodeKeys": [],
 			"leafCursorList": [],
-			"leafListComplete": False,
+			"leafListComplete": self.treeWrapper.nodesOnly,
 			"leafKeys": [],
 			"parentNodeKey" : parentKey,
 			"nodeKey": nodeKey,
@@ -232,7 +232,9 @@ class TreeView(QtCore.QAbstractItemModel):
 		self.endRemoveRows()
 
 	def rowChanged(self, index, numRows):
-		self.dataChanged.emit(self.index(index, 0), self.index(index + numRows - 1, 999))
+		# Indicates, that numRows (starting from index) have been changed and have to be redrawn
+		parent = self.parent(index)
+		self.dataChanged.emit(self.index(index.row(), 0, parent), self.index(index.row() + numRows - 1, 999, parent))
 
 	def rowCount(self, parent: QModelIndex = None, *args: Any, **kwargs: Any) -> int:
 		dataDict = self.resolveInternalDataForIndex(parent)
@@ -335,6 +337,7 @@ class TreeWrapper(ProtocolWrapper):
 		self.views: WeakSet[TreeView] = WeakSet()
 		self.rootNodes = []
 		self.pendingDeletes = set()
+		self.nodesOnly: bool = False  # If true, there's no leaf skel defined
 		# Map of pending inserts (uploads / adds that have not yet been synced to the server).
 		# Format: parent (root?)node key (str) -> List of keys that should be inserted on this node (0: Nodes, 1: Leafs)
 		self.pendingInserts: dict[str, Tuple[List[str],List[str]]] = {}
@@ -375,12 +378,6 @@ class TreeWrapper(ProtocolWrapper):
 		if tempKey in self.pendingInserts:
 			self.pendingInserts[finalKey] = self.pendingInserts[tempKey]
 			del self.pendingInserts[tempKey]
-		#for v in self.pendingInserts.values():
-		#	# We might be in our parent yyyyyyy
-		#	if tempKey in v[0]:
-		#		v[0].remove(tempKey)
-		#	if tempKey in v[1]:
-		#		v[1].remove(tempKey)
 		r = NetworkService.request("/%s/view/%s/%s" % (self.module, "node" if isNode else "leaf", finalKey), successHandler=self.updateEntry)
 		r.isNode = isNode
 
@@ -410,6 +407,7 @@ class TreeWrapper(ProtocolWrapper):
 		if tmp is None:
 			self.checkBusyStatus()
 			return
+		self.nodesOnly = True
 		for stype, structlist in tmp.items():
 			structure: OrderedDict = OrderedDict()
 			for k, v in structlist:
@@ -417,17 +415,21 @@ class TreeWrapper(ProtocolWrapper):
 			if stype == "viewNodeSkel":
 				self.viewNodeStructure = structure
 			elif stype == "viewLeafSkel":
+				self.nodesOnly = False
 				self.viewLeafStructure = structure
 			elif stype == "editNodeSkel":
 				self.editNodeStructure = structure
 			elif stype == "editLeafSkel":
+				self.nodesOnly = False
 				self.editLeafStructure = structure
 			elif stype == "addNodeSkel":
 				self.addNodeStructure = structure
 			elif stype == "addLeafSkel":
+				self.nodesOnly = False
 				self.addLeafStructure = structure
 			else:
 				raise ValueError("onStructureAvailable: unknown node type: {0}".format(stype))
+		print(self.module, self.nodesOnly)
 		self.onModulStructureAvailable.emit()
 
 
@@ -585,7 +587,6 @@ class TreeWrapper(ProtocolWrapper):
 				data["leafKeys"].insert(idx, newKey)
 				view.afterInsertRows(parentNode, idx, 1, "leaf")
 
-
 	def onSaveResult(self, req: RequestWrapper = None) -> None:
 		try:
 			data = NetworkService.decode(req)
@@ -593,14 +594,22 @@ class TreeWrapper(ProtocolWrapper):
 			self.updatingFailedError.emit(str(id(req)))
 			QtCore.QTimer.singleShot(self.updateDelay, self.resetOnError)
 			return
-		if data["action"] in ["addSuccess", "editSuccess", "deleteSuccess"]:  # Saving succeeded
-			QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
-			self.updatingSucceeded.emit(str(id(req)))
-		else:  # There were missing fields
-			self.updatingDataAvailable.emit(str(id(req)), data, req.wasInitial)
-		#self.checkBusyStatus()
+		if data["action"] == "addSuccess":
+			self._entityCache[data["values"]["key"]] = data["values"]
+			self._entityCache[data["values"]["key"]]["_type"] = req.skelType
+			if req.skelType == "node":
+				self._injectItemsIntoViews(data["values"]["parententry"], [data["values"]["key"]], [])
+			else:
+				self._injectItemsIntoViews(data["values"]["parententry"], [], [data["values"]["key"]])
+		elif data["action"] == "editSuccess":
+			self._entityCache[data["values"]["key"]].update(data["values"])
+			if req.skelType == "node":
+				self._notifyViewsItemsChanged([data["values"]["key"]], [])
+			else:
+				self._notifyViewsItemsChanged([], [data["values"]["key"]])
+		req.callback(data)
 
-	def add(self, node: str, skelType: str, **kwargs: Any) -> str:
+	def add(self, node: str, skelType: str, callback, **kwargs: Any) -> str:
 		tmp = kwargs.copy()
 		tmp["node"] = node
 		tmp["skelType"] = skelType
@@ -612,19 +621,43 @@ class TreeWrapper(ProtocolWrapper):
 			req.wasInitial = True
 		else:
 			req.wasInitial = False
+		req.callback = callback
+		req.skelType = skelType
 		return str(id(req))
 
-	def move(self, nodes: Sequence[str], leafs: Sequence[str], destNode: str) -> str:
-		"""Moves elements to the given rootNode/path.
+	def edit(self, key: str, skelType, callback, **kwargs: Any) -> str:
+		print("XXX IN EDIT", key)
+		req = NetworkService.request(
+			"/%s/edit/%s/%s" % (self.module, skelType, key), kwargs, secure=(len(kwargs) > 0),
+			finishedHandler=self.onSaveResult)
+		if not kwargs:
+			# This is our first request to fetch the data, dont show a missing hint
+			req.wasInitial = True
+		else:
+			req.wasInitial = False
+		#self.entityChanging.emit(key)
+		req.callback = callback
+		req.skelType = skelType
+		#self.checkBusyStatus()
+		editTaskId = str(id(req))
+		logger.debug("proto list edit id: %r", editTaskId)
+		return editTaskId
 
-		:param nodes: Nodes to be removed
-		:type nodes: list
-		:param leafs: leafs to be removed
-		:type leafs: list
-		:param destNode: destination node id
-		:type destNode: str
+	def _notifyViewsItemsChanged(self, nodes: List[str], leafs: List[str]):
+		for view in self.views:
+			for node in nodes:
+				index = view.resolveParentIndexForNodeKey(node)
+				view.rowChanged(index, 1)
+			for leaf in leafs:
+				index = view.resolveInternalDataForLeafKey(leaf)
+				view.rowChanged(index, 1)
+
+	def _deleteItemsFromViews(self, nodes: List[str], leafs: List[str]):
 		"""
-		# Update our internal views
+			This will remove the given nodes and/or leafs from any active views
+			:param nodes: The list of keys (of type node) that should be removed.
+			:param leafs: The list of keys (of type leaf) that should be removed.
+		"""
 		for view in self.views:
 			# Mark these entities as deleted in the source nodes
 			for node in nodes:
@@ -635,11 +668,10 @@ class TreeWrapper(ProtocolWrapper):
 					view.beforeRemoveRows(data["nodeKey"], oldIdx, 1, "node")
 					data["nodeKeys"].remove(node)
 					# Also update our parentNode key
-					nodeData = view.resolveInternalDataForNodeKey(node)
-					nodeData["parentNodeKey"] = destNode
+					#nodeData = view.resolveInternalDataForNodeKey(node)
+					#nodeData["parentNodeKey"] = destNode
 					view.afterRemoveRows(data["nodeKey"], oldIdx, 1, "node")
-					# We'll treat then as deleted, as injectPendingInsertsIfNeeded will add them anyway
-					self.pendingDeletes.add(data["nodeKey"])
+					view.removeInternalDataForNodeKey(node)
 			for leaf in leafs:
 				data = view.resolveInternalDataForLeafKey(leaf)
 				if data:  # Not all views may display this nodes/leafs
@@ -647,9 +679,15 @@ class TreeWrapper(ProtocolWrapper):
 					view.beforeRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
 					data["leafKeys"].remove(leaf)
 					view.afterRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
-					# We'll treat then as deleted, as injectPendingInsertsIfNeeded will add them anyway
-					self.pendingDeletes.add(leaf)
-			# Insert these items into the destination node
+
+	def _injectItemsIntoViews(self, destNode:str, nodes: List[str], leafs: List[str]):
+		"""
+			This will propagate the new nodes and/or leafs to all currently active views
+			:param destNode: The key of the node (may be a rootNode) under which they should appear
+			:param nodes: The list of keys (of type node) that should be injected. Will be ignored if already displayed
+			:param leafs: The list of keys (of type leaf) that should be injected. Will be ignored if already displayed
+		"""
+		for view in self.views:
 			data = view.resolveInternalDataForNodeKey(destNode)
 			if data:  # This view also has the destination node
 				if nodes:
@@ -664,6 +702,7 @@ class TreeWrapper(ProtocolWrapper):
 					for idx, newKey in enumerate(newNodeList):
 						if newKey in data["nodeKeys"]:
 							continue
+						view.createInternalNodeStructure(newKey, destNode)
 						view.beforeInsertRows(destNode, idx, 1, "node")
 						data["nodeKeys"].insert(idx, newKey)
 						view.afterInsertRows(destNode, idx, 1, "node")
@@ -682,6 +721,22 @@ class TreeWrapper(ProtocolWrapper):
 						view.beforeInsertRows(destNode, idx, 1, "leaf")
 						data["leafKeys"].insert(idx, newKey)
 						view.afterInsertRows(destNode, idx, 1, "leaf")
+
+	def move(self, nodes: List[str], leafs: List[str], destNode: str) -> str:
+		"""Moves elements to the given rootNode/path.
+
+		:param nodes: Nodes to be removed
+		:param leafs: leafs to be removed
+		:param destNode: destination node id
+		"""
+		# Update our internal views
+		self._deleteItemsFromViews(nodes, leafs)
+		self._injectItemsIntoViews(destNode, nodes, leafs)
+		# We'll treat then as deleted, as injectPendingInsertsIfNeeded will add them anyway
+		for node in nodes:
+			self.pendingDeletes.add(node)
+		for leaf in leafs:
+			self.pendingDeletes.add(leaf)
 		# Update our pending insert map
 		for node in nodes:
 			parentNodeKey = self._entityCache[node]["parententry"]
@@ -726,28 +781,12 @@ class TreeWrapper(ProtocolWrapper):
 		:return:
 		"""
 		# Update our internal views
-		for view in self.views:
-			# Mark these entities as deleted in the source nodes
-			for node in nodes:
-				index = view.resolveParentIndexForNodeKey(node)
-				data = view.resolveParentDataForIndex(index)
-				if data:  # Not all views may display this nodes/leafs
-					oldIdx = data["nodeKeys"].index(node)
-					view.beforeRemoveRows(data["nodeKey"], oldIdx, 1, "node")
-					data["nodeKeys"].remove(node)
-					# Also update our parentNode key
-					nodeData = view.resolveInternalDataForNodeKey(node)
-					view.afterRemoveRows(data["nodeKey"], oldIdx, 1, "node")
-					self.pendingDeletes.add(node)
-					view.removeInternalDataForNodeKey(node)
-			for leaf in leafs:
-				data = view.resolveInternalDataForLeafKey(leaf)
-				if data:  # Not all views may display this nodes/leafs
-					oldIdx = data["leafKeys"].index(leaf) + len(data["nodeKeys"])
-					view.beforeRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
-					data["leafKeys"].remove(leaf)
-					view.afterRemoveRows(data["nodeKey"], oldIdx, 1, "leaf")
-					self.pendingDeletes.add(leaf)
+		self._deleteItemsFromViews(nodes, leafs)
+		# We'll treat then as deleted, as injectPendingInsertsIfNeeded will add them anyway
+		for node in nodes:
+			self.pendingDeletes.add(node)
+		for leaf in leafs:
+			self.pendingDeletes.add(leaf)
 		# Update our pending insert map
 		for node in nodes:
 			print(self._entityCache[node])

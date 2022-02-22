@@ -76,10 +76,10 @@ class TreeEditAction(QtWidgets.QAction):
 		nodes = []
 		leafs = []
 		for item in self.parent().selectedItems():
-			if isinstance(item, self.parent().getLeafItemClass()):
-				leafs.append(item.entryData)
+			if item["_type"] == "leaf":
+				leafs.append(item)
 			else:
-				nodes.append(item.entryData)
+				nodes.append(item)
 		for entry in leafs:
 			skelType = "leaf"
 			modul = self.parent().module
