@@ -373,7 +373,11 @@ class FileListView(TreeListView):
 				len(str(file.toLocalFile())) > 0 and str(file.toLocalFile())[1] == ":") for file in
 		         event.mimeData().urls()])) and len(event.mimeData().urls()) > 0:
 			# Its an upload (files/dirs dragged from the local filesystem into our fileview)
-			self.doUpload([file.toLocalFile() for file in event.mimeData().urls()], self.getNode())
+			destItem = self.model().data(self.indexAt(event.pos()), QtCore.Qt.UserRole)
+			if destItem["_type"] != "node":
+				# Entries have no childs, only nodeItems can have children
+				return
+			self.doUpload([file.toLocalFile() for file in event.mimeData().urls()], destItem["key"])
 		else:
 			super(FileListView, self).dropEvent(event)
 

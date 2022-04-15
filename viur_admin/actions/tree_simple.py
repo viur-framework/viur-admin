@@ -87,7 +87,7 @@ class TreeMkDirAction(QtWidgets.QAction):
 		logger.debug("TreeMkDirAction.onTriggered: %r, %r", self.parent(), self.parent().realModule)
 		reqWrap = protocolWrapperInstanceSelector.select(self.parent().realModule)
 		assert reqWrap is not None
-		reqWrap.add(self.parent().getNode(), "node", name=result)
+		reqWrap.add(self.parent().getNode(), "node", name=result, callback=lambda x: None)
 
 	@staticmethod
 	def isSuitableFor(module: str, actionName: str) -> bool:

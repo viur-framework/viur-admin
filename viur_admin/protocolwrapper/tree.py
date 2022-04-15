@@ -348,9 +348,10 @@ class TreeWrapper(ProtocolWrapper):
 
 	def resolveTemporaryKey(self, tempKey, finalKey):
 		"""
-			Sets the final, server-assgined key for the given tempoary key. Must be called if the entry has been
+			Sets the final, server-assigned key for the given temporary key. Must be called if the entry has been
 			successfully created on the server and we got it's final key in addSuccess or the like.
 		"""
+		print("resolveTemporaryKey", tempKey, finalKey)
 		super().resolveTemporaryKey(tempKey, finalKey)
 		self._entityCache[finalKey] = self._entityCache[tempKey]
 		self._entityCache[tempKey]["_pending"] = False
@@ -499,7 +500,11 @@ class TreeWrapper(ProtocolWrapper):
 					dataDict["nodeCursorList"].append(cursor)
 				else:
 					dataDict["leafCursorList"].append(cursor)
+			# Prevent re-adding items scheduled for deletion
 			filteredSkelList = [x for x in data["skellist"] if x["key"] not in self.pendingDeletes]
+			# Don't add items already present (might be an item that just finished uploading)
+			filteredSkelList = [x for x in filteredSkelList if x["key"] not in dataDict["nodeKeys"]]
+			filteredSkelList = [x for x in filteredSkelList if x["key"] not in dataDict["leafKeys"]]
 			oldLength = len(dataDict["nodeKeys"]) + len(dataDict["leafKeys"])
 			extLength = len(filteredSkelList)
 			treeView.beforeInsertRows(req.node, oldLength, extLength, req.treeType)

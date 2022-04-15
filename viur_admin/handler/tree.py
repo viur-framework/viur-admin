@@ -28,7 +28,7 @@ class TreeBaseHandler(WidgetHandler):
 				icon = loadIcon(config["icon"])
 		else:
 			icon = loadIcon("tree.svg")
-		super(TreeBaseHandler, self).__init__(lambda: TreeWidget(module), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False, *args,
+		super(TreeBaseHandler, self).__init__(lambda: TreeWidget(module, editOnDoubleClick=True), sortIndex=config.get("sortIndex", 0), descr=config["name"], icon=icon, vanishOnClose=False, *args,
 		                                      **kwargs)
 		logger.debug("TreeBaseHandler name: %r", config["name"])
 		# self.setText(0, config["name"])

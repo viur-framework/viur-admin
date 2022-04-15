@@ -11,7 +11,7 @@ from viur_admin.network import NetworkService, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDelegateSelector
 from viur_admin.ui.treeUI import Ui_Tree
 from viur_admin.utils import Overlay, WidgetHandler, loadIcon
-from viur_admin.widgets.edit import EditWidget
+from viur_admin.widgets.edit import EditWidget, ApplicationType
 
 logger = getLogger(__name__)
 
@@ -210,11 +210,8 @@ class TreeListView(QtWidgets.QTreeView):
 
 	def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
 		super().mouseDoubleClickEvent(event)
-		print("DOUBLECLICK")
 		destItem = self.model().data(self.indexAt(event.pos()), QtCore.Qt.UserRole)
-		print(destItem)
 		if destItem["key"] != self.model()._rootNode:
-			print(destItem)
 			self.itemDoubleClicked.emit(destItem)
 
 	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
@@ -523,6 +520,7 @@ class TreeWidget(QtWidgets.QWidget):
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
 		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)
 		self.tree.itemDoubleClicked.connect(self.itemDoubleClicked)
+		self.tree.itemDoubleClicked.connect(self.listWidgetItemDoubleClicked)  # To allow double-click to edit
 
 
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
@@ -561,13 +559,11 @@ class TreeWidget(QtWidgets.QWidget):
 		self.search(self.ui.editSearch.text())
 
 	def listWidgetItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
-		if isinstance(item, self.leafItem) and self.editOnDoubleClick:
-			descr = QtCore.QCoreApplication.translate("TreeWidget", "Edit entry")
-			handler = WidgetHandler(lambda: EditWidget(self.module, EditWidget.appTree, item.entryData["key"]), descr)
+		if self.editOnDoubleClick:
+			widget = lambda: EditWidget(self.module, ApplicationType.TREE, item["key"], skelType=item["_type"])
+			handler = WidgetHandler(widget, descr=QtCore.QCoreApplication.translate("TreeHandler", "Add entry"), icon=loadIcon("edit"))
 			handler.stackHandler()
-		elif isinstance(item, NodeItem):
-			self.path.append(item.dirName)
-			self.loadData()
+
 
 	def setActions(self, actions: Union[Sequence[str], None]) -> None:
 		"""Sets the actions available for this widget (ie. its toolBar contents).
