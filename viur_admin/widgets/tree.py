@@ -88,94 +88,6 @@ class LeafItem(QtWidgets.QListWidgetItem):
 			return str(self) < str(other)
 
 
-class PathListView__UNUNSED(QtWidgets.QListWidget):
-	rootNodeChanged = QtCore.pyqtSignal((str,))
-	nodeChanged = QtCore.pyqtSignal((str,))
-
-	def __init__(
-			self,
-			module: str,
-			rootNode: str,
-			node: str = None,
-			*args: Any,
-			**kwargs: Any):
-		super(PathListView, self).__init__(*args, **kwargs)
-		self.setAcceptDrops(True)
-		self.module = self.realModule = module
-		if module.endswith("_rootNode"):
-			self.realModule = module[:-9]
-		self.rootNode = rootNode
-		self.node = node or rootNode
-		self.itemClicked.connect(self.pathListItemClicked)
-		self.setFlow(self.LeftToRight)
-		self.setFixedHeight(35)
-
-		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert protoWrap is not None
-		protoWrap.entitiesChanged.connect(self.onEntitiesChanged)
-
-	def onEntitiesChanged(self, node: QtWidgets.QListWidgetItem) -> None:
-		self.rebuild()
-
-	def rebuild(self) -> None:
-		return #Fixme 111
-		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert protoWrap is not None
-		self.clear()
-		node = self.node
-		revList = []
-		while node:
-			if node not in protoWrap.dataCache:
-				protoWrap.queryData(node)
-				return
-			node = protoWrap.dataCache[node].copy()
-			revList.append(node)
-			node = node["parententry"]
-		for node in revList[:: -1]:
-			aitem = NodeItem(node, self)
-			self.addItem(aitem)
-
-	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
-		if event.mimeData().hasFormat("viur/treeDragData"):
-			event.accept()
-		else:
-			event.ignore()
-
-	def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
-		if self.itemAt(event.pos()):
-			event.accept()
-		else:
-			event.ignore()
-
-	def dropEvent(self, event: QtGui.QDropEvent) -> None:
-		dataDict = json.loads(event.mimeData().data("viur/treeDragData").data().decode("UTF-8"))
-		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert protoWrap is not None
-		destItem = self.itemAt(event.pos())
-		protoWrap.move(
-			dataDict["nodes"],
-			dataDict["leafs"],
-			destItem.entryData["key"])
-
-	@QtCore.pyqtSlot(str)
-	def setNode(self, node: str, isInitialCall: bool = False) -> None:
-		self.node = node
-		self.rebuild()
-		if isInitialCall:
-			self.nodeChanged.emit(self.node)
-
-	@QtCore.pyqtSlot(str)
-	def setRootNode(self, rootNode: str) -> None:
-		self.rootNode = rootNode
-		self.node = rootNode
-		self.rebuild()
-
-	def pathListItemClicked(self, item: Dict[str, Any]) -> None:
-		self.setNode(item.entryData["key"], isInitialCall=True)
-
-# self.setPath( self.path[ : clickeditem.i ] )
-# self.pathChanged.emit( self.path )
-
 
 
 class TreeListView(QtWidgets.QTreeView):
@@ -229,27 +141,6 @@ class TreeListView(QtWidgets.QTreeView):
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)
 
-		#protoWrap.entitiesChanged.connect(self.onTreeChanged)
-		#protoWrap.customQueryFinished.connect(self.onCustomQueryFinished)
-		#protoWrap.entitiesChanged.connect(self.onTreeChanged)
-		#protoWrap.entitiesAppended.connect(self.onAppendedData)
-		#self.mouseDoubleClickEvent.connect(self.onMouseDoubleClickEvent)
-		#self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		#self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
-		#self.setDragEnabled(True)
-		#self.setAcceptDrops(True)
-		#self.setSortingEnabled(False)
-		#self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
-		#self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
-		#self.setSelectionMode(self.ExtendedSelection)
-		#if self.rootNode is not None:
-		#	self.loadData()
-		#sizePol = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-		#self.setSizePolicy(sizePol)
-		#self.setResizeMode(QtWidgets.QListWidget.Adjust)
-		#self.setViewMode(0)
-		#self.setViewMode(1)
-		#self.itemCache: Dict[str, Any] = dict()
 
 	## Getters & Setters
 
@@ -325,9 +216,6 @@ class TreeListView(QtWidgets.QTreeView):
 		if destItem["key"] != self.model()._rootNode:
 			print(destItem)
 			self.itemDoubleClicked.emit(destItem)
-		#logger.debug("TreeListView.onItemDoubleClicked: %r, %r", item, self.nodeItem)
-		##if isinstance(item, self.nodeItem):
-		#	self.setNode(item.entryData["key"], isInitialCall=True)
 
 	def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
 		"""
@@ -417,7 +305,6 @@ class TreeListView(QtWidgets.QTreeView):
 			return
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
-		print("pppp1")
 		self.setDisplayData(protoWrap.getNodesForCustomQuery(queryKey))
 
 	def setDisplayData(self, nodes: List[Dict[str, Any]]) -> None:
@@ -542,24 +429,6 @@ class TreeListView(QtWidgets.QTreeView):
 	def getNodeItemClass(self) -> Any:
 		return self.nodeItem
 
-	def isIconMode(self) -> bool:
-		return False
-		return self.viewMode() == self.IconMode
-
-	def setIconMode(self, iconMode: int) -> None:
-		return
-		if iconMode:
-			self.setDragEnabled(True)
-			self.setAcceptDrops(True)
-			self.viewport().setAcceptDrops(True)
-			self.setDropIndicatorShown(True)
-			self.setGridSize(QtCore.QSize(*self.gridSizeIcon))
-			self.setIconSize(QtCore.QSize(*[x - 24 for x in self.gridSizeIcon]))
-			self.setViewMode(self.IconMode)
-		else:
-			self.setGridSize(QtCore.QSize(*self.gridSizeList))
-			self.setIconSize(QtCore.QSize(*[x - 8 for x in self.gridSizeList]))
-			self.setViewMode(self.ListMode)
 
 
 class TreeWidget(QtWidgets.QWidget):
@@ -618,9 +487,6 @@ class TreeWidget(QtWidgets.QWidget):
 		self.editOnDoubleClick = editOnDoubleClick
 		self.tree = self.treeWidget(module, rootNode, node, parent=self)
 		self.ui.listWidgetBox.layout().addWidget(self.tree)
-		#self.pathList = PathListView(module, rootNode, [])
-		#self.ui.pathListBox.layout().addWidget(self.pathList)
-		self.editOnDoubleClick = True
 
 		# Inbound Signals
 		#self.pathList.nodeChanged.connect(self.nodeChanged)
@@ -815,8 +681,3 @@ class TreeWidget(QtWidgets.QWidget):
 	def showError(self, req: RequestWrapper, error: Any) -> None:
 		self.overlay.inform(self.overlay.ERROR, str(error))
 
-	def isIconMode(self) -> bool:
-		return self.tree.isIconMode()
-
-	def setIconMode(self, iconMode: bool) -> None:
-		return self.tree.setIconMode(iconMode)
