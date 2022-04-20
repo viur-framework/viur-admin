@@ -8,7 +8,7 @@ if isPyodide:
 	from PyQt5 import QtCore, QtWidgets, QtGui
 	QtWebEngineWidgets = None
 else:
-	from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
+	from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtNetwork
 	import webbrowser
 	import http.server
 	import socketserver
@@ -141,6 +141,81 @@ else:
 					self.httpdRef.shutdown()
 			self.wait()
 
+
+	class OAuth2AuthenticationHandler(http.server.BaseHTTPRequestHandler):
+		skey = "".join(random.choices(string.ascii_letters + string.digits, k=13))
+		redirUrl = "NotSet"
+
+		def do_HEAD(self):
+			self.send_response(200)
+			self.send_header("Content-type", "text/html")
+			self.end_headers()
+
+		def do_GET(self):
+			if self.path == "/":
+				self.send_response(302)
+				self.send_header("Location", self.redirUrl)
+				self.end_headers()
+			elif self.path.startswith("/login?"):
+				data = self.path.replace("/login?", "")
+				token = skey = None
+				for param in data.split("&"):
+					if param.startswith("code="):
+						print("token", param)
+						token = param.replace("code=", "")
+					elif param.startswith("session_state="):
+						skey = param.replace("session_state=", "")
+				if token: # and skey and skey == self.skey: FIXME: We can't pass an skey along here...
+					self.send_response(200)
+					self.send_header("Content-type", "text/html")
+					self.end_headers()
+					self.wfile.write(b"Okay")
+					self.qthread.tokenReceived.emit(token)
+				else:
+					self.send_response(500)
+					self.send_header("Content-type", "text/html")
+					self.end_headers()
+					self.wfile.write(b"Failed")
+					self.qthread.tokenErrorOccured.emit("Unknown error")
+			else:
+				self.send_response(404)
+				self.end_headers()
+				print("%s not found" % self.path)
+
+
+	class LocalAuthOAuthThread(QtCore.QThread):
+		port = 9090
+		tokenReceived = QtCore.pyqtSignal(str)
+		tokenErrorOccured = QtCore.pyqtSignal(str)
+
+		def start(self) -> None:
+			self.httpdRef = None
+			self.shouldStart = True
+			super().start()
+
+		def run(self):
+			try:
+				with socketserver.TCPServer(("localhost", self.port), OAuth2AuthenticationHandler) as httpd:
+					self.httpdRef = httpd
+					OAuth2AuthenticationHandler.qthread = self
+					print("serving at port", self.port)
+					webbrowser.open("http://%s:%s" % ("localhost", self.port))
+					if self.shouldStart:
+						httpd.serve_forever()
+			except OSError as e:
+				self.tokenErrorOccured.emit(str(e))
+
+		def abort(self):
+			if self.httpdRef:
+				self.httpdRef.shutdown()
+			else:
+				self.shouldStart = False
+				sleep(1)
+				if self.httpdRef:
+					self.httpdRef.shutdown()
+			self.wait()
+
+
 class AuthGoogle(AuthProviderBase):
 	loginFailed = QtCore.pyqtSignal((str,))
 	loginSucceeded = QtCore.pyqtSignal()
@@ -212,6 +287,98 @@ class AuthGoogle(AuthProviderBase):
 			self.authThread.abort()
 			self.authThread = None
 		NetworkService.request("/user/auth_googleaccount/login", {"token": token}, secure=True,
+							   successHandler=self.authStatusCallback, failureHandler=self.onError)
+
+
+	def authStatusCallback(self, nsReq: RequestWrapper) -> None:
+		data = NetworkService.decode(nsReq)
+		logger.debug("authStatusCallback: %r", data)
+		okayFound = data.find("OKAY")
+		logger.debug("checkAuthenticationStatus: %r", okayFound)
+		if okayFound != -1:
+			self.loginSucceeded.emit()
+		elif data.find("X-VIUR-2FACTOR-") != -1:
+			html = self.webView.page().mainFrame().toHtml()
+			startPos = html.find("X-VIUR-2FACTOR-")
+			secondFactorType = html[startPos, html.find("\"", startPos + 1)]
+			secondFactorType = secondFactorType.replace("X-VIUR-2FACTOR-", "")
+			self.secondFactorRequired.emit(secondFactorType)
+
+	def onError(
+			self,
+			request: RequestWrapper = None,
+			error: Callable = None,
+			msg: str = None) -> None:
+		logger.debug("onerror: %r, %r, %r", request, error, msg)
+		self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", msg or str(error)))
+
+	def getUpdatedPortalConfig(self) -> Dict[str, Any]:
+		# We cant store anything for now
+		return dict()
+
+	def closeEvent(self, event: Any) -> None:
+		if not self.didSucceed:
+			self.loginFailed.emit(QtCore.QCoreApplication.translate("Login", "Aborted"))
+
+
+class AuthOauth2(AuthProviderBase):
+	loginFailed = QtCore.pyqtSignal((str,))
+	loginSucceeded = QtCore.pyqtSignal()
+	secondFactorRequired = QtCore.pyqtSignal((str,))
+	advancesAutomatically = True  # No need to click the next-button; we'll detect changes inside the browser ourself
+
+	def __init__(
+			self,
+			currentPortalConfig: Dict[str, Any],
+			*,
+			isWizard: bool = False,
+			parent: QtCore.QObject = None):
+		super(AuthOauth2, self).__init__(
+			currentPortalConfig=currentPortalConfig,
+			isWizard=isWizard,
+			parent=parent)
+		self.didSucceed = False
+		self.authThread = None
+		OAuth2AuthenticationHandler.authProvider = self
+		if isWizard:
+			self.startAuthenticating()
+
+	def startAuthenticating(self) -> None:
+		logger.debug("LoginTask using method X-VIUR-AUTH-OAuth2")
+		if self.authThread:
+			self.authThread.abort()
+		# Fetch the HTML-File and extract the ClientID from it
+		NetworkService.request("/user/auth_oauth2/login", secure=True, successHandler=self.onRedirectUrlAvailable,
+							   failureHandler=self.onError)
+
+	def onRedirectUrlAvailable(self, req):
+		# Double-Check that we don't have an authThread running
+		if self.authThread:
+			self.authThread.abort()
+		redirUrl = req.request.header(QtNetwork.QNetworkRequest.LocationHeader).toString()
+		if self.authThread:
+			self.authThread.abort()
+		OAuth2AuthenticationHandler.redirUrl = redirUrl
+		self.authThread = LocalAuthOAuthThread()
+		self.authThread.tokenReceived.connect(self.tokenReceived)
+		self.authThread.tokenErrorOccured.connect(self.tokenErrorOccured)
+		self.authThread.start()
+
+	def tokenErrorOccured(self, error: str):
+		if self.authThread:
+			self.authThread.abort()
+			self.authThread = None
+		self.loginFailed.emit(error)
+
+	def tokenReceived(self, token: str):
+		"""
+			Callback from the OAuth2AuthenticationHandler.
+			We received a token and now going to exchange it with the server for a session
+		"""
+		if self.authThread:
+			self.authThread.abort()
+			self.authThread = None
+		NetworkService.request("/user/auth_oauth2/login", {"code": token}, secure=True,
 							   successHandler=self.authStatusCallback, failureHandler=self.onError)
 
 
@@ -370,7 +537,8 @@ class LoginTask(QtCore.QObject):
 
 	authenticationProvider = {
 		"X-VIUR-AUTH-User-Password": AuthUserPassword,
-		"X-VIUR-AUTH-Google-Account": AuthGoogle
+		"X-VIUR-AUTH-Google-Account": AuthGoogle,
+		"X-VIUR-AUTH-OAuth2": AuthOauth2
 	}
 
 	verificationProvider = {
