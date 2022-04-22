@@ -12,6 +12,7 @@ else:
 	import webbrowser
 	import http.server
 	import socketserver
+	import socket
 from viur_admin.ui.loginformUI import Ui_LoginWindow
 from viur_admin.ui.simpleloginUI import Ui_simpleLogin
 from viur_admin.ui.authuserpasswordUI import Ui_AuthUserPassword
@@ -25,7 +26,26 @@ from datetime import datetime
 import random
 import string
 from time import sleep
+from threading import Thread
 
+class HttpThread(Thread):
+	"""
+		Move serve_forever in a new python thread
+	"""
+	def __init__(self, httpdServer):
+		super().__init__()
+		self.httpdServer = httpdServer
+		self.start()
+
+	def run(self):
+		self.httpdServer.serve_forever()
+		self.httpdServer.server_close()
+
+
+class ReusableTcpServer(socketserver.TCPServer):
+	def server_bind(self):
+		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.socket.bind(self.server_address)
 
 class AuthProviderBase(QtWidgets.QWidget):
 	def __init__(
@@ -94,9 +114,7 @@ else:
 					self.send_header("Content-type", "text/html")
 					self.end_headers()
 					self.wfile.write(b"Okay")
-					#self.authProvider.tokenReceived(token)
 					self.qthread.tokenReceived.emit(token)
-					#self.authProvider.loginSucceeded.emit()
 				else:
 					self.send_response(500)
 					self.send_header("Content-type", "text/html")
@@ -117,30 +135,29 @@ else:
 		def start(self) -> None:
 			self.httpdRef = None
 			self.shouldStart = True
+			self.shouldStop = False
 			super().start()
 
 		def run(self):
 			try:
-				with socketserver.TCPServer(("localhost", self.port), GoogleAuthenticationHandler) as httpd:
+				with ReusableTcpServer(("localhost", self.port), GoogleAuthenticationHandler) as httpd:
 					self.httpdRef = httpd
 					GoogleAuthenticationHandler.qthread = self
 					print("serving at port", self.port)
-					webbrowser.open("http://%s:%s" % ("localhost", self.port))
 					if self.shouldStart:
-						httpd.serve_forever()
+						httpThread = HttpThread(httpd)
+						webbrowser.open("http://%s:%s" % ("localhost", self.port))
+						while not self.shouldStop:
+							self.sleep(1)
+						# For some unkown reason, shutdown() blocks several seconds. That's why we have two threads
+						# so one can wait for the other...
+						self.httpdRef.shutdown()
+						httpThread.join()
 			except OSError as e:
 				self.tokenErrorOccured.emit(str(e))
 
 		def abort(self):
-			if self.httpdRef:
-				self.httpdRef.shutdown()
-			else:
-				self.shouldStart = False
-				sleep(1)
-				if self.httpdRef:
-					self.httpdRef.shutdown()
-			self.wait()
-
+			self.shouldStop = True
 
 	class OAuth2AuthenticationHandler(http.server.BaseHTTPRequestHandler):
 		skey = "".join(random.choices(string.ascii_letters + string.digits, k=13))
@@ -191,17 +208,24 @@ else:
 		def start(self) -> None:
 			self.httpdRef = None
 			self.shouldStart = True
+			self.shouldStop = False
 			super().start()
 
 		def run(self):
 			try:
-				with socketserver.TCPServer(("localhost", self.port), OAuth2AuthenticationHandler) as httpd:
+				with ReusableTcpServer(("localhost", self.port), OAuth2AuthenticationHandler) as httpd:
 					self.httpdRef = httpd
 					OAuth2AuthenticationHandler.qthread = self
 					print("serving at port", self.port)
-					webbrowser.open("http://%s:%s" % ("localhost", self.port))
 					if self.shouldStart:
-						httpd.serve_forever()
+						httpThread = HttpThread(httpd)
+						webbrowser.open("http://%s:%s" % ("localhost", self.port))
+						while not self.shouldStop:
+							self.sleep(1)
+						# For some unkown reason, shutdown() blocks several seconds. That's why we have two threads
+						# so one can wait for the other...
+						self.httpdRef.shutdown()
+						httpThread.join()
 			except OSError as e:
 				self.tokenErrorOccured.emit(str(e))
 
