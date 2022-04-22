@@ -285,7 +285,7 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
 		self.editingModel = model
 		self.editingIndex = index
-		self.editingItem = model.dataCache[index.row()]
+		self.editingItem = model.data(index, QtCore.Qt.UserRole)
 		return False
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:

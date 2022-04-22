@@ -24,405 +24,8 @@ from viur_admin.ui.csvexportUI import Ui_CsvExport
 from viur_admin.config import conf
 from viur_admin.network import nam, RequestWrapper
 from typing import Tuple
+from viur_admin.protocolwrapper.list import ListTableModel
 
-
-class ListTableModel(QtCore.QAbstractTableModel):
-	"""Model for displaying data within a listView"""
-	GarbageTypeName = "ListTableModel"
-	_chunkSize = 25
-
-	rebuildDelegates = QtCore.pyqtSignal((object,))
-	listIsComplete = QtCore.pyqtSignal()
-
-	def __init__(self, module: str, fields: List[str] = None, *, viewFilter: Dict[str, Any] = None,
-	             parent: QtWidgets.QWidget = None):
-		logger.debug("ListTableModel.init: %r, %r, %r, %r", module, fields, viewFilter, parent)
-		QtCore.QAbstractTableModel.__init__(self, parent)
-		self.module = module
-		self.fields = fields
-		# Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
-		self._validFields: List[str] = list()
-		self.filter = viewFilter or {}
-		self.skippedkeys: List[str] = list()
-		self.dataCache: List[Dict[str, Any]] = list()
-		self.headers: List[Any] = []
-		self.editableFields = set()
-		self.pendingUpdates = set()  # List of keys we know have pending writes to the server
-		self.bones = {}
-		self.completeList = False  # Have we all items?
-		self.isLoading = 0
-		self.cursor = None
-		self._rowCount = 0
-		# As loading is performed in background, they might return results for a dataset which isn't displayed anymore
-		self.loadingKey = None
-		# Tuple of Sort-Properties we should include in queries (Bonename and ascending/descending)
-		self.currentSortBone: Tuple[str, bool] = None
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		#self.protoWrap.insertRowsEvent.connect(self.onInsertRows)
-		#self.protoWrap.removeRowsEvent.connect(self.onRemoveRows)
-		#self.protoWrap.changeRowsEvent.connect(self.onChangeRows)
-		#self.queryKey = self.protoWrap.registerQuery(self.filter.copy() or {})
-		self.viewProxy = protoWrap.registerView(
-			{"orderby": "changedate", "orderdir": "1"},
-			{
-				"beforeInsertRows": self.beforeInsertRows,
-				"afterInsertRows": self.afterInsertRows,
-				"beforeRemovetRows": self.beforeRemovetRows,
-				"afterRemoveRows": self.afterRemoveRows,
-				"rowChanged": self.rowChanged,
-			 }
-		)
-
-	def canFetchMore(self, QModelIndex):
-		return self.viewProxy.canFetchMore
-
-	def fetchMore(self, QModelIndex):
-		print("fetchMore")
-		self.viewProxy.fetchMore()
-		#protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		#protoWrap.requestNextBatch(self.queryKey)
-
-	def beforeInsertRows(self, index: int, numRows:int):
-		print("beforeInsertRows: %r, %r" % (index, numRows))
-
-		if not self.bones:
-			for key, bone in self.viewProxy.listWrapper.viewStructure.items():
-				self.bones[key] = bone
-			self._validFields = [x for x in self.fields if x in self.bones]
-			self.fields = [x for x in self.fields if x in self._validFields]
-			if not self.fields:  # Select the 10 first bones that do exist to prevent an empty table
-				# Don't show these bones by default in the table
-				systemBones = {"key","creationdate", "changedate", "viurCurrentSeoKeys"}
-				self.fields = [x for x in self.bones if x not in systemBones][:10]
-				self._validFields = self.fields[:]
-			self.rebuildDelegates.emit(self.viewProxy.listWrapper.viewStructure)
-			self.repaint()
-		self.beginInsertRows(QModelIndex(), index, index + numRows - 1)
-		self._rowCount += numRows
-		#for rowIndex in range(row, row + count):
-		#	self.dataCache.pop(rowIndex)
-
-	def afterInsertRows(self, index: int, numRows:int):
-		print("afterInsertRows: %r, %r" % (index, numRows))
-		self.endInsertRows()
-		return True
-
-	def beforeRemovetRows(self, index, numRows):
-		self.beginRemoveRows(QtCore.QModelIndex(), index, index + numRows - 1)
-		self._rowCount -= numRows
-
-	def afterRemoveRows(self, index, numRows):
-		self.endRemoveRows()
-
-	def rowChanged(self, index, numRows):
-		self.dataChanged.emit(self.index(index, 0), self.index(index + numRows - 1, 999))
-
-		#self.beginRemoveRows(QtCore.QModelIndex(), index, index + numRows - 1)
-		#self._rowCount -= numRows
-		#self.endRemoveRows()
-
-	def updatingDataAvailable(self, reqId, data, wasInitial):
-		"""
-			Signal from the protocoll-wrapper that an add/edit request bounced back. Check if we have it
-			in our pendingUpdates list and update accordingly
-		"""
-		print("updatingDataAvailable")
-		if wasInitial:
-			return
-		try:
-			errorKey = data["values"]["key"]
-		except:
-			errorKey = None
-		for idx, entry in enumerate(self.dataCache):  # Check if we are displaying it right now
-			if entry["key"] == errorKey:
-				if idx not in self.pendingUpdates:
-					return
-				self.pendingUpdates.remove(idx)
-				self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
-				self.msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information,
-					QtCore.QCoreApplication.translate("ListTableView", "Updating failed"),
-					QtCore.QCoreApplication.translate("ListTableView", "Updating of %s failed!") % entry["key"],
-					(QtWidgets.QMessageBox.Ok),
-				)
-				self.msgBox.open()
-				#QtWidgets.QMessageBox.warning(self.parent(), "Updating failed", "Updating of %s failed!" % entry["key"])
-				print("warning up")
-
-
-	def updatingFailed(self, key, *args, **kwargs):
-		"""
-			Callback from the protocolwrapper that an update failed, so remove it's pending update tag
-		"""
-		for idx, entry in enumerate(self.dataCache):  # Check if we are displaying it right now
-			if entry["key"] == key:
-				self.pendingUpdates.remove(idx)
-				self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
-
-	def entityChanging(self, key: str):
-		"""
-			Callback from the protocolwrapper that an entry is about to be edited on the server side.
-			Ensure we're only displaying "loading" while it's pending
-		"""
-		for idx, entry in enumerate(self.dataCache):  # Check if we are displaying it right now
-			if entry["key"] == key:
-				self.pendingUpdates.add(idx)
-				self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
-
-	def updateSingleEntity(self, entryData: dict):
-		"""
-			Callback from the protocol-wrapper that a single entry had been changed.
-			Check if we actually displaying that entry and if update our data and repaint it's cells
-			:param entryData: Data of the changed entry as received from the server
-		"""
-		for idx, displayedEntry in enumerate(self.dataCache):
-			if displayedEntry["key"] == entryData["key"]:  # We found that entry
-				self.dataCache[idx] = entryData
-				if idx in self.pendingUpdates:
-					self.pendingUpdates.remove(idx)
-				self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
-				break
-
-	def entityDeleted(self, key: str):
-		"""
-			Event-Callback from protocolwrapper that the given entry has been deleted
-		"""
-		for entry in self.dataCache:
-			if entry["key"] == key:
-				idx = self.dataCache.index(entry)
-				self.beginRemoveRows(QtCore.QModelIndex(), idx, idx)
-				self.dataCache.remove(entry)
-				self.endRemoveRows()
-				break
-
-
-	def removeRows__(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
-		# logger.debug("removeRows: %r, %r, %r", row, count, parent)
-		self.beginRemoveRows(QModelIndex(), row, row + count - 1)
-
-		for rowIndex in range(row, row + count):
-			self.dataCache.pop(rowIndex)
-
-		self.endRemoveRows()
-		return True
-
-	def supportedDropActions(self) -> int:
-		return QtCore.Qt.MoveAction | QtCore.Qt.TargetMoveAction
-
-	def setDisplayedFields(self, fields: List[str]) -> None:
-		"""
-			Update the list of bones that are visible in this table.
-			New fields are been appended to the right, as it's now possible that the user has rearranged
-			the colums - so we can't rely on the bone-order in the skeleton.
-		:param fields: The new list of bones to display
-		"""
-		print("setDisplayedFields")
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		for field in self.fields[:]:
-			if field not in fields:  # Removed
-				self.removeColumn(self.fields.index(field))
-				self.fields.remove(field)
-		for field in fields:
-			if field not in self.fields:
-				self.insertColumn(len(self.fields))
-				self.fields.append(field)
-		self.rebuildDelegates.emit(protoWrap.viewStructure)
-		self.repaint()
-
-
-	def setFilterbyName(self, filterName: str) -> None:
-		self.name = filterName
-		config = None  # getListConfig( self.module, filterName )
-		if config:
-			if "columns" in config:
-				self.fields = config["columns"]
-			if "filter" in config:
-				self.filter = config["filter"]
-
-	def setFilter(self, queryFilter: Dict[str, Any]) -> None:
-		self.filter = queryFilter
-		self.reload()
-
-	def getFilter(self) -> None:
-		return self.filter
-
-	def getFields(self) -> None:
-		return self.fields
-
-	def getModul(self) -> None:
-		return self.module
-
-	def setSortColumn(self, boneName:str, descending: bool) -> None:
-		if not boneName:
-			self.currentSortBone = None
-		else:
-			self.currentSortBone = (boneName, descending)
-		self.reload()
-
-	def reload(self) -> None:
-		self.beginRemoveRows(QtCore.QModelIndex(), 0, len(self.dataCache))
-		self.dataCache = []
-		self.completeList = False
-		self.cursor = False
-		#self.modelReset.emit()
-		self.endRemoveRows()
-		self.repaint()
-		self.loadNext(True)
-
-	def rowCount(self, parent: QModelIndex = None, *args: Any, **kwargs: Any) -> int:
-		return self._rowCount
-
-	def columnCount(self, parent: QModelIndex = None) -> int:
-		try:
-			return len(self.headers)
-		except:
-			return 0
-
-	def data(self, index: QModelIndex, role: int = None) -> Any:
-		if not index.isValid():
-			return None
-		elif role != QtCore.Qt.DisplayRole:
-			return None
-		return self.viewProxy.getRow(index.row())[self.fields[index.column()]]
-
-
-	def headerData(self, col: int, orientation: int, role: int = None) -> Any:
-		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-			return self.headers[col]
-		return None
-
-	def loadNext___(self, forceLoading: bool = False) -> None:
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		protoWrap.requestNextBatch(self.queryKey)
-		return
-		if self.isLoading and not forceLoading:
-			return
-		self.isLoading += 1
-		rawFilter = self.filter.copy() or {}
-		if self.cursor:
-			rawFilter["cursor"] = self.cursor
-		if self.currentSortBone:
-			boneName, descending = self.currentSortBone
-			rawFilter["orderby"] = boneName
-			rawFilter["orderdir"] = "1" if descending else "0"
-		#elif self.dataCache:  # FIXME(): Is this still a thing?
-		#	invertedOrderDir = False
-		#	if "orderdir" in rawFilter and str(rawFilter["orderdir"]) == "1":
-		#		invertedOrderDir = True
-		#	if "orderby" in rawFilter and rawFilter["orderby"] in self.dataCache[-1]:
-		#		if invertedOrderDir:
-		#			rawFilter[rawFilter["orderby"] + "$lt"] = self.dataCache[-1][rawFilter["orderby"]]
-		#		else:
-		#			rawFilter[rawFilter["orderby"] + "$gt"] = self.dataCache[-1][rawFilter["orderby"]]
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		# logger.debug("loadNext.chunk: %r, %r, %r", rawFilter, type(rawFilter), self._chunkSize)
-		rawFilter["limit"] = self._chunkSize
-		self.loadingKey = protoWrap.queryData(**rawFilter)
-
-	def addData(self, queryKey: str) -> None:
-		self.isLoading -= 1
-		if queryKey is not None and queryKey != self.loadingKey:  # The Data is for a list we dont display anymore
-			return
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		#cacheTime, skellist, cursor = protoWrap.dataCache[queryKey]
-		skellist = [protoWrap.entryCache[x] for x in protoWrap.queryCache[queryKey]["skelkeys"]]
-		cursor = protoWrap.queryCache[queryKey]["cursor"]
-		# Rebuild our local cache of valid fields
-		if not self.bones:
-			for key, bone in protoWrap.viewStructure.items():
-				self.bones[key] = bone
-			self._validFields = [x for x in self.fields if x in self.bones]
-			self.fields = [x for x in self.fields if x in self._validFields]
-			if not self.fields:  # Select the 10 first bones that do exist to prevent an empty table
-				# Don't show these bones by default in the table
-				systemBones = {"key","creationdate", "changedate", "viurCurrentSeoKeys"}
-				self.fields = [x for x in self.bones if x not in systemBones][:10]
-				self._validFields = self.fields[:]
-			self.rebuildDelegates.emit(protoWrap.viewStructure)
-			self.repaint()
-		self.beginInsertRows(QtCore.QModelIndex(), len(self.dataCache), len(self.dataCache) + len(skellist) - 1)
-		self.dataCache.extend(skellist)
-		self.endInsertRows()
-		if not cursor:
-			self.beginRemoveRows(QtCore.QModelIndex(), len(self.dataCache), len(self.dataCache))
-			self.completeList = True
-			self.endRemoveRows()
-		self.cursor = cursor
-		self.loadingKey = None
-		if protoWrap.queryCache[queryKey].get("failed"):
-			QtWidgets.QMessageBox.warning(self.parent(), "Failed", "A Network-Request failed")
-
-
-	# self.emit(QtCore.SIGNAL("dataRecived()"))
-
-	def repaint(self) -> None:  # Currently an ugly hack to redraw the table
-		self.layoutAboutToBeChanged.emit()
-		self.layoutChanged.emit()
-
-	def getData(self, row: int) -> dict:
-		return self.viewProxy.getRow(row)
-
-	def sort(self, p_int: int, order: Any = None) -> None:
-		return
-		if (self.fields[p_int] == "key" or (
-				"cantSort" in dir(self.delegates[p_int]) and self.delegates[p_int].cantSort)):
-			return
-		filter = self.filter
-		filter["orderby"] = self.fields[p_int]
-		if order == QtCore.Qt.DescendingOrder:
-			filter["orderdir"] = "1"
-		else:
-			filter["orderdir"] = "0"
-		self.setFilter(filter)
-
-	def search(self, searchStr: str) -> None:
-		"""
-			Start a search for the given string.
-			If searchStr is None, it ends any currently active search.
-			@param searchStr: Token to search for
-			@type searchStr: String or None
-		"""
-		if searchStr:
-			if "name$lk" in self.filter:
-				del self.filter["name$lk"]
-			self.filter["search"] = searchStr
-			self.reload()
-		else:
-			if "search" in self.filter:
-				del self.filter["search"]
-			self.reload()
-
-	def prefixSearch(self, searchStr: str) -> None:
-		"""
-			Merge the prefix search in our filter dict if possible.
-			Does noting if the list isn't sorted by name.
-		"""
-		if "orderby" not in self.filter or not self.filter["orderby"] == "name":
-			return
-		if "search" in self.filter:
-			del self.filter["search"]
-		if not searchStr and "name$lk" in self.filter:
-			del self.filter["name$lk"]
-		if searchStr:
-			self.filter["name$lk"] = searchStr
-		self.reload()
-
-	def flags(self, index: QModelIndex = None) -> QtCore.Qt.ItemFlags:
-		defaultFlags = super(ListTableModel, self).flags(index)
-		try:
-			if self.fields[index.column()] in self.editableFields:
-				defaultFlags |= QtCore.Qt.ItemIsEditable
-		except:
-			pass
-		return defaultFlags
-
-	def setSortIndex(self, index: QModelIndex, sortindex: float) -> None:
-		protoWrap = protocolWrapperInstanceSelector.select(self.module)
-		assert protoWrap is not None
-		key = self.dataCache[index.row()]["key"]
-		protoWrap.setSortIndex(key, sortindex)
 
 
 class ListTableView(QtWidgets.QTableView):
@@ -465,13 +68,17 @@ class ListTableView(QtWidgets.QTableView):
 		self.defaultFilter = viewFilter.copy()
 		self.structureCache = None
 		self.delegates: List[Callable] = []  # Qt doesn't take ownership of view delegates -> garbarge collected
-		model = ListTableModel(
-			self.module,
-			fields or ["name"],
-			viewFilter=viewFilter)
+		protoWrap = protocolWrapperInstanceSelector.select(self.module)
+		model = protoWrap.registerView(self)
+		### model.setFilter(fields, viewFilter)
+		#model = ListTableModel(
+		#	self.module,
+		#	fields or ["name"],
+		#	viewFilter=viewFilter)
+		model.setDisplayedFields(fields or ["name"])
+		model.setFilter(viewFilter)
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)  # Needed to receive dragEnterEvent, not actually wanted
-		self.setSelectionBehavior(self.SelectRows)
 		self.setWordWrap(True)
 		self.setModel(model)
 		header = self.horizontalHeader()
@@ -482,10 +89,12 @@ class ListTableView(QtWidgets.QTableView):
 		model.layoutChanged.connect(self.realignHeaders)
 		self.clicked.connect(self.onItemClicked)
 		self.doubleClicked.connect(self.onItemDoubleClicked)
-		self.setEditTriggers(self.EditKeyPressed)
+		#self.setEditTriggers(self.EditKeyPressed)
 		self.horizontalHeader().setSectionsMovable(True)
 		self.horizontalHeader().sectionClicked.connect(self.onHeaderClicked)
 		self.editColums = set()  # Column numbers that currently are in always edit mode (clicking into will open the editor)
+		self.setSelectionBehavior(self.SelectRows)
+		self.setSelectionMode(self.ExtendedSelection)
 
 
 
@@ -518,14 +127,13 @@ class ListTableView(QtWidgets.QTableView):
 					delegate = self.delegates[self.defaultSortColumn[0]]
 				except:
 					return
-			hasChanged = True
 		if hasChanged:
 			QtCore.QTimer.singleShot(1, self.applySortOrder)
 			if self.currentSortColumn:
 				self.model().setSortColumn(delegate.boneName, self.currentSortColumn[1])
 			else:
 				self.model().setSortColumn(None, False)
-		elif self.sortableBones and delegate.boneName not in self.sortableBones:
+		elif self.currentSortColumn:
 			# No change had happen, but we need to reset the sort-indicator as qt deleted it
 			QtCore.QTimer.singleShot(1, self.applySortOrder)
 
@@ -586,13 +194,13 @@ class ListTableView(QtWidgets.QTableView):
 			self.edit(index)
 			return
 		try:
-			self.itemClicked.emit(self.model().getData(index, QtCore.Qt.UserRole))
+			self.itemClicked.emit(self.model().data(index, QtCore.Qt.UserRole))
 		except IndexError:
 			# someone probably clicked on the 'loading more' row - but why the the row stays so long
 			pass
 
 	def onItemDoubleClicked(self, index: QModelIndex) -> None:
-		self.itemDoubleClicked.emit(self.model().getData()[index.row()])
+		self.itemDoubleClicked.emit(self.model().data(index, QtCore.Qt.UserRole))
 
 	# self.emit( QtCore.SIGNAL("onItemDoubleClicked(PyQt_PyObject)"), self.model().getData()[index.row()] )
 	# self.emit( QtCore.SIGNAL("onItemActivated(PyQt_PyObject)"), self.model().getData()[index.row()] )
