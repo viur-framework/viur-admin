@@ -22,6 +22,7 @@ from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.ui.docEditlinkEditUI import Ui_LinkEdit
 from viur_admin.ui.rawtexteditUI import Ui_rawTextEditWindow
 from viur_admin.utils import wheelEventFilter, ViurTabBar, switchToSummernote, loadIcon
+from html import unescape
 
 logger = getLogger(__name__)
 
@@ -49,7 +50,7 @@ class TextViewBoneDelegate(BaseViewBoneDelegate):
 		if languages is not None:
 			value = chooseLang(value, languages)
 
-		return super(TextViewBoneDelegate, self).displayText(value, locale)
+		return super(TextViewBoneDelegate, self).displayText(unescape(value), locale)
 
 
 class RawTextEdit(QtWidgets.QWidget):
