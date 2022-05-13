@@ -83,7 +83,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		return self._canFetchMore #self.viewProxy.canFetchMore
 
 	def fetchMore(self, QModelIndex):
-		print("fetchMore")
 		if not self.isLoading:
 			self.isLoading = True
 			self.protoWrap.requestNextBatch(self)
@@ -278,7 +277,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		#self.modelReset.emit()
 		self.endRemoveRows()
 		self.repaint()
-		self.protoWrap.requestNextBatch(self)
 
 	def rowCount(self, parent: QModelIndex = None, *args: Any, **kwargs: Any) -> int:
 		return len(self.displayedKeys)
@@ -636,6 +634,18 @@ class ListWrapper(ProtocolWrapper):
 			except ValueError:  # This view does not display that key
 				continue
 			view.rowChanged(idx, 1)
+
+	def reload(self):
+		for view in self.views:
+			numKeys = len(view.displayedKeys)
+			view.beforeRemovetRows(0, numKeys)
+			view.displayedKeys = []
+			view.cursorList = []
+			view.pendingUpdates = set()
+			view._canFetchMore = True
+			view.isLoading = False
+			view.afterRemoveRows(0, numKeys)
+
 
 
 # self.emit( QtCore.SIGNAL("entitiesChanged()") )
