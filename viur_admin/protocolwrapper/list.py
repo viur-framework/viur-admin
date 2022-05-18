@@ -574,6 +574,7 @@ class ListWrapper(ProtocolWrapper):
 		else:
 			req.wasInitial = False
 		req.callback = callback
+		req.pendingKey = None
 		print(("INITIAL", req.wasInitial))
 		addTaskId = str(id(req))
 		logger.debug("proto list add id: %r", addTaskId)

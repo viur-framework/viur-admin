@@ -41,7 +41,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		self.entryFetches: List[Any] = []  # List of fetch-Tasks we issued
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
-		structureCache = protoWrap.editStructure
+		#structureCache = protoWrap.editStructure
 		# print("model init structure", structureCache)
 		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
@@ -54,6 +54,11 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 			@param item: The new item
 			@type item: Dict or String
 		"""
+
+		self.layoutAboutToBeChanged.emit()
+		self.dataCache.append(item)
+		self.layoutChanged.emit()
+		return #FIXME? - is the onItemDataAvailable dance still needed?
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 		if not item:

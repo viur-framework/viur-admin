@@ -42,32 +42,28 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 	displaySourceWidget = TreeWidget
 	displaySelectionWidget = TreeSelectedEntities
 
-	def onSourceItemDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
+	def onSourceItemDoubleClicked(self, item: dict) -> None:
 		"""
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		return
-
-	def onSourceItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
-		if not isinstance(item, self.list.getNodeItemClass()):
+		print("onSourceItemDoubleClicked", item)
+		if not item["_type"] == "node":
 			return
-
-		data = item.entryData
 		selection = self.selection.get()
-		if data in selection:
+		if item in selection:
 			self.selection.set([])
 		else:
-			self.selection.set([data])
+			self.selection.set([item])
 
 
 def CheckForTreeDirBone(
 		moduleName: str,
 		boneName: str,
 		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("treedir.")
+	return skelStucture[boneName]["type"].startswith("relational.tree.node")
 
 
 # Register this Bone in the global queue
-editBoneSelector.insert(2, CheckForTreeDirBone, TreeDirBone)
-viewDelegateSelector.insert(2, CheckForTreeDirBone, TreeDirViewBoneDelegate)
+editBoneSelector.insert(4, CheckForTreeDirBone, TreeDirBone)
+viewDelegateSelector.insert(4, CheckForTreeDirBone, TreeDirViewBoneDelegate)
