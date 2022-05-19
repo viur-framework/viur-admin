@@ -22,7 +22,7 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 		boneValues = {str(k): str(v) for k, v in self.skelStructure[self.boneName]["values"]}
 		resStr = ", ".join([str(x) in boneValues and boneValues[str(x)] or str(x) for x in value])
 		# print("SelectMultiViewBoneDelegate res", repr(boneValues), repr(resStr))
-		return super(SelectMultiViewBoneDelegate, self).displayText(resStr, locale)
+		return resStr
 
 
 class SelectMultiEditBone(BoneEditInterface):
