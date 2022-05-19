@@ -538,6 +538,18 @@ class TreeWidget(QtWidgets.QWidget):
 			self.setNode(node, isInitialCall=True)
 		elif lastSeenNode:
 			self.setNode(lastSeenNode, isInitialCall=True)
+		# Allow switching rootNodes if there's more than one
+		if len(protoWrap.rootNodes) > 1:
+			selectComboBox = QtWidgets.QComboBox(self)
+			for nodeData in protoWrap.rootNodes:
+				selectComboBox.addItem(nodeData["name"])
+			selectComboBox.currentIndexChanged.connect(self.rootNodeChangeRequested)
+			self.ui.boxActions.addWidget(selectComboBox)
+
+	def rootNodeChangeRequested(self, index):
+		# Called from the root node select combobox on change
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
+		self.setRootNode(protoWrap.rootNodes[index]["key"], True)
 
 
 	def onPathChanged(self, path: list) -> None:

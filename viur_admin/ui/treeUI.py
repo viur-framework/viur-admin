@@ -21,10 +21,6 @@ class Ui_Tree(object):
         self.boxActions = QtWidgets.QHBoxLayout()
         self.boxActions.setObjectName("boxActions")
         self.verticalLayout.addLayout(self.boxActions)
-        self.pathListBox = QtWidgets.QVBoxLayout()
-        self.pathListBox.setContentsMargins(-1, 10, -1, 10)
-        self.pathListBox.setObjectName("pathListBox")
-        self.verticalLayout.addLayout(self.pathListBox)
         self.verticalLayout_3 = QtWidgets.QWidget(Tree)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalLayout_3)
@@ -59,4 +55,3 @@ class Ui_Tree(object):
         Tree.setWindowTitle(_translate("Tree", "Form"))
         self.editSearch.setPlaceholderText(_translate("Tree", "Search"))
         self.btnSearch.setText(_translate("Tree", "Search"))
-import viur_admin.ui.icons_rc

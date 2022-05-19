@@ -14,30 +14,11 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
+   <property name="margin">
     <number>0</number>
    </property>
    <item>
     <layout class="QHBoxLayout" name="boxActions"/>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="pathListBox">
-     <property name="topMargin">
-      <number>10</number>
-     </property>
-     <property name="bottomMargin">
-      <number>10</number>
-     </property>
-    </layout>
    </item>
    <item>
     <widget class="QWidget" name="verticalLayout_3" native="true">
@@ -72,7 +53,7 @@
            <string>Search</string>
           </property>
           <property name="icon">
-           <iconset resource="../icons/icons.qrc">
+           <iconset>
             <normaloff>:/icons/search.svg</normaloff>:/icons/search.svg</iconset>
           </property>
          </widget>
