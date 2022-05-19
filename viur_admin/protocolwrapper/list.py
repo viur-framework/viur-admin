@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QModelIndex
-from viur_admin.protocolwrapper.base import ProtocolWrapper
+from viur_admin.protocolwrapper.base import ProtocolWrapper, Task
 from time import time
 from viur_admin.network import NetworkService, RequestGroup, RequestWrapper
 from viur_admin.priorityqueue import protocolWrapperClassSelector, protocolWrapperInstanceSelector
@@ -30,6 +30,26 @@ class QueryResult:
 	entries: List[str]
 	partial: bool
 	cursorList: List[str]
+
+class DeleteItemsTask(Task):
+	def __init__(self, protoWrap, deleteKey: str):
+		super(DeleteItemsTask, self).__init__()
+		self.protoWrap = protoWrap
+		self.deleteKey = deleteKey
+
+	def run(self):
+		NetworkService.request("/%s/delete/" % self.protoWrap.module,
+							   {"key": self.deleteKey},
+							   secure=True,
+							   successHandler=self.onDeleteSuccess,
+							   failureHandler=self.onDeleteFailed)
+
+	def onDeleteSuccess(self, req):
+		data = NetworkService.decode(req)
+		self.finish(success=data == "OKAY")
+
+	def onDeleteFailed(self, req):
+		self.finish(success=False)
 
 
 class ListTableModel(QtCore.QAbstractTableModel):
@@ -599,6 +619,27 @@ class ListWrapper(ProtocolWrapper):
 		editTaskId = str(id(req))
 		logger.debug("proto list edit id: %r", editTaskId)
 		return editTaskId
+
+	def deleteEntities(self, keys: list) -> None:
+		"""
+		Delete the given list of keys.
+
+		:param keys: keys to be removed
+		"""
+		# Update our internal views
+		for view in self.views:
+			# Mark these entities as deleted in the source nodes
+			for key in keys:
+				if key in view.displayedKeys:
+					idx = view.displayedKeys.index(key)
+					view.beforeRemovetRows(idx, 1)
+					view.displayedKeys.remove(key)
+					view.afterRemoveRows(idx, 1)
+		# We'll treat then as deleted, as injectPendingInsertsIfNeeded will add them anyway
+		for key in keys:
+			self.pendingDeletes.add(key)
+			self.taskqueue.addTask(DeleteItemsTask(self, key))
+
 
 	def onSaveResult(self, req: RequestWrapper) -> None:
 		for view in self.views:

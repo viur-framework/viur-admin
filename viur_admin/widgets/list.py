@@ -333,7 +333,7 @@ class ListTableView(QtWidgets.QTableView):
 
 	def reqDeleteCallback(self, clickedBtn, *args, **kwargs):
 		if clickedBtn == self.requestDeleteBox.button(self.requestDeleteBox.Yes):
-			protoWrap = protocolWrapperInstanceSelector.select(self.model().module)
+			protoWrap = protocolWrapperInstanceSelector.select(self.module)
 			assert protoWrap is not None
 			protoWrap.deleteEntities(self.requestDeleteBox.deleteList)
 		self.requestDeleteBox = None
