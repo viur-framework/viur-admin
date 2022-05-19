@@ -395,7 +395,7 @@ class ListTableModel(QtCore.QAbstractTableModel):
 
 	def flags(self, index: QModelIndex = None) -> QtCore.Qt.ItemFlags:
 		#defaultFlags = super(ListTableModel, self).flags(index)
-		defaultFlags = QtCore.Qt.ItemIsEnabled
+		defaultFlags = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		try:
 			key = self.displayedKeys[index.row()]
 		except IndexError:

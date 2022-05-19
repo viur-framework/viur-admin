@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List
+from typing import List, Set
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -143,13 +143,14 @@ class ListDeleteAction(QtWidgets.QAction):
 
 	def onTriggered(self) -> None:
 		indexes = self.parentWidget().list.selectedIndexes()
-		rows: List[dict] = list()
+		rows: Set[int] = set()
+		deleteData: List[dict] = []
 		for index in indexes:
 			row = index.row()
 			if row not in rows:
-				rows.append(row)
-		deleteData = [self.parentWidget().list.model().getData()[row] for row in rows]
-		reqWrap = protocolWrapperInstanceSelector.select(self.parent().list.module)
+				rows.add(row)
+				deleteData.append(self.parentWidget().list.model().data(index, QtCore.Qt.UserRole))
+		#reqWrap = protocolWrapperInstanceSelector.select(self.parent().module)
 		self.parent().requestDelete([x["key"] for x in deleteData])
 
 	@staticmethod
