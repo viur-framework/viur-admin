@@ -112,6 +112,7 @@ class AddItemTask(Task):
 		self.finish(success=False)
 
 class TreeView(QtCore.QAbstractItemModel):
+	rebuildDelegates = QtCore.pyqtSignal((object,))
 
 	def __init__(self, treeWrapper, parent):
 		QtCore.QAbstractItemModel.__init__(self, parent)
@@ -122,6 +123,34 @@ class TreeView(QtCore.QAbstractItemModel):
 		self._nextDataIndex = 1
 		self._sortOrder = ("name", "0")
 		self._searchStr = ""
+		self.fields = ["name"]
+		# Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
+		self._validFields: List[str] = list()
+		self.displayedKeys: List[str] = []
+
+	def headerData(self, col: int, orientation: int, role: int = None) -> Any:
+		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+			return self.headers[col]
+		return None
+
+	def setDisplayedFields(self, fields: List[str]) -> None:
+		"""
+			Update the list of bones that are visible in this table.
+			New fields are been appended to the right, as it's now possible that the user has rearranged
+			the colums - so we can't rely on the bone-order in the skeleton.
+		:param fields: The new list of bones to display
+		"""
+		print("setDisplayedFields")
+		for field in self.fields[:]:
+			if field not in fields:  # Removed
+				self.removeColumn(self.fields.index(field))
+				self.fields.remove(field)
+		for field in fields:
+			if field not in self.fields:
+				self.insertColumn(len(self.fields))
+				self.fields.append(field)
+		self.rebuildDelegates.emit(self.treeWrapper.viewStructure)
+		
 
 	def search(self, searchStr:str):
 		self.setRootNode(self._rootNode)  # This will clear this model
@@ -243,7 +272,10 @@ class TreeView(QtCore.QAbstractItemModel):
 		return dataDict["rowCount"]
 
 	def columnCount(self, parent: QModelIndex = None) -> int:
-		return 1
+		try:
+			return len(self.headers)
+		except:
+			return 0
 
 	def data(self, index: QModelIndex, role: int = None) -> Any:
 		if role not in [QtCore.Qt.DisplayRole, QtCore.Qt.UserRole]:
@@ -266,8 +298,9 @@ class TreeView(QtCore.QAbstractItemModel):
 			return self.treeWrapper._entityCache[key]
 		entry = self.treeWrapper._entityCache[key]
 		if entry.get("_pending"):
-			return "[Syncing] %s" % entry["name"]
-		return entry["name"]
+			return "[Syncing] %s" % entry.get("name")
+		field = self.fields[index.column()]
+		return entry.get(field)
 
 	def canFetchMore(self, parent: QModelIndex) -> bool:
 		dataDict = self.resolveInternalDataForIndex(parent)
@@ -336,6 +369,7 @@ class TreeWrapper(ProtocolWrapper):
 		self.busy = True
 		self.views: WeakSet[TreeView] = WeakSet()
 		self.rootNodes = []
+		self.headers = []
 		self.pendingDeletes = set()
 		self.nodesOnly: bool = False  # If true, there's no leaf skel defined
 		# Map of pending inserts (uploads / adds that have not yet been synced to the server).
@@ -344,6 +378,7 @@ class TreeWrapper(ProtocolWrapper):
 		self._entityCache: dict[str, dict] = {}  # Map of database-key -> entity data
 		self.temporaryKeyIndex: int = 0  # We'll assign temp. keys using this index
 		self.temporaryKeyMap: dict[str, str] = {}  # Map of temp key -> finally assignend key from the server
+		self.viewNodeStructure = self.viewLeafStructure = self.viewStructure = None
 
 
 	def resolveTemporaryKey(self, tempKey, finalKey):
@@ -431,6 +466,17 @@ class TreeWrapper(ProtocolWrapper):
 			else:
 				raise ValueError("onStructureAvailable: unknown node type: {0}".format(stype))
 		print(self.module, self.nodesOnly)
+		if self.viewNodeStructure and self.viewLeafStructure:
+			self.viewStructure = copy.deepcopy(self.viewNodeStructure)
+			for k, v in self.viewLeafStructure.items():
+				if k not in self.viewStructure:
+					self.viewStructure[k] = copy.deepcopy(v)
+				elif self.viewStructure[k]["type"] == v["type"]:
+					if self.viewStructure[k]["descr"] != v["descr"]:
+						self.viewStructure[k]["descr"] = "%s / %s" % (self.viewStructure[k]["descr"], v["descr"])
+				else:
+					self.viewStructure[k] = [self.viewStructure[k], v]
+			#print("xxxx", self.viewLeafStructure)
 		self.onModulStructureAvailable.emit()
 
 

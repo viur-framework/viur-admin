@@ -104,53 +104,6 @@ class TreeEditAction(QtWidgets.QAction):
 actionDelegateSelector.insert(1, TreeEditAction.isSuitableFor, TreeEditAction)
 
 
-class TreeDirUpAction(QtWidgets.QAction):
-	def __init__(self, parent: QtWidgets.QWidget = None):
-		super(TreeDirUpAction, self).__init__(
-			loadIcon("folder-back"),
-			QtCore.QCoreApplication.translate("TreeHandler", "Directory up"),
-			parent)
-		self.parent().nodeChanged.connect(self.onNodeChanged)
-		self.realModule = self.parent().realModule
-		reqWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert reqWrap is not None
-		x = 3
-		while x:
-			if reqWrap.rootNodes is None:
-				# print("rootNones is still None - waiting...", reqWrap)
-				time.sleep(0.2)
-				x -= 1
-			else:
-				break
-		if reqWrap.rootNodes and self.parent().getNode() in [x["key"] for x in reqWrap.rootNodes]:
-			self.setEnabled(False)
-		self.triggered.connect(self.onTriggered)
-
-	def onNodeChanged(self, node: str) -> None:
-		reqWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert reqWrap is not None
-		node = reqWrap.getNode(self.parent().getNode())
-		if not node["parententry"]:
-			self.setEnabled(False)
-		else:
-			self.setEnabled(True)
-
-	def onTriggered(self) -> None:
-		reqWrap = protocolWrapperInstanceSelector.select(self.realModule)
-		assert reqWrap is not None
-		node = reqWrap.getNode(self.parent().getNode())
-		if node:
-			if node["parententry"]:
-				self.parent().setNode(node["parententry"], isInitialCall=True)
-
-	@staticmethod
-	def isSuitableFor(module: str, actionName: str) -> bool:
-		return (module == "tree" or module.startswith("tree.")) and actionName == "dirup"
-
-
-actionDelegateSelector.insert(1, TreeDirUpAction.isSuitableFor, TreeDirUpAction)
-
-
 class TreeDeleteAction(QtWidgets.QAction):
 	def __init__(self, parent: QtWidgets.QWidget = None):
 		super(TreeDeleteAction, self).__init__(

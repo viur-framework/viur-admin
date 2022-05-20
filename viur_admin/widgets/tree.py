@@ -12,6 +12,7 @@ from viur_admin.priorityqueue import protocolWrapperInstanceSelector, actionDele
 from viur_admin.ui.treeUI import Ui_Tree
 from viur_admin.utils import Overlay, WidgetHandler, loadIcon
 from viur_admin.widgets.edit import EditWidget, ApplicationType
+from viur_admin.priorityqueue import viewDelegateSelector
 
 logger = getLogger(__name__)
 
@@ -126,12 +127,16 @@ class TreeListView(QtWidgets.QTreeView):
 		self.node = node or rootNode
 		self.customQueryKey = None  # As loading is performed in background, they might return results for a dataset
 		# which isnt displayed anymore
+		self.delegates = []
 		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		assert protoWrap is not None
 
 		model = protoWrap.registerView(self)
-		model.setRootNode(self.rootNode)
 		self.setModel(model)
+		model.setRootNode(self.rootNode)
+		model.rebuildDelegates.connect(self.rebuildDelegates)
+		model.setDisplayedFields(["name", "active", "levelLimit"])
+
 		self.setItemsExpandable(True)
 		self.setUniformRowHeights(True)
 		self.setSortingEnabled(False)
@@ -141,6 +146,47 @@ class TreeListView(QtWidgets.QTreeView):
 		self.setDragEnabled(True)
 		self.setAcceptDrops(True)
 
+
+	def rebuildDelegates(self, bones: Dict[str, Dict[str, Any]]) -> None:
+		"""(Re)Attach the viewdelegates to the table.
+
+		:param bones: Skeleton-structure send from the server
+		"""
+		#logger.debug("ListTableView.rebuildDelegates - bones: %r", bones)
+		self.structureCache = bones
+		modelHeaders = self.model().headers = []
+		modulFields = self.model().fields
+		# logger.debug("rebuildDelegates: %r, %r", bones, modulFields)
+		#if not modulFields or modulFields == ["name"]:
+		#	self.model()._validFields = fields = [key for key, value in bones.items()]
+		#else:
+		#	fields = [x for x in modulFields if x in bones]
+		editableFields = set()
+		self.defaultSortColumn = None
+		self.header().setSortIndicatorShown(False)
+		for colum, field in enumerate(modulFields):
+			if isinstance(bones[field], list):
+				if bones[field][0]["descr"] != bones[field][1]["descr"]:
+					descr = "%s / %s" % (bones[field][0]["descr"], bones[field][1]["descr"])
+				else:
+					descr = bones[field][0]["descr"]
+			else:
+				descr = bones[field]["descr"]
+			modelHeaders.append(descr)
+			# Locate the best ViewDeleate for this colum
+			delegateFactory = viewDelegateSelector.select(self.module, field, self.structureCache)
+			delegate = delegateFactory(self.module, field, self.structureCache)
+			self.setItemDelegateForColumn(colum, delegate)
+			self.delegates.append(delegate)
+			#delegate.request_repaint.connect(self.repaint)
+			if delegate.isEditable():
+				editableFields.add(field)
+			#if self.defaultFilter.get("orderby") == field:
+			#	self.defaultSortColumn = (colum, self.defaultFilter.get("orderdir")=="1")
+			#	self.horizontalHeader().setSortIndicatorShown(True)
+			#	qtSortOrder = QtCore.Qt.AscendingOrder if not self.defaultSortColumn[ 1] else QtCore.Qt.DescendingOrder
+			#	self.horizontalHeader().setSortIndicator(self.defaultSortColumn[0], qtSortOrder)
+		self.model().editableFields = editableFields
 
 	## Getters & Setters
 

@@ -359,3 +359,32 @@ class BaseEditBone(BoneEditInterface):
 # Register this Bone in the global queue
 editBoneSelector.insert(0, lambda *args, **kwargs: True, BaseEditBone)
 viewDelegateSelector.insert(0, lambda *args, **kwargs: True, BaseViewBoneDelegate)
+
+class CombinedViewDelegate(BaseViewBoneDelegate):
+	cantSort = True
+
+	def __init__(
+			self,
+			modulName: str,
+			boneName: str,
+			skelStructure: dict,
+			*args: Any,
+			**kwargs: Any):
+		super(CombinedViewDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
+		self.skelStructure = skelStructure
+		self.boneName = boneName
+		self.modulName = modulName
+
+	def displayText(self, value: str, locale: QtCore.QLocale):
+		print("COMBI", value)
+		return "COMBI"
+
+
+## Combined viewdelegate for treeViews
+def CheckForCombinedViewDelegate(
+		moduleName: str,
+		boneName: str,
+		skelStucture: Dict[str, Any]) -> bool:
+	return isinstance(skelStucture[boneName], list)
+
+viewDelegateSelector.insert(999999, CheckForCombinedViewDelegate, CombinedViewDelegate)
