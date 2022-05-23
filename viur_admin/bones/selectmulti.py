@@ -18,6 +18,9 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 		self.moduleName = moduleName
 
 	def displayText(self, value: str, locale: Any) -> str:
+		value = value.get(self.boneName)
+		if not value:
+			return ""
 		# print("SelectMultiViewBoneDelegate.displayText", value, locale)
 		boneValues = {str(k): str(v) for k, v in self.skelStructure[self.boneName]["values"]}
 		resStr = ", ".join([str(x) in boneValues and boneValues[str(x)] or str(x) for x in value])

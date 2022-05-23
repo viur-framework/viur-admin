@@ -48,8 +48,9 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			self.ast = self.safeEval.compile("value['name']")
 		self._cache = {}
 
-	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+	def displayText(self, value: dict, locale: QtCore.QLocale) -> str:
 		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.structure[self.boneName])
+		value = value.get(self.boneName)
 		relStructList = self.structure[self.boneName]["using"]
 		inValue = str(value)
 		if inValue in self._cache:

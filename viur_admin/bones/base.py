@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 from typing import Any, Dict, List, Union
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -288,7 +289,8 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 		self.editingItem = model.data(index, QtCore.Qt.UserRole)
 		return False
 
-	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+	def displayText(self, value: dict, locale: QtCore.QLocale) -> str:
+		value = value.get(self.boneName)
 		# print("StringViewBoneDelegate.displayText:", value, locale)
 		if self.boneName in self.skelStructure:
 			if "multiple" in self.skelStructure[self.boneName]:
@@ -310,7 +312,7 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 				value = chooseLang(value, languages)
 			else:  # Not multiple nor languages
 				pass
-		return super(BaseViewBoneDelegate, self).displayText(str(value), locale)
+		return str(value)
 
 	def commitDataCb(self, editor):
 		raise NotImplementedError
@@ -361,6 +363,12 @@ editBoneSelector.insert(0, lambda *args, **kwargs: True, BaseEditBone)
 viewDelegateSelector.insert(0, lambda *args, **kwargs: True, BaseViewBoneDelegate)
 
 class CombinedViewDelegate(BaseViewBoneDelegate):
+	"""
+		This is the combined view delegate for tree modules, in which one key (boneName) can have
+		different types as there two skeletons (nodes and leafs) that get combined into one view.
+		In this case, this delegate is selected and will forward the displayText() call to the
+		appropriate delegate based on the current skeleton type.
+	"""
 	cantSort = True
 
 	def __init__(
@@ -374,10 +382,26 @@ class CombinedViewDelegate(BaseViewBoneDelegate):
 		self.skelStructure = skelStructure
 		self.boneName = boneName
 		self.modulName = modulName
+		# Create the delegate for nodes
+		structureClone = copy.deepcopy(skelStructure)
+		structureClone[self.boneName] = structureClone[self.boneName][0]
+		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, structureClone)
+		self.nodeDelegate = delegateFactory(self.modulName, self.boneName, structureClone)
+		# Create the delegate for leafs
+		structureClone = copy.deepcopy(skelStructure)
+		structureClone[self.boneName] = structureClone[self.boneName][1]
+		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, structureClone)
+		self.leafDelegate = delegateFactory(self.modulName, self.boneName, structureClone)
 
-	def displayText(self, value: str, locale: QtCore.QLocale):
-		print("COMBI", value)
-		return "COMBI"
+
+	def displayText(self, value: dict, locale: QtCore.QLocale):
+		#print("COMBI", value)
+		if value.get("_type") == "node":
+			return self.nodeDelegate.displayText(value, locale)
+		elif value.get("_type") == "leaf":
+			return self.leafDelegate.displayText(value, locale)
+		else:
+			return "?"
 
 
 ## Combined viewdelegate for treeViews

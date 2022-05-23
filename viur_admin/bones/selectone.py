@@ -18,6 +18,9 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 		return True
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+		value = value.get(self.boneName)
+		if not value:
+			return ""
 		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"]])
 		if str(value) in items:
 			return items[str(value)]

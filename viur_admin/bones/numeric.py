@@ -53,7 +53,8 @@ class FixedQDoubleSpinBox(QtWidgets.QDoubleSpinBox):
 
 
 class NumericViewBoneDelegate(BaseViewBoneDelegate):
-	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
+	def displayText(self, value: dict, locale: QtCore.QLocale) -> None:
+		value = value.get(self.boneName)
 		if self.boneName in self.skelStructure and "precision" in self.skelStructure[self.boneName]:
 			try:
 				if not self.skelStructure[self.boneName]["precision"]:  # Its an int:
@@ -63,7 +64,7 @@ class NumericViewBoneDelegate(BaseViewBoneDelegate):
 			except Exception as err:
 				#logger.exception(err)
 				value = str(value)
-		return super(NumericViewBoneDelegate, self).displayText(value, locale)
+		return value
 
 
 class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
@@ -83,6 +84,7 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 	# logger.debug("IndexSortColumnDelegate")
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
+		value = value.get(self.boneName)
 		if self.boneName in self.skelStructure and "precision" in self.skelStructure[self.boneName]:
 			try:
 				if not self.skelStructure[self.boneName]["precision"]:  # Its an int:
@@ -91,7 +93,7 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
 			except:
 				value = str(value)
-		return super(IndexSortViewBoneDelegate, self).displayText(value, locale)
+		return value
 
 	def paint(self, painter: Any, option: Any, index: Any) -> None:
 		# logger.debug("paint: %r, %r, %r", painter, option, index)

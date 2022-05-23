@@ -150,7 +150,7 @@ class TreeView(QtCore.QAbstractItemModel):
 				self.insertColumn(len(self.fields))
 				self.fields.append(field)
 		self.rebuildDelegates.emit(self.treeWrapper.viewStructure)
-		
+
 
 	def search(self, searchStr:str):
 		self.setRootNode(self._rootNode)  # This will clear this model
@@ -291,12 +291,11 @@ class TreeView(QtCore.QAbstractItemModel):
 					key = dataDict["leafKeys"][row]
 				else:
 					#print(row, "?")
-					return "?"
+					return {"_type": "invalid"}
 		else:
 			key = self._rootNode
-		if role != QtCore.Qt.DisplayRole:
-			return self.treeWrapper._entityCache[key]
-		entry = self.treeWrapper._entityCache[key]
+		return self.treeWrapper._entityCache[key]
+
 		if entry.get("_pending"):
 			return "[Syncing] %s" % entry.get("name")
 		field = self.fields[index.column()]
@@ -700,7 +699,7 @@ class TreeWrapper(ProtocolWrapper):
 				index = view.resolveParentIndexForNodeKey(node)
 				view.rowChanged(index, 1)
 			for leaf in leafs:
-				index = view.resolveInternalDataForLeafKey(leaf)
+				index = view.resolveParentIndexForLeafKey(leaf)
 				view.rowChanged(index, 1)
 
 	def _deleteItemsFromViews(self, nodes: List[str], leafs: List[str]):

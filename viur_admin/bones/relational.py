@@ -55,6 +55,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		return True
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+		value = value.get(self.boneName)
 		relStructList = self.structure[self.boneName]["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		if value == "-Lade-":

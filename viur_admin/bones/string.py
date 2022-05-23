@@ -40,6 +40,9 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 		return widget
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+		value = value.get(self.boneName)
+		if not value:
+			return ""
 		# print("StringViewBoneDelegate.displayText:", value, locale)
 		if self.boneName in self.skelStructure:
 			if "multiple" in self.skelStructure[self.boneName]:

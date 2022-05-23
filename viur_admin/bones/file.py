@@ -75,7 +75,8 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		painter.restore()
 		return super(FileViewBoneDelegate, self).paint(painter, option, index)
 
-	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
+	def displayText(self, value: dict, locale: QtCore.QLocale) -> None:
+		value = value.get(self.boneName)
 		try:
 			value = self.safeEval.execute(self.ast, {
 				"value": value,
@@ -85,7 +86,7 @@ class FileViewBoneDelegate(BaseViewBoneDelegate):
 		except Exception as e:
 			logger.exception(e)
 			value = "(invalid format string)"
-		return super(FileViewBoneDelegate, self).displayText(value, locale)
+		return value
 
 
 class MultiItemWidget(QtWidgets.QWidget):

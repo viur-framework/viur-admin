@@ -43,6 +43,7 @@ class TextViewBoneDelegate(BaseViewBoneDelegate):
 		self.modulName = modulName
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
+		value = value.get(self.boneName)
 		if "languages" in self.skelStructure[self.boneName]:
 			languages = self.skelStructure[self.boneName]["languages"]
 		else:
@@ -50,7 +51,7 @@ class TextViewBoneDelegate(BaseViewBoneDelegate):
 		if languages is not None:
 			value = chooseLang(value, languages)
 
-		return super(TextViewBoneDelegate, self).displayText(unescape(value), locale)
+		return unescape(value)
 
 
 class RawTextEdit(QtWidgets.QWidget):

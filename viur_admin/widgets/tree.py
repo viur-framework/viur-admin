@@ -560,8 +560,8 @@ class TreeWidget(QtWidgets.QWidget):
 		self.toolBar.setIconSize(QtCore.QSize(32, 32))
 		self.ui.boxActions.addWidget(self.toolBar)
 		self.setActions(
-			actions if actions is not None else ["dirup", "mkdir", "add", "addleaf", "edit", "clone", "preview", "delete",
-			                                     "switchview"])
+			actions if actions is not None else [ "mkdir", "add", "addleaf", "edit", "clone",
+												  "preview", "delete", "selecttablerows"])
 
 		self.ui.btnSearch.released.connect(self.onBtnSearchReleased)
 		self.ui.editSearch.returnPressed.connect(self.onEditSearchReturnPressed)

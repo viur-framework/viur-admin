@@ -10,7 +10,12 @@ from viur_admin.ui.extendedBooleanFilterPluginUI import Ui_Form
 
 
 class BooleanViewBoneDelegate(BaseViewBoneDelegate):
-	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+	def displayText(self, value, locale: QtCore.QLocale) -> str:
+		try:
+			value = value.get(self.boneName)
+		except:
+			print(value)
+			raise
 		if value:
 			return QtCore.QCoreApplication.translate("BooleanEditBone", "Yes")
 		else:

@@ -142,3 +142,53 @@ class TreeDeleteAction(QtWidgets.QAction):
 actionDelegateSelector.insert(1, TreeDeleteAction.isSuitableFor, TreeDeleteAction)
 
 
+class SelectTreeRowsAction(QtWidgets.QAction):
+	def __init__(self, parent: QtWidgets.QWidget = None):
+		super(SelectTreeRowsAction, self).__init__(
+			loadIcon("menu"),
+			QtCore.QCoreApplication.translate("ListHandler", "Select table headers"),
+			parent)
+		self.triggered.connect(self.onTriggered)
+		self.module = self.parentWidget().tree.module
+
+
+	def onTriggered(self) -> None:
+		class FieldAction(QtWidgets.QAction):
+			def __init__(
+					self,
+					key: str,
+					name: str,
+					parent: QtWidgets.QWidget = None):
+				super(FieldAction, self).__init__(parent=parent)
+				self.key = key
+				self.name = name
+				self.setText(self.name)
+
+		menu = QtWidgets.QMenu(self.parentWidget())
+		activeFields = self.parentWidget().tree.model().fields
+		actions: List[FieldAction] = []
+		if not self.parentWidget().tree.structureCache:
+			return
+		structure = self.parentWidget().tree.structureCache
+		for key in structure:
+			descr = "%s / %s" % (structure[key][0]["descr"], structure[key][1]["descr"]) if \
+				isinstance(structure[key], list) else structure[key]["descr"]
+			action = FieldAction(
+				key,
+				descr,
+				parent=self.parentWidget())
+			action.setCheckable(True)
+			action.setChecked(key in activeFields)
+			menu.addAction(action)
+			actions.append(action)
+		selection = menu.exec_(self.parentWidget().mapToGlobal(QtCore.QPoint(50,50)))
+		if selection:
+			self.parentWidget().tree.model().setDisplayedFields([x.key for x in actions if x.isChecked()])
+
+
+	@staticmethod
+	def isSuitableFor(module: str, actionName: str) -> bool:
+		return (module == "tree" or module.startswith("tree.")) and actionName == "selecttablerows"
+
+
+actionDelegateSelector.insert(1, SelectTreeRowsAction.isSuitableFor, SelectTreeRowsAction)

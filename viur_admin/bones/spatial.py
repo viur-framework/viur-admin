@@ -21,6 +21,7 @@ logger = getLogger(__name__)
 
 class SpatialViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
+		value = value.get(self.boneName)
 		return str(value)
 
 

@@ -310,14 +310,8 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	def data(self, index: QModelIndex, role: int = None) -> Any:
 		if not index.isValid() or role not in [QtCore.Qt.DisplayRole, QtCore.Qt.UserRole]:
 			return None
-		elif role != QtCore.Qt.DisplayRole:
-			return self.protoWrap._entityCache[self.displayedKeys[index.row()]]
-			#return None
-			#if role != QtCore.Qt.DisplayRole:
 		key = self.displayedKeys[index.row()]
-		field = self.fields[index.column()]
-		return self.protoWrap._entityCache[key][field]
-		#return self.viewProxy.getRow(index.row())[self.fields[index.column()]]
+		return self.protoWrap._entityCache[key]
 
 
 	def headerData(self, col: int, orientation: int, role: int = None) -> Any:
