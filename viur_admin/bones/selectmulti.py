@@ -11,9 +11,9 @@ from viur_admin.ui.extendedSelectMultiFilterPluginUI import Ui_Form
 
 
 class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
-	def __init__(self, moduleName: str, boneName: str, skelStructure: dict, *args: Any, **kwargs: Any):
-		super(SelectMultiViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
-		self.skelStructure = skelStructure
+	def __init__(self, moduleName: str, boneName: str, boneStructure: dict, *args: Any, **kwargs: Any):
+		super(SelectMultiViewBoneDelegate, self).__init__(moduleName, boneName, boneStructure, *args, **kwargs)
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.moduleName = moduleName
 
@@ -22,7 +22,7 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 		if not value:
 			return ""
 		# print("SelectMultiViewBoneDelegate.displayText", value, locale)
-		boneValues = {str(k): str(v) for k, v in self.skelStructure[self.boneName]["values"]}
+		boneValues = {str(k): str(v) for k, v in self.boneStructure["values"]}
 		resStr = ", ".join([str(x) in boneValues and boneValues[str(x)] or str(x) for x in value])
 		# print("SelectMultiViewBoneDelegate res", repr(boneValues), repr(resStr))
 		return resStr
@@ -59,16 +59,15 @@ class SelectMultiEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
-		if "sortBy" in myStruct:
-			sortBy = myStruct["sortBy"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
+		if "sortBy" in boneStructure:
+			sortBy = boneStructure["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(myStruct["values"])
+		values = list(boneStructure["values"])
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
@@ -77,9 +76,9 @@ class SelectMultiEditBone(BoneEditInterface):
 			values=values,
 			sortBy=sortBy,
 			**kwargs)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
@@ -125,9 +124,9 @@ class ExtendedSelectMultiFilterPlugin(QtWidgets.QGroupBox):
 def CheckForSelectMultiBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
-	return isSelect and bool(skelStucture[boneName].get("multiple"))
+		boneStructure: Dict[str, Any]) -> bool:
+	isSelect = boneStructure["type"] == "select" or boneStructure["type"].startswith("select.")
+	return isSelect and bool(boneStructure.get("multiple"))
 
 
 # Register this Bone in the global queue

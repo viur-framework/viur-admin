@@ -91,7 +91,7 @@ class BoneEditInterface(QtWidgets.QWidget):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: Dict[str, Any],
+			boneStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
 		raise NotImplementedError()
 

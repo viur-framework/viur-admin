@@ -32,14 +32,14 @@ class BaseBone:
 class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	cantSort = True
 
-	def __init__(self, module: str, boneName: str, structure: Dict[str, Any]):
-		super(RelationalViewBoneDelegate, self).__init__(module, boneName, structure)
+	def __init__(self, module: str, boneName: str, boneStructure: Dict[str, Any]):
+		super(RelationalViewBoneDelegate, self).__init__(module, boneName, boneStructure)
 		# logger.debug("RelationalViewBoneDelegate.init: %r", boneName)
 		self.format = "value['name']"
-		if "format" in structure[boneName]:
-			self.format = structure[boneName]["format"]
+		if "format" in boneStructure:
+			self.format = boneStructure["format"]
 		self.module = module
-		self.structure = structure
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.safeEval = safeeval.SafeEval()
 		try:
@@ -49,14 +49,14 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self._cache = {}
 
 	def isEditable(self):
-		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages") \
-				or self.skelStructure[self.boneName].get("multiple"):
+		if self.boneStructure.get("readonly") or self.boneStructure.get("languages") \
+				or self.boneStructure.get("multiple"):
 			return False
 		return True
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
 		value = value.get(self.boneName)
-		relStructList = self.structure[self.boneName]["using"]
+		relStructList = self.boneStructure["using"]
 		relStructDict = {k: v for k, v in relStructList} if relStructList else {}
 		if value == "-Lade-":
 			return value
@@ -71,7 +71,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 					try:
 						tmpList.append(str(self.safeEval.execute(self.ast, {
 							"value": v,
-							"structure": self.structure,
+							"structure": self.boneStructure,
 							"language": config.conf.adminConfig.get("language", "en")
 						})))
 					except Exception as e:
@@ -82,7 +82,7 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 				try:
 					value = str(self.safeEval.execute(self.ast, {
 						"value": value,
-						"structure": self.structure,
+						"structure": self.boneStructure,
 						"language": config.conf.adminConfig.get("language", "en")
 					}))
 				except Exception as e:
@@ -142,7 +142,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		super(AutocompletionModel, self).__init__(*args, **kwargs)
 		self.module = module
 		self.format = format
-		self.structure = structure
+		self.boneStructure = structure
 		self.dataCache: List[Dict[str, Any]] = list()
 		self.safeEval = safeeval.SafeEval()
 		try:
@@ -185,7 +185,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 		for skel in data["skellist"]:
 			skel["__descr__"] = self.safeEval.execute(self.ast, {
 				"value": {"dest": skel, "rel": None},
-				"structure": self.structure,
+				"structure": self.boneStructure,
 				"language": config.conf.adminConfig.get("language", "en")
 			})
 			if self.dataCache:
@@ -204,7 +204,7 @@ class AutocompletionModel(QtCore.QAbstractTableModel):
 			self.parent().complete()
 
 	def getItem(self, label: str) -> Union[str, None]:
-		#res = [x for x in self.dataCache if formatString(self.format, self.structure, x) == label]
+		#res = [x for x in self.dataCache if formatString(self.format, self.boneStructure, x) == label]
 		res = [x for x in self.dataCache if x.get("name") == label]
 		if len(res):
 			return res[0]
@@ -233,8 +233,8 @@ class InternalEdit(QtWidgets.QWidget):
 		for key, bone in using:
 			if not bone["visible"]:
 				continue
-			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict)
+			wdgGen = editBoneSelector.select(self.module, key, tmpDict[key])
+			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict[key])
 			dataWidget = widget
 			lblWidget = QtWidgets.QWidget(self)
 			layout = QtWidgets.QHBoxLayout(lblWidget)
@@ -343,33 +343,32 @@ class RelationalEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
-		if "module" in myStruct:
-			destModul = myStruct["module"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
+		if "module" in boneStructure:
+			destModul = boneStructure["module"]
 		else:
-			destModul = myStruct["type"].split(".")[1]
+			destModul = boneStructure["type"].split(".")[1]
 		fmt = "value['dest']['name']"
-		if "format" in myStruct:
-			fmt = myStruct["format"]
+		if "format" in boneStructure:
+			fmt = boneStructure["format"]
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
 			required,
-			multiple=myStruct.get("multiple"),
+			multiple=boneStructure.get("multiple"),
 			destModule=destModul,
-			using=myStruct["using"],
+			using=boneStructure["using"],
 			format=fmt)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def installAutoCompletion(self) -> None:
@@ -466,7 +465,7 @@ class RelationalEditBone(BoneEditInterface):
 		self.setErrors(errors)
 
 	def serializeForPost(self) -> Dict[str, Any]:
-		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
+		protoWrap = protocolWrapperInstanceSelector.select(self.realModule)
 		if not self.selection:
 			return None
 		refKey = self.selection["dest"]["key"]
@@ -595,8 +594,8 @@ class RelationalBoneSelector(QtWidgets.QWidget):
 		return self.list.getModul()
 
 
-def CheckForRelationalicBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("relational.")
+def CheckForRelationalicBone(moduleName: str, boneName: str, boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"].startswith("relational.")
 
 
 # Register this Bone in the global queue

@@ -135,7 +135,7 @@ class TreeListView(QtWidgets.QTreeView):
 		self.setModel(model)
 		model.setRootNode(self.rootNode)
 		model.rebuildDelegates.connect(self.rebuildDelegates)
-		model.setDisplayedFields(["name", "active", "levelLimit"])
+		model.setDisplayedFields(["name"])
 
 		self.setItemsExpandable(True)
 		self.setUniformRowHeights(True)
@@ -174,8 +174,8 @@ class TreeListView(QtWidgets.QTreeView):
 				descr = bones[field]["descr"]
 			modelHeaders.append(descr)
 			# Locate the best ViewDeleate for this colum
-			delegateFactory = viewDelegateSelector.select(self.module, field, self.structureCache)
-			delegate = delegateFactory(self.module, field, self.structureCache)
+			delegateFactory = viewDelegateSelector.select(self.module, field, self.structureCache[field])
+			delegate = delegateFactory(self.module, field, self.structureCache[field])
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			#delegate.request_repaint.connect(self.repaint)

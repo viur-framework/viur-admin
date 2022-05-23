@@ -48,7 +48,6 @@ class TreeBoneSelector(RelationalBoneSelector):
 			An item has been doubleClicked in our listWidget.
 			Read its properties and add them to our selection.
 		"""
-		print("llllloooo", )
 		if data["_type"] != "leaf":
 			return
 		if self.multiple:
@@ -61,8 +60,8 @@ class TreeBoneSelector(RelationalBoneSelector):
 def CheckForTreeItemBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("relational.treeitem.")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"].startswith("relational.tree.leaf")
 
 
 editBoneSelector.insert(2, CheckForTreeItemBone, TreeItemBone)

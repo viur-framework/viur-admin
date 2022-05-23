@@ -55,12 +55,12 @@ class FixedQDoubleSpinBox(QtWidgets.QDoubleSpinBox):
 class NumericViewBoneDelegate(BaseViewBoneDelegate):
 	def displayText(self, value: dict, locale: QtCore.QLocale) -> None:
 		value = value.get(self.boneName)
-		if self.boneName in self.skelStructure and "precision" in self.skelStructure[self.boneName]:
+		if "precision" in self.boneStructure:
 			try:
-				if not self.skelStructure[self.boneName]["precision"]:  # Its an int:
+				if not self.boneStructure["precision"]:  # Its an int:
 					value = str(int(value))
 				else:
-					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
+					value = ("%#." + str(int(self.boneStructure["precision"])) + "f") % value
 			except Exception as err:
 				#logger.exception(err)
 				value = str(value)
@@ -72,10 +72,10 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 			self,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			*args: Any,
 			**kwargs: Any):
-		super(IndexSortViewBoneDelegate, self).__init__(moduleName, boneName, skelStructure, *args, **kwargs)
+		super(IndexSortViewBoneDelegate, self).__init__(moduleName, boneName, boneStructure, *args, **kwargs)
 		self.icon = loadIcon("draggable")
 		self.margin = 20
 		self.mode = QIcon.Normal
@@ -85,12 +85,12 @@ class IndexSortViewBoneDelegate(BaseViewBoneDelegate):
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
 		value = value.get(self.boneName)
-		if self.boneName in self.skelStructure and "precision" in self.skelStructure[self.boneName]:
+		if "precision" in self.boneStructure:
 			try:
-				if not self.skelStructure[self.boneName]["precision"]:  # Its an int:
+				if not self.boneStructure["precision"]:  # Its an int:
 					value = str(int(value))
 				else:
-					value = ("%#." + str(int(self.skelStructure[self.boneName]["precision"])) + "f") % value
+					value = ("%#." + str(int(self.boneStructure["precision"])) + "f") % value
 			except:
 				value = str(value)
 		return value
@@ -146,17 +146,17 @@ class NumericEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		precision = int(skelStructure[boneName]["precision"]) if "precision" in skelStructure[boneName] else 0
-		if "min" in skelStructure[boneName] and "max" in skelStructure[boneName]:
-			minVal = skelStructure[boneName]["min"]
-			maxVal = skelStructure[boneName]["max"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		precision = int(boneStructure["precision"]) if "precision" in boneStructure else 0
+		if "min" in boneStructure and "max" in boneStructure:
+			minVal = boneStructure["min"]
+			maxVal = boneStructure["max"]
 		else:
 			minVal = -pow(2, 30)
 			maxVal = pow(2, 30)
-		myStruct = skelStructure[boneName]
+		myStruct = boneStructure
 		readOnly = bool(myStruct.get("readonly"))
 		required = bool(myStruct.get("required"))
 		widgetGen = lambda: cls(
@@ -193,8 +193,8 @@ class NumericEditBone(BoneEditInterface):
 def CheckForNumericBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "numeric"
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "numeric"
 
 
 # def CheckForSortIndexBone(moduleName, boneName, skelStucture):

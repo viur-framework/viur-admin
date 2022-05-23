@@ -132,20 +132,19 @@ class DateEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
-		hasDate = myStruct["date"]
-		hasTime = myStruct["time"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
+		hasDate = boneStructure["date"]
+		hasTime = boneStructure["time"]
 		widgetGen = lambda: DateEditBone(moduleName, boneName, readOnly, required, hasDate, hasTime, **kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 
@@ -203,8 +202,8 @@ class DateEditBone(BoneEditInterface):
 		return self.serialize()
 
 
-def CheckForDateBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "date"
+def CheckForDateBone(moduleName: str, boneName: str, boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "date"
 
 
 editBoneSelector.insert(2, CheckForDateBone, DateEditBone)

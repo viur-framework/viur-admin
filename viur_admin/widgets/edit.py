@@ -395,8 +395,8 @@ class EditWidget(QtWidgets.QWidget):
 				tabName = bone["params"]["category"]
 			else:
 				tabName = QtCore.QCoreApplication.translate("EditWidget", "General")
-			wdgGen = editBoneSelector.select(self.module, key, tmpDict)
-			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict, editWidget=self)
+			wdgGen = editBoneSelector.select(self.module, key, tmpDict.get(key))
+			widget = wdgGen.fromSkelStructure(self.module, key, tmpDict.get(key), editWidget=self)
 			widget.setSizePolicy(
 				QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 			dataWidget = widget

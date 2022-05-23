@@ -32,14 +32,14 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			self,
 			module: str,
 			boneName: str,
-			structure: Dict[str, Any]):
-		super(RecordViewBoneDelegate, self).__init__(module, boneName, structure)
-		logger.debug("RecordViewBoneDelegate.init: %r, %r, %r", module, boneName, structure[self.boneName])
+			boneStructure: Dict[str, Any]):
+		super(RecordViewBoneDelegate, self).__init__(module, boneName, boneStructure)
+		logger.debug("RecordViewBoneDelegate.init: %r, %r, %r", module, boneName, boneStructure)
 		self.format = "value['name']"
-		if "format" in structure[boneName]:
-			self.format = structure[boneName]["format"]
+		if "format" in boneStructure:
+			self.format = boneStructure["format"]
 		self.module = module
-		self.structure = structure
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.safeEval = safeeval.SafeEval()
 		try:
@@ -49,9 +49,9 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 		self._cache = {}
 
 	def displayText(self, value: dict, locale: QtCore.QLocale) -> str:
-		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.structure[self.boneName])
+		logger.debug("RecordViewBoneDeleaget - value: %r, structure: %r", value, self.boneStructure)
 		value = value.get(self.boneName)
-		relStructList = self.structure[self.boneName]["using"]
+		relStructList = self.boneStructure["using"]
 		inValue = str(value)
 		if inValue in self._cache:
 			return self._cache[inValue]
@@ -62,7 +62,7 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 					try:
 						tmpList.append(self.safeEval.execute(self.ast, {
 							"value": v,
-							"structure": self.structure,
+							"boneStructure": self.boneStructure,
 							"language": config.conf.adminConfig.get("language", "en")
 						}))
 					except Exception as e:
@@ -73,7 +73,7 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 				try:
 					value = self.safeEval.execute(self.ast, {
 						"value": value,
-						"structure": self.structure,
+						"boneStructure": self.boneStructure,
 						"language": config.conf.adminConfig.get("language", "en")
 					})
 				except Exception as e:
@@ -121,23 +121,23 @@ class RecordEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
 		#logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		myStruct = boneStructure
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
 			required,
-			skelStructure[boneName]["multiple"],
-			using=skelStructure[boneName]["using"],
-			format=skelStructure[boneName].get("format", "$(name)")
+			boneStructure["multiple"],
+			using=boneStructure["using"],
+			format=boneStructure.get("format", "$(name)")
 		)
 		if myStruct.get("multiple"):
-			viewDeleate = RecordViewBoneDelegate(moduleName, boneName, skelStructure)
+			viewDeleate = RecordViewBoneDelegate(moduleName, boneName, boneStructure)
 			textFormatFunc = lambda x: viewDeleate.displayText(x, None)
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: TabMultiContainer(preMultiWidgetGen, textFormatFunc)
@@ -163,8 +163,8 @@ class RecordEditBone(BoneEditInterface):
 def CheckForRecordBoneBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "record" or skelStucture[boneName]["type"].startswith("record.")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "record" or boneStructure["type"].startswith("record.")
 
 
 # Register this Bone in the global queue

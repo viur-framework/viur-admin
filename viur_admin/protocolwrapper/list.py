@@ -462,6 +462,9 @@ class ListWrapper(ProtocolWrapper):
 		#self.deferredTaskQueue: List[Tuple[str, str]] = []
 		#self.checkBusyStatus()
 
+	def isTemporaryKey(self, key):
+		return False  # We don't emit temp keys for now
+
 	def onStructureAvailable(self, req: RequestWrapper) -> None:
 		self.status: RequestWrapperState = RequestWrapperState.idle
 		tmp = NetworkService.decode(req)

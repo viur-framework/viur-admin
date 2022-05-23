@@ -63,10 +63,10 @@ class PasswordEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
 		return PasswordEditBone(moduleName, boneName, readOnly, required, **kwargs)
 
 	def onTabLanguageChanged(self, lang: str) -> None:
@@ -94,8 +94,8 @@ class PasswordEditBone(BoneEditInterface):
 def CheckForPasswordBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "password"
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "password"
 
 
 # Register this Bone in the global queue

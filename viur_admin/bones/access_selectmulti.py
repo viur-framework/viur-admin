@@ -150,15 +150,15 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
-		if "sortBy" in skelStructure[boneName]:
-			sortBy = skelStructure[boneName]["sortBy"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
+		if "sortBy" in boneStructure:
+			sortBy = boneStructure["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(skelStructure[boneName]["values"])
+		values = list(boneStructure["values"])
 		return cls(
 			moduleName,
 			boneName,
@@ -196,8 +196,8 @@ class AccessSelectMultiEditBone(BoneEditInterface):
 		return self.serialize()
 
 
-def CheckForAccessSelectMultiBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] in ("select.access", "selectmulti.access")
+def CheckForAccessSelectMultiBone(moduleName: str, boneName: str, boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] in ("select.access", "selectmulti.access")
 
 
 # Register this Bone in the global queue
