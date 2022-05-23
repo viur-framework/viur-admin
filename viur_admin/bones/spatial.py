@@ -60,11 +60,10 @@ class SpatialEditBone(BoneEditInterface):
 	def fromSkelStructure(
 			moduleName: str,
 			boneName: str,
-			skelStructure: Dict[str, Any],
+			boneStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = bool(myStruct.get("readonly"))
-		required = bool(myStruct.get("required"))
+		readOnly = bool(boneStructure.get("readonly"))
+		required = bool(boneStructure.get("required"))
 		widgetGen = lambda: SpatialEditBone(
 			moduleName,
 			boneName,
@@ -73,12 +72,12 @@ class SpatialEditBone(BoneEditInterface):
 			multiple=False,
 			languages=None,
 			**kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 
@@ -98,8 +97,8 @@ class SpatialEditBone(BoneEditInterface):
 
 
 
-def CheckForSpatialBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
-	return (skelStucture[boneName]["type"] == "spatial")
+def CheckForSpatialBone(moduleName: str, boneName: str, boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "spatial"
 
 
 # Register this Bone in the global queue

@@ -245,8 +245,8 @@ class ListTableView(QtWidgets.QTableView):
 		for colum, field in enumerate(modulFields):
 			modelHeaders.append(bones[field]["descr"])
 			# Locate the best ViewDeleate for this colum
-			delegateFactory = viewDelegateSelector.select(self.module, field, self.structureCache)
-			delegate = delegateFactory(self.module, field, self.structureCache)
+			delegateFactory = viewDelegateSelector.select(self.module, field, self.structureCache[field])
+			delegate = delegateFactory(self.module, field, self.structureCache[field])
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			#delegate.request_repaint.connect(self.repaint)
@@ -831,7 +831,7 @@ class CsvExportWidget(QtWidgets.QWidget):
 			conf.adminConfig["language"] = newlang
 			for field in fields:
 				# Locate the best ViewDeleate for this column
-				delegateFactory = viewDelegateSelector.select(self.module, field, bones)
+				delegateFactory = viewDelegateSelector.select(self.module, field, bones[field])
 				delegate = delegateFactory(self.module, field, bones)
 				delegates.append(delegate)
 				headers.append(bones[field]["descr"])

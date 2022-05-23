@@ -49,8 +49,8 @@ class HierarchyBoneSelector(RelationalBoneSelector):
 def CheckForHierarchyItemBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("hierarchy.")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"].startswith("hierarchy.")
 
 
 viewDelegateSelector.insert(1, CheckForHierarchyItemBone, HierarchyItemViewBoneDelegate)

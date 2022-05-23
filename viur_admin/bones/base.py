@@ -227,11 +227,11 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 			self,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			*args: Any,
 			**kwargs: Any):
 		super().__init__(**kwargs)
-		self.skelStructure = skelStructure
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.moduleName = moduleName
 		self.language = None
@@ -244,10 +244,8 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 		return False
 
 	def openContextMenu(self, point: QtCore.QPoint, parentWidget) -> None:
-		if self.boneName not in self.skelStructure:
-			return
-		if "languages" in self.skelStructure[self.boneName]:
-			languages = self.skelStructure[self.boneName]["languages"]
+		if "languages" in self.boneStructure:
+			languages = self.boneStructure["languages"]
 		else:
 			languages = None
 		menu = QtWidgets.QMenu(parentWidget)
@@ -292,27 +290,25 @@ class BaseViewBoneDelegate(QtWidgets.QStyledItemDelegate):
 	def displayText(self, value: dict, locale: QtCore.QLocale) -> str:
 		value = value.get(self.boneName)
 		# print("StringViewBoneDelegate.displayText:", value, locale)
-		if self.boneName in self.skelStructure:
-			if "multiple" in self.skelStructure[self.boneName]:
-				multiple = self.skelStructure[self.boneName]["multiple"]
-			else:
-				multiple = False
-			if "languages" in self.skelStructure[self.boneName]:
-				languages = self.skelStructure[self.boneName]["languages"]
-			else:
-				languages = None
-			if multiple and languages:
-				try:
-					value = ", ".join(chooseLang(value, languages))
-				except:
-					value = ""
-			elif multiple and not languages:
-				value = ", ".join(value)
-			elif not multiple and languages:
-				value = chooseLang(value, languages)
-			else:  # Not multiple nor languages
-				pass
-		return str(value)
+		if "multiple" in self.boneStructure:
+			multiple = self.boneStructure["multiple"]
+		else:
+			multiple = False
+		if "languages" in self.boneStructure:
+			languages = self.boneStructure["languages"]
+		else:
+			languages = None
+		if multiple and languages:
+			try:
+				value = ", ".join(chooseLang(value, languages))
+			except:
+				value = ""
+		elif multiple and not languages:
+			value = ", ".join(value)
+		elif not multiple and languages:
+			value = chooseLang(value, languages)
+		else:  # Not multiple nor languages
+			return str(value)
 
 	def commitDataCb(self, editor):
 		raise NotImplementedError
@@ -375,23 +371,19 @@ class CombinedViewDelegate(BaseViewBoneDelegate):
 			self,
 			modulName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			*args: Any,
 			**kwargs: Any):
-		super(CombinedViewDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
-		self.skelStructure = skelStructure
+		super(CombinedViewDelegate, self).__init__(modulName, boneName, boneStructure, *args, **kwargs)
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.modulName = modulName
 		# Create the delegate for nodes
-		structureClone = copy.deepcopy(skelStructure)
-		structureClone[self.boneName] = structureClone[self.boneName][0]
-		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, structureClone)
-		self.nodeDelegate = delegateFactory(self.modulName, self.boneName, structureClone)
+		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, boneStructure[0])
+		self.nodeDelegate = delegateFactory(self.modulName, self.boneName, boneStructure[0])
 		# Create the delegate for leafs
-		structureClone = copy.deepcopy(skelStructure)
-		structureClone[self.boneName] = structureClone[self.boneName][1]
-		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, structureClone)
-		self.leafDelegate = delegateFactory(self.modulName, self.boneName, structureClone)
+		delegateFactory = viewDelegateSelector.select(self.modulName, self.boneName, boneStructure[1])
+		self.leafDelegate = delegateFactory(self.modulName, self.boneName, boneStructure[1])
 
 
 	def displayText(self, value: dict, locale: QtCore.QLocale):
@@ -408,7 +400,7 @@ class CombinedViewDelegate(BaseViewBoneDelegate):
 def CheckForCombinedViewDelegate(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return isinstance(skelStucture[boneName], list)
+		boneStructure: Dict[str, Any]) -> bool:
+	return isinstance(boneStructure, list)
 
 viewDelegateSelector.insert(999999, CheckForCombinedViewDelegate, CombinedViewDelegate)

@@ -121,20 +121,20 @@ class RecordEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
 		#logger.debug("Recordbone.fromSkelStructure: %r, %r, %r", moduleName, boneName, skelStructure)
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in skelStructure[boneName] and skelStructure[boneName]["readonly"]
-		required = "required" in skelStructure[boneName] and skelStructure[boneName]["required"]
+		myStruct = boneStructure
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
 		widgetGen = lambda: cls(
 			moduleName,
 			boneName,
 			readOnly,
 			required,
-			skelStructure[boneName]["multiple"],
-			using=skelStructure[boneName]["using"],
-			format=skelStructure[boneName].get("format", "$(name)")
+			boneStructure["multiple"],
+			using=boneStructure["using"],
+			format=boneStructure.get("format", "$(name)")
 		)
 		if myStruct.get("multiple"):
 			viewDeleate = RecordViewBoneDelegate(moduleName, boneName, skelStructure)
@@ -163,8 +163,8 @@ class RecordEditBone(BoneEditInterface):
 def CheckForRecordBoneBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "record" or skelStucture[boneName]["type"].startswith("record.")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "record" or boneStructure["type"].startswith("record.")
 
 
 # Register this Bone in the global queue

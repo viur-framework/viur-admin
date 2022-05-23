@@ -201,8 +201,8 @@ class FileBoneSelector(TreeBoneSelector):
 def CheckForFileBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("relational.tree.leaf.file")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"].startswith("relational.tree.leaf.file")
 
 
 # Register this Bone in the global queue

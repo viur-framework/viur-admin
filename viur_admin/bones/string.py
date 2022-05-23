@@ -21,8 +21,8 @@ logger = getLogger(__name__)
 
 class StringViewBoneDelegate(BaseViewBoneDelegate):
 	def isEditable(self):
-		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages") \
-				or self.skelStructure[self.boneName].get("multiple"):
+		if self.boneStructure.get("readonly") or self.boneStructure.get("languages") \
+				or self.boneStructure.get("multiple"):
 			return False
 		return True
 
@@ -44,27 +44,25 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 		if not value:
 			return ""
 		# print("StringViewBoneDelegate.displayText:", value, locale)
-		if self.boneName in self.skelStructure:
-			if "multiple" in self.skelStructure[self.boneName]:
-				multiple = self.skelStructure[self.boneName]["multiple"]
-			else:
-				multiple = False
-			if "languages" in self.skelStructure[self.boneName]:
-				languages = self.skelStructure[self.boneName]["languages"]
-			else:
-				languages = None
-			if multiple and languages:
-				try:
-					value = ", ".join(chooseLang(value, languages, self.language))
-				except:
-					value = ""
-			elif multiple and not languages:
-				value = ", ".join(value)
-			elif not multiple and languages:
-				value = chooseLang(value, languages, self.language)
-			else:  # Not multiple nor languages
-				pass
-		return value
+		if "multiple" in self.boneStructure:
+			multiple = self.boneStructure["multiple"]
+		else:
+			multiple = False
+		if "languages" in self.boneStructure:
+			languages = self.boneStructure["languages"]
+		else:
+			languages = None
+		if multiple and languages:
+			try:
+				value = ", ".join(chooseLang(value, languages, self.language))
+			except:
+				value = ""
+		elif multiple and not languages:
+			value = ", ".join(value)
+		elif not multiple and languages:
+			value = chooseLang(value, languages, self.language)
+		else:  # Not multiple nor languages
+			return value
 
 	def commitDataCb(self, editor):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
@@ -162,11 +160,10 @@ class StringEditBone(BoneEditInterface):
 	def fromSkelStructure(
 			moduleName: str,
 			boneName: str,
-			skelStructure: Dict[str, Any],
+			boneStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = bool(myStruct.get("readonly"))
-		required = bool(myStruct.get("required"))
+		readOnly = bool(boneStructure.get("readonly"))
+		required = bool(boneStructure.get("required"))
 		widgetGen = lambda: StringEditBone(
 			moduleName,
 			boneName,
@@ -175,12 +172,12 @@ class StringEditBone(BoneEditInterface):
 			multiple=False,
 			languages=None,
 			**kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
@@ -193,8 +190,8 @@ class StringEditBone(BoneEditInterface):
 		return self.lineEdit.text()
 
 
-def CheckForStringBone(moduleName: str, boneName: str, skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "str" or skelStucture[boneName]["type"].startswith("str.")
+def CheckForStringBone(moduleName: str, boneName: str, boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "str" or boneStructure["type"].startswith("str.")
 
 
 # Register this Bone in the global queue

@@ -60,8 +60,8 @@ class TreeDirBoneSelector(RelationalBoneSelector):
 def CheckForTreeDirBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"].startswith("relational.tree.node")
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"].startswith("relational.tree.node")
 
 
 # Register this Bone in the global queue

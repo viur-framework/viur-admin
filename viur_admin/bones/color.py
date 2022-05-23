@@ -22,10 +22,10 @@ class ColorEditBone(BoneEditInterface):
 			boneName: str,
 			readOnly: bool,
 			required: bool,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any):
 		super(ColorEditBone, self).__init__(moduleName, boneName, readOnly, required, **kwargs)
-		self.skelStructure = skelStructure
+		self.boneStructure = boneStructure
 		lineLayout = QtWidgets.QHBoxLayout(self.editWidget)
 		self.lineEdit = QtWidgets.QLineEdit(self.editWidget)
 		self.button = QtWidgets.QPushButton('Auswählen', self.editWidget)
@@ -42,11 +42,10 @@ class ColorEditBone(BoneEditInterface):
 	def fromSkelStructure(
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = bool(myStruct.get("readonly"))
-		required = bool(myStruct.get("required"))
+		readOnly = bool(boneStructure.get("readonly"))
+		required = bool(boneStructure.get("required"))
 		widgetGen = lambda: ColorEditBone(
 			moduleName,
 			boneName,
@@ -54,19 +53,19 @@ class ColorEditBone(BoneEditInterface):
 			required,
 			skelStructure,
 			**kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def showDialog(self) -> None:
 		acolor = QtWidgets.QColorDialog.getColor(
 			QtGui.QColor(self.lineEdit.displayText()),
 			self.lineEdit,
-			self.skelStructure[self.boneName]["descr"])
+			self.boneStructure["descr"])
 		if acolor.isValid():
 			self.lineEdit.setText(acolor.name())
 			self.refreshColor()
@@ -87,9 +86,8 @@ class ColorEditBone(BoneEditInterface):
 def CheckForColorBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	res = skelStucture[boneName]["type"] == "color"
-	return res
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "color"
 
 
 editBoneSelector.insert(2, CheckForColorBone, ColorEditBone)

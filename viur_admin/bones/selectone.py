@@ -13,7 +13,7 @@ from viur_admin.utils import wheelEventFilter
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 	def isEditable(self):
-		if self.skelStructure[self.boneName].get("readonly") or self.skelStructure[self.boneName].get("languages"):
+		if self.boneStructure.get("readonly") or self.boneStructure.get("languages"):
 			return False
 		return True
 
@@ -21,7 +21,7 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 		value = value.get(self.boneName)
 		if not value:
 			return ""
-		items = dict([(str(k), str(v)) for k, v in self.skelStructure[self.boneName]["values"]])
+		items = dict([(str(k), str(v)) for k, v in self.boneStructure["values"]])
 		if str(value) in items:
 			return items[str(value)]
 		else:
@@ -128,22 +128,21 @@ class SelectOneEditBone(BoneEditInterface):
 	def fromSkelStructure(
 			moduleName: str,
 			boneName: str,
-			skelStructure: Dict[str, Any],
+			boneStructure: Dict[str, Any],
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
-		if "sortBy" in myStruct:
-			sortBy = myStruct["sortBy"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
+		if "sortBy" in boneStructure:
+			sortBy = boneStructure["sortBy"]
 		else:
 			sortBy = "keys"
-		values = list(myStruct["values"])
-		if "required" not in myStruct or not myStruct["required"]:
+		values = list(boneStructure["values"])
+		if "required" not in boneStructure or not boneStructure["required"]:
 			values.insert(0, ["", ""])
 		widgetGen = lambda: SelectOneEditBone(moduleName, boneName, readOnly, required, values=values, sortBy=sortBy, **kwargs)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 	def unserialize(self, data: Dict[str, Any], errors: List[Dict]) -> None:
@@ -168,9 +167,9 @@ class SelectOneEditBone(BoneEditInterface):
 def CheckForSelectOneBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	isSelect = skelStucture[boneName]["type"] == "select" or skelStucture[boneName]["type"].startswith("select.")
-	return isSelect and not bool(skelStucture[boneName].get("multiple"))
+		boneStructure: Dict[str, Any]) -> bool:
+	isSelect = boneStructure["type"] == "select" or boneStructure["type"].startswith("select.")
+	return isSelect and not bool(boneStructure.get("multiple"))
 
 
 # Register this Bone in the global queue

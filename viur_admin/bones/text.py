@@ -34,18 +34,18 @@ class TextViewBoneDelegate(BaseViewBoneDelegate):
 			self,
 			modulName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			*args: Any,
 			**kwargs: Any):
-		super(TextViewBoneDelegate, self).__init__(modulName, boneName, skelStructure, *args, **kwargs)
-		self.skelStructure = skelStructure
+		super(TextViewBoneDelegate, self).__init__(modulName, boneName, boneStructure, *args, **kwargs)
+		self.boneStructure = boneStructure
 		self.boneName = boneName
 		self.modulName = modulName
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> None:
 		value = value.get(self.boneName)
-		if "languages" in self.skelStructure[self.boneName]:
-			languages = self.skelStructure[self.boneName]["languages"]
+		if "languages" in self.boneStructure:
+			languages = self.boneStructure["languages"]
 		else:
 			languages = None
 		if languages is not None:
@@ -335,19 +335,18 @@ class TextEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
 		languages = None
 		plaintext = False
 		validHtml = None
 		if boneName in skelStructure:
-			if "plaintext" in myStruct and myStruct["plaintext"]:
+			if "plaintext" in boneStructure and boneStructure["plaintext"]:
 				plaintext = True
-			if "validHtml" in myStruct:
-				validHtml = myStruct["validHtml"]
+			if "validHtml" in boneStructure:
+				validHtml = boneStructure["validHtml"]
 
 		widgetGen = lambda: cls(
 			moduleName,
@@ -358,12 +357,12 @@ class TextEditBone(BoneEditInterface):
 			plaintext=plaintext,
 			validHtml=validHtml,
 			**kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 
@@ -447,8 +446,8 @@ class TextEditBone(BoneEditInterface):
 def CheckForTextBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "text"
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "text"
 
 
 # Register this Bone in the global queue

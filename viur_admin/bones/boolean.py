@@ -63,18 +63,17 @@ class BooleanEditBone(BoneEditInterface):
 			cls,
 			moduleName: str,
 			boneName: str,
-			skelStructure: dict,
+			boneStructure: dict,
 			**kwargs: Any) -> Any:
-		myStruct = skelStructure[boneName]
-		readOnly = "readonly" in myStruct and myStruct["readonly"]
-		required = "required" in myStruct and myStruct["required"]
+		readOnly = "readonly" in boneStructure and boneStructure["readonly"]
+		required = "required" in boneStructure and boneStructure["required"]
 		widgetGen = lambda: cls(moduleName, boneName, readOnly, required, **kwargs)
-		if myStruct.get("multiple"):
+		if boneStructure.get("multiple"):
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: ListMultiContainer(preMultiWidgetGen)
-		if myStruct.get("languages"):
+		if boneStructure.get("languages"):
 			preLangWidgetGen = widgetGen
-			widgetGen = lambda: LanguageContainer(myStruct["languages"], preLangWidgetGen)
+			widgetGen = lambda: LanguageContainer(boneStructure["languages"], preLangWidgetGen)
 		return widgetGen()
 
 
@@ -93,8 +92,8 @@ class BooleanEditBone(BoneEditInterface):
 def CheckForBooleanBone(
 		moduleName: str,
 		boneName: str,
-		skelStucture: Dict[str, Any]) -> bool:
-	return skelStucture[boneName]["type"] == "bool"
+		boneStructure: Dict[str, Any]) -> bool:
+	return boneStructure["type"] == "bool"
 
 
 # Register this Bone in the global queue
