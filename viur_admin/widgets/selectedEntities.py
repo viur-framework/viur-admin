@@ -43,7 +43,7 @@ class SelectedEntitiesTableModel(QtCore.QAbstractTableModel):
 		assert protoWrap is not None
 		#structureCache = protoWrap.editStructure
 		# print("model init structure", structureCache)
-		protoWrap.entityAvailable.connect(self.onItemDataAvailable)
+		#protoWrap.entityAvailable.connect(self.onItemDataAvailable)
 		for item in (selection or []):
 			self.addItem(item)
 
@@ -200,8 +200,8 @@ class SelectedEntitiesWidget(QtWidgets.QTableView):
 		for field in fields:
 			self.model().headers.append(structureCache[field]["descr"])
 			# Locate the best ViewDeleate for this colum
-			delegateFactory = viewDelegateSelector.select(self.realModule, field, structureCache)
-			delegate = delegateFactory(self.realModule, field, structureCache)
+			delegateFactory = viewDelegateSelector.select(self.realModule, field, structureCache[field])
+			delegate = delegateFactory(self.realModule, field, structureCache[field])
 			self.setItemDelegateForColumn(colum, delegate)
 			self.delegates.append(delegate)
 			delegate.request_repaint.connect(self.repaint)

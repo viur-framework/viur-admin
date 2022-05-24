@@ -416,8 +416,11 @@ class RelationalEditBone(BoneEditInterface):
 					"language": config.conf.adminConfig.get("language", "en")
 				})
 			except Exception as e:
-				logger.exception(e)
-				text = "(invalid format string)"
+				#logger.exception(e)
+				try:
+					text = str(self.selection["dest"]["name"])
+				except:
+					text = "(invalid format string)"
 			self.entry.setText(str(text))
 		else:
 			self.entry.setText("")
