@@ -462,6 +462,15 @@ class ListWrapper(ProtocolWrapper):
 		#self.deferredTaskQueue: List[Tuple[str, str]] = []
 		#self.checkBusyStatus()
 
+	def refreshViews(self):  # CHeck if there have been new items added to the list
+		if not self.views:
+			return
+		for view in self.views:
+			cursorList = [None] + view.cursorList + [None]
+			self.requestNextBatch(view, cursorList, view.displayedKeys[0] if view.displayedKeys else None)
+
+
+
 	def isTemporaryKey(self, key):
 		return False  # We don't emit temp keys for now
 
@@ -497,16 +506,24 @@ class ListWrapper(ProtocolWrapper):
 			self.requestNextBatch(queryId)
 		return None
 
-	def requestNextBatch(self, listView):
+	def requestNextBatch(self, listView, cursorList=None, lastKnownBachKey=None):
 		print("requestNextBatch", listView)
 		queryDict = copy.deepcopy(listView.filter)
-		if listView.cursorList:
+		if cursorList is not None:
+			if len(cursorList) < 2:  # We've reached the end
+				return
+			queryDict["cursor"] = cursorList[0]
+			queryDict["endcursor"] = cursorList[1]
+			queryDict["limit"] = 99
+		elif listView.cursorList:
 			queryDict["cursor"] = listView.cursorList[-1]
 		if listView.currentSortBone:
 			queryDict["orderby"] = listView.currentSortBone[0]
 			queryDict["orderdir"] = "1" if listView.currentSortBone[1] else "0"
 		r = NetworkService.request("/%s/list" % self.module, queryDict, successHandler=self.addCacheData, failureHandler=self.fetchFailed)
 		r.listView = listView
+		r.lastKnownBatchKey = lastKnownBachKey or (listView.displayedKeys[-1] if listView.displayedKeys else None)
+		r.cursorList = cursorList
 
 	def addCacheData(self, req: RequestWrapper) -> None:
 		listView = req.listView
@@ -517,23 +534,25 @@ class ListWrapper(ProtocolWrapper):
 			cursor = data["cursor"]
 			listView.cursorList.append(cursor)
 		if data["action"] == "list":
-			oldLength = len(listView.displayedKeys)
-			if 0 and not oldLength:
-				self.timer1 = QtCore.QTimer()
-				self.timer1.timeout.connect(self.onTimer1)
-				self.timer1.start(1000)
-				self.remKey = [x["key"] for x in data["skellist"] if x["key"] not in self.pendingDeletes][3]
-				self.remQuery = listView
-			extLength = len(data["skellist"])
-			listView.beforeInsertRows(oldLength, extLength)
-			listView.displayedKeys.extend([x["key"] for x in data["skellist"] if x["key"] not in self.pendingDeletes])
+			if req.lastKnownBatchKey:
+				topRow = listView.displayedKeys.index(req.lastKnownBatchKey)
+			else:
+				topRow = len(listView.displayedKeys)
 			for skel in data["skellist"]:
 				if skel["key"] in self.pendingDeletes:
 					continue
 				self._entityCache[skel["key"]] = skel
-			listView.afterInsertRows(oldLength, extLength)
-			if extLength == 0 and not cursor:
+				if skel["key"] in listView.displayedKeys:
+					topRow += 1
+					continue
+				listView.beforeInsertRows(topRow, 1)
+				listView.displayedKeys.insert(topRow, skel["key"])
+				listView.afterInsertRows(topRow, 1)
+				topRow += 1
+			if not cursor:
 				listView._canFetchMore = False
+			if req.lastKnownBatchKey is not None and data["skellist"]:
+				self.requestNextBatch(req.listView, req.cursorList[1:], data["skellist"][-1]["key"])
 		elif data["action"] == "view":
 			assert False
 			self.entryCache[data["values"]["key"]] = data["values"]
@@ -653,6 +672,8 @@ class ListWrapper(ProtocolWrapper):
 			#req.callback(data)
 			#self.updatingSucceeded.emit(str(id(req)))
 			#self.entityChanged.emit(data["values"])
+		elif data["action"] == "addSuccess":
+			self.refreshViews()
 		elif data["action"] in ["addSuccess", "deleteSuccess", "setSortIndexSuccess"]:  # Saving succeeded
 			pass
 			#QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)

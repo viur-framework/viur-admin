@@ -117,8 +117,7 @@ class ListCloneAction(QtWidgets.QAction):
 	def onTriggered(self) -> None:
 		if len(self.parentWidget().list.selectionModel().selection().indexes()) == 0:
 			return
-		data = self.parentWidget().list.model().getData()[
-			self.parentWidget().list.selectionModel().selection().indexes()[0].row()]
+		data = self.parentWidget().list.model().data(self.parentWidget().list.selectionModel().selection().indexes()[0], QtCore.Qt.UserRole)
 		self.parentWidget().openEditor(data, clone=True)
 
 	@staticmethod
