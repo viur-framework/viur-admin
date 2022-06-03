@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 from typing import Union, Any, List, Dict
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer
 from viur_admin.bones.bone_interface import BoneEditInterface
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector
 from viur_admin.ui.extendedSelectMultiFilterPluginUI import Ui_Form
+from math import floor
 
 
 class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
@@ -27,6 +28,45 @@ class SelectMultiViewBoneDelegate(BaseViewBoneDelegate):
 		# print("SelectMultiViewBoneDelegate res", repr(boneValues), repr(resStr))
 		return resStr
 
+class DynamicGridLayout(QtWidgets.QGridLayout):
+	"""
+		Like a Grid-Layout, but it will automatically demternine how many colums are possible given
+		the preffered size of it's contents and re-align it's childs left to right, top to bottom.
+	"""
+	def __init__(self, parent):
+		super().__init__(parent)
+		self.currentWidth: int = 1  # Width in pixels, that we currently have
+
+	def addItem(self, item: QtWidgets.QLayoutItem) -> None:
+		# Just push an item to the end (=new row), then reflow everything
+		nextRow = self.rowCount()+1
+		super().addItem(item, nextRow, 0)
+		self._relayout()
+
+	def setGeometry(self, rect):
+		# The space we allocate has changed (resize etc). Reflow everything
+		super().setGeometry(rect)
+		if self.currentWidth != rect.width():
+			self.currentWidth = rect.width()
+			self._relayout()
+
+	def _relayout(self):
+		# Perform the actual reflow. Grab each child, determine its preferred width and rebuild the grid.
+		itemList = []
+		maxWidth: int = 1  # Maximum preferred size of our children
+		while self.count():
+			item = self.takeAt(0)  # Remove item from layout, so we can re-add it below
+			if item.sizeHint().width() > maxWidth:
+				maxWidth = item.sizeHint().width()
+			itemList.append(item)
+		columnCount = floor(self.currentWidth/(maxWidth+20))
+		currentRow = currentColumn = 0
+		for item in itemList:
+			super().addItem(item, currentRow, currentColumn)
+			currentColumn += 1
+			if currentColumn >= columnCount:
+				currentColumn = 0
+				currentRow += 1
 
 class SelectMultiEditBone(BoneEditInterface):
 	def __init__(
@@ -41,7 +81,9 @@ class SelectMultiEditBone(BoneEditInterface):
 			*args: Any,
 			**kwargs: Any):
 		super(SelectMultiEditBone, self).__init__(moduleName, boneName, readOnly, required, editWidget, *args, **kwargs)
-		self.layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred))
+		#self.layout = QtWidgets.QVBoxLayout(self.editWidget)
+		self.layout = DynamicGridLayout(self.editWidget)
 		self.checkboxes: Dict[str, QtWidgets.QCheckBox] = dict()
 		tmpList = values
 		#if sortBy == "keys":

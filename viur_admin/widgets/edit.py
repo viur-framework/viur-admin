@@ -324,6 +324,17 @@ class EditWidget(QtWidgets.QWidget):
 					self.reloadData()
 					return
 		self.setDisabled(False)
+		if data["action"] == "networkError":
+			# We got an network-error (hopefully) while saving the result. Unblock the form so the user
+			# can try again
+			QtWidgets.QMessageBox(
+				QtWidgets.QMessageBox.Warning,
+				QtCore.QCoreApplication.translate("EditWidget", "Network error"),
+				QtCore.QCoreApplication.translate("EditWidget", "An Network error occurred during this request"),
+				(QtWidgets.QMessageBox.Close),
+				self
+			).open()
+			return
 		# Clear the UI
 		while self.ui.tabWidget.count():
 			item = self.ui.tabWidget.widget(0)

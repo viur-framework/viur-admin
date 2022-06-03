@@ -99,6 +99,17 @@ class ListTableModel(QtCore.QAbstractTableModel):
 		#	}
 		#)
 
+	def reset(self):
+		if self.displayedKeys:
+			numDelKeys = len(self.displayedKeys)
+			self.beforeRemovetRows(0, numDelKeys)
+			self.displayedKeys = []
+			self.afterRemoveRows(0, numDelKeys)
+		self.pendingUpdates = set()
+		self.cursorList = []
+		self.isLoading = False
+		self._canFetchMore = True
+
 	def canFetchMore(self, QModelIndex):
 		return self._canFetchMore #self.viewProxy.canFetchMore
 
@@ -438,7 +449,6 @@ class ListWrapper(ProtocolWrapper):
 
 	def __init__(self, module: str, *args: Any, **kwargs: Any):
 		super(ListWrapper, self).__init__()
-		logging.error(("XXX LIST WRAP", module, args ))
 		self.module = module
 		self.status: RequestWrapperState = RequestWrapperState.initializing
 		#self._filterIdMap = {}
@@ -469,7 +479,14 @@ class ListWrapper(ProtocolWrapper):
 			cursorList = [None] + view.cursorList + [None]
 			self.requestNextBatch(view, cursorList, view.displayedKeys[0] if view.displayedKeys else None)
 
-
+	def reset(self):
+		"""
+			Usually called, if tasks failed to sync to the server.
+			Reset all internal states and reload a fresh state.
+		"""
+		for view in self.views:
+			view.reset()
+		self.pendingDeletes = set()
 
 	def isTemporaryKey(self, key):
 		return False  # We don't emit temp keys for now
@@ -663,8 +680,10 @@ class ListWrapper(ProtocolWrapper):
 		try:
 			data = NetworkService.decode(req)
 		except:  # Something went wrong, call ErrorHandler
-			self.updatingFailedError.emit(str(id(req)))
-			QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
+			#self.updatingFailedError.emit(str(id(req)))
+			#QtCore.QTimer.singleShot(self.updateDelay, self.emitEntriesChanged)
+			if req.callback:
+				req.callback({"action": "networkError"})
 			return
 		if data["action"] == "editSuccess":
 			self._entityCache[data["values"]["key"]] = data["values"]

@@ -30,6 +30,7 @@ class TaskQueue(QtCore.QObject):
 			getStatusBar().removeWidget(self.progressBar)
 			self.progressBar.deleteLater()
 			self.progressBar = None
+			self.finishedTasks = 0
 		elif self.progressBar:
 			# Just update the progress
 			self.progressBar.setMaximum(len(self.pendingTasks)+self.finishedTasks)
@@ -48,7 +49,9 @@ class TaskQueue(QtCore.QObject):
 
 	def taskFinished(self, success:bool):
 		self.hasTaskRunning = False
-		assert success, "TASK FAILED"
+		if not success:  # A Task failed. Abort all pending tasks and reset the protowrap
+			self.pendingTasks = []
+			self.parent().reset()
 		self.finishedTasks += 1
 		self.tryRunNext()
 
@@ -108,3 +111,9 @@ class ProtocolWrapper(QtCore.QObject):
 		"""
 		self.temporaryKeyMap[tempKey] = finalKey
 
+	def reset(self):
+		"""
+			Usually called, if tasks failed to sync to the server.
+			Reset all internal states and reload a fresh state.
+		"""
+		pass
