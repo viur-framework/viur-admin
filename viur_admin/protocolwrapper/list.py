@@ -121,8 +121,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	#protoWrap.requestNextBatch(self.queryKey)
 
 	def beforeInsertRows(self, index: int, numRows:int):
-		print("beforeInsertRows: %r, %r" % (index, numRows))
-
 		if not self.bones:
 			for key, bone in self.protoWrap.viewStructure.items():
 				self.bones[key] = bone
@@ -141,7 +139,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 	#	self.dataCache.pop(rowIndex)
 
 	def afterInsertRows(self, index: int, numRows:int):
-		print("afterInsertRows: %r, %r" % (index, numRows))
 		self.endInsertRows()
 		return True
 
@@ -164,7 +161,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			Signal from the protocoll-wrapper that an add/edit request bounced back. Check if we have it
 			in our pendingUpdates list and update accordingly
 		"""
-		print("updatingDataAvailable")
 		if wasInitial:
 			return
 		try:
@@ -184,7 +180,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 													)
 				self.msgBox.open()
 				#QtWidgets.QMessageBox.warning(self.parent(), "Updating failed", "Updating of %s failed!" % entry["key"])
-				print("warning up")
 
 
 	def updatingFinshed(self, key, *args, **kwargs):
@@ -257,7 +252,6 @@ class ListTableModel(QtCore.QAbstractTableModel):
 			the colums - so we can't rely on the bone-order in the skeleton.
 		:param fields: The new list of bones to display
 		"""
-		print("setDisplayedFields")
 		for field in self.fields[:]:
 			if field not in fields:  # Removed
 				self.removeColumn(self.fields.index(field))
@@ -471,6 +465,41 @@ class ListWrapper(ProtocolWrapper):
 		#protocolWrapperInstanceSelector.insert(1, self.checkForOurModul, self)
 		#self.deferredTaskQueue: List[Tuple[str, str]] = []
 		#self.checkBusyStatus()
+		self.refreshTimer = QtCore.QTimer()
+		self.refreshTimer.setInterval(5000)
+		self.refreshTimer.timeout.connect(self.onRefreshTimeOut)
+		self.refreshTimer.start()
+		self.lastEntryChangeDate = None
+
+	def onRefreshTimeOut(self, *args, **kwargs):
+		if not self.views and self.lastEntryChangeDate is None:
+			return
+		NetworkService.request(
+			"/%s/list" % self.module,
+			{"orderby": "changedate", "orderdir": "1", "limit": "1"},
+			successHandler=self.periodicCheckSuccess,
+			failureHandler=self.periodicCheckFailed
+		)
+
+	def periodicCheckSuccess(self, req):
+		data = NetworkService.decode(req)
+		if not data["skellist"]:
+			return
+		entry = data["skellist"][0]
+		changeDate = entry.get("changedate")
+		if not changeDate:
+			self.refreshTimer.stop()  # There's no changedate on this kind - stop polling
+		wasInitial = self.lastEntryChangeDate is None
+		if changeDate != self.lastEntryChangeDate:
+			print("PERIODIC CHANGE")
+			self.lastEntryChangeDate = changeDate
+			if not wasInitial:
+				print("PERIODIC REFRESH")
+				self.refreshViews()
+
+	def periodicCheckFailed(self, req):  # We could not fetch this - maybe missing index.
+		self.refreshTimer.stop()  # Stop polling
+
 
 	def refreshViews(self):  # CHeck if there have been new items added to the list
 		if not self.views:
@@ -523,8 +552,7 @@ class ListWrapper(ProtocolWrapper):
 			self.requestNextBatch(queryId)
 		return None
 
-	def requestNextBatch(self, listView, cursorList=None, lastKnownBachKey=None):
-		print("requestNextBatch", listView)
+	def requestNextBatch(self, listView, cursorList=None, lastKnownBachKey=-1):
 		queryDict = copy.deepcopy(listView.filter)
 		if cursorList is not None:
 			if len(cursorList) < 2:  # We've reached the end
@@ -544,14 +572,15 @@ class ListWrapper(ProtocolWrapper):
 
 	def addCacheData(self, req: RequestWrapper) -> None:
 		listView = req.listView
-		listView._hasQueryRunning = False
+		listView.isLoading = False
 		data = NetworkService.decode(req)
 		cursor = None
 		if "cursor" in data:
 			cursor = data["cursor"]
-			listView.cursorList.append(cursor)
+			if cursor and req.lastKnownBatchKey == -1:
+				listView.cursorList.append(cursor)
 		if data["action"] == "list":
-			if req.lastKnownBatchKey:
+			if req.lastKnownBatchKey != -1 and req.lastKnownBatchKey:
 				topRow = listView.displayedKeys.index(req.lastKnownBatchKey)
 			else:
 				topRow = len(listView.displayedKeys)
@@ -566,9 +595,9 @@ class ListWrapper(ProtocolWrapper):
 				listView.displayedKeys.insert(topRow, skel["key"])
 				listView.afterInsertRows(topRow, 1)
 				topRow += 1
-			if not cursor:
+			if not cursor and req.lastKnownBatchKey != -1:
 				listView._canFetchMore = False
-			if req.lastKnownBatchKey is not None and data["skellist"]:
+			if req.lastKnownBatchKey != -1 and req.lastKnownBatchKey is not None and data["skellist"]:
 				self.requestNextBatch(req.listView, req.cursorList[1:], data["skellist"][-1]["key"])
 		elif data["action"] == "view":
 			assert False
@@ -610,14 +639,13 @@ class ListWrapper(ProtocolWrapper):
 	def fetchFailed(self, req: RequestWrapper, *args, **kwargs):
 		print("FETCH FAILED !!!!!!")
 		listView = req.listView
-		listView._hasQueryRunning = False
+		listView.isLoading = False
 
 	def checkForOurModul(self, moduleName: str) -> bool:
 		return self.module == moduleName
 
 
 	def add(self, callback, **kwargs: Any) -> str:
-		print(("IN add,", kwargs))
 		req = NetworkService.request(
 			"/%s/add/" % (self.module), kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
@@ -628,13 +656,11 @@ class ListWrapper(ProtocolWrapper):
 			req.wasInitial = False
 		req.callback = callback
 		req.pendingKey = None
-		print(("INITIAL", req.wasInitial))
 		addTaskId = str(id(req))
 		logger.debug("proto list add id: %r", addTaskId)
 		return addTaskId
 
 	def edit(self, key: str, callback = None, **kwargs: Any) -> str:
-		print("XXX IN EDIT", key)
 		for view in self.views:
 			view.entityChanging(key)
 		req = NetworkService.request(

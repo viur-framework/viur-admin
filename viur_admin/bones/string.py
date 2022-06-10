@@ -30,8 +30,8 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		skelStructure = protoWrap.editStructure
-		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure[self.moduleName])
-		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure[self.moduleName], editWidget=parent)
+		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure[self.boneName])
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure[self.boneName], editWidget=parent)
 		widget.unserialize(self.editingItem.get(self.boneName), {})
 		widget.setParent(parent)
 		widget.layout().setSpacing(0)

@@ -283,7 +283,7 @@ class ListTableView(QtWidgets.QTableView):
 		#		break
 		elif e.key() == QtCore.Qt.Key_Return:
 			for index in self.selectedIndexes():
-				self.itemActivated.emit(self.model().getData()[index.row()])
+				self.itemActivated.emit(self.model().data(index, QtCore.Qt.UserRole))
 		else:
 			super(ListTableView, self).keyPressEvent(e)
 
@@ -422,7 +422,10 @@ class ListTableView(QtWidgets.QTableView):
 		"""
 			Returns a list of items currently selected.
 		"""
-		return [self.model().getData(x) for x in set([x.row() for x in self.selectionModel().selection().indexes()])]
+		tmpDict = {}
+		for index in self.selectionModel().selection().indexes():
+			tmpDict[index.row()] = index
+		return [self.model().data(x, QtCore.Qt.UserRole) for x in tmpDict.values()]
 
 	def paintEvent_(self, event: QtGui.QPaintEvent) -> None:
 		super(ListTableView, self).paintEvent(event)
