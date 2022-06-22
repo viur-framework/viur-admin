@@ -516,6 +516,80 @@ def itemFromUrl(url: QtCore.QUrl) -> Union[Tuple[str, str, str], None]:
 	else:
 		return modul, parts[2], ""
 
+def formatString(format: str, data: Dict[str, Any], structure: Dict[str, Any] = None, prefix: List[str] = None, language: str = "de", _rec: int = 0) -> str:
+	"""
+	Parses a string given by format and substitutes placeholders using values specified by data.
+	The syntax for the placeholders is $(%s).
+	Its possible to traverse to sub-dictionarys by using a dot as seperator.
+	If data is a list, the result each element from this list applied to the given string; joined by ", ".
+	Example:
+		data = {"name": "Test","subdict": {"a":"1","b":"2"}}
+		formatString = "Name: $(name), subdict.a: $(subdict.a)"
+	Result: "Name: Test, subdict.a: 1"
+	:param format: String containing the format.
+	:type format: str
+	:param data: Data applied to the format String
+	:type data: list | dict
+	:param structure: Parses along the structure of the given skeleton.
+	:type structure: dict
+	:param prefix: a key which will be used to lookup information in a dict under data
+	:type prefix: list
+	:param language: the 2 char name of a language which should be used for translated data, e.g 'de'
+	:type language: str
+	:param _rec: a counter for internal debugging purposes, whichs holds the number of recursive calls
+	:type _rec: int
+	:return: The traversed string with the replaced values.
+	:rtype: str
+	"""
+
+	if structure and isinstance(structure, list):
+		structure = {k: v for k, v in structure}
+
+	prefix = prefix or []
+	res = format
+
+	try:
+		if isinstance(data, list):
+			return ", ".join([formatString(format, x, structure, prefix, language, _rec=_rec + 1) for x in data])
+
+		elif isinstance(data, str):
+			return data
+
+		elif not data:
+			return res
+
+		for key in data:
+			val = data[key]
+			struct = structure.get(key) if structure else None
+
+			# logger.debug("key: %r, val: %r", key, val)
+			# print("%s%s: %s" % (_rec * " ", key, struct))
+
+			if isinstance(val, dict):
+				if struct and ("$(%s)" % ".".join(prefix + [key])) in res:
+					langs = struct.get("languages")
+					if langs:
+						if language and language in langs and language in val:
+							val = val[language]
+						else:
+							val = ", ".join(val.values())
+
+					else:
+						continue
+
+				else:
+					res = formatString(res, val, structure, prefix + [key], language, _rec=_rec + 1)
+
+			elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
+				res = formatString(res, val[0], structure, prefix + [key], language, _rec=_rec + 1)
+			elif isinstance(val, list):
+				val = ", ".join(val)
+
+			res = res.replace("$(%s)" % (".".join(prefix + [key])), str(val))
+	except Exception as err:
+		pass
+	# logger.debug("in formatString: %r, %r, %r", format, data, err)
+	return res
 
 def colorizeIcon(inData: bytes) -> QtGui.QIcon:
 	"""

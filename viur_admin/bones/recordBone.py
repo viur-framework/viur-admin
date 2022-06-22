@@ -12,7 +12,7 @@ from collections import OrderedDict
 from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
-from viur_admin.utils import Overlay
+from viur_admin.utils import Overlay, formatString
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector
 from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, TabMultiContainer
 from viur_admin import config
@@ -35,17 +35,12 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			boneStructure: Dict[str, Any]):
 		super(RecordViewBoneDelegate, self).__init__(module, boneName, boneStructure)
 		logger.debug("RecordViewBoneDelegate.init: %r, %r, %r", module, boneName, boneStructure)
-		self.format = "value['name']"
+		self.format = "$(name)"
 		if "format" in boneStructure:
 			self.format = boneStructure["format"]
 		self.module = module
 		self.boneStructure = boneStructure
 		self.boneName = boneName
-		self.safeEval = safeeval.SafeEval()
-		try:
-			self.ast = self.safeEval.compile(self.format)
-		except:
-			self.ast = self.safeEval.compile("value['name']")
 		self._cache = {}
 
 	def displayText(self, value: dict, locale: QtCore.QLocale) -> str:
@@ -57,28 +52,23 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			return self._cache[inValue]
 		try:
 			if isinstance(value, list):
-				tmpList = []
-				for v in value:
-					try:
-						tmpList.append(self.safeEval.execute(self.ast, {
-							"value": v,
-							"boneStructure": self.boneStructure,
-							"language": config.conf.adminConfig.get("language", "en")
-						}))
-					except Exception as e:
-						logger.exception(e)
-						tmpList.append("(invalid format string)")
-				value = ", ".join(tmpList)
+				if relStructList:
+					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
+					value = "\n".join([(formatString(
+						formatString(
+							self.format,
+							x, self.structure[self.boneName],
+							language=config.conf.adminConfig["language"]),
+						x, x, language=config.conf.adminConfig["language"]) or x[
+											"key"]) for x in value])
+				else:
+					value = ", ".join([formatString(self.format, x, self.structure,
+													language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				try:
-					value = self.safeEval.execute(self.ast, {
-						"value": value,
-						"boneStructure": self.boneStructure,
-						"language": config.conf.adminConfig.get("language", "en")
-					})
-				except Exception as e:
-					logger.exception(e)
-					value = "(invalid format string)"
+				value = formatString(
+					formatString(self.format, value, self.structure[self.boneName], prefix=[],
+								 language=config.conf.adminConfig["language"]),
+					value, value, language=config.conf.adminConfig["language"]) or value["key"]
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage

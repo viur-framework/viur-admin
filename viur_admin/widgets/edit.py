@@ -241,7 +241,7 @@ class EditWidget(QtWidgets.QWidget):
 			else:
 				self.editTaskID = protoWrap.add(self.node, self.skelType, self.onEditResultAvailable, **data)
 		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
-			self.editTaskID = protoWrap.edit(**data)
+			self.editTaskID = protoWrap.edit(self.onEditResultAvailable, **data)
 		else:
 			raise NotImplementedError()  # Should never reach this
 		self.setDisabled(True)

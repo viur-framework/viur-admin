@@ -52,9 +52,9 @@ class SingletonWrapper(QtCore.QObject):
 		self.modulStructureAvailable.emit()
 		self.checkBusyStatus()
 
-	def edit(self, key, callback, **kwargs: Any) -> str:
+	def edit(self, callback, **kwargs: Any) -> str:
 		req = NetworkService.request(
-			"/%s/edit/%s" % (self.module, key),
+			"/%s/edit" % self.module,
 			kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
 		if not kwargs:

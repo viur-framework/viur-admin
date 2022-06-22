@@ -590,16 +590,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		handlers = []
 		groupHandlers = {}
 		by_group: Dict[str, List[Any]] = dict()
-
 		if "configuration" in data and "moduleGroups" in data["configuration"]:
-			for group in data["configuration"]["moduleGroups"]:
-				if (self.groupWhitelist is not None and group["name"] not in self.groupWhitelist) or not all([x in group for x in
-				            ["name", "prefix", "icon"]]):  # Assert that all required properties are there
+			for groupKey, groupData in data["configuration"]["moduleGroups"].items():
+				if (self.groupWhitelist is not None and groupData["name"] not in self.groupWhitelist) or not \
+						all([x in groupData for x in ["name", "icon"]]):  # Assert that all required properties are there
 					continue
-				group_handler = GroupHandler(None, group["name"], group["icon"], sortIndex=group.get("sortIndex", 0))
-				group_prefix = group["prefix"]
-				groupHandlers[group_prefix] = group_handler
-				by_group[group_prefix] = list()
+				group_handler = GroupHandler(None, groupData["name"], groupData["icon"], sortIndex=groupData.get("sortIndex", 0))
+				groupHandlers[groupKey] = group_handler
+				by_group[groupKey] = list()
 				# self.treeWidget.addTopLevelItem(groupHandlers[group["prefix"]])
 		if "modules" not in conf.portal:
 			conf.portal["modules"] = {}
@@ -617,17 +615,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			queue = RegisterQueue()
 			event.emit('requestModuleHandler', queue, module)
 			handler = queue.getBest()()
-			if "name" in cfg and groupHandlers:
-				parent = None
-				for groupName in groupHandlers:
-					if cfg["name"].startswith(groupName):
-						parent = groupHandlers[groupName]
-						break
-				if parent:
-					# parent.addChild(handler)
-					by_group[groupName].append(handler)
-				else:
-					self.treeWidget.addTopLevelItem(handler)
+			if "moduleGroup" in cfg and groupHandlers and cfg["moduleGroup"] in groupHandlers:
+				by_group[cfg["moduleGroup"]].append(handler)
 			else:
 				self.treeWidget.addTopLevelItem(handler)
 			handlers.append(handler)

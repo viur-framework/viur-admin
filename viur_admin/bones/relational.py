@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from viur_admin.bones.bone_interface import BoneEditInterface
 
 from viur_admin.event import event
-from viur_admin.utils import Overlay, WidgetHandler, loadIcon
+from viur_admin.utils import Overlay, WidgetHandler, loadIcon, formatString
 from viur_admin.ui.relationalselectionUI import Ui_relationalSelector
 from viur_admin.widgets.list import ListWidget
 from viur_admin.widgets.edit import EditWidget, collectBoneErrors
@@ -35,17 +35,12 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 	def __init__(self, module: str, boneName: str, boneStructure: Dict[str, Any]):
 		super(RelationalViewBoneDelegate, self).__init__(module, boneName, boneStructure)
 		# logger.debug("RelationalViewBoneDelegate.init: %r", boneName)
-		self.format = "value['name']"
+		self.format = "$(name)"
 		if "format" in boneStructure:
 			self.format = boneStructure["format"]
 		self.module = module
 		self.boneStructure = boneStructure
 		self.boneName = boneName
-		self.safeEval = safeeval.SafeEval()
-		try:
-			self.ast = self.safeEval.compile(self.format)
-		except:
-			self.ast = self.safeEval.compile("value['name']")
 		self._cache = {}
 
 	def isEditable(self):
@@ -66,28 +61,21 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r", self.boneName, value)
 		try:
 			if isinstance(value, list):
-				tmpList = []
-				for v in value:
-					try:
-						tmpList.append(str(self.safeEval.execute(self.ast, {
-							"value": v,
-							"structure": self.boneStructure,
-							"language": config.conf.adminConfig.get("language", "en")
-						})))
-					except Exception as e:
-						logger.exception(e)
-						tmpList.append("(invalid format string)")
-				value = ", ".join(tmpList)
+				if relStructList:
+					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
+					value = ", ".join([(formatString(
+						formatString(self.format, x["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+									 language=config.conf.adminConfig["language"]),
+						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x[
+											"key"]) for x in value])
+				else:
+					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],
+													language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				try:
-					value = str(self.safeEval.execute(self.ast, {
-						"value": value,
-						"structure": self.boneStructure,
-						"language": config.conf.adminConfig.get("language", "en")
-					}))
-				except Exception as e:
-					logger.exception(e)
-					value = "(invalid format string)"
+				value = formatString(
+					formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+								 language=config.conf.adminConfig["language"]),
+					relStructDict, value["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or value["key"]
 		except Exception as err:
 			#logger.exception(err)
 			# We probably received some garbage
@@ -409,19 +397,7 @@ class RelationalEditBone(BoneEditInterface):
 			self.internalEdits = item
 			self.addBtn.setText("Auswahl ändern")
 		if self.selection:
-			try:
-				text = self.safeEval.execute(self.ast, {
-					"value": self.selection,
-					"structure": structure,
-					"language": config.conf.adminConfig.get("language", "en")
-				})
-			except Exception as e:
-				#logger.exception(e)
-				try:
-					text = str(self.selection["dest"]["name"])
-				except:
-					text = "(invalid format string)"
-			self.entry.setText(str(text))
+			self.entry.setText(formatString(self.format, self.selection, structure))
 		else:
 			self.entry.setText("")
 		self.blockAutoCompletion = False

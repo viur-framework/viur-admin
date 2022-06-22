@@ -51,7 +51,7 @@ class TextViewBoneDelegate(BaseViewBoneDelegate):
 		if languages is not None:
 			value = chooseLang(value, languages)
 
-		return unescape(value)
+		return unescape(value) if value else ""
 
 
 class RawTextEdit(QtWidgets.QWidget):
