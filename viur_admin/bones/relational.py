@@ -23,7 +23,8 @@ from viur_admin.bones.base import BaseViewBoneDelegate, LanguageContainer, ListM
 from viur_admin import config
 from viur_admin.pyodidehelper import isPyodide
 import safeeval
-
+from viur_admin.protocolwrapper.list import ListWrapper
+from viur_admin.protocolwrapper.tree import TreeWrapper
 
 class BaseBone:
 	pass
@@ -64,20 +65,21 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 				if relStructList:
 					# logger.debug("RelationalViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
 					value = ", ".join([(formatString(
-						formatString(self.format, x["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+						formatString(self.format, x["dest"], self.boneStructure["relskel"], prefix=["dest"],
 									 language=config.conf.adminConfig["language"]),
 						relStructDict, x["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or x[
 											"key"]) for x in value])
 				else:
-					value = ", ".join([formatString(self.format, x["dest"], self.structure, prefix=["dest"],
+					value = ", ".join([formatString(self.format, x["dest"], self.boneStructure, prefix=["dest"],
 													language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
 				value = formatString(
-					formatString(self.format, value["dest"], self.structure[self.boneName]["relskel"], prefix=["dest"],
+					formatString(self.format, value["dest"], self.boneStructure["relskel"], prefix=["dest"],
 								 language=config.conf.adminConfig["language"]),
 					relStructDict, value["rel"], prefix=["rel"], language=config.conf.adminConfig["language"]) or value["key"]
 		except Exception as err:
-			#logger.exception(err)
+			logger.exception(err)
+			raise
 			# We probably received some garbage
 			value = ""
 		self._cache[inValue] = value
@@ -87,8 +89,8 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
 		skelStructure = protoWrap.editStructure
-		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure)
-		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure, editWidget=self)
+		wdgGen = editBoneSelector.select(self.moduleName, self.boneName, skelStructure[self.boneName])
+		widget = wdgGen.fromSkelStructure(self.moduleName, self.boneName, skelStructure[self.boneName], editWidget=self)
 		widget.setParent(parent)
 		widget.layout().setSpacing(0)
 		widget.layout().setContentsMargins(0, 0, 0, 0)
@@ -98,7 +100,10 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		widget.hboxLayout.setContentsMargins(0, 0, 0, 0)
 		widget.previewLayout.setSpacing(0)
 		widget.previewLayout.setContentsMargins(0, 0, 0, 0)
-		parent.parent().verticalHeader().setSectionResizeMode(index.row(), parent.parent().verticalHeader().ResizeToContents)
+		if isinstance(protoWrap, ListWrapper):
+			parent.parent().verticalHeader().setSectionResizeMode(index.row(), parent.parent().verticalHeader().ResizeToContents)
+		#elif isinstance(protoWrap, TreeWrapper):
+		#	parent.parent().header().setSectionResizeMode(index.row(), parent.parent().header().ResizeToContents)
 		widget.selectionChanged.connect(self.editorSelectionChanged)
 		widget.unserialize(self.editingItem.get(self.boneName), {})
 		QtCore.QTimer.singleShot(1, lambda: widget.entry.setFocus())
@@ -110,10 +115,15 @@ class RelationalViewBoneDelegate(BaseViewBoneDelegate):
 		self.closeEditor.emit(editor)
 
 	def commitDataCb(self, editor):
-		print("IN COMMIT DATA CB")
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
-		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		if isinstance(protoWrap, TreeWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], self.editingItem["_type"], **{self.boneName: editor.serializeForPost()})
+		elif isinstance(protoWrap, ListWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		else:
+			raise NotImplementedError()
+
 		#self.editingModel.dataCache[self.editingIndex.row()][self.boneName] = "-Lade-"
 		self.editingModel = None
 		self.editingIndex = None

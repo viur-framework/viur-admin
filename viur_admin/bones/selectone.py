@@ -9,6 +9,8 @@ from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, pro
 	extendedSearchWidgetSelector
 from viur_admin.ui.extendedSelectOneFilterPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter
+from viur_admin.protocolwrapper.list import ListWrapper
+from viur_admin.protocolwrapper.tree import TreeWrapper
 
 
 class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
@@ -46,7 +48,12 @@ class SelectOneViewBoneDelegate(BaseViewBoneDelegate):
 	def commitDataCb(self, editor):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
-		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		if isinstance(protoWrap, TreeWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], self.editingItem["_type"], **{self.boneName: editor.serializeForPost()})
+		elif isinstance(protoWrap, ListWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		else:
+			raise NotImplementedError()
 		self.editingModel = None
 		self.editingIndex = None
 

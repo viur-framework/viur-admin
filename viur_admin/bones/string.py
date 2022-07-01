@@ -13,6 +13,8 @@ from viur_admin.log import getLogger
 from viur_admin.priorityqueue import editBoneSelector, viewDelegateSelector, extendedSearchWidgetSelector, protocolWrapperInstanceSelector
 from viur_admin.ui.extendedStringSearchPluginUI import Ui_Form
 from viur_admin.utils import wheelEventFilter, ViurTabBar, loadIcon
+from viur_admin.protocolwrapper.list import ListWrapper
+from viur_admin.protocolwrapper.tree import TreeWrapper
 
 logger = getLogger(__name__)
 
@@ -36,7 +38,7 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 		widget.setParent(parent)
 		widget.layout().setSpacing(0)
 		widget.layout().setContentsMargins(0, 0, 0, 0)
-		QtCore.QTimer.singleShot(1, lambda: widget.lineEdit.setFocus())
+		#QtCore.QTimer.singleShot(1, lambda: widget.lineEdit.setFocus())
 		return widget
 
 	def displayText(self, value: str, locale: QtCore.QLocale) -> str:
@@ -67,7 +69,12 @@ class StringViewBoneDelegate(BaseViewBoneDelegate):
 	def commitDataCb(self, editor):
 		protoWrap = protocolWrapperInstanceSelector.select(self.moduleName)
 		assert protoWrap is not None
-		self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		if isinstance(protoWrap, TreeWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], self.editingItem["_type"], **{self.boneName: editor.serializeForPost()})
+		elif isinstance(protoWrap, ListWrapper):
+			self.editTaskID = protoWrap.edit(self.editingItem["key"], **{self.boneName: editor.serializeForPost()})
+		else:
+			raise NotImplementedError()
 		self.editingModel = None
 		self.editingIndex = None
 

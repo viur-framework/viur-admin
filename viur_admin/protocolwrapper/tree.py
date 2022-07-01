@@ -123,7 +123,9 @@ class TreeView(QtCore.QAbstractItemModel):
 		self._nextDataIndex = 1
 		self._sortOrder = ("name", "0")
 		self._searchStr = ""
+		self.pendingUpdates = set()
 		self.fields = ["name"]
+		self.editableFields = set()
 		# Due to miss-use, someone might request displaying fields which dont exists. These are the fields that are valid
 		self._validFields: List[str] = list()
 		self.displayedKeys: List[str] = []
@@ -336,11 +338,48 @@ class TreeView(QtCore.QAbstractItemModel):
 	def flags(self, index: QModelIndex) -> QtCore.Qt.ItemFlags:
 		if not index.isValid():
 			return QtCore.Qt.ItemIsDropEnabled  # Allow dropping on root-node
-		if self.resolveInternalDataForIndex(index): # Allow drops only on nodes
-			return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-		return QtCore.Qt.ItemIsDragEnabled| QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemNeverHasChildren
+		nodeData = self.resolveInternalDataForIndex(index)
+		currentKey = None
+		if nodeData: # Allow drops only on nodes
+			defaultFlags = QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+			currentKey = nodeData["nodeKey"]
+		else:
+			defaultFlags = QtCore.Qt.ItemIsDragEnabled| QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemNeverHasChildren
+			data = self.data(index,QtCore.Qt.UserRole)
+			if data:
+				currentKey = data["key"]
+		if currentKey and currentKey in self.pendingUpdates:
+			return QtCore.Qt.NoItemFlags
+		try:
+			if self.fields[index.column()] in self.editableFields:
+				defaultFlags |= QtCore.Qt.ItemIsEditable
+		except:
+			raise
+			pass
+		return defaultFlags
 
+	def updatingFinshed(self, key, *args, **kwargs):
+		"""
+			Callback from the protocolwrapper that an update finished, so remove it's pending update tag
+		"""
+		#try:
+		#	idx = self.displayedKeys.index(key)
+		#except ValueError:
+		#	return
+		self.pendingUpdates.remove(key)
+		#self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
 
+	def entityChanging(self, key: str):
+		"""
+			Callback from the protocolwrapper that an entry is about to be edited on the server side.
+			Ensure we're only displaying "loading" while it's pending
+		"""
+		#try:
+		#	idx = self.displayedKeys.index(key)
+		#except ValueError:
+		#	return
+		self.pendingUpdates.add(key)
+		#self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
 
 class TreeWrapper(ProtocolWrapper):
 	maxCacheTime = 60  # Cache results for max. 60 Seconds
@@ -378,6 +417,7 @@ class TreeWrapper(ProtocolWrapper):
 		self.temporaryKeyIndex: int = 0  # We'll assign temp. keys using this index
 		self.temporaryKeyMap: dict[str, str] = {}  # Map of temp key -> finally assignend key from the server
 		self.viewNodeStructure = self.viewLeafStructure = self.viewStructure = None
+		self.editNodeStructure = self.editLeafStructure = self.editStructure = None
 
 
 	def resolveTemporaryKey(self, tempKey, finalKey):
@@ -475,6 +515,16 @@ class TreeWrapper(ProtocolWrapper):
 						self.viewStructure[k]["descr"] = "%s / %s" % (self.viewStructure[k]["descr"], v["descr"])
 				else:
 					self.viewStructure[k] = [self.viewStructure[k], v]
+		if self.editNodeStructure and self.editLeafStructure:
+			self.editStructure = copy.deepcopy(self.editNodeStructure)
+			for k, v in self.editLeafStructure.items():
+				if k not in self.editStructure:
+					self.editStructure[k] = copy.deepcopy(v)
+				elif self.editStructure[k]["type"] == v["type"]:
+					if self.editStructure[k]["descr"] != v["descr"]:
+						self.editStructure[k]["descr"] = "%s / %s" % (self.editStructure[k]["descr"], v["descr"])
+				else:
+					self.editStructure[k] = [self.editStructure[k], v]
 			#print("xxxx", self.viewLeafStructure)
 		self.onModulStructureAvailable.emit()
 
@@ -638,6 +688,8 @@ class TreeWrapper(ProtocolWrapper):
 				view.afterInsertRows(parentNode, idx, 1, "leaf")
 
 	def onSaveResult(self, req: RequestWrapper = None) -> None:
+		for view in self.views:
+			view.updatingFinshed(req.pendingKey)
 		try:
 			data = NetworkService.decode(req)
 		except:  # Something went wrong, call ErrorHandler
@@ -657,7 +709,8 @@ class TreeWrapper(ProtocolWrapper):
 				self._notifyViewsItemsChanged([data["values"]["key"]], [])
 			else:
 				self._notifyViewsItemsChanged([], [data["values"]["key"]])
-		req.callback(data)
+		if req.callback:
+			req.callback(data)
 
 	def add(self, node: str, skelType: str, callback, **kwargs: Any) -> str:
 		tmp = kwargs.copy()
@@ -675,8 +728,9 @@ class TreeWrapper(ProtocolWrapper):
 		req.skelType = skelType
 		return str(id(req))
 
-	def edit(self, key: str, skelType, callback, **kwargs: Any) -> str:
-		print("XXX IN EDIT", key)
+	def edit(self, key: str, skelType, callback=None, **kwargs: Any) -> str:
+		for view in self.views:
+			view.entityChanging(key)
 		req = NetworkService.request(
 			"/%s/edit/%s/%s" % (self.module, skelType, key), kwargs, secure=(len(kwargs) > 0),
 			finishedHandler=self.onSaveResult)
@@ -688,6 +742,7 @@ class TreeWrapper(ProtocolWrapper):
 		#self.entityChanging.emit(key)
 		req.callback = callback
 		req.skelType = skelType
+		req.pendingKey = key
 		#self.checkBusyStatus()
 		editTaskId = str(id(req))
 		logger.debug("proto list edit id: %r", editTaskId)
