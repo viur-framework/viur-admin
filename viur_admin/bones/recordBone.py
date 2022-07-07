@@ -54,7 +54,7 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			if isinstance(value, list):
 				if relStructList:
 					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
-					value = "\n".join([(formatString(
+					value = ", ".join([(formatString(
 						formatString(
 							self.format,
 							x, self.boneStructure,
