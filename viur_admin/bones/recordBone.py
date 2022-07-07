@@ -57,12 +57,12 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 					value = "\n".join([(formatString(
 						formatString(
 							self.format,
-							x, self.structure[self.boneName],
+							x, self.boneStructure,
 							language=config.conf.adminConfig["language"]),
 						x, x, language=config.conf.adminConfig["language"]) or x[
 											"key"]) for x in value])
 				else:
-					value = ", ".join([formatString(self.format, x, self.structure,
+					value = ", ".join([formatString(self.format, x, self.boneStructure,
 													language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
 				value = formatString(
