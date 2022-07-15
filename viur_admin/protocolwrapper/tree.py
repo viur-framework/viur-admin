@@ -366,7 +366,8 @@ class TreeView(QtCore.QAbstractItemModel):
 		#	idx = self.displayedKeys.index(key)
 		#except ValueError:
 		#	return
-		self.pendingUpdates.remove(key)
+		if key and key in self.pendingUpdates:
+			self.pendingUpdates.remove(key)
 		#self.dataChanged.emit(self.index(idx, 0), self.index(idx, 999))
 
 	def entityChanging(self, key: str):
@@ -726,6 +727,7 @@ class TreeWrapper(ProtocolWrapper):
 			req.wasInitial = False
 		req.callback = callback
 		req.skelType = skelType
+		req.pendingKey = None
 		return str(id(req))
 
 	def edit(self, key: str, skelType, callback=None, **kwargs: Any) -> str:
