@@ -72,10 +72,10 @@ class FileDownloadAction(QtWidgets.QAction):
 		dirs: List[Dict[str, Any]] = list()
 		files: List[Dict[str, Any]] = list()
 		for item in self.parent().selectedItems():
-			if isinstance(item, self.parent().getNodeItemClass()):
-				dirs.append(item.entryData)
+			if item["_type"] == "node":
+				dirs.append(item)
 			else:
-				files.append(item.entryData)
+				files.append(item)
 		if not files and not dirs:
 			return
 		if isPyodide:
