@@ -62,6 +62,10 @@ class BoneEditInterface(QtWidgets.QWidget):
 		self.errorSeverityList = [-1]
 		#self.errorLabels.setLayout(QtWidgets.QVBoxLayout(self.errorLabels))
 
+	def setPreflightData(self, values):
+		# Used to propagate values from the preflight request so descriptions can be updated
+		pass
+
 	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False):
 		maxErr = max(self.errorSeverityList)
 		if maxErr == 2 or maxErr==0:

@@ -103,7 +103,7 @@ class TabMultiContainer(QtWidgets.QTabWidget):
 			wdg = self._mkEntry()
 			wdg.unserialize(data, collectBoneErrors(errors, "0"))
 			if self.textFormatFunc:
-				self.setTabText(0, self.textFormatFunc(d))
+				self.setTabText(0, self.textFormatFunc(data))
 
 	def getChildBones(self):
 		for x in range(0, self.count()):
@@ -124,7 +124,18 @@ class TabMultiContainer(QtWidgets.QTabWidget):
 			self.setTabIcon(idx, icon)
 
 	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
-		return max([x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.getChildBones()])
+		return max([x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.getChildBones()]+[0])
+
+	def setPreflightData(self, data):
+		if not data:
+			return
+		elif isinstance(data, list):
+			for idx, d in enumerate(data):
+				if self.textFormatFunc:
+					self.setTabText(idx, self.textFormatFunc(d))
+		else:
+			if self.textFormatFunc:
+				self.setTabText(0, self.textFormatFunc(data))
 
 class ListMultiContainer(QtWidgets.QWidget):
 	# For simple relations, multi stringBones etc. They will be rendered in a list, top to bottom
@@ -196,6 +207,9 @@ class ListMultiContainer(QtWidgets.QWidget):
 
 	def getEffectiveMaximumBoneError(self, inOptionalContainer: bool = False) -> int:
 		return max([-1]+[x.getEffectiveMaximumBoneError(inOptionalContainer) for x in self.getChildBones()])
+
+	def setPreflightData(self, values):
+		pass
 
 def chooseLang(value: Dict[str, Any], prefs: List[str], currentLanguageSelection: str = None) -> Union[str, dict, None]:
 	"""

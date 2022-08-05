@@ -153,10 +153,10 @@ class EditWidget(QtWidgets.QWidget):
 
 	def issuePreflightRequest(self):
 		# Serialize all bones
-		return
 		data = {}
 		for key, bone in self.bones.items():
 			data[key] = bone.serializeForPost()
+		data["bounce"] = "1"
 		if data == self.lastRequestedPreflightData: # The values inside the bones did not change
 			return
 		self.lastRequestedPreflightData = data.copy()  # Data will be modified in protocolwrapper
@@ -164,22 +164,20 @@ class EditWidget(QtWidgets.QWidget):
 		assert protoWrap is not None
 		if self.applicationType == ApplicationType.LIST:  # Application: List
 			if self.key and not self.clone:
-				protoWrap.editPreflight(self.key, data, self.onPreflightDataAvailable)
+				protoWrap.edit(self.key, data, self.onPreflightDataAvailable)
 			else:
-				protoWrap.editPreflight(None, data, self.onPreflightDataAvailable)
+				protoWrap.edit(None, data, self.onPreflightDataAvailable)
 		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
 			if self.key and not self.clone:
-				protoWrap.editPreflight(self.key, self.node, self.skelType, data, self.onPreflightDataAvailable)
+				protoWrap.edit(self.key, self.skelType, self.onPreflightDataAvailable, **data)
 			else:
-				protoWrap.editPreflight(None, self.node, self.skelType, data, self.onPreflightDataAvailable)
+				protoWrap.add(self.node, self.skelType, self.onPreflightDataAvailable, **data)
 		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
-			protoWrap.editPreflight(self.key, data, self.onPreflightDataAvailable)
+			protoWrap.edit(self.key, data, self.onPreflightDataAvailable)
 		else:
 			raise NotImplementedError()  # Should never reach this
 
-	def onPreflightDataAvailable(self, req):
-		print("onPreflightDataAvailable")
-		data = NetworkService.decode(req)
+	def onPreflightDataAvailable(self, data):
 		errors = data["errors"]
 		newTabIcons: Dict[QtWidgets.QWidget, List[int]] = {}
 		for key, bone in self.bones.items():
@@ -187,6 +185,7 @@ class EditWidget(QtWidgets.QWidget):
 				continue
 			boneErrors = collectBoneErrors(errors, key)
 			bone.setErrors(boneErrors)
+			bone.setPreflightData(data["values"].get(key))
 			tab = self.boneToTabMap[bone]
 			if tab not in newTabIcons:
 				newTabIcons[tab] = []

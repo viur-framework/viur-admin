@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import datetime
 from collections import OrderedDict
 from typing import Union, Sequence, Tuple, List, Dict, Any, Optional, Set
 from PyQt5.QtCore import QModelIndex
@@ -419,7 +419,86 @@ class TreeWrapper(ProtocolWrapper):
 		self.temporaryKeyMap: dict[str, str] = {}  # Map of temp key -> finally assignend key from the server
 		self.viewNodeStructure = self.viewLeafStructure = self.viewStructure = None
 		self.editNodeStructure = self.editLeafStructure = self.editStructure = None
+		self.refreshTimer = QtCore.QTimer()
+		self.refreshTimer.setInterval(5000)
+		self.refreshTimer.timeout.connect(self.onRefreshTimeOut)
+		self.refreshTimer.start()
+		self.lastEntryChangeDateLeaf = None
+		self.lastEntryChangeDateNode = None
 
+
+	def onRefreshTimeOut(self, *args, **kwargs):
+		if not self.views and self.lastEntryChangeDateNode is None:
+			return
+		if self.lastEntryChangeDateNode:
+			changeDate = datetime.datetime.fromisoformat(self.lastEntryChangeDateNode).strftime("%Y-%m-%d %H:%M:%S")
+			NetworkService.request(
+				"/%s/list/node" % self.module,
+				{"orderby": "changedate", "orderdir": "0", "limit": "99", "changedate$gt": changeDate},
+				successHandler=self.periodicCheckSuccess,
+				failureHandler=self.periodicCheckFailed
+			).skelType = "node"
+		else:
+			NetworkService.request(
+				"/%s/list/node" % self.module,
+				{"orderby": "changedate", "orderdir": "1", "limit": "1"},
+				successHandler=self.periodicCheckSuccess,
+				failureHandler=self.periodicCheckFailed
+			).skelType = "node"
+		if not self.nodesOnly:
+			if self.lastEntryChangeDateLeaf:
+				changeDate = datetime.datetime.fromisoformat(self.lastEntryChangeDateLeaf).strftime("%Y-%m-%d %H:%M:%S")
+				NetworkService.request(
+					"/%s/list/leaf" % self.module,
+					{"orderby": "changedate", "orderdir": "0", "limit": "99", "changedate$gt": changeDate},
+					successHandler=self.periodicCheckSuccess,
+					failureHandler=self.periodicCheckFailed
+				).skelType = "leaf"
+			else:
+				NetworkService.request(
+					"/%s/list/leaf" % self.module,
+					{"orderby": "changedate", "orderdir": "1", "limit": "99"},
+					successHandler=self.periodicCheckSuccess,
+					failureHandler=self.periodicCheckFailed
+				).skelType = "leaf"
+
+	def periodicCheckSuccess(self, req):
+		data = NetworkService.decode(req)
+		if not data["skellist"]:
+			return
+		entry = data["skellist"][0]
+		changeDate = entry.get("changedate")
+		if not changeDate:
+			self.refreshTimer.stop()  # There's no changedate on this kind - stop polling
+		lastChangeDate = self.lastEntryChangeDateNode if req.skelType=="node" else self.lastEntryChangeDateLeaf
+		wasInitial = lastChangeDate is None
+		if changeDate != lastChangeDate:
+			print("PERIODIC CHANGE")
+			for entry in data["skellist"]:
+				if req.skelType=="node":
+					self.lastEntryChangeDateNode = entry["changedate"]
+				else:
+					self.lastEntryChangeDateLeaf = entry["changedate"]
+				if not wasInitial:
+						print("PERIODIC REFRESH")
+						entry["_type"] = req.skelType
+						self.updateEntry(None, entry)
+						#self.refreshViews(req.skelType, entry)
+
+	def refreshViews(self, skelType, entry):
+		"""
+			Called from periodic check if an entry has been changed/added
+		:param skelType:
+		:param entry:
+		:return:
+		"""
+		print("refreshViews", skelType, entry)
+		if entry["key"] not in self._entityCache:
+			self._entityCache[entry["key"]] = entry
+
+
+	def periodicCheckFailed(self, req):  # We could not fetch this - maybe missing index.
+		self.refreshTimer.stop()  # Stop polling
 
 	def resolveTemporaryKey(self, tempKey, finalKey):
 		"""
@@ -457,26 +536,47 @@ class TreeWrapper(ProtocolWrapper):
 		r = NetworkService.request("/%s/view/%s/%s" % (self.module, "node" if isNode else "leaf", finalKey), successHandler=self.updateEntry)
 		r.isNode = isNode
 
-	def updateEntry(self, req):
-		data = NetworkService.decode(req)
-		key = data["values"]["key"]
-		self._entityCache[key].update(data["values"])
+	def updateEntry(self, req, data=None):
+		data = NetworkService.decode(req)["values"] if req else data
+		if req:
+			data["_type"] = "node" if req.isNode else "leaf"
+		if not data.get("parententry"): # Update for rootNode
+			return
+		key = data["key"]
+		isUpdate = key in self._entityCache
+		isMoved = False
+		if isUpdate:
+			if not self._entityCache[key].get("parententry"):
+				# Update for a rootNode
+				return
+			isMoved = self._entityCache[key]["parententry"] != data["parententry"]
+			self._entityCache[key].update(data)
+		else:
+			self._entityCache[key] = data
 		for view in self.views:
-			# Check which views may display that node/leaf
-			if req.isNode:
-				parentIndex = view.resolveParentIndexForNodeKey(key)
-				if parentIndex:
-					data = view.resolveInternalDataForNodeKey(view.resolveInternalDataForNodeKey(key)["parentNodeKey"])
-					idx = view.index(data["nodeKeys"].index(key), 0, parentIndex)
-					idx2 = view.index(data["nodeKeys"].index(key), 99, parentIndex)
-					view.dataChanged.emit(idx, idx2)
-			else:
-				parentIndex = view.resolveParentIndexForLeafKey(key)
-				data = view.resolveInternalDataForLeafKey(key)
-				if data:
-					idx = view.index(data["leafKeys"].index(key), 0, parentIndex)
-					idx2 = view.index(data["leafKeys"].index(key), 99, parentIndex)
-					view.dataChanged.emit(idx, idx2)
+			if isUpdate:
+				# Check which views may display that node/leaf
+				if data["_type"] == "node":
+					parentIndex = view.resolveParentIndexForNodeKey(key)
+					if parentIndex:
+						viewData = view.resolveInternalDataForNodeKey(view.resolveInternalDataForNodeKey(key)["parentNodeKey"])
+						idx = view.index(viewData["nodeKeys"].index(key), 0, parentIndex)
+						idx2 = view.index(viewData["nodeKeys"].index(key), 99, parentIndex)
+						view.dataChanged.emit(idx, idx2)
+				else:
+					parentIndex = view.resolveParentIndexForLeafKey(key)
+					viewData = view.resolveInternalDataForLeafKey(key)
+					if data:
+						idx = view.index(viewData["leafKeys"].index(key), 0, parentIndex)
+						idx2 = view.index(viewData["leafKeys"].index(key), 99, parentIndex)
+						view.dataChanged.emit(idx, idx2)
+			else: # Is Add
+				self._injectItemsIntoViews(data["parententry"], [data["key"]] if data["_type"]=="node" else [], [data["key"]] if data["_type"]=="leaf" else [])
+				#self.injectPendingInsertsIfNeeded(view, entry["_type"], parentNode: str)
+			if isMoved:
+				self._deleteItemsFromViews([data["key"]] if data["_type"]=="node" else [], [data["key"]] if data["_type"]=="leaf" else [])
+				self._injectItemsIntoViews(data["parententry"], [data["key"]] if data["_type"] == "node" else [],
+										   [data["key"]] if data["_type"] == "leaf" else [])
 
 	def onStructureAvailable(self, req: RequestWrapper) -> None:
 		tmp = NetworkService.decode(req)

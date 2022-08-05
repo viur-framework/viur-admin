@@ -54,21 +54,17 @@ class RecordViewBoneDelegate(BaseViewBoneDelegate):
 			if isinstance(value, list):
 				if relStructList:
 					# logger.debug("RecordViewBoneDelegate.displayText: %r, %r, %r", self.boneName, self.format, self.structure)
-					value = ", ".join([(formatString(
+					value = ", ".join([
 						formatString(
 							self.format,
 							x, self.boneStructure,
-							language=config.conf.adminConfig["language"]),
-						x, x, language=config.conf.adminConfig["language"]) or x[
-											"key"]) for x in value])
+							language=config.conf.adminConfig["language"]) for x in value])
 				else:
 					value = ", ".join([formatString(self.format, x, self.boneStructure,
 													language=config.conf.adminConfig["language"]) for x in value])
 			elif isinstance(value, dict):
-				value = formatString(
-					formatString(self.format, value, self.structure[self.boneName], prefix=[],
-								 language=config.conf.adminConfig["language"]),
-					value, value, language=config.conf.adminConfig["language"]) or value["key"]
+				value = formatString(self.format, value, self.boneStructure, prefix=[],
+								 language=config.conf.adminConfig["language"])
 		except Exception as err:
 			logger.exception(err)
 			# We probably received some garbage
@@ -128,7 +124,7 @@ class RecordEditBone(BoneEditInterface):
 		)
 		if myStruct.get("multiple"):
 			viewDeleate = RecordViewBoneDelegate(moduleName, boneName, boneStructure)
-			textFormatFunc = lambda x: viewDeleate.displayText(x, None)
+			textFormatFunc = lambda x: viewDeleate.displayText({boneName: x}, None)
 			preMultiWidgetGen = widgetGen
 			widgetGen = lambda: TabMultiContainer(preMultiWidgetGen, textFormatFunc)
 		if myStruct.get("languages"):
