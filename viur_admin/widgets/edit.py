@@ -164,9 +164,9 @@ class EditWidget(QtWidgets.QWidget):
 		assert protoWrap is not None
 		if self.applicationType == ApplicationType.LIST:  # Application: List
 			if self.key and not self.clone:
-				protoWrap.edit(self.key, data, self.onPreflightDataAvailable)
+				protoWrap.edit(self.key, self.onPreflightDataAvailable, **data)
 			else:
-				protoWrap.edit(None, data, self.onPreflightDataAvailable)
+				protoWrap.edit(None, self.onPreflightDataAvailable, **data)
 		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
 			if self.key and not self.clone:
 				protoWrap.edit(self.key, self.skelType, self.onPreflightDataAvailable, **data)
