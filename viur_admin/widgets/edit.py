@@ -173,7 +173,7 @@ class EditWidget(QtWidgets.QWidget):
 			else:
 				protoWrap.add(self.node, self.skelType, self.onPreflightDataAvailable, **data)
 		elif self.applicationType == ApplicationType.SINGLETON:  # Application: Singleton
-			protoWrap.edit(self.key, data, self.onPreflightDataAvailable)
+			protoWrap.edit(self.onPreflightDataAvailable, **data)
 		else:
 			raise NotImplementedError()  # Should never reach this
 
