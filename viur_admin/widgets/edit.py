@@ -166,7 +166,7 @@ class EditWidget(QtWidgets.QWidget):
 			if self.key and not self.clone:
 				protoWrap.edit(self.key, self.onPreflightDataAvailable, **data)
 			else:
-				protoWrap.edit(None, self.onPreflightDataAvailable, **data)
+				protoWrap.add(self.onPreflightDataAvailable, **data)
 		elif self.applicationType == ApplicationType.TREE:  # Application: Tree
 			if self.key and not self.clone:
 				protoWrap.edit(self.key, self.skelType, self.onPreflightDataAvailable, **data)
